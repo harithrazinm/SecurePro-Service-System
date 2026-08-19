@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SecurePro | Technician Login</title>
+
+      <link
+    rel="icon"
+    href="data:,"
+>
+    <link
+        rel="stylesheet"
+        href="css/technician-login.css"
+    >
+
+  
+
+</head>
+
+<body>
+
+    <main class="login-page">
+
+        <section class="login-card">
+
+            <div class="login-brand">
+
+                <div class="brand-mark">
+                    S
+                </div>
+
+                <div>
+
+                    <strong>
+                        SECUREPRO
+                    </strong>
+
+                    <span>
+                        System Solutions
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="login-heading">
+
+                <span>
+                    TECHNICIAN PORTAL
+                </span>
+
+                <h1>
+                    Welcome back
+                </h1>
+
+                <p>
+                    Sign in to view your assigned
+                    service requests.
+                </p>
+
+            </div>
+
+
+            <form id="loginForm">
+
+                <div class="form-group">
+
+                    <label for="email">
+                        Email
+                    </label>
+
+                    <input
+                        id="email"
+                        type="email"
+                        placeholder="technician@securepro.com"
+                        required
+                        autocomplete="email"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <input
+                        id="password"
+                        type="password"
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password"
+                    >
+
+                </div>
+
+
+                <div
+                    id="loginError"
+                    class="login-error"
+                    hidden
+                ></div>
+
+
+                <button
+                    id="loginButton"
+                    type="submit"
+                >
+                    Sign In
+                </button>
+
+            </form>
+
+
+            <div class="login-footer">
+                SecurePro Technician Portal
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="js/login.js"></script>
+
+</body>
+
+</html>

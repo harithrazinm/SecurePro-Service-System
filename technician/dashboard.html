@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SecurePro | Technician Dashboard</title>
+
+     <link
+    rel="icon"
+    href="data:,"
+>
+
+    <link
+        rel="stylesheet"
+        href="../css/style.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/technician.css"
+    >
+
+   
+
+</head>
+
+<body>
+
+<div class="technician-layout">
+
+    <!-- ==========================================
+         SIDEBAR
+    =========================================== -->
+
+    <aside class="technician-sidebar">
+
+        <div class="technician-brand">
+
+            <div class="technician-brand-mark">
+                S
+            </div>
+
+            <div>
+
+                <strong>
+                    SECUREPRO
+                </strong>
+
+                <span>
+                    System Solutions
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="technician-nav">
+
+            <a
+                href="dashboard.html"
+                class="technician-nav-item active"
+            >
+
+                <span class="nav-icon">
+                    ▦
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <a
+                href="dashboard.html#requests"
+                class="technician-nav-item"
+            >
+
+                <span class="nav-icon">
+                    ▤
+                </span>
+
+                <span>
+                    My Requests
+                </span>
+
+            </a>
+
+        </nav>
+
+
+        <div class="technician-sidebar-footer">
+
+            <div class="technician-profile">
+
+                <div class="profile-avatar">
+                    T
+                </div>
+
+                <div>
+
+                    <strong id="sidebarTechnicianName">
+                        Technician
+                    </strong>
+
+                    <span>
+                        Technician
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button
+                id="logoutButton"
+                type="button"
+                class="logout-button"
+            >
+
+                <span>
+                    ↪
+                </span>
+
+                Logout
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ==========================================
+         MAIN
+    =========================================== -->
+
+    <main class="technician-main">
+
+        <!-- TOPBAR -->
+
+        <header class="technician-topbar">
+
+            <div>
+
+                <span class="topbar-label">
+                    TECHNICIAN PORTAL
+                </span>
+
+                <h1>
+                    My Dashboard
+                </h1>
+
+            </div>
+
+
+            <div class="topbar-user">
+
+                <span class="online-dot"></span>
+
+                <span id="topbarTechnicianName">
+                    Technician
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+
+        <div class="technician-content">
+
+            <!-- ======================================
+                 WELCOME
+            ======================================= -->
+
+            <section class="welcome-card">
+
+                <div>
+
+                    <span class="eyebrow">
+                        WORK MANAGEMENT
+                    </span>
+
+                    <h2>
+                        Welcome back,
+                        <span id="welcomeTechnicianName">
+                            Technician
+                        </span>
+                    </h2>
+
+                    <p>
+                        View your assigned service requests
+                        and submit work reports after completing
+                        your service work.
+                    </p>
+
+                </div>
+
+                <div class="welcome-icon">
+                    ✓
+                </div>
+
+            </section>
+
+
+            <!-- ======================================
+                 SUMMARY
+            ======================================= -->
+
+            <section class="summary-grid">
+
+                <div class="summary-card">
+
+                    <div class="summary-icon">
+                        ▤
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Assigned
+                        </span>
+
+                        <strong id="assignedCount">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <div class="summary-icon">
+                        ◷
+                    </div>
+
+                    <div>
+
+                        <span>
+                            In Progress
+                        </span>
+
+                        <strong id="progressCount">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <div class="summary-icon">
+                        ✓
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Completed
+                        </span>
+
+                        <strong id="completedCount">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ======================================
+                 REQUESTS
+            ======================================= -->
+
+            <section
+                id="requests"
+                class="requests-section"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            SERVICE REQUESTS
+                        </span>
+
+                        <h2>
+                            My Assigned Requests
+                        </h2>
+
+                        <p>
+                            Service requests assigned to you.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        id="refreshButton"
+                        type="button"
+                        class="refresh-button"
+                    >
+
+                        ↻
+                        Refresh
+
+                    </button>
+
+                </div>
+
+
+                <!-- ERROR -->
+
+                <div
+                    id="dashboardError"
+                    class="dashboard-error"
+                    hidden
+                ></div>
+
+
+                <!-- LOADING -->
+
+                <div
+                    id="requestLoading"
+                    class="request-loading"
+                >
+
+                    <div class="loading-spinner"></div>
+
+                    <span>
+                        Loading requests...
+                    </span>
+
+                </div>
+
+
+                <!-- EMPTY -->
+
+                <div
+                    id="emptyRequests"
+                    class="empty-state"
+                    hidden
+                >
+
+                    <div class="empty-icon">
+                        ▤
+                    </div>
+
+                    <h3>
+                        No assigned requests
+                    </h3>
+
+                    <p>
+                        You currently have no service
+                        requests assigned to you.
+                    </p>
+
+                </div>
+
+
+                <!-- REQUEST LIST -->
+
+                <div
+                    id="requestList"
+                    class="request-list"
+                    hidden
+                ></div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="js/dashboard.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SecurePro | Request Details</title>
+
+ <link
+    rel="stylesheet"
+    href="css/admin.css"
+>
+
+<link
+    rel="stylesheet"
+    href="css/dashboard.css"
+>
+
+<link
+    rel="stylesheet"
+    href="css/request.css"
+>
+
+</head>
+
+<body>
+
+<div class="admin-layout">
+
+    <!-- SIDEBAR -->
+
+    <aside class="admin-sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="sidebar-mark">
+                S
+            </div>
+
+            <div>
+
+                <strong>
+                    SECUREPRO
+                </strong>
+
+                <span>
+                    System Solutions
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a
+                href="dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a
+                href="dashboard.html#requests"
+                class="nav-item active"
+            >
+                <span class="nav-icon">▤</span>
+                Requests
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="admin-profile">
+
+                <div class="admin-avatar">
+                    A
+                </div>
+
+                <div class="admin-profile-info">
+
+                    <strong id="sidebarAdminName">
+                        Admin
+                    </strong>
+
+                    <span>
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="admin-main">
+
+        <!-- TOPBAR -->
+
+        <header class="admin-topbar">
+
+            <div>
+
+                <span class="topbar-label">
+                    REQUEST MANAGEMENT
+                </span>
+
+                <h1>
+                    Request Details
+                </h1>
+
+            </div>
+
+
+            <div class="topbar-user">
+
+                <span class="online-dot"></span>
+
+                <span id="topbarAdminName">
+                    Admin
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+
+        <div class="request-content">
+
+            <!-- BACK -->
+
+            <a
+                href="dashboard.html#requests"
+                class="back-link"
+            >
+                ← Back to Requests
+            </a>
+
+
+            <!-- ERROR -->
+
+            <div
+                id="requestError"
+                class="request-error"
+                hidden
+            ></div>
+
+
+            <!-- LOADING -->
+
+            <div
+                id="requestLoading"
+                class="request-loading"
+            >
+                Loading request details...
+            </div>
+
+
+            <!-- REQUEST -->
+
+            <div
+                id="requestDetails"
+                hidden
+            >
+
+                <!-- HEADER CARD -->
+
+                <section class="request-header-card">
+
+                    <div class="request-header-main">
+
+                        <span class="eyebrow">
+                            SERVICE REQUEST
+                        </span>
+
+                        <h2 id="requestCode">
+                            —
+                        </h2>
+
+                        <p id="requestService">
+                            —
+                        </p>
+
+                    </div>
+
+
+                    <span
+                        id="requestStatus"
+                        class="status-badge"
+                    >
+                        Pending
+                    </span>
+
+                </section>
+
+
+                <!-- CUSTOMER -->
+
+                <section class="detail-card">
+
+                    <div class="detail-heading">
+
+                        <span class="detail-number">
+                            01
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Customer Information
+                            </h2>
+
+                            <p>
+                                Customer details submitted
+                                with this request.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="customerGrid"
+                        class="customer-grid"
+                    ></div>
+
+                </section>
+
+
+                <!-- SERVICE ANSWERS -->
+
+                <section class="detail-card">
+
+                    <div class="detail-heading">
+
+                        <span class="detail-number">
+                            02
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Service Information
+                            </h2>
+
+                            <p>
+                                Answers provided by the
+                                customer.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="answersGrid"
+                        class="answers-grid"
+                    ></div>
+
+                </section>
+
+
+                <!-- NOTES -->
+
+                <section
+                    id="notesCard"
+                    class="detail-card"
+                    hidden
+                >
+
+                    <div class="detail-heading">
+
+                        <span class="detail-number">
+                            03
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Customer Notes
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="customerNotes"
+                        class="customer-notes"
+                    ></div>
+
+                </section>
+
+
+                <!-- PHOTOS -->
+
+                <section
+                    id="photosCard"
+                    class="detail-card"
+                >
+
+                    <div class="detail-heading">
+
+                        <span class="detail-number">
+                            04
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Customer Photos
+                            </h2>
+
+                            <p id="photoCount">
+                                0 photos
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="photosGrid"
+                        class="photos-grid"
+                    ></div>
+
+                </section>
+
+<!-- =====================================================
+     TECHNICIAN WORK REPORT
+====================================================== -->
+
+<section
+    id="technicianReportCard"
+    class="detail-card"
+    hidden
+>
+
+    <div class="detail-heading">
+
+        <span class="detail-number">
+            05
+        </span>
+
+        <div>
+
+            <h2>
+                Technician Work Report
+            </h2>
+
+            <p>
+                Work information submitted by the technician.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- REPORT STATUS -->
+
+    <div class="report-status-row">
+
+        <span>
+            Report Status
+        </span>
+
+        <strong id="technicianReportStatus">
+            —
+        </strong>
+
+    </div>
+
+
+    <!-- WORK PERFORMED -->
+
+    <div class="report-field">
+
+        <span>
+            Work Performed
+        </span>
+
+        <p id="reportWorkPerformed">
+            —
+        </p>
+
+    </div>
+
+
+    <!-- FINDINGS -->
+
+    <div class="report-field">
+
+        <span>
+            Findings
+        </span>
+
+        <p id="reportFindings">
+            —
+        </p>
+
+    </div>
+
+
+    <!-- MATERIALS -->
+
+    <div class="report-field">
+
+        <span>
+            Materials Used
+        </span>
+
+        <p id="reportMaterialsUsed">
+            —
+        </p>
+
+    </div>
+
+
+    <!-- TECHNICIAN NOTES -->
+
+    <div class="report-field">
+
+        <span>
+            Technician Notes
+        </span>
+
+        <p id="reportTechnicianNotes">
+            —
+        </p>
+
+    </div>
+
+
+    <!-- REVIEW REMARKS -->
+
+    <div
+        id="reportReviewRemarks"
+        class="report-review-remarks"
+        hidden
+    >
+
+        <span>
+            Admin Review Remarks
+        </span>
+
+        <p id="reportReviewRemarksText">
+            —
+        </p>
+
+    </div>
+
+
+    <!-- COMPLETION MEDIA -->
+
+    <div class="report-media-section">
+
+        <div class="report-media-heading">
+
+            <h3>
+                Completion Photos & Videos
+            </h3>
+
+            <span id="completionMediaCount">
+                0 files
+            </span>
+
+        </div>
+
+
+        <div
+            id="completionMediaGrid"
+            class="completion-media-grid"
+        ></div>
+
+    </div>
+
+
+    <!-- =================================================
+         REPORT REVIEW
+    ================================================== -->
+
+    <div
+        id="reportReviewSection"
+        class="report-review-section"
+    >
+
+        <div class="report-review-heading">
+
+            <div>
+
+                <h3>
+                    Review Technician Report
+                </h3>
+
+                <p>
+                    Approve the report to complete the request,
+                    or reject it so the technician can resubmit.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="reviewActionArea"
+            class="review-action-area"
+        >
+
+            <button
+                type="button"
+                id="approveReportButton"
+                class="review-button approve-button"
+            >
+                ✓ Approve Report
+            </button>
+
+
+            <button
+                type="button"
+                id="rejectReportButton"
+                class="review-button reject-button"
+            >
+                ✕ Reject Report
+            </button>
+
+        </div>
+
+
+        <!-- REJECTION FORM -->
+
+        <div
+            id="rejectForm"
+            class="reject-form"
+            hidden
+        >
+
+            <label
+                for="rejectReason"
+            >
+                Rejection Reason
+            </label>
+
+
+            <textarea
+                id="rejectReason"
+                rows="4"
+                placeholder="Explain what the technician needs to correct or resubmit..."
+            ></textarea>
+
+
+            <div class="reject-form-actions">
+
+                <button
+                    type="button"
+                    id="cancelRejectButton"
+                    class="secondary-review-button"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="button"
+                    id="confirmRejectButton"
+                    class="review-button reject-button"
+                >
+                    Reject Report
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+                <!-- STATUS -->
+
+                <section class="detail-card">
+
+                    <div class="detail-heading">
+
+                        <span class="detail-number">
+                            05
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Request Status
+                            </h2>
+
+                            <p>
+                                Current request progress.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="status-section">
+
+                        <div class="current-status">
+
+                            <span>
+                                Current Status
+                            </span>
+
+                            <strong
+                                id="currentStatusText"
+                            >
+                                Pending
+                            </strong>
+
+                        </div>
+
+
+                        <div class="status-options">
+
+                            <button
+                                type="button"
+                                data-status="pending"
+                                class="status-option"
+                            >
+                                Pending
+                            </button>
+
+                            <button
+                                type="button"
+                                data-status="assigned"
+                                class="status-option"
+                            >
+                                Assigned
+                            </button>
+
+                            <button
+                                type="button"
+                                data-status="in_progress"
+                                class="status-option"
+                            >
+                                In Progress
+                            </button>
+
+                            <button
+                                type="button"
+                                data-status="waiting_parts"
+                                class="status-option"
+                            >
+                                Waiting Parts
+                            </button>
+
+                            <button
+                                type="button"
+                                data-status="completed"
+                                class="status-option"
+                            >
+                                Completed
+                            </button>
+
+                            <button
+                                type="button"
+                                data-status="cancelled"
+                                class="status-option"
+                            >
+                                Cancelled
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- TECHNICIAN -->
+
+<section class="detail-card">
+
+    <div class="detail-heading">
+
+        <span class="detail-number">
+            06
+        </span>
+
+        <div>
+
+            <h2>
+                Technician Assignment
+            </h2>
+
+            <p>
+                Assign a technician and save the current request status.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="technician-section">
+
+        <div>
+
+            <label for="technicianSelect">
+                Technician
+            </label>
+
+            <select id="technicianSelect">
+
+                <option value="">
+                    No technician assigned
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <button
+            id="saveButton"
+            type="button"
+            class="save-button"
+        >
+            Save Changes
+        </button>
+
+    </div>
+
+
+    <p class="save-help">
+        Changes to the status and technician will be saved together.
+    </p>
+
+</section>
+
+
+                <!-- META -->
+
+                <section class="request-meta">
+
+                    <div>
+
+                        <span>
+                            Created
+                        </span>
+
+                        <strong id="createdAt">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Last Updated
+                        </span>
+
+                        <strong id="updatedAt">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Completed
+                        </span>
+
+                        <strong id="completedAt">
+                            —
+                        </strong>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="js/request.js"></script>
+
+</body>
+
+</html>

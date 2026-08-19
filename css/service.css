@@ -1,0 +1,778 @@
+.question-page {
+    min-height: calc(100vh - 76px);
+    padding: 45px 0 80px;
+    background: var(--bg);
+}
+
+.question-top {
+    margin-bottom: 35px;
+}
+
+.back-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.back-link:hover {
+    color: var(--text);
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.question-header {
+    max-width: 760px;
+    margin-bottom: 40px;
+}
+
+.question-header h1 {
+    font-size: clamp(34px, 5vw, 54px);
+    line-height: 1.08;
+    letter-spacing: -1.8px;
+    margin-bottom: 14px;
+}
+
+.question-header p {
+    color: var(--muted);
+    font-size: 17px;
+}
+
+
+/* ========================================
+   PROGRESS
+======================================== */
+
+.progress-area {
+    max-width: 760px;
+    margin-bottom: 35px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 9px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    color: var(--muted);
+}
+
+.progress-track {
+    width: 100%;
+    height: 7px;
+
+    background: #e5e7eb;
+
+    border-radius: 99px;
+
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+
+    background: var(--accent);
+
+    border-radius: inherit;
+
+    transition: width .3s ease;
+}
+
+
+/* ========================================
+   QUESTION CARD
+======================================== */
+
+.question-container {
+    max-width: 760px;
+}
+
+.question-card {
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 20px;
+
+    padding: 30px;
+
+    box-shadow:
+        0 12px 35px rgba(15, 23, 42, .05);
+}
+
+.question-number {
+    color: var(--accent);
+
+    font-size: 12px;
+    font-weight: 800;
+
+    letter-spacing: 1.4px;
+
+    margin-bottom: 10px;
+}
+
+.question-title {
+    font-size: 26px;
+    line-height: 1.2;
+
+    margin-bottom: 9px;
+}
+
+.question-description {
+    color: var(--muted);
+
+    font-size: 14px;
+
+    margin-bottom: 25px;
+}
+
+
+/* ========================================
+   OPTIONS
+======================================== */
+
+.options {
+    display: grid;
+    gap: 12px;
+}
+
+.option {
+    position: relative;
+}
+
+.option input {
+    position: absolute;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+.option-label {
+    display: block;
+
+    padding: 18px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    cursor: pointer;
+
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        transform .2s ease;
+}
+
+.option-label:hover {
+    border-color: #bfdbfe;
+    transform: translateY(-1px);
+}
+
+.option input:checked + .option-label {
+    border-color: var(--accent);
+
+    background: var(--accent-soft);
+}
+
+.option-title {
+    display: block;
+
+    font-weight: 750;
+
+    margin-bottom: 4px;
+}
+
+.option-description {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+
+/* ========================================
+   MULTI SELECT
+======================================== */
+
+.option-checkbox {
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 12px;
+}
+
+.option-checkbox input {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+
+    width: 18px;
+    height: 18px;
+
+    margin-top: 2px;
+}
+
+
+/* ========================================
+   NUMBER INPUT
+======================================== */
+
+.number-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.number-input {
+    width: 100%;
+
+    padding: 15px 16px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 11px;
+
+    outline: none;
+
+    font-size: 16px;
+}
+
+.number-input:focus {
+    border-color: var(--accent);
+}
+
+.number-unit {
+    color: var(--muted);
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* ========================================
+   COUNTERS
+======================================== */
+
+.counter-list {
+    display: grid;
+    gap: 14px;
+}
+
+.counter-item {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 18px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+}
+
+.counter-info {
+    flex: 1;
+}
+
+.counter-title {
+    font-weight: 750;
+}
+
+.counter-description {
+    color: var(--muted);
+
+    font-size: 13px;
+
+    margin-top: 3px;
+}
+
+.counter-control {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+.counter-button {
+    width: 38px;
+    height: 38px;
+
+    border: 1px solid var(--border);
+
+    background: white;
+
+    border-radius: 9px;
+
+    cursor: pointer;
+
+    font-size: 20px;
+
+    font-weight: 700;
+}
+
+.counter-button:hover {
+    border-color: var(--accent);
+}
+
+.counter-value {
+    min-width: 32px;
+
+    text-align: center;
+
+    font-weight: 800;
+}
+
+
+/* ========================================
+   TEXTAREA
+======================================== */
+
+.question-textarea {
+    width: 100%;
+
+    min-height: 150px;
+
+    resize: vertical;
+
+    padding: 15px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    outline: none;
+
+    font: inherit;
+}
+
+.question-textarea:focus {
+    border-color: var(--accent);
+}
+
+
+/* ========================================
+   FILE
+======================================== */
+
+.file-upload {
+    border: 2px dashed var(--border);
+
+    border-radius: 15px;
+
+    padding: 30px;
+
+    text-align: center;
+
+    cursor: pointer;
+
+    transition: .2s ease;
+}
+
+.file-upload:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.file-upload input {
+    display: none;
+}
+
+.file-upload strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.file-upload span {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+
+/* ========================================
+   NAVIGATION
+======================================== */
+
+.question-navigation {
+    max-width: 760px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-top: 25px;
+}
+
+.secondary-btn {
+    border: 1px solid var(--border);
+
+    background: white;
+
+    color: var(--text);
+
+    padding: 14px 22px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-weight: 700;
+}
+
+.secondary-btn:hover {
+    border-color: #cbd5e1;
+}
+
+.question-navigation .primary-btn {
+    min-width: 120px;
+}
+
+
+/* ========================================
+   ERROR
+======================================== */
+
+.question-error {
+    padding: 18px;
+
+    background: #fef2f2;
+
+    border: 1px solid #fecaca;
+
+    color: #991b1b;
+
+    border-radius: 12px;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 600px) {
+
+    .question-page {
+        padding-top: 30px;
+    }
+
+    .question-card {
+        padding: 22px;
+    }
+
+    .question-title {
+        font-size: 22px;
+    }
+
+    .counter-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .counter-control {
+        align-self: stretch;
+        justify-content: flex-end;
+    }
+
+    .question-navigation {
+        position: sticky;
+        bottom: 0;
+
+        padding: 14px 0;
+
+        background: rgba(247, 248, 250, .95);
+    }
+}
+
+/* =========================================================
+   VALIDATION POPUP
+========================================================= */
+
+.validation-popup-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(15, 23, 42, 0.55);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease;
+
+    z-index: 9999;
+}
+
+
+.validation-popup-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+.validation-popup {
+    width: min(420px, 100%);
+
+    padding: 32px;
+
+    text-align: center;
+
+    background: #ffffff;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 25px 60px
+        rgba(0, 0, 0, 0.22);
+
+    transform:
+        translateY(15px)
+        scale(0.97);
+
+    transition:
+        transform 0.25s ease;
+}
+
+
+.validation-popup-overlay.show
+.validation-popup {
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+
+.validation-popup-icon {
+    width: 58px;
+    height: 58px;
+
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #fff3cd;
+    color: #b45309;
+
+    font-size: 32px;
+    font-weight: 700;
+}
+
+
+.validation-popup h3 {
+    margin: 0 0 10px;
+
+    color: #111827;
+
+    font-size: 22px;
+}
+
+
+.validation-popup p {
+    margin: 0 0 24px;
+
+    color: #6b7280;
+
+    line-height: 1.6;
+}
+
+
+#validationPopupButton {
+    width: 100%;
+
+    border: none;
+    border-radius: 10px;
+
+    padding: 13px 20px;
+
+    background: #111827;
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+
+#validationPopupButton:hover {
+    opacity: 0.9;
+
+    transform: translateY(-1px);
+}
+
+
+#validationPopupButton:focus {
+    outline: 3px solid
+        rgba(59, 130, 246, 0.35);
+
+    outline-offset: 3px;
+}
+
+/* =========================================================
+   PREVIOUS POPUP
+========================================================= */
+
+.previous-popup-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(15, 23, 42, 0.55);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease;
+
+    z-index: 9999;
+}
+
+
+.previous-popup-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+.previous-popup {
+    width: min(420px, 100%);
+
+    padding: 32px;
+
+    text-align: center;
+
+    background: #ffffff;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 25px 60px
+        rgba(0, 0, 0, 0.22);
+
+    transform:
+        translateY(15px)
+        scale(0.97);
+
+    transition:
+        transform 0.25s ease;
+}
+
+
+.previous-popup-overlay.show
+.previous-popup {
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+
+.previous-popup-icon {
+    width: 58px;
+    height: 58px;
+
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #eff6ff;
+    color: #2563eb;
+
+    font-size: 30px;
+    font-weight: 700;
+}
+
+
+.previous-popup h3 {
+    margin: 0 0 10px;
+
+    color: #111827;
+
+    font-size: 22px;
+}
+
+
+.previous-popup p {
+    margin: 0 0 24px;
+
+    color: #6b7280;
+
+    line-height: 1.6;
+}
+
+
+.previous-popup-actions {
+    display: flex;
+
+    gap: 12px;
+}
+
+
+.previous-popup-actions button {
+    flex: 1;
+
+    padding: 13px 16px;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.previous-popup-cancel {
+    border: 1px solid #d1d5db;
+
+    background: #ffffff;
+    color: #374151;
+}
+
+
+.previous-popup-confirm {
+    border: none;
+
+    background: #111827;
+    color: #ffffff;
+}

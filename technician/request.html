@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Service Request
+    </title>
+
+      <link
+    rel="icon"
+    href="data:,"
+>
+
+    <link
+        rel="stylesheet"
+        href="css/request.css"
+    >
+  
+
+</head>
+
+
+<body>
+
+<div class="technician-page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="page-header">
+
+        <div>
+
+            <a
+                href="dashboard.html"
+                class="back-link"
+            >
+                ← Back to Requests
+            </a>
+
+            <h1>
+                Service Request
+            </h1>
+
+            <p>
+                View customer requirements and submit your work report.
+            </p>
+
+        </div>
+
+
+        <div
+            id="requestStatus"
+            class="status-badge"
+        >
+            Loading...
+        </div>
+
+    </header>
+
+
+
+    <main
+        id="pageContent"
+        class="request-content"
+    >
+
+
+        <!-- =================================================
+             ERROR
+        ================================================== -->
+
+        <div
+            id="requestError"
+            class="error-box"
+            hidden
+        ></div>
+
+
+
+        <!-- =================================================
+             REQUEST SUMMARY
+        ================================================== -->
+
+        <section class="detail-card request-summary">
+
+            <div>
+
+                <span class="label">
+                    Request Code
+                </span>
+
+                <strong id="requestCode">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span class="label">
+                    Service
+                </span>
+
+                <strong id="serviceName">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span class="label">
+                    Created
+                </span>
+
+                <strong id="createdAt">
+                    —
+                </strong>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             CUSTOMER INFORMATION
+        ================================================== -->
+
+        <section class="detail-card">
+
+            <div class="section-heading">
+
+                <div class="section-number">
+                    01
+                </div>
+
+                <div>
+
+                    <h2>
+                        Customer Information
+                    </h2>
+
+                    <p>
+                        Customer details for this service request.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="customerGrid"
+                class="customer-grid"
+            ></div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             CUSTOMER REQUIREMENTS
+        ================================================== -->
+
+        <section class="detail-card">
+
+            <div class="section-heading">
+
+                <div class="section-number">
+                    02
+                </div>
+
+                <div>
+
+                    <h2>
+                        What the Customer Requested
+                    </h2>
+
+                    <p>
+                        Review the customer's answers before starting work.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="answersGrid"
+                class="answers-grid"
+            ></div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             CUSTOMER NOTES
+        ================================================== -->
+
+        <section
+            id="notesCard"
+            class="detail-card"
+            hidden
+        >
+
+            <div class="section-heading">
+
+                <div class="section-number">
+                    03
+                </div>
+
+                <div>
+
+                    <h2>
+                        Customer Notes
+                    </h2>
+
+                    <p>
+                        Additional information provided by the customer.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="customerNotes"
+                class="customer-notes"
+            ></div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             CUSTOMER PHOTOS
+        ================================================== -->
+
+        <section class="detail-card">
+
+            <div class="section-heading">
+
+                <div class="section-number">
+                    04
+                </div>
+
+                <div>
+
+                    <h2>
+                        Customer Photos
+                    </h2>
+
+                    <p id="photoCount">
+                        0 photos
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="photosGrid"
+                class="photos-grid"
+            ></div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             EXISTING REPORT
+        ================================================== -->
+
+        <section
+            id="existingReportCard"
+            class="detail-card"
+            hidden
+        >
+
+            <div class="section-heading">
+
+                <div class="section-number">
+                    05
+                </div>
+
+                <div>
+
+                    <h2>
+                        Submitted Work Report
+                    </h2>
+
+                    <p>
+                        Your latest report for this request.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="existingReport"
+                class="existing-report"
+            ></div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             WORK REPORT
+        ================================================== -->
+
+        <section
+            id="workReportCard"
+            class="detail-card"
+        >
+
+            <div class="section-heading">
+
+                <div class="section-number">
+                    06
+                </div>
+
+                <div>
+
+                    <h2>
+                        Work Report
+                    </h2>
+
+                    <p>
+                        Submit the work you completed to the admin.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <form
+                id="reportForm"
+                class="report-form"
+            >
+
+
+                <!-- WORK PERFORMED -->
+
+                <div class="form-group">
+
+                    <label
+                        for="workPerformed"
+                    >
+                        Work Performed
+                        <span>*</span>
+                    </label>
+
+                    <textarea
+                        id="workPerformed"
+                        name="work_performed"
+                        rows="5"
+                        placeholder="Describe the work you completed..."
+                        required
+                    ></textarea>
+
+                </div>
+
+
+
+                <!-- FINDINGS -->
+
+                <div class="form-group">
+
+                    <label
+                        for="findings"
+                    >
+                        Findings
+                    </label>
+
+                    <textarea
+                        id="findings"
+                        name="findings"
+                        rows="4"
+                        placeholder="Describe any problems, observations or findings..."
+                    ></textarea>
+
+                </div>
+
+
+
+                <!-- MATERIALS -->
+
+                <div class="form-group">
+
+                    <label
+                        for="materialsUsed"
+                    >
+                        Materials Used
+                    </label>
+
+                    <textarea
+                        id="materialsUsed"
+                        name="materials_used"
+                        rows="4"
+                        placeholder="List the materials, equipment or parts used..."
+                    ></textarea>
+
+                </div>
+
+
+
+                <!-- TECHNICIAN NOTES -->
+
+                <div class="form-group">
+
+                    <label
+                        for="technicianNotes"
+                    >
+                        Technician Notes
+                    </label>
+
+                    <textarea
+                        id="technicianNotes"
+                        name="technician_notes"
+                        rows="4"
+                        placeholder="Add any additional notes for the admin..."
+                    ></textarea>
+
+                </div>
+
+                <!-- COMPLETION MEDIA -->
+
+<div class="form-group completion-media-group">
+
+    <label
+        for="completionMedia"
+    >
+        Completion Photos / Videos
+    </label>
+
+    <p class="form-help">
+        Upload photos or videos showing the completed work.
+        You can upload up to 10 files.
+    </p>
+
+
+    <label
+        for="completionMedia"
+        class="media-upload-box"
+    >
+
+        <span class="media-upload-icon">
+            +
+        </span>
+
+        <strong>
+            Choose Photos or Videos
+        </strong>
+
+        <span>
+            JPG, PNG, WebP, MP4, WebM or MOV
+        </span>
+
+        <small>
+            Maximum 10 files · Maximum 100 MB each
+        </small>
+
+    </label>
+
+
+    <input
+        id="completionMedia"
+        name="completion_media"
+        type="file"
+        accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+        multiple
+        hidden
+    >
+
+
+    <div
+        id="mediaPreview"
+        class="media-preview"
+    ></div>
+
+</div>
+
+
+
+                <!-- SUBMIT -->
+
+                <div class="report-actions">
+
+                    <div>
+
+                        <strong>
+                            Ready to submit?
+                        </strong>
+
+                        <p>
+                            Your report will be sent to the admin for review.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        id="submitReportButton"
+                        type="submit"
+                    >
+                        Submit Work Report
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="reportMessage"
+                    class="report-message"
+                    hidden
+                ></div>
+
+
+            </form>
+
+        </section>
+
+
+
+        <!-- =================================================
+             REQUEST META
+        ================================================== -->
+
+        <section class="request-meta">
+
+            <div>
+
+                <span>
+                    Request Created
+                </span>
+
+                <strong id="metaCreated">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Last Updated
+                </span>
+
+                <strong id="metaUpdated">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Completed
+                </span>
+
+                <strong id="metaCompleted">
+                    —
+                </strong>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script src="js/request.js"></script>
+
+</body>
+
+</html>

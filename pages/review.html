@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SecurePro | Review Request</title>
+
+    <link
+        rel="stylesheet"
+        href="../css/style.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../css/review.css"
+    >
+
+</head>
+
+<body>
+
+<header class="site-header">
+
+    <div class="container navbar">
+
+        <a href="../index.html" class="brand">
+
+            <span class="brand-mark">S</span>
+
+            <span>
+                <strong>SECUREPRO</strong>
+                <small>System Solutions</small>
+            </span>
+
+        </a>
+
+        <button
+            id="languageToggle"
+            class="language-btn"
+            type="button"
+        >
+            BM
+        </button>
+
+    </div>
+
+</header>
+
+
+<main class="review-page">
+
+    <div class="container">
+
+        <div class="review-top">
+
+            <a
+                href="customer.html"
+                class="back-link"
+            >
+                ←
+                <span data-i18n="back">
+                    Back
+                </span>
+            </a>
+
+        </div>
+
+
+        <div class="review-header">
+
+            <span class="eyebrow">
+                SECUREPRO
+            </span>
+
+            <h1 data-i18n="title">
+                Review your request
+            </h1>
+
+            <p data-i18n="description">
+                Please check your information before submitting.
+            </p>
+
+        </div>
+
+
+        <!-- SERVICE -->
+
+        <section class="review-card">
+
+            <div class="review-card-heading">
+
+                <span class="review-number">
+                    01
+                </span>
+
+                <div>
+
+                    <h2 data-i18n="serviceTitle">
+                        Selected Service
+                    </h2>
+
+                    <p id="serviceName">
+                        Loading...
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- QUESTIONS -->
+
+        <section class="review-card">
+
+            <div class="review-card-heading">
+
+                <span class="review-number">
+                    02
+                </span>
+
+                <div>
+
+                    <h2 data-i18n="answersTitle">
+                        Your Answers
+                    </h2>
+
+                    <p data-i18n="answersDescription">
+                        Information provided for this service.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="answersList"
+                class="answers-list"
+            >
+                Loading...
+            </div>
+
+        </section>
+
+
+        <!-- CUSTOMER -->
+
+        <section class="review-card">
+
+            <div class="review-card-heading">
+
+                <span class="review-number">
+                    03
+                </span>
+
+                <div>
+
+                    <h2 data-i18n="customerTitle">
+                        Customer Information
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="customerInfo"
+                class="customer-review-grid"
+            >
+            </div>
+
+        </section>
+
+
+        <!-- PHOTOS -->
+
+        <section class="review-card">
+
+            <div class="review-card-heading">
+
+                <span class="review-number">
+                    04
+                </span>
+
+                <div>
+
+                    <h2 data-i18n="photosTitle">
+                        Photos
+                    </h2>
+
+                    <p id="photoCount">
+                        0 photos
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="reviewPhotos"
+                class="review-photos"
+            >
+            </div>
+
+        </section>
+
+
+        <div
+            id="submitError"
+            class="submit-error"
+            hidden
+        ></div>
+
+
+        <!-- ACTION -->
+
+        <div class="review-actions">
+
+            <button
+                id="editButton"
+                type="button"
+                class="secondary-btn"
+            >
+                ←
+                <span data-i18n="edit">
+                    Edit Information
+                </span>
+            </button>
+
+
+            <button
+                id="submitButton"
+                type="button"
+                class="primary-btn"
+            >
+
+                <span data-i18n="submit">
+                    Submit Request
+                </span>
+
+                →
+
+            </button>
+
+        </div>
+
+
+        <p
+            class="privacy-note"
+            data-i18n="privacy"
+        >
+            Your information will only be used to process your
+            service request.
+        </p>
+
+    </div>
+
+</main>
+
+
+<script src="../js/review.js"></script>
+
+</body>
+
+</html>
