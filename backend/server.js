@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const mysql = require("mysql2/promise");
 const path = require("path");
 
 // ======================================================
@@ -12,9 +11,15 @@ dotenv.config();
 
 const app = express();
 
-// Render will automatically provide process.env.PORT.
-// 5001 is used for local development.
+// Render automatically provides PORT.
+// Local development uses 5001.
 const PORT = process.env.PORT || 5001;
+
+// ======================================================
+// DATABASE
+// ======================================================
+
+const pool = require("./config/db");
 
 // ======================================================
 // ROUTES
@@ -50,7 +55,7 @@ app.use(
 );
 
 // ======================================================
-// CUSTOMER / TECHNICIAN UPLOADS
+// UPLOADS
 // ======================================================
 
 app.use(
@@ -104,36 +109,6 @@ app.use(
     "/api/technician",
     technicianRoutes
 );
-
-// ======================================================
-// MYSQL CONNECTION POOL
-// ======================================================
-
-const pool = mysql.createPool({
-
-    host:
-        process.env.DB_HOST || "localhost",
-
-    port:
-        Number(
-            process.env.DB_PORT || 3306
-        ),
-
-    user:
-        process.env.DB_USER || "securepro",
-
-    password:
-        process.env.DB_PASSWORD || "securepro123",
-
-    database:
-        process.env.DB_NAME || "securepro",
-
-    waitForConnections: true,
-
-    connectionLimit: 10,
-
-    queueLimit: 0
-});
 
 // ======================================================
 // HEALTH CHECK
@@ -223,7 +198,7 @@ app.listen(
         );
 
         console.log(
-            `Health: /api/health`
+            `Health: http://localhost:${PORT}/api/health`
         );
 
         console.log(
