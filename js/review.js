@@ -717,131 +717,129 @@ async function submitRequest() {
 
     button.classList.add("loading");
 
-    button.querySelector(
-        "span"
-    ).textContent =
+    button.querySelector("span").textContent =
         t("submitting");
 
     try {
+
+        console.log("STEP 1: Starting submission");
+        console.log("API_BASE:", API_BASE);
+        console.log("Customer:", customer);
+        console.log("Service:", service);
+        console.log("Answers:", answers);
+        console.log("Selected files:", selectedFiles);
+
+
+        console.log("STEP 2: Creating FormData");
 
         const formData =
             new FormData();
 
 
-        /*
-         * ==========================================
-         * CUSTOMER INFORMATION
-         * ==========================================
-         */
+        console.log("STEP 3: Adding customer data");
 
         formData.append(
             "customer_name",
-            customer.customer_name || ""
+            String(customer?.customer_name || "")
         );
 
         formData.append(
             "customer_phone",
-            customer.customer_phone || ""
+            String(customer?.customer_phone || "")
         );
 
         formData.append(
             "customer_email",
-            customer.customer_email || ""
+            String(customer?.customer_email || "")
         );
 
         formData.append(
             "customer_address",
-            customer.customer_address || ""
+            String(customer?.customer_address || "")
         );
 
 
-        /*
-         * ==========================================
-         * SERVICE
-         * ==========================================
-         */
+        console.log("STEP 4: Adding service");
 
         formData.append(
             "service_type",
-            service.id
+            String(service?.id || "")
         );
 
 
-        /*
-         * ==========================================
-         * ANSWERS
-         * ==========================================
-         */
+        console.log("STEP 5: Adding answers");
 
         formData.append(
             "service_answers",
-            JSON.stringify(answers)
+            JSON.stringify(answers || {})
         );
 
 
-        /*
-         * ==========================================
-         * NOTES
-         * ==========================================
-         */
+        console.log("STEP 6: Adding notes");
 
         formData.append(
             "customer_notes",
-            customer.customer_notes || ""
+            String(customer?.customer_notes || "")
         );
 
 
-        /*
-         * ==========================================
-         * PHOTOS
-         * ==========================================
-         */
+        console.log("STEP 7: Adding photos");
 
-        selectedFiles.forEach(
-    (file, index) => {
+        for (
+            let index = 0;
+            index < selectedFiles.length;
+            index++
+        ) {
 
-        if (!file) {
-            return;
+            const file =
+                selectedFiles[index];
+
+            if (
+                !(file instanceof Blob)
+            ) {
+
+                console.warn(
+                    "Skipping invalid photo:",
+                    file
+                );
+
+                continue;
+            }
+
+            const extension =
+                file.type === "image/png"
+                    ? "png"
+                    : file.type === "image/webp"
+                        ? "webp"
+                        : "jpg";
+
+            const fileName =
+                `customer-photo-${index + 1}.${extension}`;
+
+            console.log(
+                "Adding photo:",
+                fileName,
+                file.type,
+                file.size
+            );
+
+            formData.append(
+                "customer_photos",
+                file,
+                fileName
+            );
         }
 
-        const extension =
-            file.type === "image/png"
-                ? "png"
-                : file.type === "image/webp"
-                    ? "webp"
-                    : "jpg";
 
-        const fileName =
-            file.name &&
-            file.name.trim()
-                ? file.name
-                : `customer-photo-${index + 1}.${extension}`;
-
-        formData.append(
-            "customer_photos",
-            file,
-            fileName
-        );
-
-    }
-);
+        console.log("STEP 8: FormData complete");
 
 
         console.log(
-            "Submitting SecurePro request..."
+            "STEP 9: Sending request to:",
+            `${API_BASE}/requests`
         );
 
-console.log(
-    "Photos to upload:",
-    selectedFiles.map(
-        (file, index) => ({
-            index,
-            name: file?.name,
-            type: file?.type,
-            size: file?.size
-        })
-    )
-);
+
         const response =
             await fetch(
                 `${API_BASE}/requests`,
@@ -850,6 +848,12 @@ console.log(
                     body: formData
                 }
             );
+
+
+        console.log(
+            "STEP 10: Response received:",
+            response.status
+        );
 
 
         const result =
@@ -874,22 +878,11 @@ console.log(
         }
 
 
-        /*
-         * Save the returned request
-         * for the success page.
-         */
-
         localStorage.setItem(
             "securepro_request",
-            JSON.stringify(
-                result.data
-            )
+            JSON.stringify(result.data)
         );
 
-
-        /*
-         * Remove temporary data.
-         */
 
         localStorage.removeItem(
             "securepro_answers"
@@ -908,12 +901,16 @@ console.log(
         );
 
 
+        console.log(
+            "STEP 11: Clearing photo database"
+        );
+
         await clearPhotoDatabase();
 
 
-        /*
-         * Go to success page.
-         */
+        console.log(
+            "STEP 12: Redirecting to success page"
+        );
 
         window.location.href =
             "success.html";
@@ -922,22 +919,36 @@ console.log(
     } catch (error) {
 
         console.error(
-            "Submit error:",
+            "SUBMIT ERROR FULL:",
             error
         );
 
-        showSubmitError(
-            error.message ||
-            t("submitError")
+        console.error(
+            "ERROR NAME:",
+            error?.name
         );
+
+        console.error(
+            "ERROR MESSAGE:",
+            error?.message
+        );
+
+        console.error(
+            "ERROR STACK:",
+            error?.stack
+        );
+
+
+        showSubmitError(
+            `Error: ${error?.message || t("submitError")}`
+        );
+
 
         button.classList.remove(
             "loading"
         );
 
-        button.querySelector(
-            "span"
-        ).textContent =
+        button.querySelector("span").textContent =
             t("submit");
     }
 }
