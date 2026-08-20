@@ -1,82 +1,143 @@
 const express = require("express");
 const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 const {
     createRequest
 } = require("../controllers/requestController");
 
 
-const router =
-    express.Router();
+const router = express.Router();
 
 
 /*
  * ==========================================================
- * MULTER CONFIGURATION
+ * UPLOAD DIRECTORY
+ * ==========================================================
+ */
+
+const uploadDirectory =
+    path.join(
+        __dirname,
+        "../uploads/customer"
+    );
+
+
+fs.mkdirSync(
+    uploadDirectory,
+    {
+        recursive: true
+    }
+);
+
+
+/*
+ * ==========================================================
+ * MULTER STORAGE
+ * ==========================================================
+ */
+
+const storage =
+    multer.diskStorage({
+
+        destination:
+            (req, file, callback) => {
+
+                callback(
+                    null,
+                    uploadDirectory
+                );
+
+            },
+
+
+        filename:
+            (req, file, callback) => {
+
+                const extension =
+                    path.extname(
+                        file.originalname
+                    ).toLowerCase();
+
+
+                const uniqueName =
+                    `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
+
+
+                callback(
+                    null,
+                    uniqueName
+                );
+
+            }
+
+    });
+
+
+/*
+ * ==========================================================
+ * MULTER
  * ==========================================================
  */
 
 const upload =
     multer({
 
-        /*
-         * Keep uploaded files temporarily in memory.
-         * The controller saves them into uploads/customer.
-         */
-
-        storage:
-            multer.memoryStorage(),
+        storage,
 
 
         limits: {
 
-            /*
-             * Maximum 10 photos.
-             */
-
             files: 10,
 
-
             /*
-             * Maximum 10 MB per photo.
+             * Allow up to 20 MB per photo.
              */
 
             fileSize:
-                10 * 1024 * 1024
+                20 * 1024 * 1024
+
         },
 
 
-        /*
-         * ALLOWED IMAGE TYPES
-         */
-
         fileFilter:
-    (req, file, callback) => {
+            (req, file, callback) => {
 
-        console.log(
-            "Uploaded file:",
-            file.originalname,
-            file.mimetype
-        );
+                console.log(
+                    "Incoming photo:",
+                    file.originalname,
+                    file.mimetype
+                );
 
-        if (
-            file.mimetype &&
-            file.mimetype.startsWith("image/")
-        ) {
 
-            callback(null, true);
+                /*
+                 * Accept image files from mobile devices.
+                 */
 
-        } else {
+                if (
+                    file.mimetype &&
+                    file.mimetype.startsWith(
+                        "image/"
+                    )
+                ) {
 
-            callback(
-                new Error(
-                    "Please upload a valid image file."
-                )
-            );
+                    callback(
+                        null,
+                        true
+                    );
 
-        }
+                } else {
 
-    }
+                    callback(
+                        new Error(
+                            "Please upload a valid image."
+                        )
+                    );
+
+                }
+
+            }
 
     });
 
@@ -99,7 +160,7 @@ router.post(
 
 /*
  * ==========================================================
- * UPLOAD ERROR HANDLER
+ * ERROR HANDLER
  * ==========================================================
  */
 
@@ -117,9 +178,22 @@ router.use(
         );
 
 
-        /*
-         * Too many files
-         */
+        if (
+            error.message ===
+            "Unexpected end of form"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "The photo upload was interrupted. Please check your internet connection and try uploading again."
+
+            });
+
+        }
+
 
         if (
             error instanceof multer.MulterError
@@ -135,7 +209,7 @@ router.use(
                     success: false,
 
                     message:
-                        "One of the photos is too large. Maximum size is 10 MB per photo."
+                        "One photo is too large. Maximum size is 20 MB."
 
                 });
 
@@ -152,46 +226,14 @@ router.use(
                     success: false,
 
                     message:
-                        "You can upload a maximum of 10 photos."
+                        "Maximum 10 photos are allowed."
 
                 });
 
             }
-
-
-            if (
-                error.code ===
-                "LIMIT_UNEXPECTED_FILE"
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Unexpected photo upload field."
-
-                });
-
-            }
-
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    error.message ||
-                    "Photo upload failed."
-
-            });
 
         }
 
-
-        /*
-         * File type or other errors
-         */
 
         return res.status(400).json({
 
@@ -199,7 +241,7 @@ router.use(
 
             message:
                 error.message ||
-                "Unable to upload photo."
+                "Photo upload failed."
 
         });
 

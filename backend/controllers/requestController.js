@@ -697,172 +697,46 @@ async function createRequest(
         }
 
 
-        /*
-         * ==================================================
-         * SAVE PHOTOS
-         * ==================================================
-         */
+     /*
+ * ==================================================
+ * SAVE PHOTOS
+ * ==================================================
+ */
 
-        const uploadDirectory =
-            path.join(
-                __dirname,
-                "../uploads/customer"
-            );
+for (
+    const file
+    of files
+) {
 
-
-        /*
-         * Create directory if it does not exist.
-         */
-
-        fs.mkdirSync(
-            uploadDirectory,
-            {
-                recursive: true
-            }
-        );
+    console.log(
+        "Photo saved by Multer:",
+        file.filename
+    );
 
 
-        for (
-            const file
-            of files
-        ) {
-
-            /*
-             * Get file extension.
-             */
-
-            let extension =
-                path.extname(
-                    file.originalname
-                ).toLowerCase();
+    const databasePath =
+        `/uploads/customer/${file.filename}`;
 
 
-            /*
-             * Fallback extension if necessary.
-             */
+    await connection.query(
+        `
+        INSERT INTO customer_photos (
+            id,
+            request_id,
+            file_name,
+            file_path
+        )
+        VALUES (?, ?, ?, ?)
+        `,
+        [
+            uuid(),
+            requestId,
+            file.originalname,
+            databasePath
+        ]
+    );
 
-            if (!extension) {
-
-                if (
-                    file.mimetype ===
-                    "image/jpeg"
-                ) {
-
-                    extension =
-                        ".jpg";
-
-                }
-
-                else if (
-                    file.mimetype ===
-                    "image/png"
-                ) {
-
-                    extension =
-                        ".png";
-
-                }
-
-                else if (
-                    file.mimetype ===
-                    "image/webp"
-                ) {
-
-                    extension =
-                        ".webp";
-
-                }
-
-            }
-
-
-            /*
-             * Generate secure file name.
-             */
-
-            const storedFileName =
-                `${uuid()}${extension}`;
-
-
-            const destination =
-                path.join(
-                    uploadDirectory,
-                    storedFileName
-                );
-
-
-            console.log(
-                "Saving photo:",
-                {
-                    originalName:
-                        file.originalname,
-
-                    mimeType:
-                        file.mimetype,
-
-                    size:
-                        file.size,
-
-                    destination
-                }
-            );
-
-
-            /*
-             * Save memory buffer to disk.
-             */
-
-            if (
-                file.buffer
-            ) {
-
-                fs.writeFileSync(
-                    destination,
-                    file.buffer
-                );
-
-            }
-
-            else {
-
-                throw new Error(
-                    "Uploaded photo has no file data."
-                );
-
-            }
-
-
-            /*
-             * Path stored in database.
-             */
-
-            const databasePath =
-                `/uploads/customer/${storedFileName}`;
-
-
-            /*
-             * Insert photo record.
-             */
-
-            await connection.query(
-                `
-                INSERT INTO customer_photos (
-                    id,
-                    request_id,
-                    file_name,
-                    file_path
-                )
-                VALUES (?, ?, ?, ?)
-                `,
-                [
-                    uuid(),
-                    requestId,
-                    file.originalname,
-                    databasePath
-                ]
-            );
-
-        }
+}
 
 
         /*
@@ -880,7 +754,7 @@ async function createRequest(
         );
 
 
-        /*
+        /*,
          * ==================================================
          * SUCCESS RESPONSE
          * ==================================================
