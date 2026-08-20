@@ -318,7 +318,113 @@ function renderPhotos() {
     });
 }
 
-function handlePhotos(event) {
+/*
+ * Resize + re-encode a photo in the browser before it ever
+ * touches IndexedDB or the network. Phone camera photos can
+ * be 3-10MB; this brings them down to a few hundred KB, which
+ * is what actually fixes "upload interrupted" on mobile data.
+ */
+function compressPhoto(
+    file,
+    maxDimension = 1600,
+    quality = 0.72
+) {
+
+    return new Promise((resolve) => {
+
+        const image = new Image();
+
+        const objectUrl =
+            URL.createObjectURL(file);
+
+        image.onload = () => {
+
+            URL.revokeObjectURL(objectUrl);
+
+            let { width, height } = image;
+
+            if (width > maxDimension || height > maxDimension) {
+
+                if (width >= height) {
+
+                    height =
+                        Math.round(
+                            height * (maxDimension / width)
+                        );
+
+                    width = maxDimension;
+
+                } else {
+
+                    width =
+                        Math.round(
+                            width * (maxDimension / height)
+                        );
+
+                    height = maxDimension;
+
+                }
+
+            }
+
+            const canvas =
+                document.createElement("canvas");
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const context =
+                canvas.getContext("2d");
+
+            context.drawImage(image, 0, 0, width, height);
+
+            canvas.toBlob(
+                (blob) => {
+
+                    if (!blob) {
+                        // Fallback: if compression fails for any
+                        // reason, just use the original file so
+                        // the user isn't blocked.
+                        resolve(file);
+                        return;
+                    }
+
+                    const compressedFile =
+                        new File(
+                            [blob],
+                            file.name.replace(/\.\w+$/, ".jpg"),
+                            {
+                                type: "image/jpeg",
+                                lastModified: Date.now()
+                            }
+                        );
+
+                    resolve(compressedFile);
+
+                },
+                "image/jpeg",
+                quality
+            );
+
+        };
+
+        image.onerror = () => {
+
+            URL.revokeObjectURL(objectUrl);
+
+            // If the browser can't decode it (rare), fall back
+            // to uploading the original file untouched.
+            resolve(file);
+
+        };
+
+        image.src = objectUrl;
+
+    });
+
+}
+
+async function handlePhotos(event) {
     hideError();
 
     const files =
@@ -353,8 +459,14 @@ function handlePhotos(event) {
         return;
     }
 
+    // Compress every photo before adding it to the selection.
+    const compressedFiles =
+        await Promise.all(
+            files.map(file => compressPhoto(file))
+        );
+
     selectedFiles =
-        selectedFiles.concat(files);
+        selectedFiles.concat(compressedFiles);
 
     renderPhotos();
 

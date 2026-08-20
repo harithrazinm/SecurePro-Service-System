@@ -176,7 +176,7 @@ app.get(
 // START SERVER
 // ======================================================
 
-app.listen(
+const httpServer = app.listen(
     PORT,
     "0.0.0.0",
     () => {
@@ -207,3 +207,11 @@ app.listen(
 
     }
 );
+
+// Mobile uploads (slower/less stable connections, larger
+// camera photos) can take longer to fully arrive than the
+// Node.js default 2-minute socket timeout in some cases.
+// Give in-flight requests more room before Node itself
+// kills the connection.
+httpServer.requestTimeout = 5 * 60 * 1000; // 5 minutes
+httpServer.headersTimeout = 5 * 60 * 1000 + 1000;
