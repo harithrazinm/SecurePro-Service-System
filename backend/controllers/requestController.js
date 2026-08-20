@@ -2,13 +2,28 @@ const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
 
-const pool = require("../config/db");
+const pool =
+    require("../config/db");
 
+
+/*
+ * ==========================================================
+ * UUID
+ * ==========================================================
+ */
 
 function uuid() {
+
     return crypto.randomUUID();
+
 }
 
+
+/*
+ * ==========================================================
+ * GENERATE REQUEST CODE
+ * ==========================================================
+ */
 
 function generateRequestCode() {
 
@@ -17,31 +32,55 @@ function generateRequestCode() {
             .toString(36)
             .toUpperCase();
 
+
     const random =
         Math.random()
             .toString(36)
             .substring(2, 6)
             .toUpperCase();
 
+
     return `SR-${timestamp}-${random}`;
+
 }
 
+
+/*
+ * ==========================================================
+ * SAFE JSON PARSE
+ * ==========================================================
+ */
 
 function safeJsonParse(value) {
 
     if (!value) {
+
         return {};
+
     }
 
-    if (typeof value === "object") {
+
+    if (
+        typeof value === "object"
+    ) {
+
         return value;
+
     }
+
 
     try {
-        return JSON.parse(value);
+
+        return JSON.parse(
+            value
+        );
+
     } catch {
+
         return {};
+
     }
+
 }
 
 
@@ -51,17 +90,30 @@ function safeJsonParse(value) {
  * ==========================================================
  */
 
-async function createRequest(req, res) {
+async function createRequest(
+    req,
+    res
+) {
 
-    const connection =
-        await pool.getConnection();
+    let connection;
+
 
     try {
 
         /*
-         * --------------------------------------------------
+         * ==================================================
+         * DATABASE CONNECTION
+         * ==================================================
+         */
+
+        connection =
+            await pool.getConnection();
+
+
+        /*
+         * ==================================================
          * CUSTOMER INFORMATION
-         * --------------------------------------------------
+         * ==================================================
          */
 
         const customerName =
@@ -69,20 +121,24 @@ async function createRequest(req, res) {
                 req.body.customer_name || ""
             ).trim();
 
+
         const customerPhone =
             String(
                 req.body.customer_phone || ""
             ).trim();
+
 
         const customerEmail =
             String(
                 req.body.customer_email || ""
             ).trim();
 
+
         const customerAddress =
             String(
                 req.body.customer_address || ""
             ).trim();
+
 
         const customerNotes =
             String(
@@ -91,9 +147,9 @@ async function createRequest(req, res) {
 
 
         /*
-         * --------------------------------------------------
+         * ==================================================
          * SERVICE
-         * --------------------------------------------------
+         * ==================================================
          */
 
         const serviceCode =
@@ -103,60 +159,92 @@ async function createRequest(req, res) {
 
 
         /*
-         * --------------------------------------------------
+         * ==================================================
          * VALIDATION
-         * --------------------------------------------------
+         * ==================================================
          */
 
         if (!customerName) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Customer name is required."
+
+                message:
+                    "Customer name is required."
+
             });
+
         }
 
 
         if (!customerPhone) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Customer phone is required."
+
+                message:
+                    "Customer phone is required."
+
             });
+
+        }
+
+
+        if (!customerAddress) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Customer address is required."
+
+            });
+
         }
 
 
         if (!serviceCode) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Service is required."
+
+                message:
+                    "Service is required."
+
             });
+
         }
 
 
         /*
-         * --------------------------------------------------
+         * ==================================================
          * FIND SERVICE
-         * --------------------------------------------------
+         * ==================================================
          */
 
         const [
             services
-        ] = await connection.query(
-            `
-            SELECT
-                id,
-                service_code,
-                name_en,
-                name_ms
-            FROM services
-            WHERE service_code = ?
-              AND active = TRUE
-            LIMIT 1
-            `,
-            [serviceCode]
-        );
+        ] =
+            await connection.query(
+                `
+                SELECT
+                    id,
+                    service_code,
+                    name_en,
+                    name_ms
+                FROM services
+                WHERE service_code = ?
+                  AND active = TRUE
+                LIMIT 1
+                `,
+                [
+                    serviceCode
+                ]
+            );
 
 
         if (
@@ -164,10 +252,14 @@ async function createRequest(req, res) {
         ) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message:
                     "Selected service was not found."
+
             });
+
         }
 
 
@@ -176,9 +268,9 @@ async function createRequest(req, res) {
 
 
         /*
-         * --------------------------------------------------
-         * ANSWERS
-         * --------------------------------------------------
+         * ==================================================
+         * SERVICE ANSWERS
+         * ==================================================
          */
 
         const answers =
@@ -188,32 +280,58 @@ async function createRequest(req, res) {
 
 
         /*
-         * --------------------------------------------------
-         * FILES
-         * --------------------------------------------------
+         * ==================================================
+         * UPLOADED FILES
+         * ==================================================
          */
 
         const files =
-            Array.isArray(req.files)
+            Array.isArray(
+                req.files
+            )
                 ? req.files
                 : [];
 
 
+        console.log(
+            "Creating request..."
+        );
+
+
+        console.log(
+            "Uploaded files:",
+            files.length
+        );
+
+
         /*
-         * --------------------------------------------------
-         * CREATE REQUEST
-         * --------------------------------------------------
+         * ==================================================
+         * CREATE REQUEST ID
+         * ==================================================
          */
 
         const requestId =
             uuid();
 
+
         const requestCode =
             generateRequestCode();
 
 
+        /*
+         * ==================================================
+         * START TRANSACTION
+         * ==================================================
+         */
+
         await connection.beginTransaction();
 
+
+        /*
+         * ==================================================
+         * INSERT SERVICE REQUEST
+         * ==================================================
+         */
 
         await connection.query(
             `
@@ -239,43 +357,53 @@ async function createRequest(req, res) {
                 customerName,
                 customerPhone,
                 customerEmail || null,
-                customerAddress || null,
+                customerAddress,
                 customerNotes || null
             ]
         );
 
 
         /*
-         * --------------------------------------------------
+         * ==================================================
          * SAVE ANSWERS
-         * --------------------------------------------------
+         * ==================================================
          */
 
         for (
-            const [questionCode, answer]
-            of Object.entries(answers)
+            const [
+                questionCode,
+                answer
+            ]
+            of Object.entries(
+                answers
+            )
         ) {
 
             const [
                 questions
-            ] = await connection.query(
-                `
-                SELECT
-                    id,
-                    question_type,
-                    unit
-                FROM service_questions
-                WHERE service_id = ?
-                  AND question_code = ?
-                  AND active = TRUE
-                LIMIT 1
-                `,
-                [
-                    service.id,
-                    questionCode
-                ]
-            );
+            ] =
+                await connection.query(
+                    `
+                    SELECT
+                        id,
+                        question_type,
+                        unit
+                    FROM service_questions
+                    WHERE service_id = ?
+                      AND question_code = ?
+                      AND active = TRUE
+                    LIMIT 1
+                    `,
+                    [
+                        service.id,
+                        questionCode
+                    ]
+                );
 
+
+            /*
+             * Ignore unknown questions.
+             */
 
             if (
                 questions.length === 0
@@ -286,6 +414,7 @@ async function createRequest(req, res) {
                 );
 
                 continue;
+
             }
 
 
@@ -297,55 +426,88 @@ async function createRequest(req, res) {
                 uuid();
 
 
-            let textValue = null;
+            let textValue =
+                null;
 
-            let numberValue = null;
+
+            let numberValue =
+                null;
 
 
             /*
-             * Counter / number / measurement
+             * ==============================================
+             * NUMBER / MEASUREMENT
+             * ==============================================
              */
 
             if (
+
                 question.question_type ===
-                    "number" ||
+                "number"
+
+                ||
+
                 question.question_type ===
-                    "measurement"
+                "measurement"
+
             ) {
 
                 const numeric =
-                    Number(answer);
+                    Number(
+                        answer
+                    );
+
 
                 if (
-                    Number.isFinite(numeric)
+                    Number.isFinite(
+                        numeric
+                    )
                 ) {
+
                     numberValue =
                         numeric;
+
                 }
 
-            } else if (
+            }
+
+
+            /*
+             * ==============================================
+             * COUNTER
+             * ==============================================
+             */
+
+            else if (
+
                 question.question_type ===
                 "counter"
+
             ) {
 
-                /*
-                 * Counters can contain multiple
-                 * values, so store them as JSON.
-                 */
-
                 textValue =
-                    JSON.stringify(answer);
+                    JSON.stringify(
+                        answer
+                    );
 
-            } else {
+            }
 
-                /*
-                 * Single, multi, text,
-                 * textarea, file, etc.
-                 */
+
+            /*
+             * ==============================================
+             * OTHER ANSWERS
+             * ==============================================
+             */
+
+            else {
 
                 if (
                     typeof answer ===
                     "object"
+
+                    &&
+
+                    answer !== null
                 ) {
 
                     textValue =
@@ -356,10 +518,20 @@ async function createRequest(req, res) {
                 } else {
 
                     textValue =
-                        String(answer ?? "");
+                        String(
+                            answer ?? ""
+                        );
+
                 }
+
             }
 
+
+            /*
+             * ==============================================
+             * INSERT REQUEST ANSWER
+             * ==============================================
+             */
 
             await connection.query(
                 `
@@ -372,7 +544,9 @@ async function createRequest(req, res) {
                     number_value,
                     unit
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (
+                    ?, ?, ?, ?, ?, ?, ?
+                )
                 `,
                 [
                     answerId,
@@ -387,190 +561,146 @@ async function createRequest(req, res) {
 
 
             /*
-             * ------------------------------------------------
-             * MULTI / OPTION ANSWERS
-             * ------------------------------------------------
+             * ==============================================
+             * SAVE SINGLE / MULTI OPTIONS
+             * ==============================================
              */
 
             if (
-    question.question_type === "single" ||
-    question.question_type === "multi"
-) {
 
-    const values =
-        Array.isArray(answer)
-            ? answer
-            : [answer];
+                question.question_type ===
+                "single"
 
-    for (const value of values) {
+                ||
 
-        if (
-            value === null ||
-            value === undefined ||
-            value === ""
-        ) {
-            continue;
-        }
+                question.question_type ===
+                "multi"
 
-        const [options] =
-            await connection.query(
-                `
-                SELECT
-                    id,
-                    option_value,
-                    label_en,
-                    label_ms
-                FROM question_options
-                WHERE question_id = ?
-                  AND option_value = ?
-                  AND active = TRUE
-                LIMIT 1
-                `,
-                [
-                    question.id,
-                    String(value)
-                ]
-            );
-
-        if (options.length === 0) {
-            continue;
-        }
-
-        const option = options[0];
-
-        await connection.query(
-            `
-            INSERT INTO request_answer_options (
-                id,
-                answer_id,
-                option_id,
-                option_value,
-                option_label_en,
-                option_label_ms
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-            `,
-            [
-                uuid(),
-                answerId,
-                option.id,
-                option.option_value,
-                option.label_en,
-                option.label_ms
-            ]
-        );
-    }
-}{
+            ) {
 
                 const values =
-                    Array.isArray(answer)
+                    Array.isArray(
+                        answer
+                    )
                         ? answer
                         : [answer];
 
 
                 for (
-                    const value of values
+                    const value
+                    of values
                 ) {
 
+                    /*
+                     * Ignore empty values.
+                     */
+
                     if (
-                        value === null ||
-                        value === undefined ||
+
+                        value === null
+
+                        ||
+
+                        value === undefined
+
+                        ||
+
                         value === ""
+
                     ) {
+
                         continue;
+
                     }
 
 
+                    /*
+                     * Find selected option.
+                     */
+
                     const [
                         options
-                    ] = await connection.query(
-                        `
-                        SELECT id
-                        FROM question_options
-                        WHERE question_id = ?
-                          AND option_value = ?
-                          AND active = TRUE
-                        LIMIT 1
-                        `,
-                        [
-                            question.id,
-                            String(value)
-                        ]
-                    );
+                    ] =
+                        await connection.query(
+                            `
+                            SELECT
+                                id,
+                                option_value,
+                                label_en,
+                                label_ms
+                            FROM question_options
+                            WHERE question_id = ?
+                              AND option_value = ?
+                              AND active = TRUE
+                            LIMIT 1
+                            `,
+                            [
+                                question.id,
+                                String(value)
+                            ]
+                        );
 
+
+                    /*
+                     * Ignore invalid options.
+                     */
 
                     if (
                         options.length === 0
                     ) {
+
+                        console.warn(
+                            `Option not found: ${value}`
+                        );
+
                         continue;
+
                     }
 
 
-                    const selectedOption = options[0];
+                    const option =
+                        options[0];
 
-await connection.query(
-    `
-    SELECT
-        option_value,
-        label_en,
-        label_ms
-    FROM question_options
-    WHERE id = ?
-    LIMIT 1
-    `,
-    [selectedOption.id]
-);
 
-const [optionDetails] =
-    await connection.query(
-        `
-        SELECT
-            option_value,
-            label_en,
-            label_ms
-        FROM question_options
-        WHERE id = ?
-        LIMIT 1
-        `,
-        [selectedOption.id]
-    );
+                    /*
+                     * Save selected option.
+                     */
 
-if (optionDetails.length > 0) {
+                    await connection.query(
+                        `
+                        INSERT INTO request_answer_options (
+                            id,
+                            answer_id,
+                            option_id,
+                            option_value,
+                            option_label_en,
+                            option_label_ms
+                        )
+                        VALUES (
+                            ?, ?, ?, ?, ?, ?
+                        )
+                        `,
+                        [
+                            uuid(),
+                            answerId,
+                            option.id,
+                            option.option_value,
+                            option.label_en,
+                            option.label_ms
+                        ]
+                    );
 
-    const option =
-        optionDetails[0];
-
-    await connection.query(
-        `
-        INSERT INTO request_answer_options (
-            id,
-            answer_id,
-            option_id,
-            option_value,
-            option_label_en,
-            option_label_ms
-        )
-        VALUES (?, ?, ?, ?, ?, ?)
-        `,
-        [
-            uuid(),
-            answerId,
-            selectedOption.id,
-            option.option_value,
-            option.label_en,
-            option.label_ms
-        ]
-    );
-}
                 }
+
             }
+
         }
 
 
         /*
-         * --------------------------------------------------
+         * ==================================================
          * SAVE PHOTOS
-         * --------------------------------------------------
+         * ==================================================
          */
 
         const uploadDirectory =
@@ -579,6 +709,10 @@ if (optionDetails.length > 0) {
                 "../uploads/customer"
             );
 
+
+        /*
+         * Create directory if it does not exist.
+         */
 
         fs.mkdirSync(
             uploadDirectory,
@@ -589,14 +723,62 @@ if (optionDetails.length > 0) {
 
 
         for (
-            const file of files
+            const file
+            of files
         ) {
 
-            const extension =
+            /*
+             * Get file extension.
+             */
+
+            let extension =
                 path.extname(
                     file.originalname
-                );
+                ).toLowerCase();
 
+
+            /*
+             * Fallback extension if necessary.
+             */
+
+            if (!extension) {
+
+                if (
+                    file.mimetype ===
+                    "image/jpeg"
+                ) {
+
+                    extension =
+                        ".jpg";
+
+                }
+
+                else if (
+                    file.mimetype ===
+                    "image/png"
+                ) {
+
+                    extension =
+                        ".png";
+
+                }
+
+                else if (
+                    file.mimetype ===
+                    "image/webp"
+                ) {
+
+                    extension =
+                        ".webp";
+
+                }
+
+            }
+
+
+            /*
+             * Generate secure file name.
+             */
 
             const storedFileName =
                 `${uuid()}${extension}`;
@@ -609,32 +791,58 @@ if (optionDetails.length > 0) {
                 );
 
 
+            console.log(
+                "Saving photo:",
+                {
+                    originalName:
+                        file.originalname,
+
+                    mimeType:
+                        file.mimetype,
+
+                    size:
+                        file.size,
+
+                    destination
+                }
+            );
+
+
             /*
-             * Multer memory storage gives us
-             * file.buffer.
+             * Save memory buffer to disk.
              */
 
-            if (file.buffer) {
+            if (
+                file.buffer
+            ) {
 
                 fs.writeFileSync(
                     destination,
                     file.buffer
                 );
 
-            } else if (
-                file.path
-            ) {
-
-                fs.renameSync(
-                    file.path,
-                    destination
-                );
             }
 
+            else {
+
+                throw new Error(
+                    "Uploaded photo has no file data."
+                );
+
+            }
+
+
+            /*
+             * Path stored in database.
+             */
 
             const databasePath =
                 `/uploads/customer/${storedFileName}`;
 
+
+            /*
+             * Insert photo record.
+             */
 
             await connection.query(
                 `
@@ -653,29 +861,29 @@ if (optionDetails.length > 0) {
                     databasePath
                 ]
             );
+
         }
 
 
         /*
-         * --------------------------------------------------
-         * STATUS HISTORY
-         * --------------------------------------------------
+         * ==================================================
+         * COMMIT TRANSACTION
+         * ==================================================
          */
-
-        /*
-         * We will add the initial status-history
-         * implementation after confirming the
-         * exact status-history columns.
-         */
-
 
         await connection.commit();
 
 
+        console.log(
+            "Request created successfully:",
+            requestCode
+        );
+
+
         /*
-         * --------------------------------------------------
+         * ==================================================
          * SUCCESS RESPONSE
-         * --------------------------------------------------
+         * ==================================================
          */
 
         return res.status(201).json({
@@ -687,10 +895,12 @@ if (optionDetails.length > 0) {
 
             data: {
 
-                id: requestId,
+                id:
+                    requestId,
 
                 request_code:
                     requestCode,
+
 
                 service: {
 
@@ -707,8 +917,11 @@ if (optionDetails.length > 0) {
 
                         ms:
                             service.name_ms
+
                     }
+
                 },
+
 
                 customer: {
 
@@ -723,23 +936,51 @@ if (optionDetails.length > 0) {
 
                     address:
                         customerAddress
+
                 },
+
 
                 status:
                     "pending",
 
+
                 photo_count:
                     files.length
+
             }
+
         });
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
-        try {
-            await connection.rollback();
-        } catch {
-            // Ignore rollback errors
+        /*
+         * ==================================================
+         * ROLLBACK
+         * ==================================================
+         */
+
+        if (
+            connection
+        ) {
+
+            try {
+
+                await connection.rollback();
+
+            } catch (
+                rollbackError
+            ) {
+
+                console.error(
+                    "Rollback error:",
+                    rollbackError
+                );
+
+            }
+
         }
 
 
@@ -754,23 +995,40 @@ if (optionDetails.length > 0) {
             success: false,
 
             message:
-                "Unable to create service request.",
+                "Unable to create service request."
 
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined
         });
 
 
     } finally {
 
-        connection.release();
+        /*
+         * ==================================================
+         * RELEASE CONNECTION
+         * ==================================================
+         */
+
+        if (
+            connection
+        ) {
+
+            connection.release();
+
+        }
+
     }
+
 }
 
 
+/*
+ * ==========================================================
+ * EXPORT
+ * ==========================================================
+ */
+
 module.exports = {
+
     createRequest
+
 };
