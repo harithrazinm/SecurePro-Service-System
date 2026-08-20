@@ -1,6 +1,4 @@
-const API_BASE =
-    "https://securepro-service-system.onrender.com/api";
-
+const API_BASE = "http://localhost:5001/api";
 
 const token =
     localStorage.getItem(

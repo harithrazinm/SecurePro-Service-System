@@ -3,12 +3,28 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
+
 const {
     createRequest
-} = require("../controllers/requestController");
+} = require(
+    "../controllers/requestController"
+);
 
 
-const router = express.Router();
+const router =
+    express.Router();
+
+
+/*
+ * ==========================================================
+ * CHECK CONTROLLER
+ * ==========================================================
+ */
+
+console.log(
+    "createRequest type:",
+    typeof createRequest
+);
 
 
 /*
@@ -24,12 +40,20 @@ const uploadDirectory =
     );
 
 
-fs.mkdirSync(
-    uploadDirectory,
-    {
-        recursive: true
-    }
-);
+if (
+    !fs.existsSync(
+        uploadDirectory
+    )
+) {
+
+    fs.mkdirSync(
+        uploadDirectory,
+        {
+            recursive: true
+        }
+    );
+
+}
 
 
 /*
@@ -42,7 +66,11 @@ const storage =
     multer.diskStorage({
 
         destination:
-            (req, file, callback) => {
+            (
+                req,
+                file,
+                callback
+            ) => {
 
                 callback(
                     null,
@@ -53,16 +81,84 @@ const storage =
 
 
         filename:
-            (req, file, callback) => {
+            (
+                req,
+                file,
+                callback
+            ) => {
 
-                const extension =
+                const originalExtension =
                     path.extname(
-                        file.originalname
+                        file.originalname ||
+                        ""
                     ).toLowerCase();
 
 
+                let extension =
+                    originalExtension;
+
+
+                /*
+                 * Generate extension when mobile browser
+                 * does not provide a filename extension.
+                 */
+
+                if (!extension) {
+
+                    if (
+                        file.mimetype ===
+                        "image/png"
+                    ) {
+
+                        extension =
+                            ".png";
+
+                    }
+
+                    else if (
+                        file.mimetype ===
+                        "image/webp"
+                    ) {
+
+                        extension =
+                            ".webp";
+
+                    }
+
+                    else if (
+                        file.mimetype ===
+                        "image/heic"
+                    ) {
+
+                        extension =
+                            ".heic";
+
+                    }
+
+                    else if (
+                        file.mimetype ===
+                        "image/heif"
+                    ) {
+
+                        extension =
+                            ".heif";
+
+                    }
+
+                    else {
+
+                        extension =
+                            ".jpg";
+
+                    }
+
+                }
+
+
                 const uniqueName =
-                    `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
+                    `${Date.now()}-${Math.round(
+                        Math.random() * 1e9
+                    )}${extension}`;
 
 
                 callback(
@@ -77,23 +173,70 @@ const storage =
 
 /*
  * ==========================================================
- * MULTER
+ * FILE FILTER
+ * ==========================================================
+ */
+
+function fileFilter(
+    req,
+    file,
+    callback
+) {
+
+    console.log(
+        "Incoming photo:",
+        {
+            originalName:
+                file.originalname,
+
+            mimetype:
+                file.mimetype
+        }
+    );
+
+
+    if (
+        file.mimetype &&
+        file.mimetype.startsWith(
+            "image/"
+        )
+    ) {
+
+        return callback(
+            null,
+            true
+        );
+
+    }
+
+
+    return callback(
+        new Error(
+            "Only image files are allowed."
+        )
+    );
+
+}
+
+
+/*
+ * ==========================================================
+ * MULTER CONFIGURATION
  * ==========================================================
  */
 
 const upload =
     multer({
 
-        storage,
+        storage:
+            storage,
 
 
         limits: {
 
-            files: 10,
+            files:
+                10,
 
-            /*
-             * Allow up to 20 MB per photo.
-             */
 
             fileSize:
                 20 * 1024 * 1024
@@ -102,42 +245,7 @@ const upload =
 
 
         fileFilter:
-            (req, file, callback) => {
-
-                console.log(
-                    "Incoming photo:",
-                    file.originalname,
-                    file.mimetype
-                );
-
-
-                /*
-                 * Accept image files from mobile devices.
-                 */
-
-                if (
-                    file.mimetype &&
-                    file.mimetype.startsWith(
-                        "image/"
-                    )
-                ) {
-
-                    callback(
-                        null,
-                        true
-                    );
-
-                } else {
-
-                    callback(
-                        new Error(
-                            "Please upload a valid image."
-                        )
-                    );
-
-                }
-
-            }
+            fileFilter
 
     });
 
@@ -160,7 +268,7 @@ router.post(
 
 /*
  * ==========================================================
- * ERROR HANDLER
+ * UPLOAD ERROR HANDLER
  * ==========================================================
  */
 
@@ -173,26 +281,20 @@ router.use(
     ) => {
 
         console.error(
-            "Request upload error:",
+            "=========================================="
+        );
+
+        console.error(
+            "REQUEST UPLOAD ERROR"
+        );
+
+        console.error(
             error
         );
 
-
-        if (
-            error.message ===
-            "Unexpected end of form"
-        ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "The photo upload was interrupted. Please check your internet connection and try uploading again."
-
-            });
-
-        }
+        console.error(
+            "=========================================="
+        );
 
 
         if (
@@ -205,12 +307,10 @@ router.use(
             ) {
 
                 return res.status(400).json({
-
                     success: false,
 
                     message:
                         "One photo is too large. Maximum size is 20 MB."
-
                 });
 
             }
@@ -222,12 +322,25 @@ router.use(
             ) {
 
                 return res.status(400).json({
-
                     success: false,
 
                     message:
                         "Maximum 10 photos are allowed."
+                });
 
+            }
+
+
+            if (
+                error.code ===
+                "LIMIT_UNEXPECTED_FILE"
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+
+                    message:
+                        "Unexpected photo upload field."
                 });
 
             }
@@ -237,7 +350,8 @@ router.use(
 
         return res.status(400).json({
 
-            success: false,
+            success:
+                false,
 
             message:
                 error.message ||

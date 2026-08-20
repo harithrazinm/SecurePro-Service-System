@@ -1,7 +1,6 @@
 const API_BASE =
     "https://securepro-service-system.onrender.com/api";
 
-
 let currentLanguage =
     localStorage.getItem("securepro_language") || "en";
 
@@ -72,6 +71,7 @@ const translations = {
 
         success:
             "Request submitted successfully."
+
     },
 
 
@@ -127,7 +127,9 @@ const translations = {
 
         success:
             "Permintaan berjaya dihantar."
+
     }
+
 };
 
 
@@ -321,7 +323,8 @@ async function loadPhotosFromDatabase() {
                             )
                             .filter(
                                 file =>
-                                    file instanceof Blob
+                                    file instanceof Blob &&
+                                    file.size > 0
                             );
 
 
@@ -472,14 +475,7 @@ async function loadService() {
             result.data;
 
 
-        /*
-         * IMPORTANT:
-         * Load photos only once when
-         * the review page opens.
-         */
-
         await loadPhotosFromDatabase();
-
 
         renderReview();
 
@@ -1040,17 +1036,19 @@ async function submitRequest() {
     try {
 
         /*
-         * IMPORTANT:
-         * Do NOT reload photos here.
-         * They were already loaded once in loadService().
+         * Reload photos from IndexedDB immediately
+         * before creating FormData.
          */
+
+        await loadPhotosFromDatabase();
+
 
         const formData =
             new FormData();
 
 
         /*
-         * CUSTOMER
+         * CUSTOMER INFORMATION
          */
 
         formData.append(
@@ -1123,12 +1121,16 @@ async function submitRequest() {
                 selectedFiles[index];
 
 
+            /*
+             * IndexedDB must return a Blob or File.
+             */
+
             if (
                 !(photo instanceof Blob)
             ) {
 
                 console.warn(
-                    "Invalid photo skipped:",
+                    "Skipping invalid photo:",
                     photo
                 );
 
@@ -1138,7 +1140,46 @@ async function submitRequest() {
 
 
             /*
-             * Keep the correct extension.
+             * Skip empty photos.
+             */
+
+            if (
+                photo.size <= 0
+            ) {
+
+                console.warn(
+                    "Skipping empty photo:",
+                    photo
+                );
+
+                continue;
+
+            }
+
+
+            /*
+             * Get a valid MIME type.
+             */
+
+            let mimeType =
+                photo.type;
+
+
+            if (
+                !mimeType ||
+                !mimeType.startsWith(
+                    "image/"
+                )
+            ) {
+
+                mimeType =
+                    "image/jpeg";
+
+            }
+
+
+            /*
+             * Get the correct extension.
              */
 
             let extension =
@@ -1146,55 +1187,95 @@ async function submitRequest() {
 
 
             if (
-                photo.type === "image/png"
+                mimeType === "image/png"
             ) {
 
-                extension = "png";
+                extension =
+                    "png";
 
             } else if (
-                photo.type === "image/webp"
+                mimeType === "image/webp"
             ) {
 
-                extension = "webp";
+                extension =
+                    "webp";
 
             } else if (
-                photo.type === "image/jpeg"
+                mimeType === "image/jpeg"
             ) {
 
-                extension = "jpg";
+                extension =
+                    "jpg";
 
             }
 
 
+            /*
+             * Use original name if available.
+             */
+
             const fileName =
                 photo.name ||
-                `customer-photo-${index + 1}.${extension}`;
+                `customer-photo-${Date.now()}-${index + 1}.${extension}`;
+
+
+            /*
+             * IMPORTANT:
+             * Convert IndexedDB Blob into a fresh File.
+             * This improves compatibility with mobile browsers.
+             */
+
+            const uploadFile =
+                new File(
+                    [photo],
+                    fileName,
+                    {
+                        type:
+                            mimeType,
+
+                        lastModified:
+                            Date.now()
+                    }
+                );
+
+
+            /*
+             * Final safety check.
+             */
+
+            if (
+                uploadFile.size <= 0
+            ) {
+
+                console.warn(
+                    "Generated upload file is empty:",
+                    uploadFile.name
+                );
+
+                continue;
+
+            }
 
 
             console.log(
                 "Adding photo to FormData:",
                 {
                     name:
-                        fileName,
+                        uploadFile.name,
 
                     type:
-                        photo.type,
+                        uploadFile.type,
 
                     size:
-                        photo.size
+                        uploadFile.size
                 }
             );
 
 
-            /*
-             * Append directly.
-             * Do not create another Blob.
-             */
-
             formData.append(
                 "customer_photos",
-                photo,
-                fileName
+                uploadFile,
+                uploadFile.name
             );
 
 
@@ -1211,8 +1292,8 @@ async function submitRequest() {
 
 
         /*
-         * IMPORTANT:
-         * Do not add Content-Type manually.
+         * DO NOT manually add Content-Type.
+         * The browser must generate the multipart boundary.
          */
 
         const response =
@@ -1277,7 +1358,7 @@ async function submitRequest() {
 
 
         /*
-         * SAVE RESULT
+         * SAVE SUCCESSFUL REQUEST
          */
 
         localStorage.setItem(
@@ -1313,7 +1394,7 @@ async function submitRequest() {
 
 
         /*
-         * SUCCESS
+         * SUCCESS PAGE
          */
 
         window.location.href =
@@ -1338,7 +1419,9 @@ async function submitRequest() {
             "loading"
         );
 
-        button.disabled = false;
+        button.disabled =
+            false;
+
 
         button.querySelector(
             "span"

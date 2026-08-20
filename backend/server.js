@@ -176,42 +176,52 @@ app.get(
 // START SERVER
 // ======================================================
 
-const httpServer = app.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
+// ======================================================
+// START SERVER
+// ======================================================
 
-        console.log(
-            "=========================================="
-        );
+const server =
+    app.listen(
+        PORT,
+        "0.0.0.0",
+        () => {
 
-        console.log(
-            " SecurePro Backend"
-        );
+            console.log(
+                "=========================================="
+            );
 
-        console.log(
-            "=========================================="
-        );
+            console.log(
+                " SecurePro Backend"
+            );
 
-        console.log(
-            `Server running on port ${PORT}`
-        );
+            console.log(
+                "=========================================="
+            );
 
-        console.log(
-            `Health: http://localhost:${PORT}/api/health`
-        );
+            console.log(
+                `Server running on port ${PORT}`
+            );
 
-        console.log(
-            "=========================================="
+            console.log(
+                `Health: http://localhost:${PORT}/api/health`
+            );
+
+            console.log(
+                "=========================================="
+            );
+
+        }
+    );
+
+
+server.on(
+    "error",
+    error => {
+
+        console.error(
+            "SERVER ERROR:",
+            error
         );
 
     }
 );
-
-// Mobile uploads (slower/less stable connections, larger
-// camera photos) can take longer to fully arrive than the
-// Node.js default 2-minute socket timeout in some cases.
-// Give in-flight requests more room before Node itself
-// kills the connection.
-httpServer.requestTimeout = 5 * 60 * 1000; // 5 minutes
-httpServer.headersTimeout = 5 * 60 * 1000 + 1000;

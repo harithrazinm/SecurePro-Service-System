@@ -1,6 +1,4 @@
 const crypto = require("crypto");
-const path = require("path");
-const fs = require("fs");
 
 const pool =
     require("../config/db");
@@ -84,55 +82,6 @@ function safeJsonParse(value) {
 
 /*
  * ==========================================================
- * GET SAFE FILE EXTENSION
- * ==========================================================
- */
-
-function getFileExtension(file) {
-
-    const extension =
-        path.extname(
-            file.originalname || ""
-        ).toLowerCase();
-
-
-    if (
-        extension === ".jpg" ||
-        extension === ".jpeg" ||
-        extension === ".png" ||
-        extension === ".webp"
-    ) {
-
-        return extension;
-
-    }
-
-
-    if (
-        file.mimetype === "image/png"
-    ) {
-
-        return ".png";
-
-    }
-
-
-    if (
-        file.mimetype === "image/webp"
-    ) {
-
-        return ".webp";
-
-    }
-
-
-    return ".jpg";
-
-}
-
-
-/*
- * ==========================================================
  * CREATE SERVICE REQUEST
  * ==========================================================
  */
@@ -143,11 +92,35 @@ async function createRequest(
 ) {
 
     let connection;
-
     let transactionStarted = false;
 
 
     try {
+
+        console.log(
+            "Creating service request..."
+        );
+
+
+        console.log(
+            "Content-Type:",
+            req.headers["content-type"]
+        );
+
+
+        console.log(
+            "Request body:",
+            req.body
+        );
+
+
+        console.log(
+            "Uploaded files:",
+            req.files
+                ? req.files.length
+                : 0
+        );
+
 
         /*
          * ==================================================
@@ -325,19 +298,9 @@ async function createRequest(
                 : [];
 
 
-        console.log(
-            "Creating request..."
-        );
-
-        console.log(
-            "Uploaded files:",
-            files.length
-        );
-
-
         /*
          * ==================================================
-         * CREATE IDS
+         * CREATE REQUEST
          * ==================================================
          */
 
@@ -453,17 +416,9 @@ async function createRequest(
                 uuid();
 
 
-            let textValue =
-                null;
+            let textValue = null;
+            let numberValue = null;
 
-
-            let numberValue =
-                null;
-
-
-            /*
-             * NUMBER / MEASUREMENT
-             */
 
             if (
                 question.question_type === "number" ||
@@ -486,10 +441,6 @@ async function createRequest(
             }
 
 
-            /*
-             * COUNTER
-             */
-
             else if (
                 question.question_type === "counter"
             ) {
@@ -500,33 +451,16 @@ async function createRequest(
             }
 
 
-            /*
-             * OTHER ANSWERS
-             */
-
             else {
 
-                if (
+                textValue =
                     typeof answer === "object" &&
                     answer !== null
-                ) {
-
-                    textValue =
-                        JSON.stringify(answer);
-
-                } else {
-
-                    textValue =
-                        String(answer ?? "");
-
-                }
+                        ? JSON.stringify(answer)
+                        : String(answer ?? "");
 
             }
 
-
-            /*
-             * INSERT REQUEST ANSWER
-             */
 
             await connection.query(
                 `
@@ -540,7 +474,8 @@ async function createRequest(
                     unit
                 )
                 VALUES (
-                    ?, ?, ?, ?, ?, ?, ?)
+                    ?, ?, ?, ?, ?, ?, ?
+                )
                 `,
                 [
                     answerId,
@@ -660,83 +595,24 @@ async function createRequest(
          * ==================================================
          * SAVE PHOTOS
          * ==================================================
+         *
+         * Multer diskStorage has already saved the files.
+         * Therefore use file.filename directly.
          */
-
-        const uploadDirectory =
-            path.join(
-                __dirname,
-                "..",
-                "uploads",
-                "customer"
-            );
-
-
-        await fs.promises.mkdir(
-            uploadDirectory,
-            {
-                recursive: true
-            }
-        );
-
 
         for (
             const file
             of files
         ) {
 
-            /*
-             * memoryStorage gives us file.buffer,
-             * not file.filename.
-             */
-
-            if (
-                !file.buffer ||
-                file.buffer.length === 0
-            ) {
-
-                throw new Error(
-                    "Uploaded photo is empty."
-                );
-
-            }
-
-
-            const extension =
-                getFileExtension(file);
-
-
-            const savedFileName =
-                `${uuid()}${extension}`;
-
-
-            const savedFilePath =
-                path.join(
-                    uploadDirectory,
-                    savedFileName
-                );
-
-
-            /*
-             * Save the buffer to the uploads folder.
-             */
-
-            await fs.promises.writeFile(
-                savedFilePath,
-                file.buffer
-            );
-
-
-            const databasePath =
-                `/uploads/customer/${savedFileName}`;
-
-
             console.log(
-                "Customer photo saved:",
+                "Saving customer photo:",
                 {
                     originalName:
                         file.originalname,
 
-                    savedFileName,
+                    savedName:
+                        file.filename,
 
                     mimeType:
                         file.mimetype,
@@ -745,6 +621,10 @@ async function createRequest(
                         file.size
                 }
             );
+
+
+            const databasePath =
+                `/uploads/customer/${file.filename}`;
 
 
             await connection.query(
@@ -760,8 +640,7 @@ async function createRequest(
                 [
                     uuid(),
                     requestId,
-                    file.originalname ||
-                        savedFileName,
+                    file.originalname,
                     databasePath
                 ]
             );
@@ -786,14 +665,9 @@ async function createRequest(
         );
 
 
-        /*
-         * ==================================================
-         * SUCCESS RESPONSE
-         * ==================================================
-         */
-
         return res.status(201).json({
             success: true,
+
             message:
                 "Service request created successfully.",
 
@@ -852,13 +726,7 @@ async function createRequest(
         });
 
 
-    } catch (error) {
-
-        /*
-         * ==================================================
-         * ROLLBACK
-         * ==================================================
-         */
+      } catch (error) {
 
         if (
             connection &&
@@ -882,14 +750,48 @@ async function createRequest(
 
 
         console.error(
-            "Create request error:",
+            "=========================================="
+        );
+
+        console.error(
+            "CREATE REQUEST ERROR"
+        );
+
+        console.error(
+            "Message:",
+            error.message
+        );
+
+        console.error(
+            "Code:",
+            error.code
+        );
+
+        console.error(
+            "SQL Message:",
+            error.sqlMessage
+        );
+
+        console.error(
+            "SQL:",
+            error.sql
+        );
+
+        console.error(
+            "Full Error:",
             error
+        );
+
+        console.error(
+            "=========================================="
         );
 
 
         return res.status(500).json({
             success: false,
+
             message:
+                error.message ||
                 "Unable to create service request."
         });
 
@@ -906,12 +808,6 @@ async function createRequest(
 
 }
 
-
-/*
- * ==========================================================
- * EXPORT
- * ==========================================================
- */
 
 module.exports = {
     createRequest
