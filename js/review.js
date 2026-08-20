@@ -1,4 +1,6 @@
-const API_BASE = "https://securepro-service-system.onrender.com/api";
+const API_BASE =
+    "https://securepro-service-system.onrender.com/api";
+
 
 let currentLanguage =
     localStorage.getItem("securepro_language") || "en";
@@ -8,20 +10,32 @@ let answers = {};
 let customer = {};
 let selectedFiles = [];
 
-const PHOTO_DB_NAME = "SecureProPhotosDB";
-const PHOTO_STORE_NAME = "photos";
+
+const PHOTO_DB_NAME =
+    "SecureProPhotosDB";
+
+const PHOTO_STORE_NAME =
+    "photos";
+
 
 const translations = {
 
     en: {
-        back: "Back",
-        title: "Review your request",
+
+        back:
+            "Back",
+
+        title:
+            "Review your request",
+
         description:
             "Please check your information before submitting.",
 
-        serviceTitle: "Selected Service",
+        serviceTitle:
+            "Selected Service",
 
-        answersTitle: "Your Answers",
+        answersTitle:
+            "Your Answers",
 
         answersDescription:
             "Information provided for this service.",
@@ -60,9 +74,15 @@ const translations = {
             "Request submitted successfully."
     },
 
+
     ms: {
-        back: "Kembali",
-        title: "Semak permintaan anda",
+
+        back:
+            "Kembali",
+
+        title:
+            "Semak permintaan anda",
+
         description:
             "Sila semak maklumat anda sebelum menghantar.",
 
@@ -110,22 +130,46 @@ const translations = {
     }
 };
 
+
 function t(key) {
+
     return translations[currentLanguage][key];
+
 }
+
 
 function getLanguageText(value) {
 
-    if (!value) return "";
+    if (!value) {
 
-    if (typeof value === "string") {
-        return value;
+        return "";
+
     }
 
-    return value[currentLanguage]
-        || value.en
-        || "";
+
+    if (
+        typeof value === "string"
+    ) {
+
+        return value;
+
+    }
+
+
+    return (
+        value[currentLanguage] ||
+        value.en ||
+        ""
+    );
+
 }
+
+
+/*
+ * ==========================================================
+ * LOAD SAVED DATA
+ * ==========================================================
+ */
 
 function getSavedData() {
 
@@ -141,7 +185,9 @@ function getSavedData() {
     } catch {
 
         answers = {};
+
     }
+
 
     try {
 
@@ -155,60 +201,95 @@ function getSavedData() {
     } catch {
 
         customer = {};
+
     }
+
 }
+
 
 function getServiceId() {
 
     return localStorage.getItem(
         "securepro_service"
     );
+
 }
+
+
+/*
+ * ==========================================================
+ * INDEXEDDB
+ * ==========================================================
+ */
 
 function openPhotoDatabase() {
 
-    return new Promise((resolve, reject) => {
+    return new Promise(
+        (resolve, reject) => {
 
-        const request =
-            indexedDB.open(
-                PHOTO_DB_NAME,
-                1
-            );
+            const request =
+                indexedDB.open(
+                    PHOTO_DB_NAME,
+                    1
+                );
 
-        request.onupgradeneeded =
-            event => {
 
-                const db =
-                    event.target.result;
+            request.onupgradeneeded =
+                event => {
 
-                if (
-                    !db.objectStoreNames.contains(
-                        PHOTO_STORE_NAME
-                    )
-                ) {
+                    const db =
+                        event.target.result;
 
-                    db.createObjectStore(
-                        PHOTO_STORE_NAME,
-                        {
-                            keyPath: "id",
-                            autoIncrement: true
-                        }
+
+                    if (
+                        !db.objectStoreNames.contains(
+                            PHOTO_STORE_NAME
+                        )
+                    ) {
+
+                        db.createObjectStore(
+                            PHOTO_STORE_NAME,
+                            {
+                                keyPath: "id",
+                                autoIncrement: true
+                            }
+                        );
+
+                    }
+
+                };
+
+
+            request.onsuccess =
+                () => {
+
+                    resolve(
+                        request.result
                     );
-                }
-            };
 
-        request.onsuccess =
-            () => resolve(request.result);
+                };
 
-        request.onerror =
-            () => reject(request.error);
-    });
+
+            request.onerror =
+                () => {
+
+                    reject(
+                        request.error
+                    );
+
+                };
+
+        }
+    );
+
 }
+
 
 async function loadPhotosFromDatabase() {
 
     const db =
         await openPhotoDatabase();
+
 
     return new Promise(
         (resolve, reject) => {
@@ -219,28 +300,57 @@ async function loadPhotosFromDatabase() {
                     "readonly"
                 );
 
+
             const store =
                 transaction.objectStore(
                     PHOTO_STORE_NAME
                 );
 
+
             const request =
                 store.getAll();
+
 
             request.onsuccess =
                 () => {
 
                     selectedFiles =
-                        request.result.map(
-                            item => item.file
-                        );
+                        request.result
+                            .map(
+                                item => item.file
+                            )
+                            .filter(
+                                file =>
+                                    file instanceof Blob
+                            );
+
+
+                    console.log(
+                        "Loaded photos:",
+                        selectedFiles.map(
+                            file => ({
+                                name:
+                                    file.name ||
+                                    "unnamed-photo",
+
+                                type:
+                                    file.type,
+
+                                size:
+                                    file.size
+                            })
+                        )
+                    );
+
 
                     db.close();
 
                     resolve(
                         selectedFiles
                     );
+
                 };
+
 
             request.onerror =
                 () => {
@@ -250,15 +360,20 @@ async function loadPhotosFromDatabase() {
                     reject(
                         request.error
                     );
+
                 };
+
         }
     );
+
 }
+
 
 async function clearPhotoDatabase() {
 
     const db =
         await openPhotoDatabase();
+
 
     return new Promise(
         (resolve, reject) => {
@@ -269,12 +384,15 @@ async function clearPhotoDatabase() {
                     "readwrite"
                 );
 
+
             const store =
                 transaction.objectStore(
                     PHOTO_STORE_NAME
                 );
 
+
             store.clear();
+
 
             transaction.oncomplete =
                 () => {
@@ -282,7 +400,9 @@ async function clearPhotoDatabase() {
                     db.close();
 
                     resolve();
+
                 };
+
 
             transaction.onerror =
                 () => {
@@ -292,15 +412,26 @@ async function clearPhotoDatabase() {
                     reject(
                         transaction.error
                     );
+
                 };
+
         }
     );
+
 }
+
+
+/*
+ * ==========================================================
+ * LOAD SERVICE
+ * ==========================================================
+ */
 
 async function loadService() {
 
     const serviceId =
         getServiceId();
+
 
     if (!serviceId) {
 
@@ -309,7 +440,9 @@ async function loadService() {
         );
 
         return;
+
     }
+
 
     try {
 
@@ -318,51 +451,83 @@ async function loadService() {
                 `${API_BASE}/services/${encodeURIComponent(serviceId)}`
             );
 
+
         const result =
             await response.json();
+
 
         if (
             !response.ok ||
             !result.success
         ) {
+
             throw new Error(
                 "Unable to load service."
             );
+
         }
+
 
         service =
             result.data;
 
+
+        /*
+         * IMPORTANT:
+         * Load photos only once when
+         * the review page opens.
+         */
+
         await loadPhotosFromDatabase();
+
 
         renderReview();
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Load service error:",
+            error
+        );
+
 
         showSubmitError(
             t("submitError")
         );
+
     }
+
 }
+
+
+/*
+ * ==========================================================
+ * RENDER REVIEW
+ * ==========================================================
+ */
 
 function renderReview() {
 
     document.title =
         `SecurePro | ${getLanguageText(service.name)}`;
 
+
     document.querySelector(
         "#serviceName"
     ).textContent =
-        getLanguageText(service.name);
+        getLanguageText(
+            service.name
+        );
+
 
     renderAnswers();
 
     renderCustomer();
 
     renderPhotos();
+
 }
+
 
 function getOptionLabel(
     question,
@@ -370,8 +535,11 @@ function getOptionLabel(
 ) {
 
     if (!question.options) {
+
         return value;
+
     }
+
 
     const option =
         question.options.find(
@@ -379,14 +547,20 @@ function getOptionLabel(
                 item.value === value
         );
 
+
     if (!option) {
+
         return value;
+
     }
+
 
     return getLanguageText(
         option.label
     );
+
 }
+
 
 function formatAnswer(
     question,
@@ -398,41 +572,63 @@ function formatAnswer(
         answer === undefined ||
         answer === ""
     ) {
+
         return t("noAnswer");
+
     }
 
-    if (question.type === "single") {
+
+    if (
+        question.type === "single"
+    ) {
 
         return getOptionLabel(
             question,
             answer
         );
+
     }
 
-    if (question.type === "multi") {
 
-        if (!Array.isArray(answer)) {
+    if (
+        question.type === "multi"
+    ) {
+
+        if (
+            !Array.isArray(answer)
+        ) {
+
             return t("noAnswer");
+
         }
 
+
         return answer
-            .map(value =>
-                getOptionLabel(
-                    question,
-                    value
-                )
+            .map(
+                value =>
+                    getOptionLabel(
+                        question,
+                        value
+                    )
             )
             .join(", ");
+
     }
 
-    if (question.type === "counter") {
+
+    if (
+        question.type === "counter"
+    ) {
 
         if (
             typeof answer !== "object" ||
             answer === null
         ) {
+
             return t("noAnswer");
+
         }
+
 
         return Object.entries(answer)
             .map(
@@ -444,6 +640,7 @@ function formatAnswer(
                                 item.id === id
                         );
 
+
                     const label =
                         counter
                             ? getLanguageText(
@@ -451,14 +648,20 @@ function formatAnswer(
                             )
                             : id;
 
+
                     return `${label}: ${value}`;
+
                 }
             )
             .join("\n");
+
     }
 
+
     return String(answer);
+
 }
+
 
 function renderAnswers() {
 
@@ -467,7 +670,9 @@ function renderAnswers() {
             "#answersList"
         );
 
+
     container.innerHTML = "";
+
 
     service.questions.forEach(
         question => {
@@ -475,40 +680,51 @@ function renderAnswers() {
             const answer =
                 answers[question.id];
 
+
             if (
                 question.type === "file"
             ) {
+
                 return;
+
             }
+
 
             const row =
                 document.createElement(
                     "div"
                 );
 
+
             row.className =
                 "answer-row";
+
 
             const label =
                 document.createElement(
                     "div"
                 );
 
+
             label.className =
                 "answer-question";
+
 
             label.textContent =
                 getLanguageText(
                     question.title
                 );
 
+
             const value =
                 document.createElement(
                     "div"
                 );
 
+
             value.className =
                 "answer-value";
+
 
             value.textContent =
                 formatAnswer(
@@ -516,14 +732,30 @@ function renderAnswers() {
                     answer
                 );
 
-            row.appendChild(label);
 
-            row.appendChild(value);
+            row.appendChild(
+                label
+            );
 
-            container.appendChild(row);
+            row.appendChild(
+                value
+            );
+
+            container.appendChild(
+                row
+            );
+
         }
     );
+
 }
+
+
+/*
+ * ==========================================================
+ * CUSTOMER
+ * ==========================================================
+ */
 
 function renderCustomer() {
 
@@ -532,7 +764,9 @@ function renderCustomer() {
             "#customerInfo"
         );
 
+
     container.innerHTML = "";
+
 
     addCustomerItem(
         container,
@@ -542,6 +776,7 @@ function renderCustomer() {
         customer.customer_name
     );
 
+
     addCustomerItem(
         container,
         currentLanguage === "en"
@@ -550,16 +785,20 @@ function renderCustomer() {
         customer.customer_phone
     );
 
+
     addCustomerItem(
         container,
         currentLanguage === "en"
             ? "Email Address"
             : "Alamat Emel",
         customer.customer_email ||
-            (currentLanguage === "en"
+        (
+            currentLanguage === "en"
                 ? "Not provided"
-                : "Tidak diberikan")
+                : "Tidak diberikan"
+        )
     );
+
 
     addCustomerItem(
         container,
@@ -570,7 +809,10 @@ function renderCustomer() {
         true
     );
 
-    if (customer.customer_notes) {
+
+    if (
+        customer.customer_notes
+    ) {
 
         addCustomerItem(
             container,
@@ -580,8 +822,11 @@ function renderCustomer() {
             customer.customer_notes,
             true
         );
+
     }
+
 }
+
 
 function addCustomerItem(
     container,
@@ -595,9 +840,15 @@ function addCustomerItem(
             "div"
         );
 
+
     item.className =
         "customer-review-item" +
-        (full ? " full" : "");
+        (
+            full
+                ? " full"
+                : ""
+        );
+
 
     item.innerHTML = `
         <span class="customer-label">
@@ -609,8 +860,19 @@ function addCustomerItem(
         </span>
     `;
 
-    container.appendChild(item);
+
+    container.appendChild(
+        item
+    );
+
 }
+
+
+/*
+ * ==========================================================
+ * PHOTOS PREVIEW
+ * ==========================================================
+ */
 
 function renderPhotos() {
 
@@ -619,12 +881,15 @@ function renderPhotos() {
             "#reviewPhotos"
         );
 
+
     container.innerHTML = "";
+
 
     document.querySelector(
         "#photoCount"
     ).textContent =
         `${selectedFiles.length} ${t("photos")}`;
+
 
     if (
         selectedFiles.length === 0
@@ -640,46 +905,76 @@ function renderPhotos() {
         `;
 
         return;
+
     }
 
-    selectedFiles.forEach(file => {
 
-        const image =
-            document.createElement(
-                "img"
+    selectedFiles.forEach(
+        file => {
+
+            const image =
+                document.createElement(
+                    "img"
+                );
+
+
+            image.className =
+                "review-photo";
+
+
+            image.alt =
+                file.name ||
+                "Customer photo";
+
+
+            const wrapper =
+                document.createElement(
+                    "div"
+                );
+
+
+            wrapper.className =
+                "review-photo";
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                event => {
+
+                    image.src =
+                        event.target.result;
+
+                };
+
+
+            reader.readAsDataURL(
+                file
             );
 
-        image.className =
-            "review-photo";
 
-        image.alt =
-            file.name;
-
-        const wrapper =
-            document.createElement(
-                "div"
+            wrapper.appendChild(
+                image
             );
 
-        wrapper.className =
-            "review-photo";
 
-        const reader =
-            new FileReader();
+            container.appendChild(
+                wrapper
+            );
 
-        reader.onload =
-            event => {
+        }
+    );
 
-                image.src =
-                    event.target.result;
-            };
-
-        reader.readAsDataURL(file);
-
-        wrapper.appendChild(image);
-
-        container.appendChild(wrapper);
-    });
 }
+
+
+/*
+ * ==========================================================
+ * ERROR
+ * ==========================================================
+ */
 
 function showSubmitError(message) {
 
@@ -688,11 +983,15 @@ function showSubmitError(message) {
             "#submitError"
         );
 
+
     element.textContent =
         message;
 
+
     element.hidden = false;
+
 }
+
 
 function hideSubmitError() {
 
@@ -701,43 +1000,57 @@ function hideSubmitError() {
             "#submitError"
         );
 
+
     element.hidden = true;
 
     element.textContent = "";
+
 }
+
+
+/*
+ * ==========================================================
+ * SUBMIT REQUEST
+ * ==========================================================
+ */
 
 async function submitRequest() {
 
     hideSubmitError();
+
 
     const button =
         document.querySelector(
             "#submitButton"
         );
 
-    button.classList.add("loading");
+
+    button.classList.add(
+        "loading"
+    );
 
     button.disabled = true;
 
-    button.querySelector("span").textContent =
+    button.querySelector(
+        "span"
+    ).textContent =
         t("submitting");
+
 
     try {
 
         /*
-         * Reload photos directly from IndexedDB
-         * before creating FormData.
+         * IMPORTANT:
+         * Do NOT reload photos here.
+         * They were already loaded once in loadService().
          */
-
-        await loadPhotosFromDatabase();
-
 
         const formData =
             new FormData();
 
 
         /*
-         * CUSTOMER INFORMATION
+         * CUSTOMER
          */
 
         formData.append(
@@ -797,6 +1110,9 @@ async function submitRequest() {
          * PHOTOS
          */
 
+        let uploadedPhotoCount = 0;
+
+
         for (
             let index = 0;
             index < selectedFiles.length;
@@ -807,80 +1123,72 @@ async function submitRequest() {
                 selectedFiles[index];
 
 
-            /*
-             * IndexedDB should return Blob/File.
-             */
-
             if (
                 !(photo instanceof Blob)
             ) {
 
                 console.warn(
-                    "Skipping invalid photo:",
+                    "Invalid photo skipped:",
                     photo
                 );
 
                 continue;
+
             }
 
 
             /*
-             * Use original name if available.
+             * Keep the correct extension.
              */
 
-            let fileName =
-                photo.name;
+            let extension =
+                "jpg";
 
 
-            /*
-             * Create a safe filename if the
-             * mobile browser returned only a Blob.
-             */
+            if (
+                photo.type === "image/png"
+            ) {
 
-            if (!fileName) {
+                extension = "png";
 
-                let extension = "jpg";
+            } else if (
+                photo.type === "image/webp"
+            ) {
 
-                if (
-                    photo.type === "image/png"
-                ) {
+                extension = "webp";
 
-                    extension = "png";
+            } else if (
+                photo.type === "image/jpeg"
+            ) {
 
-                } else if (
-                    photo.type === "image/webp"
-                ) {
-
-                    extension = "webp";
-
-                } else if (
-                    photo.type === "image/heic" ||
-                    photo.type === "image/heif"
-                ) {
-
-                    extension = "heic";
-
-                }
-
-
-                fileName =
-                    `customer-photo-${index + 1}.${extension}`;
+                extension = "jpg";
 
             }
+
+
+            const fileName =
+                photo.name ||
+                `customer-photo-${index + 1}.${extension}`;
 
 
             console.log(
-                "Uploading:",
+                "Adding photo to FormData:",
                 {
-                    name: fileName,
-                    type: photo.type,
-                    size: photo.size
+                    name:
+                        fileName,
+
+                    type:
+                        photo.type,
+
+                    size:
+                        photo.size
                 }
             );
 
 
             /*
-             * Append the original Blob/File.
+             * Append directly.
+             * Do not create another Blob.
              */
 
             formData.append(
@@ -889,35 +1197,36 @@ async function submitRequest() {
                 fileName
             );
 
+
+            uploadedPhotoCount++;
+
         }
 
 
         console.log(
-            "Sending request with",
-            selectedFiles.length,
+            "Submitting request with",
+            uploadedPhotoCount,
             "photo(s)"
         );
 
 
         /*
-         * DO NOT manually set Content-Type here.
-         * The browser must create the multipart
-         * boundary automatically.
+         * IMPORTANT:
+         * Do not add Content-Type manually.
          */
 
         const response =
             await fetch(
                 `${API_BASE}/requests`,
                 {
-                    method: "POST",
-                    body: formData
+                    method:
+                        "POST",
+
+                    body:
+                        formData
                 }
             );
 
-
-        /*
-         * Safely read server response.
-         */
 
         const responseText =
             await response.text();
@@ -925,10 +1234,13 @@ async function submitRequest() {
 
         let result;
 
+
         try {
 
             result =
-                JSON.parse(responseText);
+                JSON.parse(
+                    responseText
+                );
 
         } catch {
 
@@ -936,6 +1248,7 @@ async function submitRequest() {
                 "Invalid server response:",
                 responseText
             );
+
 
             throw new Error(
                 "Server returned an invalid response."
@@ -964,7 +1277,7 @@ async function submitRequest() {
 
 
         /*
-         * SAVE REQUEST
+         * SAVE RESULT
          */
 
         localStorage.setItem(
@@ -1000,7 +1313,7 @@ async function submitRequest() {
 
 
         /*
-         * SUCCESS PAGE
+         * SUCCESS
          */
 
         window.location.href =
@@ -1027,26 +1340,61 @@ async function submitRequest() {
 
         button.disabled = false;
 
-        button.querySelector("span").textContent =
+        button.querySelector(
+            "span"
+        ).textContent =
             t("submit");
 
     }
+
 }
+
+
+/*
+ * ==========================================================
+ * SECURITY
+ * ==========================================================
+ */
+
 function escapeHtml(value) {
 
     return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
 }
+
+
+/*
+ * ==========================================================
+ * PAGE INITIALIZATION
+ * ==========================================================
+ */
 
 document.addEventListener(
     "DOMContentLoaded",
     () => {
 
         getSavedData();
+
 
         document.querySelector(
             "#editButton"
@@ -1056,8 +1404,10 @@ document.addEventListener(
 
                 window.location.href =
                     "customer.html";
+
             }
         );
+
 
         document.querySelector(
             "#languageToggle"
@@ -1070,14 +1420,18 @@ document.addEventListener(
                         ? "ms"
                         : "en";
 
+
                 localStorage.setItem(
                     "securepro_language",
                     newLanguage
                 );
 
+
                 window.location.reload();
+
             }
         );
+
 
         document.querySelector(
             "#submitButton"
@@ -1086,6 +1440,8 @@ document.addEventListener(
             submitRequest
         );
 
+
         loadService();
+
     }
 );
