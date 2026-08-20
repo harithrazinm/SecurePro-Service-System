@@ -1,9 +1,11 @@
-const API_BASE =
-    "https://securepro-service-system.onrender.com/api";
-
-const UPLOAD_BASE =
+const BACKEND_BASE =
     "https://securepro-service-system.onrender.com";
 
+const API_BASE =
+    `${BACKEND_BASE}/api`;
+
+const UPLOAD_BASE =
+    BACKEND_BASE;
 
 let requestData = null;
 
