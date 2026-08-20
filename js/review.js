@@ -717,73 +717,85 @@ async function submitRequest() {
 
     button.classList.add("loading");
 
+    button.disabled = true;
+
     button.querySelector("span").textContent =
         t("submitting");
 
     try {
 
-        console.log("STEP 1: Starting submission");
-        console.log("API_BASE:", API_BASE);
-        console.log("Customer:", customer);
-        console.log("Service:", service);
-        console.log("Answers:", answers);
-        console.log("Selected files:", selectedFiles);
+        /*
+         * Reload photos directly from IndexedDB
+         * before creating FormData.
+         */
 
+        await loadPhotosFromDatabase();
 
-        console.log("STEP 2: Creating FormData");
 
         const formData =
             new FormData();
 
 
-        console.log("STEP 3: Adding customer data");
+        /*
+         * CUSTOMER INFORMATION
+         */
 
         formData.append(
             "customer_name",
-            String(customer?.customer_name || "")
+            customer.customer_name || ""
         );
 
         formData.append(
             "customer_phone",
-            String(customer?.customer_phone || "")
+            customer.customer_phone || ""
         );
 
         formData.append(
             "customer_email",
-            String(customer?.customer_email || "")
+            customer.customer_email || ""
         );
 
         formData.append(
             "customer_address",
-            String(customer?.customer_address || "")
+            customer.customer_address || ""
         );
 
 
-        console.log("STEP 4: Adding service");
+        /*
+         * SERVICE
+         */
 
         formData.append(
             "service_type",
-            String(service?.id || "")
+            service.id || ""
         );
 
 
-        console.log("STEP 5: Adding answers");
+        /*
+         * ANSWERS
+         */
 
         formData.append(
             "service_answers",
-            JSON.stringify(answers || {})
+            JSON.stringify(
+                answers || {}
+            )
         );
 
 
-        console.log("STEP 6: Adding notes");
+        /*
+         * NOTES
+         */
 
         formData.append(
             "customer_notes",
-            String(customer?.customer_notes || "")
+            customer.customer_notes || ""
         );
 
 
-        console.log("STEP 7: Adding photos");
+        /*
+         * PHOTOS
+         */
 
         for (
             let index = 0;
@@ -791,54 +803,107 @@ async function submitRequest() {
             index++
         ) {
 
-            const file =
+            const photo =
                 selectedFiles[index];
 
+
+            /*
+             * IndexedDB should return Blob/File.
+             */
+
             if (
-                !(file instanceof Blob)
+                !(photo instanceof Blob)
             ) {
 
                 console.warn(
                     "Skipping invalid photo:",
-                    file
+                    photo
                 );
 
                 continue;
             }
 
-            const extension =
-                file.type === "image/png"
-                    ? "png"
-                    : file.type === "image/webp"
-                        ? "webp"
-                        : "jpg";
 
-            const fileName =
-                `customer-photo-${index + 1}.${extension}`;
+            /*
+             * Use original name if available.
+             */
+
+            let fileName =
+                photo.name;
+
+
+            /*
+             * Create a safe filename if the
+             * mobile browser returned only a Blob.
+             */
+
+            if (!fileName) {
+
+                let extension = "jpg";
+
+                if (
+                    photo.type === "image/png"
+                ) {
+
+                    extension = "png";
+
+                } else if (
+                    photo.type === "image/webp"
+                ) {
+
+                    extension = "webp";
+
+                } else if (
+                    photo.type === "image/heic" ||
+                    photo.type === "image/heif"
+                ) {
+
+                    extension = "heic";
+
+                }
+
+
+                fileName =
+                    `customer-photo-${index + 1}.${extension}`;
+
+            }
+
 
             console.log(
-                "Adding photo:",
-                fileName,
-                file.type,
-                file.size
+                "Uploading:",
+                {
+                    name: fileName,
+                    type: photo.type,
+                    size: photo.size
+                }
             );
+
+
+            /*
+             * Append the original Blob/File.
+             */
 
             formData.append(
                 "customer_photos",
-                file,
+                photo,
                 fileName
             );
+
         }
 
 
-        console.log("STEP 8: FormData complete");
-
-
         console.log(
-            "STEP 9: Sending request to:",
-            `${API_BASE}/requests`
+            "Sending request with",
+            selectedFiles.length,
+            "photo(s)"
         );
 
+
+        /*
+         * DO NOT manually set Content-Type here.
+         * The browser must create the multipart
+         * boundary automatically.
+         */
 
         const response =
             await fetch(
@@ -850,14 +915,33 @@ async function submitRequest() {
             );
 
 
-        console.log(
-            "STEP 10: Response received:",
-            response.status
-        );
+        /*
+         * Safely read server response.
+         */
+
+        const responseText =
+            await response.text();
 
 
-        const result =
-            await response.json();
+        let result;
+
+        try {
+
+            result =
+                JSON.parse(responseText);
+
+        } catch {
+
+            console.error(
+                "Invalid server response:",
+                responseText
+            );
+
+            throw new Error(
+                "Server returned an invalid response."
+            );
+
+        }
 
 
         console.log(
@@ -875,14 +959,25 @@ async function submitRequest() {
                 result.message ||
                 t("submitError")
             );
+
         }
 
 
+        /*
+         * SAVE REQUEST
+         */
+
         localStorage.setItem(
             "securepro_request",
-            JSON.stringify(result.data)
+            JSON.stringify(
+                result.data
+            )
         );
 
+
+        /*
+         * CLEAR TEMPORARY DATA
+         */
 
         localStorage.removeItem(
             "securepro_answers"
@@ -901,16 +996,12 @@ async function submitRequest() {
         );
 
 
-        console.log(
-            "STEP 11: Clearing photo database"
-        );
-
         await clearPhotoDatabase();
 
 
-        console.log(
-            "STEP 12: Redirecting to success page"
-        );
+        /*
+         * SUCCESS PAGE
+         */
 
         window.location.href =
             "success.html";
@@ -919,28 +1010,14 @@ async function submitRequest() {
     } catch (error) {
 
         console.error(
-            "SUBMIT ERROR FULL:",
+            "Submit error:",
             error
-        );
-
-        console.error(
-            "ERROR NAME:",
-            error?.name
-        );
-
-        console.error(
-            "ERROR MESSAGE:",
-            error?.message
-        );
-
-        console.error(
-            "ERROR STACK:",
-            error?.stack
         );
 
 
         showSubmitError(
-            `Error: ${error?.message || t("submitError")}`
+            error.message ||
+            t("submitError")
         );
 
 
@@ -948,11 +1025,13 @@ async function submitRequest() {
             "loading"
         );
 
+        button.disabled = false;
+
         button.querySelector("span").textContent =
             t("submit");
+
     }
 }
-
 function escapeHtml(value) {
 
     return String(value)
