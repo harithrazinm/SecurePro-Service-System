@@ -798,23 +798,50 @@ async function submitRequest() {
          */
 
         selectedFiles.forEach(
-            file => {
+    (file, index) => {
 
-                formData.append(
-                    "customer_photos",
-                    file,
-                    file.name
-                );
+        if (!file) {
+            return;
+        }
 
-            }
+        const extension =
+            file.type === "image/png"
+                ? "png"
+                : file.type === "image/webp"
+                    ? "webp"
+                    : "jpg";
+
+        const fileName =
+            file.name &&
+            file.name.trim()
+                ? file.name
+                : `customer-photo-${index + 1}.${extension}`;
+
+        formData.append(
+            "customer_photos",
+            file,
+            fileName
         );
+
+    }
+);
 
 
         console.log(
             "Submitting SecurePro request..."
         );
 
-
+console.log(
+    "Photos to upload:",
+    selectedFiles.map(
+        (file, index) => ({
+            index,
+            name: file?.name,
+            type: file?.type,
+            size: file?.size
+        })
+    )
+);
         const response =
             await fetch(
                 `${API_BASE}/requests`,
