@@ -71,15 +71,62 @@ function safeJsonParse(value) {
 
     try {
 
-        return JSON.parse(
-            value
-        );
+        return JSON.parse(value);
 
     } catch {
 
         return {};
 
     }
+
+}
+
+
+/*
+ * ==========================================================
+ * GET SAFE FILE EXTENSION
+ * ==========================================================
+ */
+
+function getFileExtension(file) {
+
+    const extension =
+        path.extname(
+            file.originalname || ""
+        ).toLowerCase();
+
+
+    if (
+        extension === ".jpg" ||
+        extension === ".jpeg" ||
+        extension === ".png" ||
+        extension === ".webp"
+    ) {
+
+        return extension;
+
+    }
+
+
+    if (
+        file.mimetype === "image/png"
+    ) {
+
+        return ".png";
+
+    }
+
+
+    if (
+        file.mimetype === "image/webp"
+    ) {
+
+        return ".webp";
+
+    }
+
+
+    return ".jpg";
 
 }
 
@@ -96,6 +143,8 @@ async function createRequest(
 ) {
 
     let connection;
+
+    let transactionStarted = false;
 
 
     try {
@@ -167,12 +216,9 @@ async function createRequest(
         if (!customerName) {
 
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Customer name is required."
-
             });
 
         }
@@ -181,12 +227,9 @@ async function createRequest(
         if (!customerPhone) {
 
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Customer phone is required."
-
             });
 
         }
@@ -195,12 +238,9 @@ async function createRequest(
         if (!customerAddress) {
 
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Customer address is required."
-
             });
 
         }
@@ -209,12 +249,9 @@ async function createRequest(
         if (!serviceCode) {
 
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Service is required."
-
             });
 
         }
@@ -252,12 +289,9 @@ async function createRequest(
         ) {
 
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Selected service was not found."
-
             });
 
         }
@@ -286,9 +320,7 @@ async function createRequest(
          */
 
         const files =
-            Array.isArray(
-                req.files
-            )
+            Array.isArray(req.files)
                 ? req.files
                 : [];
 
@@ -296,7 +328,6 @@ async function createRequest(
         console.log(
             "Creating request..."
         );
-
 
         console.log(
             "Uploaded files:",
@@ -306,7 +337,7 @@ async function createRequest(
 
         /*
          * ==================================================
-         * CREATE REQUEST ID
+         * CREATE IDS
          * ==================================================
          */
 
@@ -325,6 +356,8 @@ async function createRequest(
          */
 
         await connection.beginTransaction();
+
+        transactionStarted = true;
 
 
         /*
@@ -374,9 +407,7 @@ async function createRequest(
                 questionCode,
                 answer
             ]
-            of Object.entries(
-                answers
-            )
+            of Object.entries(answers)
         ) {
 
             const [
@@ -400,10 +431,6 @@ async function createRequest(
                     ]
                 );
 
-
-            /*
-             * Ignore unknown questions.
-             */
 
             if (
                 questions.length === 0
@@ -435,33 +462,20 @@ async function createRequest(
 
 
             /*
-             * ==============================================
              * NUMBER / MEASUREMENT
-             * ==============================================
              */
 
             if (
-
-                question.question_type ===
-                "number"
-
-                ||
-
-                question.question_type ===
-                "measurement"
-
+                question.question_type === "number" ||
+                question.question_type === "measurement"
             ) {
 
                 const numeric =
-                    Number(
-                        answer
-                    );
+                    Number(answer);
 
 
                 if (
-                    Number.isFinite(
-                        numeric
-                    )
+                    Number.isFinite(numeric)
                 ) {
 
                     numberValue =
@@ -473,54 +487,37 @@ async function createRequest(
 
 
             /*
-             * ==============================================
              * COUNTER
-             * ==============================================
              */
 
             else if (
-
-                question.question_type ===
-                "counter"
-
+                question.question_type === "counter"
             ) {
 
                 textValue =
-                    JSON.stringify(
-                        answer
-                    );
+                    JSON.stringify(answer);
 
             }
 
 
             /*
-             * ==============================================
              * OTHER ANSWERS
-             * ==============================================
              */
 
             else {
 
                 if (
-                    typeof answer ===
-                    "object"
-
-                    &&
-
+                    typeof answer === "object" &&
                     answer !== null
                 ) {
 
                     textValue =
-                        JSON.stringify(
-                            answer
-                        );
+                        JSON.stringify(answer);
 
                 } else {
 
                     textValue =
-                        String(
-                            answer ?? ""
-                        );
+                        String(answer ?? "");
 
                 }
 
@@ -528,9 +525,7 @@ async function createRequest(
 
 
             /*
-             * ==============================================
              * INSERT REQUEST ANSWER
-             * ==============================================
              */
 
             await connection.query(
@@ -545,8 +540,7 @@ async function createRequest(
                     unit
                 )
                 VALUES (
-                    ?, ?, ?, ?, ?, ?, ?
-                )
+                    ?, ?, ?, ?, ?, ?, ?)
                 `,
                 [
                     answerId,
@@ -561,27 +555,16 @@ async function createRequest(
 
 
             /*
-             * ==============================================
              * SAVE SINGLE / MULTI OPTIONS
-             * ==============================================
              */
 
             if (
-
-                question.question_type ===
-                "single"
-
-                ||
-
-                question.question_type ===
-                "multi"
-
+                question.question_type === "single" ||
+                question.question_type === "multi"
             ) {
 
                 const values =
-                    Array.isArray(
-                        answer
-                    )
+                    Array.isArray(answer)
                         ? answer
                         : [answer];
 
@@ -591,32 +574,16 @@ async function createRequest(
                     of values
                 ) {
 
-                    /*
-                     * Ignore empty values.
-                     */
-
                     if (
-
-                        value === null
-
-                        ||
-
-                        value === undefined
-
-                        ||
-
+                        value === null ||
+                        value === undefined ||
                         value === ""
-
                     ) {
 
                         continue;
 
                     }
 
-
-                    /*
-                     * Find selected option.
-                     */
 
                     const [
                         options
@@ -641,10 +608,6 @@ async function createRequest(
                         );
 
 
-                    /*
-                     * Ignore invalid options.
-                     */
-
                     if (
                         options.length === 0
                     ) {
@@ -661,10 +624,6 @@ async function createRequest(
                     const option =
                         options[0];
 
-
-                    /*
-                     * Save selected option.
-                     */
 
                     await connection.query(
                         `
@@ -697,55 +656,128 @@ async function createRequest(
         }
 
 
-     /*
- * ==================================================
- * SAVE PHOTOS
- * ==================================================
- */
+        /*
+         * ==================================================
+         * SAVE PHOTOS
+         * ==================================================
+         */
 
-for (
-    const file
-    of files
-) {
-
-    console.log(
-        "Photo saved by Multer:",
-        file.filename
-    );
+        const uploadDirectory =
+            path.join(
+                __dirname,
+                "..",
+                "uploads",
+                "customer"
+            );
 
 
-    const databasePath =
-        `/uploads/customer/${file.filename}`;
+        await fs.promises.mkdir(
+            uploadDirectory,
+            {
+                recursive: true
+            }
+        );
 
 
-    await connection.query(
-        `
-        INSERT INTO customer_photos (
-            id,
-            request_id,
-            file_name,
-            file_path
-        )
-        VALUES (?, ?, ?, ?)
-        `,
-        [
-            uuid(),
-            requestId,
-            file.originalname,
-            databasePath
-        ]
-    );
+        for (
+            const file
+            of files
+        ) {
 
-}
+            /*
+             * memoryStorage gives us file.buffer,
+             * not file.filename.
+             */
+
+            if (
+                !file.buffer ||
+                file.buffer.length === 0
+            ) {
+
+                throw new Error(
+                    "Uploaded photo is empty."
+                );
+
+            }
+
+
+            const extension =
+                getFileExtension(file);
+
+
+            const savedFileName =
+                `${uuid()}${extension}`;
+
+
+            const savedFilePath =
+                path.join(
+                    uploadDirectory,
+                    savedFileName
+                );
+
+
+            /*
+             * Save the buffer to the uploads folder.
+             */
+
+            await fs.promises.writeFile(
+                savedFilePath,
+                file.buffer
+            );
+
+
+            const databasePath =
+                `/uploads/customer/${savedFileName}`;
+
+
+            console.log(
+                "Customer photo saved:",
+                {
+                    originalName:
+                        file.originalname,
+
+                    savedFileName,
+
+                    mimeType:
+                        file.mimetype,
+
+                    size:
+                        file.size
+                }
+            );
+
+
+            await connection.query(
+                `
+                INSERT INTO customer_photos (
+                    id,
+                    request_id,
+                    file_name,
+                    file_path
+                )
+                VALUES (?, ?, ?, ?)
+                `,
+                [
+                    uuid(),
+                    requestId,
+                    file.originalname ||
+                        savedFileName,
+                    databasePath
+                ]
+            );
+
+        }
 
 
         /*
          * ==================================================
-         * COMMIT TRANSACTION
+         * COMMIT
          * ==================================================
          */
 
         await connection.commit();
+
+        transactionStarted = false;
 
 
         console.log(
@@ -754,16 +786,14 @@ for (
         );
 
 
-        /*,
+        /*
          * ==================================================
          * SUCCESS RESPONSE
          * ==================================================
          */
 
         return res.status(201).json({
-
             success: true,
-
             message:
                 "Service request created successfully.",
 
@@ -774,7 +804,6 @@ for (
 
                 request_code:
                     requestCode,
-
 
                 service: {
 
@@ -796,7 +825,6 @@ for (
 
                 },
 
-
                 customer: {
 
                     name:
@@ -813,10 +841,8 @@ for (
 
                 },
 
-
                 status:
                     "pending",
-
 
                 photo_count:
                     files.length
@@ -826,9 +852,7 @@ for (
         });
 
 
-    } catch (
-        error
-    ) {
+    } catch (error) {
 
         /*
          * ==================================================
@@ -837,16 +861,15 @@ for (
          */
 
         if (
-            connection
+            connection &&
+            transactionStarted
         ) {
 
             try {
 
                 await connection.rollback();
 
-            } catch (
-                rollbackError
-            ) {
+            } catch (rollbackError) {
 
                 console.error(
                     "Rollback error:",
@@ -865,26 +888,15 @@ for (
 
 
         return res.status(500).json({
-
             success: false,
-
             message:
                 "Unable to create service request."
-
         });
 
 
     } finally {
 
-        /*
-         * ==================================================
-         * RELEASE CONNECTION
-         * ==================================================
-         */
-
-        if (
-            connection
-        ) {
+        if (connection) {
 
             connection.release();
 
@@ -902,7 +914,5 @@ for (
  */
 
 module.exports = {
-
     createRequest
-
 };
