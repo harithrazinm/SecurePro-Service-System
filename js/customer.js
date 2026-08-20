@@ -522,14 +522,22 @@ document.addEventListener(
 
         } catch (error) {
 
-            console.error(error);
+    console.error(
+        "Customer form error:",
+        error,
+        error?.name,
+        error?.message
+    );
 
-            showError(
-                currentLanguage === "en"
-                    ? "Unable to prepare your photos. Please try again."
-                    : "Tidak dapat menyediakan gambar anda. Sila cuba lagi."
-            );
-        }
+    showError(
+        error?.message ||
+        (
+            currentLanguage === "en"
+                ? "Unable to prepare your photos. Please try again."
+                : "Tidak dapat menyediakan gambar anda. Sila cuba lagi."
+        )
+    );
+}
     }
 );
     }
