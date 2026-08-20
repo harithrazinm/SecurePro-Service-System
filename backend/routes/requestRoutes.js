@@ -51,40 +51,32 @@ const upload =
          */
 
         fileFilter:
-            (req, file, callback) => {
+    (req, file, callback) => {
 
-                const allowedTypes = [
+        console.log(
+            "Uploaded file:",
+            file.originalname,
+            file.mimetype
+        );
 
-                    "image/jpeg",
+        if (
+            file.mimetype &&
+            file.mimetype.startsWith("image/")
+        ) {
 
-                    "image/png",
+            callback(null, true);
 
-                    "image/webp"
+        } else {
 
-                ];
+            callback(
+                new Error(
+                    "Please upload a valid image file."
+                )
+            );
 
+        }
 
-                if (
-                    allowedTypes.includes(
-                        file.mimetype
-                    )
-                ) {
-
-                    callback(
-                        null,
-                        true
-                    );
-
-                } else {
-
-                    callback(
-                        new Error(
-                            "Only JPG, JPEG, PNG and WebP images are allowed."
-                        )
-                    );
-                }
-
-            }
+    }
 
     });
 
