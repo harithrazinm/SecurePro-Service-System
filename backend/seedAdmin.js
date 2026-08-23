@@ -4,30 +4,63 @@ const bcrypt = require("bcryptjs");
 const pool = require("./config/db");
 const crypto = require("crypto");
 
+
 async function seedAdmin() {
+
     try {
 
         const name = "SecurePro Admin";
         const email = "admin@securepro.com";
         const password = "admin123";
 
+
+        // Check whether admin already exists
+
         const [existing] = await pool.query(
-            "SELECT id FROM users WHERE email = ? LIMIT 1",
+            `
+            SELECT id
+            FROM users
+            WHERE email = ?
+            LIMIT 1
+            `,
             [email]
         );
 
+
+        // Delete old account if you want to recreate it
+        // with a new hashed password
+
         if (existing.length > 0) {
 
-            console.log("Admin account already exists.");
+            console.log(
+                "Admin account already exists."
+            );
 
-            process.exit(0);
+            console.log(
+                "Delete the old admin from the database first if its password is not hashed."
+            );
+
+            return;
+
         }
 
+
+        // Hash password
+
         const hashedPassword =
-            await bcrypt.hash(password, 12);
+            await bcrypt.hash(
+                password,
+                12
+            );
+
+
+        // Generate UUID
 
         const id =
             crypto.randomUUID();
+
+
+        // Insert hashed password
 
         await pool.query(
             `
@@ -40,28 +73,57 @@ async function seedAdmin() {
                 role,
                 status
             )
-            VALUES (?, ?, ?, ?, 'admin', 'active')
+            VALUES
+            (?, ?, ?, ?, ?, ?)
             `,
             [
                 id,
                 name,
                 email,
-                hashedPassword
+                hashedPassword,
+                "admin",
+                "active"
             ]
         );
 
-        console.log("====================================");
-        console.log("Admin account created successfully");
-        console.log("====================================");
-        console.log("Email:", email);
-        console.log("Password:", password);
-        console.log("Role: admin");
-        console.log("====================================");
+
+        console.log(
+            "===================================="
+        );
+
+        console.log(
+            "Admin account created successfully"
+        );
+
+        console.log(
+            "===================================="
+        );
+
+        console.log(
+            "Email:",
+            email
+        );
+
+        console.log(
+            "Password:",
+            password
+        );
+
+        console.log(
+            "Role: admin"
+        );
+
+        console.log(
+            "===================================="
+        );
 
     } catch (error) {
 
         console.error(
-            "Failed to create admin:",
+            "Failed to create admin:"
+        );
+
+        console.error(
             error
         );
 
@@ -70,6 +132,8 @@ async function seedAdmin() {
         await pool.end();
 
     }
+
 }
+
 
 seedAdmin();

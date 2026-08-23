@@ -1,11 +1,69 @@
 /* ========================================
+   COLOR SYSTEM
+   Centralised so the whole dashboard stays
+   consistent — change a value here and it
+   updates everywhere.
+======================================== */
+
+:root {
+    /* brand / sidebar */
+    --sidebar-bg: #111827;
+    --sidebar-bg-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-text: #ffffff;
+    --sidebar-text-muted: #9ca3af;
+
+    /* accent */
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+
+    /* surface */
+    --bg-page: #f7f8fa;
+    --bg-card: #ffffff;
+    --border: #e5e7eb;
+    --border-soft: #f3f4f6;
+
+    /* text */
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+
+    /* status */
+    --status-online: #22c55e;
+    --pending-bg: #fff7ed;
+    --pending-text: #c2410c;
+    --pending-icon: #ea580c;
+    --assigned-bg: #eff6ff;
+    --assigned-text: #1d4ed8;
+    --progress-bg: #eef2ff;
+    --progress-text: #4338ca;
+    --waiting-bg: #fefce8;
+    --waiting-text: #a16207;
+    --completed-bg: #f0fdf4;
+    --completed-text: #15803d;
+    --cancelled-bg: #fef2f2;
+    --cancelled-text: #b91c1c;
+
+    /* layout */
+    --sidebar-width: 250px;
+    --sidebar-width-collapsed: 76px;
+}
+
+
+* {
+    box-sizing: border-box;
+}
+
+
+/* ========================================
    ADMIN LAYOUT
 ======================================== */
 
 .admin-layout {
     min-height: 100vh;
     display: flex;
-    background: #f7f8fa;
+    background: var(--bg-page);
 }
 
 
@@ -14,21 +72,25 @@
 ======================================== */
 
 .admin-sidebar {
-    width: 250px;
+    width: var(--sidebar-width);
     flex-shrink: 0;
-    min-height: 100vh;
-
-    background: #111827;
-    color: white;
 
     display: flex;
     flex-direction: column;
 
     padding: 25px 18px;
 
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+
     position: sticky;
     top: 0;
     height: 100vh;
+    height: 100dvh;
+
+    overflow-y: auto;
+
+    transition: width .2s ease, padding .2s ease;
 }
 
 
@@ -44,14 +106,15 @@
 .sidebar-mark {
     width: 40px;
     height: 40px;
+    flex-shrink: 0;
 
     display: grid;
     place-items: center;
 
     border-radius: 11px;
 
-    background: white;
-    color: #111827;
+    background: var(--sidebar-text);
+    color: var(--sidebar-bg);
 
     font-weight: 900;
 }
@@ -68,7 +131,7 @@
 .sidebar-brand span {
     display: block;
 
-    color: #9ca3af;
+    color: var(--sidebar-text-muted);
 
     font-size: 10px;
 }
@@ -78,6 +141,9 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+
+    flex: 1;
+    min-height: 0;
 }
 
 
@@ -90,28 +156,29 @@
 
     border-radius: 9px;
 
-    color: #9ca3af;
+    color: var(--sidebar-text-muted);
 
     text-decoration: none;
 
     font-size: 13px;
     font-weight: 600;
 
-    transition:
-        background .2s ease,
-        color .2s ease;
+    white-space: nowrap;
+
+    transition: background .2s ease, color .2s ease;
 }
 
 
 .nav-item:hover,
 .nav-item.active {
-    background: rgba(255,255,255,.08);
-    color: white;
+    background: var(--sidebar-bg-hover);
+    color: var(--sidebar-text);
 }
 
 
 .nav-icon {
     width: 20px;
+    flex-shrink: 0;
 
     text-align: center;
 
@@ -121,6 +188,7 @@
 
 .sidebar-bottom {
     margin-top: auto;
+    flex-shrink: 0;
 }
 
 
@@ -131,21 +199,22 @@
 
     padding: 15px 8px;
 
-    border-top:
-        1px solid rgba(255,255,255,.08);
+    border-top: 1px solid var(--sidebar-border);
 }
 
 
 .admin-avatar {
     width: 34px;
     height: 34px;
+    flex-shrink: 0;
 
     display: grid;
     place-items: center;
 
     border-radius: 50%;
 
-    background: #2563eb;
+    background: var(--accent);
+    color: var(--sidebar-text);
 
     font-size: 12px;
     font-weight: 800;
@@ -171,20 +240,30 @@
 .admin-profile-info span {
     display: block;
 
-    color: #9ca3af;
+    color: var(--sidebar-text-muted);
 
     font-size: 10px;
 }
 
 
+/* Logout button: ALWAYS visible in every layout.
+   Collapses to an icon-only circle on narrow
+   sidebars instead of disappearing. */
+
 .logout-button {
     width: 100%;
+    min-height: 40px;
 
-    border: 1px solid rgba(255,255,255,.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
 
     background: transparent;
 
-    color: #9ca3af;
+    color: var(--sidebar-text-muted);
 
     padding: 9px;
 
@@ -192,13 +271,31 @@
 
     cursor: pointer;
 
+    font: inherit;
     font-size: 12px;
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 
 .logout-button:hover {
-    color: white;
-    background: rgba(255,255,255,.05);
+    color: var(--sidebar-text);
+    background: var(--sidebar-bg-hover);
+}
+
+
+.logout-button:active {
+    transform: scale(0.98);
+}
+
+
+.logout-button .logout-icon {
+    font-size: 14px;
+    line-height: 1;
 }
 
 
@@ -224,17 +321,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
 
-    background: white;
+    background: var(--bg-card);
 
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border);
 }
 
 
 .topbar-label {
     display: block;
 
-    color: #2563eb;
+    color: var(--accent);
 
     font-size: 9px;
     font-weight: 800;
@@ -249,6 +347,8 @@
     font-size: 21px;
 
     letter-spacing: -.5px;
+
+    color: var(--text-primary);
 }
 
 
@@ -257,20 +357,23 @@
     align-items: center;
     gap: 8px;
 
-    color: #4b5563;
+    color: var(--text-secondary);
 
     font-size: 12px;
     font-weight: 600;
+
+    white-space: nowrap;
 }
 
 
 .online-dot {
     width: 7px;
     height: 7px;
+    flex-shrink: 0;
 
     border-radius: 50%;
 
-    background: #22c55e;
+    background: var(--status-online);
 }
 
 
@@ -301,19 +404,34 @@
 }
 
 
+.eyebrow {
+    color: var(--accent);
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+
 .dashboard-intro h2,
 .section-heading h2 {
+    margin-top: 6px;
+
     font-size: 27px;
     line-height: 1.15;
 
     letter-spacing: -1px;
+
+    color: var(--text-primary);
 }
 
 
 .dashboard-intro p {
     margin-top: 7px;
 
-    color: #6b7280;
+    color: var(--text-muted);
 
     font-size: 13px;
 }
@@ -328,16 +446,17 @@
 
     padding: 10px 15px;
 
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
 
-    background: white;
+    background: var(--bg-card);
 
     border-radius: 8px;
 
     cursor: pointer;
 
-    color: #374151;
+    color: var(--text-secondary);
 
+    font: inherit;
     font-size: 12px;
     font-weight: 700;
 
@@ -357,8 +476,7 @@
 .stats-grid {
     display: grid;
 
-    grid-template-columns:
-        repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
 
     gap: 14px;
 
@@ -367,9 +485,9 @@
 
 
 .stat-card {
-    background: white;
+    background: var(--bg-card);
 
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
 
     border-radius: 13px;
 
@@ -377,8 +495,7 @@
 
     min-height: 145px;
 
-    box-shadow:
-        0 5px 20px rgba(15,23,42,.025);
+    box-shadow: 0 5px 20px rgba(15, 23, 42, .025);
 }
 
 
@@ -392,7 +509,7 @@
 
 
 .stat-label {
-    color: #6b7280;
+    color: var(--text-muted);
 
     font-size: 11px;
     font-weight: 700;
@@ -410,9 +527,9 @@
 
     border-radius: 8px;
 
-    background: #f3f4f6;
+    background: var(--border-soft);
 
-    color: #374151;
+    color: var(--text-secondary);
 
     font-size: 13px;
     font-weight: 800;
@@ -420,8 +537,8 @@
 
 
 .stat-card.pending .stat-icon {
-    background: #fff7ed;
-    color: #ea580c;
+    background: var(--pending-bg);
+    color: var(--pending-icon);
 }
 
 
@@ -435,6 +552,8 @@
     line-height: 1;
 
     letter-spacing: -1px;
+
+    color: var(--text-primary);
 }
 
 
@@ -443,7 +562,7 @@
 
     margin-top: 8px;
 
-    color: #9ca3af;
+    color: var(--text-faint);
 
     font-size: 10px;
 }
@@ -456,9 +575,9 @@
 .requests-section {
     width: 100%;
 
-    background: white;
+    background: var(--bg-card);
 
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
 
     border-radius: 15px;
 
@@ -478,7 +597,7 @@
 
 
 .request-total {
-    color: #6b7280;
+    color: var(--text-muted);
 
     font-size: 11px;
 
@@ -515,11 +634,11 @@
 
     padding: 0 12px;
 
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
 
     border-radius: 8px;
 
-    color: #9ca3af;
+    color: var(--text-faint);
 }
 
 
@@ -535,7 +654,7 @@
 
     font-size: 12px;
 
-    color: #111827;
+    color: var(--text-primary);
 
     background: transparent;
 }
@@ -544,15 +663,15 @@
 .request-toolbar select {
     height: 40px;
 
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
 
     border-radius: 8px;
 
     padding: 0 12px;
 
-    background: white;
+    background: var(--bg-card);
 
-    color: #374151;
+    color: var(--text-secondary);
 
     font: inherit;
 
@@ -575,8 +694,7 @@
 
     -webkit-overflow-scrolling: touch;
 
-    border-top:
-        1px solid #f3f4f6;
+    border-top: 1px solid var(--border-soft);
 }
 
 
@@ -599,7 +717,7 @@ th {
 
     text-align: left;
 
-    color: #6b7280;
+    color: var(--text-muted);
 
     font-size: 9px;
 
@@ -616,11 +734,13 @@ th {
 td {
     padding: 15px 17px;
 
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid var(--border-soft);
 
     font-size: 12px;
 
     vertical-align: middle;
+
+    color: var(--text-primary);
 }
 
 
@@ -632,7 +752,7 @@ tbody tr:hover {
 .request-code {
     display: block;
 
-    color: #111827;
+    color: var(--text-primary);
 
     font-weight: 800;
 
@@ -645,7 +765,7 @@ tbody tr:hover {
 .request-date {
     display: block;
 
-    color: #9ca3af;
+    color: var(--text-faint);
 
     font-size: 9px;
 
@@ -656,7 +776,7 @@ tbody tr:hover {
 .customer-name {
     font-weight: 700;
 
-    color: #111827;
+    color: var(--text-primary);
 
     white-space: nowrap;
 }
@@ -665,7 +785,7 @@ tbody tr:hover {
 .customer-phone {
     display: block;
 
-    color: #9ca3af;
+    color: var(--text-faint);
 
     font-size: 10px;
 
@@ -681,7 +801,7 @@ tbody tr:hover {
 
 
 .technician-empty {
-    color: #9ca3af;
+    color: var(--text-faint);
 
     font-size: 11px;
 
@@ -708,48 +828,20 @@ tbody tr:hover {
 }
 
 
-.status-pending {
-    background: #fff7ed;
-    color: #c2410c;
-}
-
-
-.status-assigned {
-    background: #eff6ff;
-    color: #1d4ed8;
-}
-
-
-.status-in_progress {
-    background: #eef2ff;
-    color: #4338ca;
-}
-
-
-.status-waiting_parts {
-    background: #fefce8;
-    color: #a16207;
-}
-
-
-.status-completed {
-    background: #f0fdf4;
-    color: #15803d;
-}
-
-
-.status-cancelled {
-    background: #fef2f2;
-    color: #b91c1c;
-}
+.status-pending      { background: var(--pending-bg);   color: var(--pending-text); }
+.status-assigned     { background: var(--assigned-bg);  color: var(--assigned-text); }
+.status-in_progress  { background: var(--progress-bg);  color: var(--progress-text); }
+.status-waiting_parts{ background: var(--waiting-bg);   color: var(--waiting-text); }
+.status-completed    { background: var(--completed-bg); color: var(--completed-text); }
+.status-cancelled    { background: var(--cancelled-bg); color: var(--cancelled-text); }
 
 
 .view-button {
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
 
-    background: white;
+    background: var(--bg-card);
 
-    color: #111827;
+    color: var(--text-primary);
 
     border-radius: 7px;
 
@@ -780,7 +872,7 @@ tbody tr:hover {
 
     padding: 50px 20px;
 
-    color: #9ca3af;
+    color: var(--text-faint);
 
     font-size: 12px;
 }
@@ -797,72 +889,66 @@ tbody tr:hover {
 
     border-radius: 8px;
 
-    background: #fef2f2;
+    background: var(--cancelled-bg);
 
     border: 1px solid #fecaca;
 
-    color: #b91c1c;
+    color: var(--cancelled-text);
 
     font-size: 12px;
 }
 
 
-/* ========================================
-   TABLET
-======================================== */
+/* ========================================================
+   RESPONSIVE
+   Single, non-nested breakpoint ladder — desktop first,
+   narrowing down. The sidebar collapses to an icon rail
+   from 900px down; the logout button is never hidden,
+   it just switches to an icon-only circle.
+======================================================== */
+
+/* ---- TABLET: fewer stat columns ---- */
 
 @media (max-width: 1200px) {
 
     .stats-grid {
-        grid-template-columns:
-            repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
 }
 
 
-/* ========================================
-   SMALL TABLET
-======================================== */
+/* ---- SMALL TABLET / NARROW LAPTOP: collapse sidebar ---- */
 
 @media (max-width: 900px) {
 
     .admin-sidebar {
-        width: 72px;
+        width: var(--sidebar-width-collapsed);
 
         padding: 20px 10px;
     }
 
-
     .sidebar-brand {
         justify-content: center;
 
-        padding:
-            5px 0 25px;
+        padding: 5px 0 25px;
     }
-
 
     .sidebar-brand > div:last-child {
         display: none;
     }
 
-
     .nav-item {
         justify-content: center;
 
         padding: 13px 5px;
-    }
 
-
-    .nav-item {
         font-size: 0;
     }
-
 
     .nav-icon {
         font-size: 17px;
     }
-
 
     .admin-profile {
         justify-content: center;
@@ -870,17 +956,30 @@ tbody tr:hover {
         padding: 15px 0;
     }
 
-
-    .admin-profile-info,
-    .logout-button {
+    .admin-profile-info {
         display: none;
     }
 
+    /* Logout stays visible: icon-only circle */
+    .logout-button {
+        width: 40px;
+        height: 40px;
+        min-height: 40px;
+
+        padding: 0;
+
+        border-radius: 50%;
+
+        margin: 0 auto;
+    }
+
+    .logout-button .logout-label {
+        display: none;
+    }
 
     .admin-topbar {
         padding: 0 25px;
     }
-
 
     .dashboard-content {
         padding: 28px 25px;
@@ -889,136 +988,19 @@ tbody tr:hover {
 }
 
 
-/* ========================================
-   MOBILE
-======================================== */
+/* ---- MOBILE ---- */
 
 @media (max-width: 650px) {
 
     .admin-layout {
-        display: block;
-    }
-
-
-    /* -----------------------------
-       MOBILE SIDEBAR
-    ----------------------------- */
-
-    .admin-sidebar {
-        width: 100%;
-
-        height: auto;
-
-        min-height: auto;
-
-        position: sticky;
-
-        top: 0;
-
-        z-index: 100;
-
-        padding: 10px 14px;
-
         display: flex;
-
-        flex-direction: row;
-
-        align-items: center;
-
-        justify-content: space-between;
     }
-
-
-    .sidebar-brand {
-        padding: 0;
-
-        gap: 9px;
-    }
-
-
-    .sidebar-mark {
-        width: 36px;
-        height: 36px;
-
-        border-radius: 9px;
-
-        font-size: 15px;
-    }
-
-
-    .sidebar-brand > div:last-child {
-        display: block;
-    }
-
-
-    .sidebar-brand strong {
-        font-size: 12px;
-    }
-
-
-    .sidebar-brand span {
-        font-size: 8px;
-    }
-
-
-    .sidebar-nav {
-        flex-direction: row;
-
-        gap: 4px;
-
-        margin-left: auto;
-
-        margin-right: 8px;
-    }
-
-
-    .nav-item {
-        width: 38px;
-        height: 38px;
-
-        padding: 0;
-
-        justify-content: center;
-
-        border-radius: 8px;
-    }
-
-
-    .nav-icon {
-        font-size: 16px;
-    }
-
-
-    .sidebar-bottom {
-        margin: 0;
-
-        display: block;
-    }
-
-
-    .admin-profile {
-        padding: 0;
-        border: none;
-    }
-
-
-    .admin-avatar {
-        width: 34px;
-        height: 34px;
-    }
-
-
-    /* -----------------------------
-       TOPBAR
-    ----------------------------- */
 
     .admin-topbar {
         min-height: 70px;
 
-        padding:
-            0 17px;
+        padding: 0 17px;
     }
-
 
     .topbar-label {
         font-size: 8px;
@@ -1026,30 +1008,17 @@ tbody tr:hover {
         letter-spacing: 1.2px;
     }
 
-
     .admin-topbar h1 {
         font-size: 19px;
     }
-
 
     .topbar-user {
         display: none;
     }
 
-
-    /* -----------------------------
-       CONTENT
-    ----------------------------- */
-
     .dashboard-content {
-        padding:
-            22px 15px 35px;
+        padding: 22px 15px 35px;
     }
-
-
-    /* -----------------------------
-       INTRO
-    ----------------------------- */
 
     .dashboard-intro {
         flex-direction: column;
@@ -1061,17 +1030,14 @@ tbody tr:hover {
         margin-bottom: 22px;
     }
 
-
     .dashboard-intro h2,
     .section-heading h2 {
         font-size: 23px;
     }
 
-
     .dashboard-intro p {
         font-size: 12px;
     }
-
 
     .refresh-button {
         width: 100%;
@@ -1079,20 +1045,13 @@ tbody tr:hover {
         height: 42px;
     }
 
-
-    /* -----------------------------
-       STATS
-    ----------------------------- */
-
     .stats-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
 
         gap: 9px;
 
         margin-bottom: 25px;
     }
-
 
     .stat-card {
         min-height: 125px;
@@ -1100,11 +1059,9 @@ tbody tr:hover {
         padding: 14px;
     }
 
-
     .stat-label {
         font-size: 10px;
     }
-
 
     .stat-icon {
         width: 25px;
@@ -1113,31 +1070,22 @@ tbody tr:hover {
         font-size: 11px;
     }
 
-
     .stat-number {
         margin-top: 15px;
 
         font-size: 27px;
     }
 
-
     .stat-description {
         font-size: 9px;
     }
-
-
-    /* -----------------------------
-       REQUEST SECTION
-    ----------------------------- */
 
     .requests-section {
         border-radius: 11px;
     }
 
-
     .section-heading {
-        padding:
-            19px 16px 16px;
+        padding: 19px 16px 16px;
 
         align-items: flex-start;
 
@@ -1146,30 +1094,23 @@ tbody tr:hover {
         gap: 6px;
     }
 
-
     .section-heading h2 {
         font-size: 20px;
     }
-
 
     .request-total {
         font-size: 10px;
     }
 
-
-    /* -----------------------------
-       TOOLBAR
-    ----------------------------- */
-
     .request-toolbar {
-        padding:
-            0 16px 16px;
+        padding: 0 16px 16px;
 
         flex-direction: column;
 
+        align-items: stretch;
+
         gap: 8px;
     }
-
 
     .search-box {
         width: 100%;
@@ -1179,51 +1120,34 @@ tbody tr:hover {
         height: 42px;
     }
 
-
     .request-toolbar select {
         width: 100%;
 
         height: 42px;
     }
 
-
-    /* -----------------------------
-       TABLE
-    ----------------------------- */
-
     .table-wrapper {
         overflow-x: auto;
     }
-
 
     table {
         min-width: 850px;
     }
 
-
     th {
-        padding:
-            11px 13px;
+        padding: 11px 13px;
 
         font-size: 8px;
     }
 
-
     td {
-        padding:
-            13px;
+        padding: 13px;
 
         font-size: 11px;
     }
 
-
-    /* -----------------------------
-       ERROR
-    ----------------------------- */
-
     .dashboard-error {
-        margin:
-            0 16px 15px;
+        margin: 0 16px 15px;
 
         font-size: 11px;
     }
@@ -1231,36 +1155,23 @@ tbody tr:hover {
 }
 
 
-/* ========================================
-   VERY SMALL PHONES
-======================================== */
+/* ---- VERY SMALL PHONES ---- */
 
 @media (max-width: 380px) {
 
-    .sidebar-brand > div:last-child {
-        display: none;
-    }
-
-
-    .sidebar-nav {
-        margin-left: auto;
-    }
-
-
     .stats-grid {
+        grid-template-columns: 1fr;
+
         gap: 7px;
     }
-
 
     .stat-card {
         padding: 12px;
     }
 
-
     .stat-number {
         font-size: 24px;
     }
-
 
     .dashboard-content {
         padding-left: 11px;

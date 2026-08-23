@@ -12,16 +12,60 @@ async function createTechnician() {
         const email = "technician@securepro.com";
         const password = "tech123";
 
+
+        // ==========================================
+        // CHECK WHETHER TECHNICIAN ALREADY EXISTS
+        // ==========================================
+
+        const [existingUsers] =
+            await pool.query(
+                `
+                SELECT id
+                FROM users
+                WHERE email = ?
+                LIMIT 1
+                `,
+                [email]
+            );
+
+
+        if (existingUsers.length > 0) {
+
+            console.log(
+                "Technician account already exists."
+            );
+
+            return;
+        }
+
+
+        // ==========================================
+        // HASH PASSWORD
+        // ==========================================
+
         const hashedPassword =
-            await bcrypt.hash(password, 10);
+            await bcrypt.hash(
+                password,
+                12
+            );
+
+
+        // ==========================================
+        // CREATE UUID
+        // ==========================================
 
         const id =
             crypto.randomUUID();
 
 
+        // ==========================================
+        // INSERT TECHNICIAN
+        // ==========================================
+
         await pool.query(
             `
-            INSERT INTO users (
+            INSERT INTO users
+            (
                 id,
                 name,
                 email,
@@ -29,7 +73,10 @@ async function createTechnician() {
                 role,
                 status
             )
-            VALUES (?, ?, ?, ?, 'technician', 'active')
+            VALUES
+            (
+                ?, ?, ?, ?, 'technician', 'active'
+            )
             `,
             [
                 id,
@@ -41,7 +88,15 @@ async function createTechnician() {
 
 
         console.log(
-            "✓ Technician account created successfully."
+            "=========================================="
+        );
+
+        console.log(
+            "Technician account created successfully"
+        );
+
+        console.log(
+            "=========================================="
         );
 
         console.log(
@@ -54,11 +109,44 @@ async function createTechnician() {
             password
         );
 
+        console.log(
+            "Role: technician"
+        );
+
+        console.log(
+            "=========================================="
+        );
+
+
+        // Verify bcrypt before finishing
+
+        const verify =
+            await bcrypt.compare(
+                password,
+                hashedPassword
+            );
+
+        console.log(
+            "Password hash verification:",
+            verify
+        );
+
     } catch (error) {
 
         console.error(
-            "Unable to create technician:",
+            "=========================================="
+        );
+
+        console.error(
+            "Unable to create technician:"
+        );
+
+        console.error(
             error
+        );
+
+        console.error(
+            "=========================================="
         );
 
     } finally {
@@ -68,5 +156,6 @@ async function createTechnician() {
     }
 
 }
+
 
 createTechnician();

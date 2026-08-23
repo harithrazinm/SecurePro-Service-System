@@ -591,61 +591,61 @@ async function createRequest(
         }
 
 
-        /*
-         * ==================================================
-         * SAVE PHOTOS
-         * ==================================================
-         *
-         * Multer diskStorage has already saved the files.
-         * Therefore use file.filename directly.
-         */
+/*
+ * ==================================================
+ * SAVE PHOTOS
+ * ==================================================
+ */
 
-        for (
-            const file
-            of files
-        ) {
+for (
+    const file
+    of files
+) {
 
-            console.log(
-                "Saving customer photo:",
-                {
-                    originalName:
-                        file.originalname,
+    console.log(
+        "Saving Cloudinary customer photo:",
+        {
+            originalName:
+                file.originalname,
 
-                    savedName:
-                        file.filename,
+            cloudinaryUrl:
+                file.path,
 
-                    mimeType:
-                        file.mimetype,
+            publicId:
+                file.filename,
 
-                    size:
-                        file.size
-                }
-            );
+            mimeType:
+                file.mimetype,
 
-
-            const databasePath =
-                `/uploads/customer/${file.filename}`;
-
-
-            await connection.query(
-                `
-                INSERT INTO customer_photos (
-                    id,
-                    request_id,
-                    file_name,
-                    file_path
-                )
-                VALUES (?, ?, ?, ?)
-                `,
-                [
-                    uuid(),
-                    requestId,
-                    file.originalname,
-                    databasePath
-                ]
-            );
-
+            size:
+                file.size
         }
+    );
+
+
+    const databasePath =
+        file.path;
+
+
+    await connection.query(
+        `
+        INSERT INTO customer_photos (
+            id,
+            request_id,
+            file_name,
+            file_path
+        )
+        VALUES (?, ?, ?, ?)
+        `,
+        [
+            uuid(),
+            requestId,
+            file.originalname,
+            databasePath
+        ]
+    );
+
+}
 
 
         /*

@@ -33,6 +33,8 @@
 
     --tech-warning-soft: #fffbeb;
 
+    --tech-sidebar-border: rgba(255, 255, 255, .08);
+
 }
 
 
@@ -116,7 +118,7 @@ body {
 
     border-bottom:
         1px solid
-        rgba(255,255,255,.08);
+        var(--tech-sidebar-border);
 
 }
 
@@ -126,6 +128,8 @@ body {
     width: 40px;
 
     height: 40px;
+
+    flex-shrink: 0;
 
     display: grid;
 
@@ -205,6 +209,8 @@ body {
 
     font-weight: 600;
 
+    white-space: nowrap;
+
     transition:
         background .2s ease,
         color .2s ease;
@@ -236,6 +242,8 @@ body {
 
     width: 21px;
 
+    flex-shrink: 0;
+
     text-align: center;
 
     font-size: 16px;
@@ -256,7 +264,7 @@ body {
 
     border-top:
         1px solid
-        rgba(255,255,255,.08);
+        var(--tech-sidebar-border);
 
 }
 
@@ -271,6 +279,8 @@ body {
 
     margin-bottom: 16px;
 
+    min-width: 0;
+
 }
 
 
@@ -279,6 +289,8 @@ body {
     width: 34px;
 
     height: 34px;
+
+    flex-shrink: 0;
 
     display: grid;
 
@@ -326,11 +338,14 @@ body {
 }
 
 
+/* Logout button: ALWAYS visible — mobile just
+   restyles this bar, it never hides it. */
+
 .logout-button {
 
     width: 100%;
 
-    height: 38px;
+    min-height: 38px;
 
     border:
         1px solid
@@ -347,6 +362,7 @@ body {
     font: inherit;
 
     font-size: 11px;
+    font-weight: 700;
 
     display: flex;
 
@@ -355,6 +371,11 @@ body {
     justify-content: center;
 
     gap: 7px;
+
+    white-space: nowrap;
+
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 
     transition:
         background .2s ease,
@@ -369,6 +390,13 @@ body {
         rgba(255,255,255,.07);
 
     color: white;
+
+}
+
+
+.logout-button:active {
+
+    transform: scale(0.98);
 
 }
 
@@ -411,6 +439,8 @@ body {
     align-items: center;
 
     justify-content: space-between;
+
+    gap: 16px;
 
 }
 
@@ -457,6 +487,8 @@ body {
 
     font-weight: 600;
 
+    white-space: nowrap;
+
 }
 
 
@@ -465,6 +497,8 @@ body {
     width: 7px;
 
     height: 7px;
+
+    flex-shrink: 0;
 
     border-radius: 50%;
 
@@ -517,6 +551,8 @@ body {
 
     justify-content: space-between;
 
+    gap: 20px;
+
     overflow: hidden;
 
     position: relative;
@@ -553,6 +589,8 @@ body {
 
     z-index: 2;
 
+    min-width: 0;
+
 }
 
 
@@ -588,6 +626,8 @@ body {
 
     margin-bottom: 8px;
 
+    overflow-wrap: break-word;
+
 }
 
 
@@ -607,6 +647,8 @@ body {
     position: relative;
 
     z-index: 2;
+
+    flex-shrink: 0;
 
     width: 58px;
 
@@ -677,6 +719,8 @@ body {
     width: 42px;
 
     height: 42px;
+
+    flex-shrink: 0;
 
     display: grid;
 
@@ -787,6 +831,8 @@ body {
     font-size: 11px;
 
     font-weight: 700;
+
+    white-space: nowrap;
 
 }
 
@@ -947,16 +993,18 @@ body {
 
     font-weight: 800;
 
+    white-space: nowrap;
+
 }
 
 
 .status-assigned {
 
     background:
-        #eff6ff;
+        var(--tech-accent-soft);
 
     color:
-        #2563eb;
+        var(--tech-accent);
 
 }
 
@@ -975,10 +1023,10 @@ body {
 .status-completed {
 
     background:
-        #f0fdf4;
+        var(--tech-success-soft);
 
     color:
-        #15803d;
+        var(--tech-success);
 
 }
 
@@ -986,10 +1034,10 @@ body {
 .status-waiting-parts {
 
     background:
-        #fffbeb;
+        var(--tech-warning-soft);
 
     color:
-        #a16207;
+        var(--tech-warning);
 
 }
 
@@ -1239,6 +1287,11 @@ body {
 
 @media (max-width: 700px) {
 
+    /* Sidebar becomes a static top bar: brand + nav
+       row, with the footer (profile + logout) as a
+       second row underneath. Nothing here is ever
+       display:none — logout stays reachable. */
+
     .technician-sidebar {
 
         position: static;
@@ -1293,9 +1346,54 @@ body {
     }
 
 
+    /* Footer collapses into a compact row instead
+       of disappearing: avatar/name hide to save
+       space, logout stays visible and tappable. */
+
     .technician-sidebar-footer {
 
-        display: none;
+        margin-top: 0;
+
+        padding: 10px 14px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 10px;
+
+    }
+
+
+    .technician-profile {
+
+        margin-bottom: 0;
+
+        min-width: 0;
+
+        flex: 1;
+
+    }
+
+
+    .technician-profile > div:last-child {
+
+        min-width: 0;
+
+    }
+
+
+    .logout-button {
+
+        width: auto;
+
+        flex-shrink: 0;
+
+        padding: 0 16px;
+
+        min-height: 40px;
 
     }
 
@@ -1331,6 +1429,8 @@ body {
 
         padding:
             25px;
+
+        flex-wrap: wrap;
 
     }
 
@@ -1419,6 +1519,18 @@ body {
     .summary-card {
 
         min-height: 85px;
+
+    }
+
+
+    /* Sidebar footer is tight here — drop the
+       profile name/role and keep only the avatar
+       plus the logout button, both still visible. */
+
+    .technician-profile strong,
+    .technician-profile span {
+
+        display: none;
 
     }
 

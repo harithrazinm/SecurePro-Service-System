@@ -1,8 +1,12 @@
 const express = require("express");
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 
+const {
+    CloudinaryStorage
+} = require("multer-storage-cloudinary");
+
+const cloudinary =
+    require("../config/cloudinary");
 
 const {
     createRequest
@@ -29,144 +33,78 @@ console.log(
 
 /*
  * ==========================================================
- * UPLOAD DIRECTORY
- * ==========================================================
- */
-
-const uploadDirectory =
-    path.join(
-        __dirname,
-        "../uploads/customer"
-    );
-
-
-if (
-    !fs.existsSync(
-        uploadDirectory
-    )
-) {
-
-    fs.mkdirSync(
-        uploadDirectory,
-        {
-            recursive: true
-        }
-    );
-
-}
-
-
-/*
- * ==========================================================
- * MULTER STORAGE
+ * CLOUDINARY STORAGE
  * ==========================================================
  */
 
 const storage =
-    multer.diskStorage({
+    new CloudinaryStorage({
 
-        destination:
-            (
-                req,
-                file,
-                callback
-            ) => {
+        cloudinary:
 
-                callback(
-                    null,
-                    uploadDirectory
-                );
-
-            },
+            cloudinary,
 
 
-        filename:
-            (
-                req,
-                file,
-                callback
-            ) => {
+        params: async (
+            req,
+            file
+        ) => {
 
-                const originalExtension =
-                    path.extname(
-                        file.originalname ||
-                        ""
-                    ).toLowerCase();
+            console.log(
+                "Uploading photo to Cloudinary:",
+                {
+                    originalName:
+                        file.originalname,
+
+                    mimetype:
+                        file.mimetype
+                }
+            );
 
 
-                let extension =
-                    originalExtension;
+            return {
+
+                /*
+                 * Cloudinary folder
+                 */
+
+                folder:
+                    "securepro/customer-photos",
 
 
                 /*
-                 * Generate extension when mobile browser
-                 * does not provide a filename extension.
+                 * Image type
                  */
 
-                if (!extension) {
-
-                    if (
-                        file.mimetype ===
-                        "image/png"
-                    ) {
-
-                        extension =
-                            ".png";
-
-                    }
-
-                    else if (
-                        file.mimetype ===
-                        "image/webp"
-                    ) {
-
-                        extension =
-                            ".webp";
-
-                    }
-
-                    else if (
-                        file.mimetype ===
-                        "image/heic"
-                    ) {
-
-                        extension =
-                            ".heic";
-
-                    }
-
-                    else if (
-                        file.mimetype ===
-                        "image/heif"
-                    ) {
-
-                        extension =
-                            ".heif";
-
-                    }
-
-                    else {
-
-                        extension =
-                            ".jpg";
-
-                    }
-
-                }
+                resource_type:
+                    "image",
 
 
-                const uniqueName =
-                    `${Date.now()}-${Math.round(
-                        Math.random() * 1e9
-                    )}${extension}`;
+                /*
+                 * Generate unique filename automatically
+                 */
+
+                use_filename:
+                    true,
+
+                unique_filename:
+                    true,
 
 
-                callback(
-                    null,
-                    uniqueName
-                );
+                /*
+                 * Supported upload formats
+                 */
 
-            }
+                allowed_formats: [
+                    "jpg",
+                    "jpeg",
+                    "png",
+                    "webp"
+                ]
+
+            };
+
+        }
 
     });
 
@@ -234,9 +172,17 @@ const upload =
 
         limits: {
 
+            /*
+             * Maximum 10 photos
+             */
+
             files:
                 10,
 
+
+            /*
+             * Maximum 20 MB each
+             */
 
             fileSize:
                 20 * 1024 * 1024
@@ -307,10 +253,13 @@ router.use(
             ) {
 
                 return res.status(400).json({
-                    success: false,
+
+                    success:
+                        false,
 
                     message:
                         "One photo is too large. Maximum size is 20 MB."
+
                 });
 
             }
@@ -322,10 +271,13 @@ router.use(
             ) {
 
                 return res.status(400).json({
-                    success: false,
+
+                    success:
+                        false,
 
                     message:
                         "Maximum 10 photos are allowed."
+
                 });
 
             }
@@ -337,10 +289,13 @@ router.use(
             ) {
 
                 return res.status(400).json({
-                    success: false,
+
+                    success:
+                        false,
 
                     message:
                         "Unexpected photo upload field."
+
                 });
 
             }
@@ -362,6 +317,12 @@ router.use(
     }
 );
 
+
+/*
+ * ==========================================================
+ * EXPORT
+ * ==========================================================
+ */
 
 module.exports =
     router;
