@@ -1,9 +1,8 @@
 const API_BASE =
-    "http://localhost:5001/api";
-
+    "https://securepro-service-system.onrender.com/api";
 const BACKEND_BASE =
-    "http://localhost:5001";
-    
+    "https://securepro-service-system.onrender.com";
+
 let requestData = null;
 let selectedStatus = null;
 
