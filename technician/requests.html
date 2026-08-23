@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePro | My Work</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/technician.css">
+    <link rel="stylesheet" href="css/requests.css">
+</head>
+
+<body>
+    <div class="technician-layout">
+        <aside class="technician-sidebar">
+            <div class="technician-brand">
+                <div class="technician-brand-mark">S</div>
+                <div><strong>SECUREPRO</strong><span>System Solutions</span></div>
+            </div>
+            <nav class="technician-nav">
+                <a href="dashboard.html" class="technician-nav-item"><span
+                        class="nav-icon">▦</span><span>Dashboard</span></a>
+                <a href="requests.html" class="technician-nav-item active"><span class="nav-icon">▤</span><span>My
+                        Work</span></a>
+            </nav>
+            <div class="technician-sidebar-footer">
+                <div class="technician-profile">
+                    <div class="profile-avatar">T</div>
+                    <div><strong id="sidebarTechnicianName">Technician</strong><span>Technician</span></div>
+                </div>
+                <button id="logoutButton" type="button" class="logout-button"><span>↪</span>Logout</button>
+            </div>
+        </aside>
+        <main class="technician-main">
+            <header class="technician-topbar">
+                <div><span class="topbar-label">TECHNICIAN PORTAL</span>
+                    <h1>My Work</h1>
+                </div>
+                <div class="topbar-user"><span class="online-dot"></span><span
+                        id="topbarTechnicianName">Technician</span></div>
+            </header>
+            <div class="technician-content">
+                <section class="work-header">
+                    <div><span class="eyebrow">WORK MANAGEMENT</span>
+                        <h2>Service Requests</h2>
+                        <p>Search, filter and manage all work assigned to you.</p>
+                    </div>
+                    <button id="refreshButton" class="refresh-button" type="button">↻ Refresh</button>
+                </section>
+                <section class="filter-card">
+                    <div class="filter-grid">
+                        <div class="filter-field search-field"><label for="searchInput">Search</label><input
+                                id="searchInput" type="search" placeholder="Request code, customer or address"></div>
+                        <div class="filter-field"><label for="statusFilter">Status</label><select id="statusFilter">
+                                <option value="">All Statuses</option>
+                                <option value="assigned">Assigned</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="waiting_parts">Waiting Parts</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select></div>
+                        <div class="filter-field"><label for="serviceFilter">Service</label><select id="serviceFilter">
+                                <option value="">All Services</option>
+                            </select></div>
+                        <div class="filter-field"><label for="dateFilter">Scheduled Date</label><input id="dateFilter"
+                                type="date"></div>
+                        <div class="filter-field"><label for="sortFilter">Sort By</label><select id="sortFilter">
+                                <option value="scheduled_asc">Scheduled Date: Earliest</option>
+                                <option value="scheduled_desc">Scheduled Date: Latest</option>
+                                <option value="created_desc">Newest Created</option>
+                                <option value="created_asc">Oldest Created</option>
+                            </select></div>
+                    </div>
+                    <div class="filter-actions"><span id="resultCount">0 requests</span><button id="clearFiltersButton"
+                            type="button" class="clear-filter-button">Clear Filters</button></div>
+                </section>
+                <section class="work-tabs" aria-label="Work status">
+                    <button class="work-tab active" data-status="">All <span id="allTabCount">0</span></button>
+                    <button class="work-tab" data-status="assigned">Assigned <span
+                            id="assignedTabCount">0</span></button>
+                    <button class="work-tab" data-status="in_progress">In Progress <span
+                            id="progressTabCount">0</span></button>
+                    <button class="work-tab" data-status="waiting_parts">Waiting Parts <span
+                            id="waitingTabCount">0</span></button>
+                    <button class="work-tab" data-status="completed">Completed <span
+                            id="completedTabCount">0</span></button>
+                </section>
+                <div id="workError" class="dashboard-error" hidden></div>
+                <div id="workLoading" class="request-loading">
+                    <div class="loading-spinner"></div><span>Loading your work...</span>
+                </div>
+                <div id="emptyWork" class="empty-state" hidden>
+                    <div class="empty-icon">▤</div>
+                    <h3>No matching work found</h3>
+                    <p>Try changing your filters or check again later.</p>
+                </div>
+                <section id="workList" class="request-list work-list" hidden></section>
+            </div>
+        </main>
+    </div>
+    <script src="js/requests.js"></script>
+</body>
+
+</html>

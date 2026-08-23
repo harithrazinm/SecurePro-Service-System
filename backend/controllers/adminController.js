@@ -1,5 +1,5 @@
 const pool = require("../config/db");
-
+const crypto = require("crypto");
 
 /*
  * ======================================================
@@ -26,8 +26,14 @@ async function getRequests(req, res) {
                 sr.customer_phone,
                 sr.customer_email,
                 sr.customer_address,
+                sr.admin_notes,
                 sr.status,
                 sr.technician_id,
+
+                sr.scheduled_date,
+                sr.scheduled_time,
+                sr.assigned_at,
+
                 sr.created_at,
                 sr.updated_at,
 
@@ -51,10 +57,6 @@ async function getRequests(req, res) {
         const params = [];
 
 
-        /*
-         * STATUS FILTER
-         */
-
         if (status) {
 
             conditions.push(
@@ -66,10 +68,6 @@ async function getRequests(req, res) {
         }
 
 
-        /*
-         * SERVICE FILTER
-         */
-
         if (service) {
 
             conditions.push(
@@ -80,10 +78,6 @@ async function getRequests(req, res) {
 
         }
 
-
-        /*
-         * SEARCH
-         */
 
         if (search) {
 
@@ -109,10 +103,6 @@ async function getRequests(req, res) {
         }
 
 
-        /*
-         * APPLY CONDITIONS
-         */
-
         if (conditions.length > 0) {
 
             sql +=
@@ -122,12 +112,12 @@ async function getRequests(req, res) {
         }
 
 
-        /*
-         * ORDER
-         */
-
         sql += `
-            ORDER BY sr.created_at DESC
+            ORDER BY
+                sr.scheduled_date IS NULL ASC,
+                sr.scheduled_date ASC,
+                sr.scheduled_time ASC,
+                sr.created_at DESC
         `;
 
 
@@ -137,10 +127,6 @@ async function getRequests(req, res) {
                 params
             );
 
-
-        /*
-         * RESPONSE
-         */
 
         return res.json({
 
@@ -192,6 +178,9 @@ async function getRequests(req, res) {
                         status:
                             request.status,
 
+                        admin_notes:
+                            request.admin_notes,
+
                         technician:
                             request.technician_id
                                 ? {
@@ -204,6 +193,19 @@ async function getRequests(req, res) {
 
                                 }
                                 : null,
+
+                        schedule: {
+
+                            date:
+                                request.scheduled_date,
+
+                            time:
+                                request.scheduled_time
+
+                        },
+
+                        assigned_at:
+                            request.assigned_at,
 
                         created_at:
                             request.created_at,
@@ -671,6 +673,26 @@ async function getRequestById(req, res) {
                 technician:
                     technician,
 
+                    schedule: {
+
+    date:
+        request.scheduled_date,
+
+    time:
+        request.scheduled_time
+
+},
+
+assigned_at:
+    request.assigned_at,
+
+
+admin_notes:
+    request.admin_notes,
+
+admin_notes_updated_at:
+    request.admin_notes_updated_at,
+
 
                 /*
                  * CUSTOMER QUESTIONS / ANSWERS
@@ -950,28 +972,131 @@ async function updateRequest(req, res) {
     const connection =
         await pool.getConnection();
 
-
-    let transactionStarted =
-        false;
-
-
     try {
 
-        const {
-            id
-        } = req.params;
+        const requestId =
+            req.params.id;
+            const id = req.params.id;
 
 
         const {
             status,
-            technician_id
+            technician_id,
+            scheduled_date,
+            scheduled_time,
+            admin_notes
         } = req.body;
+
+console.log("================================");
+console.log("UPDATE REQUEST BODY:");
+console.log(req.body);
+console.log("REQUEST ID:", id);
+console.log("================================");
+
+        /*
+         * ==========================================
+         * CHECK REQUEST EXISTS
+         * ==========================================
+         */
+
+        const [requests] =
+            await connection.query(
+                `
+                SELECT
+                    id,
+                    status,
+                    technician_id
+                FROM service_requests
+                WHERE id = ?
+                LIMIT 1
+                `,
+                [requestId]
+            );
+
+
+        if (requests.length === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Service request not found."
+            });
+
+        }
+
+
+        const request =
+            requests[0];
 
 
         /*
-         * ==================================================
-         * ALLOWED STATUSES
-         * ==================================================
+         * ==========================================
+         * VALIDATE TECHNICIAN
+         * ==========================================
+         */
+
+        if (technician_id) {
+
+            const [technicians] =
+                await connection.query(
+                    `
+                    SELECT
+                        id,
+                        name
+                    FROM users
+                    WHERE id = ?
+                    AND role = 'technician'
+                    AND status = 'active'
+                    LIMIT 1
+                    `,
+                    [technician_id]
+                );
+
+
+            if (technicians.length === 0) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Selected technician is not valid or inactive."
+                });
+
+            }
+
+        }
+
+
+        /*
+         * ==========================================
+         * DETERMINE FINAL STATUS
+         *
+         * If technician is assigned,
+         * automatically change pending to assigned.
+         * ==========================================
+         */
+
+        let finalStatus =
+            status ||
+            request.status;
+
+
+        if (
+            technician_id &&
+            (
+                !status ||
+                status === "pending"
+            )
+        ) {
+
+            finalStatus =
+                "assigned";
+
+        }
+
+
+        /*
+         * ==========================================
+         * VALIDATE STATUS
+         * ==========================================
          */
 
         const allowedStatuses = [
@@ -992,252 +1117,157 @@ async function updateRequest(req, res) {
 
 
         if (
-            status &&
             !allowedStatuses.includes(
-                status
+                finalStatus
             )
         ) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Invalid request status."
-
+                message: "Invalid request status."
             });
 
         }
 
 
         /*
-         * ==================================================
-         * GET CURRENT REQUEST
-         * ==================================================
+         * ==========================================
+         * ASSIGNMENT VALIDATION
+         * ==========================================
          */
 
-        const [requests] =
-            await connection.query(
-                `
-                SELECT
-
-                    id,
-                    status,
-                    technician_id
-
-                FROM service_requests
-
-                WHERE id = ?
-
-                LIMIT 1
-                `,
-                [id]
-            );
-
-
         if (
-            requests.length === 0
+            technician_id &&
+            !scheduled_date
         ) {
 
-            return res.status(404).json({
-
+            return res.status(400).json({
                 success: false,
-
                 message:
-                    "Service request not found."
-
+                    "Scheduled date is required when assigning a technician."
             });
 
         }
 
 
-        const current =
-            requests[0];
-
-
         /*
-         * ==================================================
-         * NEW STATUS
-         * ==================================================
-         */
-
-        const newStatus =
-            status ||
-            current.status;
-
-
-        /*
-         * IMPORTANT:
-         *
-         * Empty technician_id means
-         * remove assignment.
-         */
-
-        const newTechnician =
-            technician_id ||
-            null;
-
-
-        /*
-         * ==================================================
-         * VALIDATE TECHNICIAN
-         * ==================================================
-         */
-
-        if (
-            newTechnician
-        ) {
-
-            const [technicians] =
-                await connection.query(
-                    `
-                    SELECT
-                        id
-
-                    FROM users
-
-                    WHERE
-                        id = ?
-
-                        AND role = 'technician'
-
-                        AND status = 'active'
-
-                    LIMIT 1
-                    `,
-                    [
-                        newTechnician
-                    ]
-                );
-
-
-            if (
-                technicians.length === 0
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Selected technician is invalid or inactive."
-
-                });
-
-            }
-
-        }
-
-
-        /*
-         * ==================================================
+         * ==========================================
          * START TRANSACTION
-         * ==================================================
+         * ==========================================
          */
 
         await connection.beginTransaction();
 
-        transactionStarted =
-            true;
-
 
         /*
-         * ==================================================
+         * ==========================================
          * UPDATE REQUEST
-         * ==================================================
+         * ==========================================
          */
 
         await connection.query(
             `
             UPDATE service_requests
-
             SET
 
                 status = ?,
 
                 technician_id = ?,
 
-                completed_at =
+                scheduled_date = ?,
+
+                scheduled_time = ?,
+
+                assigned_at =
                     CASE
-
-                        WHEN ? = 'completed'
-                            THEN CURRENT_TIMESTAMP
-
-                        WHEN ? <> 'completed'
-                            THEN NULL
-
-                        ELSE completed_at
-
+                        WHEN ? IS NOT NULL
+                        THEN NOW()
+                        ELSE assigned_at
                     END,
 
-                updated_at =
-                    CURRENT_TIMESTAMP
+                admin_notes = ?,
+
+                admin_notes_updated_at =
+                    CASE
+                        WHEN ? IS NOT NULL
+                        THEN NOW()
+                        ELSE admin_notes_updated_at
+                    END,
+
+                admin_notes_updated_by =
+                    CASE
+                        WHEN ? IS NOT NULL
+                        THEN ?
+                        ELSE admin_notes_updated_by
+                    END
 
             WHERE id = ?
             `,
             [
-                newStatus,
 
-                newTechnician,
+                finalStatus,
 
-                newStatus,
+                technician_id || null,
 
-                newStatus,
+                scheduled_date || null,
 
-                id
+                scheduled_time || null,
+
+                technician_id || null,
+
+                admin_notes || null,
+
+                admin_notes || null,
+
+                admin_notes || null,
+
+                req.user.id,
+
+                requestId
+
             ]
         );
 
 
         /*
-         * ==================================================
-         * STATUS HISTORY
-         *
-         * Only create a history record
-         * when status actually changed.
-         * ==================================================
+         * ==========================================
+         * SAVE STATUS HISTORY
+         * Only create history when status changed.
+         * ==========================================
          */
 
         if (
-            current.status !==
-            newStatus
+            request.status !==
+            finalStatus
         ) {
 
             await connection.query(
                 `
-                INSERT INTO request_status_history (
-
+                INSERT INTO request_status_history
+                (
                     id,
                     request_id,
                     old_status,
                     new_status,
                     changed_by,
                     remarks
-
                 )
-
-                VALUES (
-
-                    UUID(),
-                    ?,
-                    ?,
-                    ?,
-                    ?,
-                    ?
-
-                )
+                VALUES (?, ?, ?, ?, ?, ?)
                 `,
                 [
 
-                    id,
+                    crypto.randomUUID(),
 
-                    current.status,
+                    requestId,
 
-                    newStatus,
+                    request.status,
+
+                    finalStatus,
 
                     req.user.id,
 
-                    "Admin updated request status."
+                    admin_notes ||
+                    "Request updated by administrator."
 
                 ]
             );
@@ -1246,63 +1276,44 @@ async function updateRequest(req, res) {
 
 
         /*
-         * ==================================================
+         * ==========================================
          * COMMIT
-         * ==================================================
+         * ==========================================
          */
 
         await connection.commit();
 
-        transactionStarted =
-            false;
-
 
         /*
-         * ==================================================
+         * ==========================================
          * GET UPDATED REQUEST
-         * ==================================================
+         * ==========================================
          */
 
-        const [updated] =
+        const [updatedRequests] =
             await connection.query(
                 `
                 SELECT
+                    sr.*,
 
-                    sr.id,
-                    sr.request_code,
-                    sr.status,
-                    sr.technician_id,
-
-                    sr.created_at,
-                    sr.updated_at,
-                    sr.completed_at,
+                    u.id AS technician_user_id,
 
                     u.name AS technician_name,
+
                     u.email AS technician_email
 
                 FROM service_requests sr
 
                 LEFT JOIN users u
-                    ON u.id =
-                        sr.technician_id
+                    ON sr.technician_id = u.id
 
                 WHERE sr.id = ?
 
                 LIMIT 1
                 `,
-                [id]
+                [requestId]
             );
 
-
-        const updatedRequest =
-            updated[0];
-
-
-        /*
-         * ==================================================
-         * RESPONSE
-         * ==================================================
-         */
 
         return res.json({
 
@@ -1311,63 +1322,15 @@ async function updateRequest(req, res) {
             message:
                 "Service request updated successfully.",
 
-            data: {
-
-                id:
-                    updatedRequest.id,
-
-                request_code:
-                    updatedRequest.request_code,
-
-                status:
-                    updatedRequest.status,
-
-                technician:
-                    updatedRequest.technician_id
-                        ? {
-
-                            id:
-                                updatedRequest.technician_id,
-
-                            name:
-                                updatedRequest.technician_name,
-
-                            email:
-                                updatedRequest.technician_email
-
-                        }
-                        : null,
-
-                created_at:
-                    updatedRequest.created_at,
-
-                updated_at:
-                    updatedRequest.updated_at,
-
-                completed_at:
-                    updatedRequest.completed_at
-
-            }
+            data:
+                updatedRequests[0]
 
         });
 
 
     } catch (error) {
 
-        /*
-         * ==================================================
-         * ROLLBACK
-         * ==================================================
-         */
-
-        if (
-            transactionStarted
-        ) {
-
-            await connection.rollback();
-
-        }
-
+        await connection.rollback();
 
         console.error(
             "Update request error:",
@@ -1383,6 +1346,7 @@ async function updateRequest(req, res) {
                 "Unable to update service request."
 
         });
+
 
     } finally {
 

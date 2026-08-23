@@ -16,6 +16,11 @@ function uuid() {
 async function getAssignedRequests(req, res) {
 
     try {
+console.log("TECHNICIAN TOKEN USER:", req.user);
+console.log("TECHNICIAN ID USED:", req.user.id);
+        const technicianId =
+            req.user.id;
+
 
         const [requests] =
             await pool.query(
@@ -23,29 +28,56 @@ async function getAssignedRequests(req, res) {
                 SELECT
 
                     sr.id,
+
                     sr.request_code,
+
+                    sr.customer_name,
+
+                    sr.customer_phone,
+
+                    sr.customer_email,
+
+                    sr.customer_address,
+
                     sr.status,
+
+                    sr.admin_notes,
+
+                    sr.scheduled_date,
+
+                    sr.scheduled_time,
+
+                    sr.assigned_at,
+
                     sr.created_at,
+
                     sr.updated_at,
 
-                    s.id AS service_id,
-                    s.service_code AS service_code,
-                    s.name_en AS service_name_en,
-                    s.name_ms AS service_name_ms
+                    s.name_en AS service_name
 
                 FROM service_requests sr
 
                 LEFT JOIN services s
                     ON s.id = sr.service_id
 
-                WHERE
-                    sr.technician_id = ?
+                WHERE sr.technician_id = ?
 
                 ORDER BY
+
+                    CASE
+                        WHEN sr.scheduled_date IS NULL
+                            THEN 1
+                        ELSE 0
+                    END ASC,
+
+                    sr.scheduled_date ASC,
+
+                    sr.scheduled_time ASC,
+
                     sr.created_at DESC
                 `,
                 [
-                    req.user.id
+                    technicianId
                 ]
             );
 
@@ -54,54 +86,14 @@ async function getAssignedRequests(req, res) {
 
             success: true,
 
-            data:
-                requests.map(
-                    request => ({
-
-                        id:
-                            request.id,
-
-                        request_code:
-                            request.request_code,
-
-                        status:
-                            request.status,
-
-                        created_at:
-                            request.created_at,
-
-                        updated_at:
-                            request.updated_at,
-
-                        service: {
-
-                            id:
-                                request.service_id,
-
-                            code:
-                                request.service_code,
-
-                            name: {
-
-                                en:
-                                    request.service_name_en,
-
-                                ms:
-                                    request.service_name_ms
-
-                            }
-
-                        }
-
-                    })
-                )
+            data: requests
 
         });
 
     } catch (error) {
 
         console.error(
-            "Get technician requests error:",
+            "Get assigned requests error:",
             error
         );
 
@@ -130,15 +122,18 @@ async function getAssignedRequestById(req, res) {
 
     try {
 
+
         const requestId =
             req.params.id;
 
 
-        /*
-         * ==================================================
-         * REQUEST + CUSTOMER + SERVICE
-         * ==================================================
-         */
+        const technicianId =
+            req.user.id;
+
+
+        /* ==================================================
+           GET REQUEST DETAILS
+        ================================================== */
 
         const [requests] =
             await pool.query(
@@ -146,58 +141,69 @@ async function getAssignedRequestById(req, res) {
                 SELECT
 
                     sr.id,
+
                     sr.request_code,
-                    sr.status,
+
+                    sr.service_id,
 
                     sr.customer_name,
+
                     sr.customer_phone,
+
                     sr.customer_email,
+
                     sr.customer_address,
+
                     sr.customer_notes,
 
-                    sr.technician_id,
+                    sr.admin_notes,
+
+                    sr.status,
+
+                    sr.scheduled_date,
+
+                    sr.scheduled_time,
+
+                    sr.assigned_at,
 
                     sr.created_at,
+
                     sr.updated_at,
-                    sr.completed_at,
 
-                    s.id AS service_id,
-                    s.service_code AS service_code,
-                    s.name_en AS service_name_en,
-                    s.name_ms AS service_name_ms,
 
-                    u.name AS technician_name,
-                    u.email AS technician_email
+                   s.name_en AS service_name
 
                 FROM service_requests sr
 
                 LEFT JOIN services s
                     ON s.id = sr.service_id
 
-                LEFT JOIN users u
-                    ON u.id = sr.technician_id
+                WHERE sr.id = ?
 
-                WHERE
-                    sr.id = ?
-                    AND sr.technician_id = ?
+                AND sr.technician_id = ?
 
                 LIMIT 1
                 `,
                 [
                     requestId,
-                    req.user.id
+                    technicianId
                 ]
             );
 
+console.log("REQUEST DETAILS RESULT:");
+console.log(requests[0]);
+        /* ==================================================
+           CHECK REQUEST
+        ================================================== */
 
-        if (!requests.length) {
+        if (requests.length === 0) {
 
             return res.status(404).json({
 
                 success: false,
 
                 message:
-                    "Request not found or not assigned to you."
+                    "Request not found or is not assigned to you."
 
             });
 
@@ -208,11 +214,9 @@ async function getAssignedRequestById(req, res) {
             requests[0];
 
 
-        /*
-         * ==================================================
-         * CUSTOMER PHOTOS
-         * ==================================================
-         */
+        /* ==================================================
+           GET CUSTOMER PHOTOS
+        ================================================== */
 
         const [photos] =
             await pool.query(
@@ -220,8 +224,11 @@ async function getAssignedRequestById(req, res) {
                 SELECT
 
                     id,
+
                     file_name,
+
                     file_path,
+
                     uploaded_at
 
                 FROM customer_photos
@@ -236,21 +243,16 @@ async function getAssignedRequestById(req, res) {
             );
 
 
-        /*
-         * ==================================================
-         * CUSTOMER SERVICE ANSWERS
-         * ==================================================
-         *
-         * These are the answers the customer gave
-         * when creating the service request.
-         */
+        /* ==================================================
+           GET REQUEST ANSWERS
+        ================================================== */
 
         const [answers] =
             await pool.query(
                 `
                 SELECT
 
-                    ra.id AS answer_id,
+                    ra.id,
 
                     ra.question_id,
 
@@ -262,29 +264,23 @@ async function getAssignedRequestById(req, res) {
 
                     ra.unit,
 
-                    sq.question_code,
+                    ra.created_at,
 
-                    sq.title_en,
+                    ra.updated_at,
 
-                    sq.title_ms,
 
-                    sq.description_en,
+                    sq.title_en AS question_en,
 
-                    sq.description_ms,
-
-                    sq.display_order
+sq.title_ms AS question_ms
 
                 FROM request_answers ra
 
                 LEFT JOIN service_questions sq
                     ON sq.id = ra.question_id
 
-                WHERE
-                    ra.request_id = ?
+                WHERE ra.request_id = ?
 
-                ORDER BY
-                    sq.display_order ASC,
-                    ra.created_at ASC
+                ORDER BY ra.created_at ASC
                 `,
                 [
                     requestId
@@ -292,271 +288,48 @@ async function getAssignedRequestById(req, res) {
             );
 
 
-        /*
-         * ==================================================
-         * ANSWER OPTIONS
-         * ==================================================
-         *
-         * Used for single/multi selection answers.
-         */
+        /* ==================================================
+           GET SELECTED OPTIONS
+        ================================================== */
 
-        const [answerOptions] =
-            await pool.query(
-                `
-                SELECT
+        for (
+            const answer of answers
+        ) {
 
-                    rao.answer_id,
+            const [options] =
+                await pool.query(
+                    `
+                    SELECT
 
-                    rao.option_id,
+                        id,
 
-                    rao.option_value,
+                        option_id,
 
-                    rao.option_label_en,
+                        option_value,
 
-                    rao.option_label_ms
+                        option_label_en,
 
-                FROM request_answer_options rao
+                        option_label_ms
 
-                INNER JOIN request_answers ra
-                    ON ra.id = rao.answer_id
+                    FROM request_answer_options
 
-                WHERE
-                    ra.request_id = ?
+                    WHERE answer_id = ?
+                    `,
+                    [
+                        answer.id
+                    ]
+                );
 
-                ORDER BY
-                    rao.id ASC
-                `,
-                [
-                    requestId
-                ]
-            );
 
+            answer.options =
+                options;
 
-        /*
-         * ==================================================
-         * FORMAT CUSTOMER ANSWERS
-         * ==================================================
-         */
+        }
 
-        const formattedAnswers =
-            answers.map(
-                answer => {
 
-                    const options =
-                        answerOptions.filter(
-                            option =>
-                                option.answer_id ===
-                                answer.answer_id
-                        );
-
-
-                    let answerValue =
-                        null;
-
-
-                    /*
-                     * --------------------------------------
-                     * OPTION ANSWER
-                     * --------------------------------------
-                     */
-
-                    if (options.length) {
-
-                        answerValue =
-                            options
-                                .map(
-                                    option =>
-                                        option.option_label_en
-                                )
-                                .join(", ");
-
-                    }
-
-
-                    /*
-                     * --------------------------------------
-                     * TEXT ANSWER
-                     * --------------------------------------
-                     */
-
-                    else if (
-                        answer.text_value !== null &&
-                        answer.text_value !== undefined &&
-                        String(
-                            answer.text_value
-                        ).trim() !== ""
-                    ) {
-
-                        answerValue =
-                            answer.text_value;
-
-                    }
-
-
-                    /*
-                     * --------------------------------------
-                     * NUMBER ANSWER
-                     * --------------------------------------
-                     */
-
-                    else if (
-                        answer.number_value !== null &&
-                        answer.number_value !== undefined
-                    ) {
-
-                        answerValue =
-                            answer.number_value;
-
-                    }
-
-
-                    /*
-                     * --------------------------------------
-                     * EMPTY ANSWER
-                     * --------------------------------------
-                     */
-
-                    if (
-                        answerValue === null ||
-                        answerValue === undefined ||
-                        String(
-                            answerValue
-                        ).trim() === ""
-                    ) {
-
-                        answerValue =
-                            "Not specified";
-
-                    }
-
-
-                    return {
-
-                        id:
-                            answer.answer_id,
-
-                        question_id:
-                            answer.question_id,
-
-                        question_code:
-                            answer.question_code,
-
-                        question_type:
-                            answer.question_type,
-
-                        question: {
-
-                            en:
-                                answer.title_en,
-
-                            ms:
-                                answer.title_ms
-
-                        },
-
-                        description: {
-
-                            en:
-                                answer.description_en,
-
-                            ms:
-                                answer.description_ms
-
-                        },
-
-                        answer:
-                            answerValue,
-
-                        text_value:
-                            answer.text_value,
-
-                        number_value:
-                            answer.number_value,
-
-                        unit:
-                            answer.unit,
-
-                        options:
-                            options.map(
-                                option => ({
-
-                                    id:
-                                        option.option_id,
-
-                                    value:
-                                        option.option_value,
-
-                                    label: {
-
-                                        en:
-                                            option.option_label_en,
-
-                                        ms:
-                                            option.option_label_ms
-
-                                    }
-
-                                })
-                            )
-
-                    };
-
-                }
-            );
-
-
-        /*
-         * ==================================================
-         * SERVICE REPORT
-         * ==================================================
-         */
-
-        const [reports] =
-            await pool.query(
-                `
-                SELECT
-
-                    id,
-
-                    work_performed,
-                    findings,
-                    materials_used,
-                    technician_notes,
-
-                    report_file_path,
-
-                    status,
-
-                    submitted_at,
-                    reviewed_at,
-                    reviewed_by,
-
-                    created_at,
-                    updated_at
-
-                FROM service_reports
-
-                WHERE
-                    request_id = ?
-                    AND technician_id = ?
-
-                ORDER BY
-                    created_at DESC
-
-                LIMIT 1
-                `,
-                [
-                    requestId,
-                    req.user.id
-                ]
-            );
-
-
-        /*
-         * ==================================================
-         * FINAL RESPONSE
-         * ==================================================
-         */
+        /* ==================================================
+           RETURN COMPLETE REQUEST
+        ================================================== */
 
         return res.json({
 
@@ -564,141 +337,24 @@ async function getAssignedRequestById(req, res) {
 
             data: {
 
-                id:
-                    request.id,
+                ...request,
 
-                request_code:
-                    request.request_code,
+                photos,
 
-                status:
-                    request.status,
-
-                technician_id:
-                    request.technician_id,
-
-
-                /*
-                 * ------------------------------------------
-                 * TECHNICIAN
-                 * ------------------------------------------
-                 */
-
-                technician: {
-
-                    id:
-                        request.technician_id,
-
-                    name:
-                        request.technician_name,
-
-                    email:
-                        request.technician_email
-
-                },
-
-
-                /*
-                 * ------------------------------------------
-                 * SERVICE
-                 * ------------------------------------------
-                 */
-
-                service: {
-
-                    id:
-                        request.service_id,
-
-                    code:
-                        request.service_code,
-
-                    name: {
-
-                        en:
-                            request.service_name_en,
-
-                        ms:
-                            request.service_name_ms
-
-                    }
-
-                },
-
-
-                /*
-                 * ------------------------------------------
-                 * CUSTOMER
-                 * ------------------------------------------
-                 */
-
-                customer: {
-
-                    name:
-                        request.customer_name,
-
-                    phone:
-                        request.customer_phone,
-
-                    email:
-                        request.customer_email,
-
-                    address:
-                        request.customer_address,
-
-                    notes:
-                        request.customer_notes
-
-                },
-
-
-                /*
-                 * ------------------------------------------
-                 * WHAT CUSTOMER REQUESTED
-                 * ------------------------------------------
-                 */
-
-                answers:
-                    formattedAnswers,
-
-
-                /*
-                 * ------------------------------------------
-                 * CUSTOMER PHOTOS
-                 * ------------------------------------------
-                 */
-
-                photos:
-                    photos,
-
-
-                /*
-                 * ------------------------------------------
-                 * TECHNICIAN REPORT
-                 * ------------------------------------------
-                 */
-
-                report:
-                    reports[0] || null,
-
-
-                created_at:
-                    request.created_at,
-
-                updated_at:
-                    request.updated_at,
-
-                completed_at:
-                    request.completed_at
+                answers
 
             }
 
         });
 
+
     } catch (error) {
 
         console.error(
-            "Get technician request error:",
+            "Get assigned request details error:",
             error
         );
+
 
         return res.status(500).json({
 
@@ -722,11 +378,17 @@ async function getAssignedRequestById(req, res) {
 
 async function submitWorkReport(req, res) {
 
-    const connection =
-        await pool.getConnection();
+    let connection;
 
 
     try {
+
+        connection =
+            await pool.getConnection();
+
+
+        await connection.beginTransaction();
+
 
         const requestId =
             req.params.id;
@@ -766,6 +428,9 @@ async function submitWorkReport(req, res) {
 
         if (!workPerformed) {
 
+            await connection.rollback();
+
+
             return res.status(400).json({
 
                 success: false,
@@ -788,17 +453,13 @@ async function submitWorkReport(req, res) {
                 SELECT
 
                     id,
-
                     status,
-
                     technician_id
 
                 FROM service_requests
 
                 WHERE
-
                     id = ?
-
                     AND technician_id = ?
 
                 LIMIT 1
@@ -811,6 +472,9 @@ async function submitWorkReport(req, res) {
 
 
         if (!requests.length) {
+
+            await connection.rollback();
+
 
             return res.status(403).json({
 
@@ -837,6 +501,9 @@ async function submitWorkReport(req, res) {
             "cancelled"
         ) {
 
+            await connection.rollback();
+
+
             return res.status(400).json({
 
                 success: false,
@@ -859,15 +526,12 @@ async function submitWorkReport(req, res) {
                 SELECT
 
                     id,
-
                     status
 
                 FROM service_reports
 
                 WHERE
-
                     request_id = ?
-
                     AND technician_id = ?
 
                 ORDER BY
@@ -887,10 +551,14 @@ async function submitWorkReport(req, res) {
         ====================================================== */
 
         if (
-            existingReports.length &&
+            existingReports.length > 0 &&
             existingReports[0].status ===
-                "rejected"
+            "rejected"
         ) {
+
+            const reportId =
+                existingReports[0].id;
+
 
             await connection.query(
                 `
@@ -912,9 +580,9 @@ async function submitWorkReport(req, res) {
 
                     reviewed_at = NULL,
 
-                    reviewed_by = NULL
-                    
-                    review_remarks = NULL,
+                    reviewed_by = NULL,
+
+                    review_remarks = NULL
 
                 WHERE
                     id = ?
@@ -929,14 +597,11 @@ async function submitWorkReport(req, res) {
 
                     technicianNotes,
 
-                    existingReports[0].id
+                    reportId
 
                 ]
             );
 
-            /* ==================================================
-               SAVE NEW COMPLETION MEDIA
-            ================================================== */
 
             const uploadedMedia =
                 Array.isArray(req.files)
@@ -949,7 +614,9 @@ async function submitWorkReport(req, res) {
             ) {
 
                 const mediaType =
-                    file.mimetype.startsWith("image/")
+                    file.mimetype.startsWith(
+                        "image/"
+                    )
                         ? "image"
                         : "video";
 
@@ -963,21 +630,13 @@ async function submitWorkReport(req, res) {
                     INSERT INTO service_report_media (
 
                         id,
-
                         report_id,
-
                         request_id,
-
                         technician_id,
-
                         media_type,
-
                         file_name,
-
                         file_path,
-
                         mime_type,
-
                         file_size
 
                     )
@@ -988,7 +647,7 @@ async function submitWorkReport(req, res) {
 
                         uuid(),
 
-                        existingReports[0].id,
+                        reportId,
 
                         requestId,
 
@@ -1008,6 +667,26 @@ async function submitWorkReport(req, res) {
                 );
 
             }
+
+
+            await connection.query(
+                `
+                UPDATE service_requests
+
+                SET
+
+                    status = 'in_progress',
+
+                    updated_at = NOW()
+
+                WHERE id = ?
+                `,
+                [
+                    requestId
+                ]
+            );
+
+
             await connection.commit();
 
 
@@ -1021,7 +700,7 @@ async function submitWorkReport(req, res) {
                 data: {
 
                     id:
-                        existingReports[0].id,
+                        reportId,
 
                     request_id:
                         requestId,
@@ -1040,7 +719,10 @@ async function submitWorkReport(req, res) {
            PREVENT DUPLICATE REPORT
         ====================================================== */
 
-        if (existingReports.length) {
+        if (existingReports.length > 0) {
+
+            await connection.rollback();
+
 
             return res.status(409).json({
 
@@ -1067,21 +749,13 @@ async function submitWorkReport(req, res) {
             INSERT INTO service_reports (
 
                 id,
-
                 request_id,
-
                 technician_id,
-
                 work_performed,
-
                 findings,
-
                 materials_used,
-
                 technician_notes,
-
                 status,
-
                 submitted_at
 
             )
@@ -1089,21 +763,13 @@ async function submitWorkReport(req, res) {
             VALUES (
 
                 ?,
-
                 ?,
-
                 ?,
-
                 ?,
-
                 ?,
-
                 ?,
-
                 ?,
-
                 'submitted',
-
                 NOW()
 
             )
@@ -1126,6 +792,8 @@ async function submitWorkReport(req, res) {
 
             ]
         );
+
+
         /* ======================================================
            SAVE COMPLETION PHOTOS / VIDEOS
         ====================================================== */
@@ -1141,7 +809,9 @@ async function submitWorkReport(req, res) {
         ) {
 
             const mediaType =
-                file.mimetype.startsWith("image/")
+                file.mimetype.startsWith(
+                    "image/"
+                )
                     ? "image"
                     : "video";
 
@@ -1155,46 +825,18 @@ async function submitWorkReport(req, res) {
                 INSERT INTO service_report_media (
 
                     id,
-
                     report_id,
-
                     request_id,
-
                     technician_id,
-
                     media_type,
-
                     file_name,
-
                     file_path,
-
                     mime_type,
-
                     file_size
 
                 )
 
-                VALUES (
-
-                    ?,
-
-                    ?,
-
-                    ?,
-
-                    ?,
-
-                    ?,
-
-                    ?,
-
-                    ?,
-
-                    ?,
-
-                    ?
-
-                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `,
                 [
 
@@ -1221,6 +863,7 @@ async function submitWorkReport(req, res) {
 
         }
 
+
         /* ======================================================
            UPDATE REQUEST STATUS
         ====================================================== */
@@ -1235,8 +878,7 @@ async function submitWorkReport(req, res) {
 
                 updated_at = NOW()
 
-            WHERE
-                id = ?
+            WHERE id = ?
             `,
             [
                 requestId
@@ -1247,7 +889,7 @@ async function submitWorkReport(req, res) {
         await connection.commit();
 
 
-                return res.status(201).json({
+        return res.status(201).json({
 
             success: true,
 
@@ -1279,7 +921,9 @@ async function submitWorkReport(req, res) {
                                 `/uploads/technician/reports/${file.filename}`,
 
                             media_type:
-                                file.mimetype.startsWith("image/")
+                                file.mimetype.startsWith(
+                                    "image/"
+                                )
                                     ? "image"
                                     : "video",
 
@@ -1298,13 +942,18 @@ async function submitWorkReport(req, res) {
 
     } catch (error) {
 
-        try {
+        if (connection) {
 
-            await connection.rollback();
+            try {
 
-        } catch {
+                await connection.rollback();
 
-            // Ignore rollback errors.
+            } catch {
+
+                // Ignore rollback errors.
+
+            }
+
         }
 
 
@@ -1325,7 +974,11 @@ async function submitWorkReport(req, res) {
 
     } finally {
 
-        connection.release();
+        if (connection) {
+
+            connection.release();
+
+        }
 
     }
 

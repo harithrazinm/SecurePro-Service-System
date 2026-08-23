@@ -1535,3 +1535,190 @@ body {
     }
 
 }
+
+/* ========================================
+   REQUEST SCHEDULE INFORMATION
+======================================== */
+
+.request-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+
+    margin-bottom: 14px;
+}
+
+
+.schedule-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 12px;
+
+    margin-top: 20px;
+}
+
+
+.schedule-item {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 14px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+}
+
+
+.schedule-icon {
+    width: 38px;
+    height: 38px;
+
+    display: grid;
+    place-items: center;
+
+    background: var(--accent-soft);
+
+    border-radius: 10px;
+
+    font-size: 17px;
+}
+
+
+.schedule-item small,
+.request-location small {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    margin-bottom: 2px;
+}
+
+
+.schedule-item strong {
+    display: block;
+
+    font-size: 14px;
+}
+
+
+/* ========================================
+   CUSTOMER LOCATION
+======================================== */
+
+.request-location {
+    display: flex;
+
+    gap: 12px;
+
+    margin-top: 12px;
+
+    padding: 15px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+}
+
+
+.request-location > span {
+    font-size: 18px;
+}
+
+
+.request-location p {
+    margin: 0;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    line-height: 1.5;
+}
+
+
+/* ========================================
+   ADMIN INSTRUCTIONS
+======================================== */
+
+.admin-instructions {
+    margin-top: 12px;
+
+    padding: 15px;
+
+    background: #eff6ff;
+
+    border: 1px solid #bfdbfe;
+
+    border-radius: 12px;
+}
+
+
+.instruction-heading {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 7px;
+}
+
+
+.instruction-heading strong {
+    font-size: 13px;
+}
+
+
+.admin-instructions p {
+    margin: 0;
+
+    color: #374151;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 650px) {
+
+    .request-card-top {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+
+    .schedule-info {
+        grid-template-columns: 1fr;
+    }
+
+
+    .schedule-item {
+        padding: 13px;
+    }
+
+
+    .request-location,
+    .admin-instructions {
+        padding: 13px;
+    }
+
+}

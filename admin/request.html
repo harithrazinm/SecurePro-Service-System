@@ -705,7 +705,9 @@
                 </section>
 
 
-                <!-- TECHNICIAN -->
+<!-- ==========================================
+     TECHNICIAN ASSIGNMENT & SCHEDULING
+========================================== -->
 
 <section class="detail-card">
 
@@ -718,11 +720,12 @@
         <div>
 
             <h2>
-                Technician Assignment
+                Technician Assignment & Schedule
             </h2>
 
             <p>
-                Assign a technician and save the current request status.
+                Assign a technician, set the service date and
+                time, and provide instructions.
             </p>
 
         </div>
@@ -730,9 +733,12 @@
     </div>
 
 
-    <div class="technician-section">
+    <div class="assignment-grid">
 
-        <div>
+
+        <!-- TECHNICIAN -->
+
+        <div class="assignment-field">
 
             <label for="technicianSelect">
                 Technician
@@ -749,23 +755,80 @@
         </div>
 
 
-        <button
-            id="saveButton"
-            type="button"
-            class="save-button"
-        >
-            Save Changes
-        </button>
+        <!-- SCHEDULED DATE -->
+
+        <div class="assignment-field">
+
+            <label for="scheduledDate">
+                Scheduled Date
+            </label>
+
+            <input
+                type="date"
+                id="scheduledDate"
+            >
+
+        </div>
+
+
+        <!-- SCHEDULED TIME -->
+
+        <div class="assignment-field">
+
+            <label for="scheduledTime">
+                Scheduled Time
+            </label>
+
+            <input
+                type="time"
+                id="scheduledTime"
+            >
+
+        </div>
+
+
+        <!-- ADMIN INSTRUCTIONS -->
+
+        <div class="assignment-field assignment-field-full">
+
+            <label for="adminNotes">
+                Admin Instructions
+            </label>
+
+            <textarea
+                id="adminNotes"
+                rows="5"
+                placeholder="Example: Please inspect the existing wiring before starting the installation. Contact the customer before arriving."
+            ></textarea>
+
+        </div>
+
+
+        <!-- SAVE -->
+
+        <div class="assignment-actions">
+
+            <button
+                id="saveButton"
+                type="button"
+                class="save-button"
+            >
+                Save Assignment
+            </button>
+
+        </div>
 
     </div>
 
 
     <p class="save-help">
-        Changes to the status and technician will be saved together.
+
+        When assigning a technician, you can also set
+        the scheduled date, time, and service instructions.
+
     </p>
 
 </section>
-
 
                 <!-- META -->
 

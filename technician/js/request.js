@@ -1,5 +1,5 @@
 const BACKEND_BASE =
-    "https://securepro-service-system.onrender.com";
+    "http://localhost:5001";
 
 const API_BASE =
     `${BACKEND_BASE}/api`;
@@ -333,12 +333,10 @@ function renderHeader(data) {
             "#requestCode"
         );
 
-
     const serviceName =
         document.querySelector(
             "#serviceName"
         );
-
 
     const status =
         document.querySelector(
@@ -358,8 +356,7 @@ function renderHeader(data) {
     if (serviceName) {
 
         serviceName.textContent =
-            data.service?.name?.en ||
-            data.service?.code ||
+            data.service_name ||
             "—";
 
     }
@@ -372,25 +369,18 @@ function renderHeader(data) {
                 data.status
             );
 
-
         status.className =
-            `status-badge status-${data.status}`;
+            `status-badge status-${data.status || "pending"}`;
 
     }
 
 }
-
 
 /* =========================================================
    CUSTOMER
 ========================================================= */
 
 function renderCustomer(data) {
-
-    const customer =
-        data.customer ||
-        {};
-
 
     const container =
         document.querySelector(
@@ -406,24 +396,20 @@ function renderCustomer(data) {
 
 
     const phone =
-        customer.phone
+        data.customer_phone
             ? `
-                <a
-                    href="tel:${escapeHtml(customer.phone)}"
-                >
-                    ${escapeHtml(customer.phone)}
+                <a href="tel:${escapeHtml(data.customer_phone)}">
+                    ${escapeHtml(data.customer_phone)}
                 </a>
             `
             : "—";
 
 
     const email =
-        customer.email
+        data.customer_email
             ? `
-                <a
-                    href="mailto:${escapeHtml(customer.email)}"
-                >
-                    ${escapeHtml(customer.email)}
+                <a href="mailto:${escapeHtml(data.customer_email)}">
+                    ${escapeHtml(data.customer_email)}
                 </a>
             `
             : "—";
@@ -439,8 +425,7 @@ function renderCustomer(data) {
 
             <strong>
                 ${escapeHtml(
-                    customer.name ||
-                    "—"
+                    data.customer_name || "—"
                 )}
             </strong>
 
@@ -481,9 +466,7 @@ function renderCustomer(data) {
 
             <strong>
                 ${escapeHtml(
-                    data.service?.name?.en ||
-                    data.service?.code ||
-                    "—"
+                    data.service_name || "—"
                 )}
             </strong>
 
@@ -498,8 +481,7 @@ function renderCustomer(data) {
 
             <p>
                 ${escapeHtml(
-                    customer.address ||
-                    "—"
+                    data.customer_address || "—"
                 )}
             </p>
 
@@ -508,7 +490,6 @@ function renderCustomer(data) {
     `;
 
 }
-
 
 /* =========================================================
    CUSTOMER ANSWERS
@@ -992,17 +973,13 @@ function renderNotes(data) {
             "#notesCard"
         );
 
-
     const container =
         document.querySelector(
             "#customerNotes"
         );
 
 
-    if (
-        !card ||
-        !container
-    ) {
+    if (!card || !container) {
 
         return;
 
@@ -1011,24 +988,20 @@ function renderNotes(data) {
 
     const notes =
         String(
-            data.customer?.notes ||
-            ""
+            data.customer_notes || ""
         ).trim();
 
 
     if (!notes) {
 
-        card.hidden =
-            true;
+        card.hidden = true;
 
         return;
 
     }
 
 
-    card.hidden =
-        false;
-
+    card.hidden = false;
 
     container.textContent =
         notes;

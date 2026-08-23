@@ -1,8 +1,9 @@
 const API_BASE =
-    "https://securepro-service-system.onrender.com/api";
-const BACKEND_BASE =
-    "https://securepro-service-system.onrender.com";
+    "http://localhost:5001/api";
 
+const BACKEND_BASE =
+    "http://localhost:5001";
+    
 let requestData = null;
 let selectedStatus = null;
 
@@ -234,7 +235,9 @@ function renderRequest(data) {
 
     renderTechnician(data);
 
-    renderMeta(data);
+renderAssignment(data);
+
+renderMeta(data);
 
     /* ========================================
        SHOW REQUEST DETAILS
@@ -1583,9 +1586,100 @@ function setupStatusButtons() {
 
 }
 
+/* ========================================
+   SCHEDULED DATE / TIME
+======================================== */
+
+function formatDateForInput(value) {
+
+    if (!value) {
+        return "";
+    }
+
+    return String(value)
+        .slice(0, 10);
+}
+
+
+function formatTimeForInput(value) {
+
+    if (!value) {
+        return "";
+    }
+
+    return String(value)
+        .slice(0, 5);
+}
+
 
 /* ========================================
-   SAVE CHANGES
+   RENDER ASSIGNMENT
+======================================== */
+
+function renderAssignment(data) {
+
+    const technicianSelect =
+        document.querySelector(
+            "#technicianSelect"
+        );
+
+    const scheduledDate =
+        document.querySelector(
+            "#scheduledDate"
+        );
+
+    const scheduledTime =
+        document.querySelector(
+            "#scheduledTime"
+        );
+
+    const adminNotes =
+        document.querySelector(
+            "#adminNotes"
+        );
+
+
+    if (
+        technicianSelect &&
+        data.technician?.id
+    ) {
+
+        technicianSelect.value =
+            data.technician.id;
+
+    }
+
+
+    if (scheduledDate) {
+
+        scheduledDate.value =
+            formatDateForInput(
+                data.scheduled_date
+            );
+
+    }
+
+
+    if (scheduledTime) {
+
+        scheduledTime.value =
+            formatTimeForInput(
+                data.scheduled_time
+            );
+
+    }
+
+
+    if (adminNotes) {
+
+        adminNotes.value =
+            data.admin_notes || "";
+
+    }
+
+}
+/* ========================================
+   SAVE CHANGES / ASSIGN TECHNICIAN
 ======================================== */
 
 async function saveChanges() {
@@ -1607,8 +1701,96 @@ async function saveChanges() {
         );
 
 
+    const scheduledDate =
+        document.querySelector(
+            "#scheduledDate"
+        );
+
+
+    const scheduledTime =
+        document.querySelector(
+            "#scheduledTime"
+        );
+
+
+    const adminNotes =
+        document.querySelector(
+            "#adminNotes"
+        );
+
+
     const technicianId =
-        technicianSelect.value || null;
+        technicianSelect?.value || null;
+
+
+    const date =
+        scheduledDate?.value || null;
+
+
+    const time =
+        scheduledTime?.value || null;
+
+
+    const notes =
+        adminNotes?.value.trim() || null;
+
+
+    /*
+     * Validation:
+     * When assigning a technician,
+     * require a scheduled date.
+     */
+
+    if (
+        technicianId &&
+        !date
+    ) {
+
+        alert(
+            "Please select a scheduled date for the technician."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Prevent selecting a past date.
+     */
+
+    if (date) {
+
+        const today =
+            new Date();
+
+        today.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        const selectedDate =
+            new Date(
+                `${date}T00:00:00`
+            );
+
+
+        if (
+            selectedDate < today
+        ) {
+
+            alert(
+                "The scheduled date cannot be in the past."
+            );
+
+            return;
+
+        }
+
+    }
 
 
     button.disabled = true;
@@ -1619,38 +1801,41 @@ async function saveChanges() {
 
     try {
 
-        /*
-         * IMPORTANT:
-         *
-         * This expects the backend to expose:
-         *
-         * PUT /api/admin/requests/:id
-         *
-         * We'll connect the backend update
-         * endpoint in the next stage.
-         */
-
         const response =
             await fetch(
-                `${API_BASE}/admin/requests/${requestData.id}`,
+                `${API_BASE}/admin/requests/${encodeURIComponent(requestData.id)}`,
                 {
                     method: "PUT",
 
                     headers: {
+
                         "Authorization":
                             `Bearer ${token}`,
 
                         "Content-Type":
                             "application/json"
+
                     },
 
                     body: JSON.stringify({
+
                         status:
                             selectedStatus,
 
                         technician_id:
-                            technicianId
+                            technicianId,
+
+                        scheduled_date:
+                            date,
+
+                        scheduled_time:
+                            time,
+
+                        admin_notes:
+                            notes
+
                     })
+
                 }
             );
 
@@ -1672,15 +1857,15 @@ async function saveChanges() {
         }
 
 
-        requestData =
-            result.data ||
-            requestData;
+        /*
+         * Reload from backend.
+         *
+         * This ensures the admin sees the
+         * latest technician, schedule,
+         * notes and status.
+         */
 
-
-        updateStatusDisplay(
-            requestData.status ||
-            selectedStatus
-        );
+        await loadRequest();
 
 
         button.textContent =
