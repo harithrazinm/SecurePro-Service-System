@@ -10,7 +10,7 @@ async function seedAdmin() {
     try {
 
         const name = "SecurePro Admin";
-        const email = "admin@securepro.com";
+        const email = "admin";
         const password = "adan123";
 
 
