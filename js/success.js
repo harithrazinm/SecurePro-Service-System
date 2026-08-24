@@ -5,7 +5,7 @@ const WHATSAPP_NUMBER =
 let currentLanguage =
     localStorage.getItem(
         "securepro_language"
-    ) || "en";
+    ) || "ms";
 
 
 let requestData = null;
@@ -549,11 +549,39 @@ function setupLanguageToggle() {
  * ========================================
  */
 
+
+function updateLanguageToggleLabel() {
+
+    const button =
+        document.querySelector("#languageToggle");
+
+    if (!button) return;
+
+    const switchTo =
+        currentLanguage === "ms"
+            ? "English"
+            : "Bahasa Melayu";
+
+    button.textContent =
+        `🌐 ${switchTo}`;
+
+    button.setAttribute(
+        "aria-label",
+        `Switch language to ${switchTo}`
+    );
+}
+
+
 document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        if (
+        
+        
+
+        updateLanguageToggleLabel();
+updateLanguageToggleLabel();
+if (
             !loadRequest()
         ) {
 

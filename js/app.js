@@ -1,7 +1,7 @@
 const API_BASE =
     "https://securepro-service-system.onrender.com/api";
 
-let currentLanguage = "en";
+let currentLanguage = "ms";
 
 const translations = {
     en: {
@@ -88,10 +88,18 @@ function applyLanguage() {
         document.querySelector("#languageToggle");
 
     if (button) {
+        const switchTo =
+            currentLanguage === "ms"
+                ? "English"
+                : "Bahasa Melayu";
+
         button.textContent =
-            currentLanguage === "en"
-                ? "BM"
-                : "EN";
+            `🌐 ${switchTo}`;
+
+        button.setAttribute(
+            "aria-label",
+            `Switch language to ${switchTo}`
+        );
     }
 }
 

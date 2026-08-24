@@ -1,5 +1,5 @@
 const currentLanguage =
-    localStorage.getItem("securepro_language") || "en";
+    localStorage.getItem("securepro_language") || "ms";
 
 let selectedFiles = [];
 
@@ -557,11 +557,39 @@ function restoreCustomerData() {
     }
 }
 
+
+function updateLanguageToggleLabel() {
+
+    const button =
+        document.querySelector("#languageToggle");
+
+    if (!button) return;
+
+    const switchTo =
+        currentLanguage === "ms"
+            ? "English"
+            : "Bahasa Melayu";
+
+    button.textContent =
+        `🌐 ${switchTo}`;
+
+    button.setAttribute(
+        "aria-label",
+        `Switch language to ${switchTo}`
+    );
+}
+
+
 document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        restoreCustomerData();
+        
+        
+
+        updateLanguageToggleLabel();
+updateLanguageToggleLabel();
+restoreCustomerData();
 
         document.querySelector(
             "#customerPhotos"
