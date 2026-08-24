@@ -53,21 +53,6 @@ if (
  * ========================================
  */
 
-const totalCount =
-    document.querySelector("#totalCount");
-
-const pendingCount =
-    document.querySelector("#pendingCount");
-
-const assignedCount =
-    document.querySelector("#assignedCount");
-
-const progressCount =
-    document.querySelector("#progressCount");
-
-const completedCount =
-    document.querySelector("#completedCount");
-
 const requestsTableBody =
     document.querySelector(
         "#requestsTableBody"
@@ -698,8 +683,6 @@ refreshButton.addEventListener(
     "click",
     async () => {
 
-        await loadDashboard();
-
         await loadRequests();
 
     }
@@ -776,8 +759,6 @@ logoutButton.addEventListener(
  */
 
 async function init() {
-
-    await loadDashboard();
 
     await loadRequests();
 
