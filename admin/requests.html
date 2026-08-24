@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SecurePro | Service Orders</title>
+
+    <link
+        rel="stylesheet"
+        href="css/admin.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/dashboard.css"
+    >
+
+</head>
+
+<body>
+
+<div class="admin-layout">
+
+    <!-- SIDEBAR -->
+
+    <aside class="admin-sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="sidebar-mark">
+                S
+            </div>
+
+            <div>
+
+                <strong>
+                    SECUREPRO
+                </strong>
+
+                <span>
+                    System Solutions
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a
+                href="dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a
+                href="requests.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">▤</span>
+                Service Requests
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="admin-profile">
+
+                <div class="admin-avatar">
+                    A
+                </div>
+
+                <div class="admin-profile-info">
+
+                    <strong id="sidebarAdminName">
+                        Admin
+                    </strong>
+
+                    <span>
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+                title="Logout"
+                aria-label="Logout"
+            >
+                <span class="logout-icon">⎋</span>
+                <span class="logout-label">Logout</span>
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="admin-main">
+
+        <!-- TOPBAR -->
+
+        <header class="admin-topbar">
+
+            <div>
+
+                <span class="topbar-label">
+                    SECUREPRO ADMINISTRATION
+                </span>
+
+                <h1>
+                    Service Orders
+                </h1>
+
+            </div>
+
+
+            <div class="topbar-user">
+
+                <span class="online-dot"></span>
+
+                <span id="topbarAdminName">
+                    Admin
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+
+        <div class="dashboard-content">
+
+            <!-- WELCOME -->
+
+            <section class="dashboard-intro">
+
+                <div>
+
+                    <span class="eyebrow">
+                        OVERVIEW
+                    </span>
+
+                    <h2>
+                        Service request overview
+                    </h2>
+
+                    <p>
+                        Monitor and manage customer
+                        service requests from one place.
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="refreshButton"
+                    class="refresh-button"
+                    type="button"
+                >
+                    ↻
+                    <span>
+                        Refresh
+                    </span>
+                </button>
+
+            </section>
+
+
+            <!-- STATISTICS -->
+
+            <section class="stats-grid">
+
+                <article class="stat-card">
+
+                    <div class="stat-top">
+
+                        <span class="stat-label">
+                            Total Requests
+                        </span>
+
+                        <span class="stat-icon">
+                            #
+                        </span>
+
+                    </div>
+
+                    <strong
+                        id="totalCount"
+                        class="stat-number"
+                    >
+                        —
+                    </strong>
+
+                    <span class="stat-description">
+                        All service requests
+                    </span>
+
+                </article>
+
+
+                <article class="stat-card pending">
+
+                    <div class="stat-top">
+
+                        <span class="stat-label">
+                            Pending
+                        </span>
+
+                        <span class="stat-icon">
+                            !
+                        </span>
+
+                    </div>
+
+                    <strong
+                        id="pendingCount"
+                        class="stat-number"
+                    >
+                        —
+                    </strong>
+
+                    <span class="stat-description">
+                        Awaiting action
+                    </span>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-top">
+
+                        <span class="stat-label">
+                            Assigned
+                        </span>
+
+                        <span class="stat-icon">
+                            →
+                        </span>
+
+                    </div>
+
+                    <strong
+                        id="assignedCount"
+                        class="stat-number"
+                    >
+                        —
+                    </strong>
+
+                    <span class="stat-description">
+                        Assigned to technician
+                    </span>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-top">
+
+                        <span class="stat-label">
+                            In Progress
+                        </span>
+
+                        <span class="stat-icon">
+                            ◷
+                        </span>
+
+                    </div>
+
+                    <strong
+                        id="progressCount"
+                        class="stat-number"
+                    >
+                        —
+                    </strong>
+
+                    <span class="stat-description">
+                        Currently being handled
+                    </span>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-top">
+
+                        <span class="stat-label">
+                            Completed
+                        </span>
+
+                        <span class="stat-icon">
+                            ✓
+                        </span>
+
+                    </div>
+
+                    <strong
+                        id="completedCount"
+                        class="stat-number"
+                    >
+                        —
+                    </strong>
+
+                    <span class="stat-description">
+                        Successfully completed
+                    </span>
+
+                </article>
+
+            </section>
+
+
+            <!-- REQUESTS -->
+
+            <section
+                class="requests-section"
+                id="requests"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            REQUEST MANAGEMENT
+                        </span>
+
+                        <h2>
+                            Manage service orders
+                        </h2>
+
+                    </div>
+
+
+                    <span
+                        id="requestTotalLabel"
+                        class="request-total"
+                    >
+                        Loading...
+                    </span>
+
+                </div>
+
+
+                <!-- FILTER -->
+
+                <div class="request-toolbar">
+
+                    <div class="search-box">
+
+                        <span>
+                            ⌕
+                        </span>
+
+                        <input
+                            id="searchInput"
+                            type="search"
+                            placeholder="Search request, customer or phone..."
+                        >
+
+                    </div>
+
+
+                    <select id="statusFilter">
+
+                        <option value="">
+                            All Status
+                        </option>
+
+                        <option value="pending">
+                            Pending
+                        </option>
+
+                        <option value="assigned">
+                            Assigned
+                        </option>
+
+                        <option value="in_progress">
+                            In Progress
+                        </option>
+
+                        <option value="waiting_parts">
+                            Waiting Parts
+                        </option>
+
+                        <option value="completed">
+                            Completed
+                        </option>
+
+                        <option value="cancelled">
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ERROR -->
+
+                <div
+                    id="dashboardError"
+                    class="dashboard-error"
+                    hidden
+                ></div>
+
+
+                <!-- TABLE -->
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Request
+                                </th>
+
+                                <th>
+                                    Customer
+                                </th>
+
+                                <th>
+                                    Service
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Technician
+                                </th>
+
+                                <th>
+                                    Date
+                                </th>
+
+                                <th>
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="requestsTableBody">
+
+                            <tr>
+
+                                <td
+                                    colspan="7"
+                                    class="table-loading"
+                                >
+                                    Loading requests...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="js/dashboard.js"></script>
+
+</body>
+
+</html>
