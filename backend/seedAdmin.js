@@ -11,7 +11,7 @@ async function seedAdmin() {
 
         const name = "SecurePro Admin";
         const email = "admin@securepro.com";
-        const password = "admin123";
+        const password = "adan123";
 
 
         // Check whether admin already exists
