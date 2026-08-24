@@ -64,9 +64,8 @@
             </a>
 
             <a
-                href="#requests"
+                href="requests.html"
                 class="nav-item"
-                id="requestsNav"
             >
                 <span class="nav-icon">▤</span>
                 Service Requests
@@ -334,163 +333,24 @@
             </section>
 
 
-            <!-- REQUESTS -->
+            <!-- RECENT REQUESTS -->
 
-            <section
-                class="requests-section"
-                id="requests"
-            >
-
+            <section class="requests-section" id="recentRequests">
                 <div class="section-heading">
-
                     <div>
-
-                        <span class="eyebrow">
-                            REQUEST MANAGEMENT
-                        </span>
-
-                        <h2>
-                            Recent service requests
-                        </h2>
-
+                        <span class="eyebrow">RECENT ACTIVITY</span>
+                        <h2>Recent service requests</h2>
+                        <p>Latest customer orders requiring attention.</p>
                     </div>
-
-
-                    <span
-                        id="requestTotalLabel"
-                        class="request-total"
-                    >
-                        Loading...
-                    </span>
-
+                    <a class="view-button" href="requests.html">View All Orders →</a>
                 </div>
-
-
-                <!-- FILTER -->
-
-                <div class="request-toolbar">
-
-                    <div class="search-box">
-
-                        <span>
-                            ⌕
-                        </span>
-
-                        <input
-                            id="searchInput"
-                            type="search"
-                            placeholder="Search request, customer or phone..."
-                        >
-
-                    </div>
-
-
-                    <select id="statusFilter">
-
-                        <option value="">
-                            All Status
-                        </option>
-
-                        <option value="pending">
-                            Pending
-                        </option>
-
-                        <option value="assigned">
-                            Assigned
-                        </option>
-
-                        <option value="in_progress">
-                            In Progress
-                        </option>
-
-                        <option value="waiting_parts">
-                            Waiting Parts
-                        </option>
-
-                        <option value="completed">
-                            Completed
-                        </option>
-
-                        <option value="cancelled">
-                            Cancelled
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <!-- ERROR -->
-
-                <div
-                    id="dashboardError"
-                    class="dashboard-error"
-                    hidden
-                ></div>
-
-
-                <!-- TABLE -->
-
+                <div id="dashboardError" class="dashboard-error" hidden></div>
                 <div class="table-wrapper">
-
                     <table>
-
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    Request
-                                </th>
-
-                                <th>
-                                    Customer
-                                </th>
-
-                                <th>
-                                    Service
-                                </th>
-
-                                <th>
-                                    Status
-                                </th>
-
-                                <th>
-                                    Technician
-                                </th>
-
-                                <th>
-                                    Date
-                                </th>
-
-                                <th>
-                                    Action
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody id="requestsTableBody">
-
-                            <tr>
-
-                                <td
-                                    colspan="7"
-                                    class="table-loading"
-                                >
-                                    Loading requests...
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
+                        <thead><tr><th>Request</th><th>Customer</th><th>Service</th><th>Status</th><th>Technician</th><th>Date</th><th>Action</th></tr></thead>
+                        <tbody id="requestsTableBody"><tr><td colspan="7" class="table-loading">Loading recent requests...</td></tr></tbody>
                     </table>
-
                 </div>
-
             </section>
 
         </div>

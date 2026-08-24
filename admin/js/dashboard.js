@@ -73,24 +73,9 @@ const requestsTableBody =
         "#requestsTableBody"
     );
 
-const requestTotalLabel =
-    document.querySelector(
-        "#requestTotalLabel"
-    );
-
 const dashboardError =
     document.querySelector(
         "#dashboardError"
-    );
-
-const searchInput =
-    document.querySelector(
-        "#searchInput"
-    );
-
-const statusFilter =
-    document.querySelector(
-        "#statusFilter"
     );
 
 const refreshButton =
@@ -312,49 +297,9 @@ async function loadRequests() {
         `;
 
 
-        const params =
-            new URLSearchParams();
-
-
-        const search =
-            searchInput.value.trim();
-
-
-        const status =
-            statusFilter.value;
-
-
-        if (search) {
-
-            params.set(
-                "search",
-                search
-            );
-
-        }
-
-
-        if (status) {
-
-            params.set(
-                "status",
-                status
-            );
-
-        }
-
-
-        const query =
-            params.toString();
-
-
         const result =
             await apiRequest(
-                `/admin/requests${
-                    query
-                        ? `?${query}`
-                        : ""
-                }`
+                "/admin/requests"
             );
 
 
@@ -362,7 +307,7 @@ async function loadRequests() {
 
 
         renderRequests(
-            result.data
+            (result.data || []).slice(0, 5)
         );
 
 
@@ -403,14 +348,6 @@ async function loadRequests() {
 function renderRequests(
     requests
 ) {
-
-    requestTotalLabel.textContent =
-        `${requests.length} request${
-            requests.length === 1
-                ? ""
-                : "s"
-        }`;
-
 
     if (
         !requests ||
@@ -706,48 +643,6 @@ refreshButton.addEventListener(
 );
 
 
-statusFilter.addEventListener(
-    "change",
-    loadRequests
-);
-
-
-let searchTimer;
-
-searchInput.addEventListener(
-    "input",
-    () => {
-
-        clearTimeout(
-            searchTimer
-        );
-
-        searchTimer =
-            setTimeout(
-                loadRequests,
-                350
-            );
-
-    }
-);
-
-
-document.querySelector(
-    "#requestsNav"
-).addEventListener(
-    "click",
-    event => {
-
-        event.preventDefault();
-
-        document.querySelector(
-            "#requests"
-        ).scrollIntoView({
-            behavior: "smooth"
-        });
-
-    }
-);
 
 
 logoutButton.addEventListener(
