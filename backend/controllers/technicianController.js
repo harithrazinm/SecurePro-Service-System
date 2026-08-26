@@ -622,7 +622,7 @@ async function submitWorkReport(req, res) {
 
 
                 const filePath =
-                    `/uploads/technician/reports/${file.filename}`;
+    file.path;
 
 
                 await connection.query(
@@ -817,7 +817,7 @@ async function submitWorkReport(req, res) {
 
 
             const filePath =
-                `/uploads/technician/reports/${file.filename}`;
+    file.path;
 
 
             await connection.query(
@@ -918,7 +918,7 @@ async function submitWorkReport(req, res) {
                                 file.originalname,
 
                             file_path:
-                                `/uploads/technician/reports/${file.filename}`,
+    file.path,
 
                             media_type:
                                 file.mimetype.startsWith(

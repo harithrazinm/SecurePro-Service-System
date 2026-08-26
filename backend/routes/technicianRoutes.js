@@ -1,7 +1,13 @@
 const express = require("express");
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+
+const {
+    CloudinaryStorage
+} = require("multer-storage-cloudinary");
+
+const cloudinary =
+    require("../config/cloudinary");
+
 
 const {
     getAssignedRequests,
@@ -9,79 +15,76 @@ const {
     submitWorkReport
 } = require("../controllers/technicianController");
 
+
 const authMiddleware =
     require("../middleware/authMiddleware");
 
+
 const requireTechnician =
     authMiddleware.requireTechnician;
+
 
 const router =
     express.Router();
 
 
 // ======================================================
-// UPLOAD DIRECTORY
-// ======================================================
-
-const uploadDirectory =
-    path.join(
-        __dirname,
-        "..",
-        "uploads",
-        "technician",
-        "reports"
-    );
-
-
-if (!fs.existsSync(uploadDirectory)) {
-
-    fs.mkdirSync(
-        uploadDirectory,
-        {
-            recursive: true
-        }
-    );
-
-}
-
-
-// ======================================================
-// MULTER STORAGE
+// CLOUDINARY STORAGE
 // ======================================================
 
 const storage =
-    multer.diskStorage({
+    new CloudinaryStorage({
 
-        destination:
-            (req, file, callback) => {
+        cloudinary,
 
-                callback(
-                    null,
-                    uploadDirectory
+        params: async (
+            req,
+            file
+        ) => {
+
+            const isImage =
+                file.mimetype.startsWith(
+                    "image/"
                 );
 
-            },
+
+            return {
+
+                folder:
+                    "securepro/technician-reports",
 
 
-        filename:
-            (req, file, callback) => {
+                resource_type:
+                    isImage
+                        ? "image"
+                        : "video",
 
-                const extension =
-                    path.extname(
-                        file.originalname
-                    );
 
-                const uniqueName =
-                    `${Date.now()}-${Math.round(
-                        Math.random() * 1E9
-                    )}${extension}`;
+                use_filename:
+                    true,
 
-                callback(
-                    null,
-                    uniqueName
-                );
 
-            }
+                unique_filename:
+                    true,
+
+
+                allowed_formats:
+                    isImage
+                        ? [
+                            "jpg",
+                            "jpeg",
+                            "png",
+                            "webp"
+                        ]
+                        : [
+                            "mp4",
+                            "webm",
+                            "mov"
+                        ]
+
+            };
+
+        }
 
     });
 
@@ -91,22 +94,33 @@ const storage =
 // ======================================================
 
 const allowedImages = [
+
     "image/jpeg",
+
     "image/png",
+
     "image/webp"
+
 ];
 
 
 const allowedVideos = [
+
     "video/mp4",
+
     "video/webm",
+
     "video/quicktime"
+
 ];
 
 
 const allowedTypes = [
+
     ...allowedImages,
+
     ...allowedVideos
+
 ];
 
 
@@ -129,7 +143,11 @@ const upload =
         },
 
         fileFilter:
-            (req, file, callback) => {
+            (
+                req,
+                file,
+                callback
+            ) => {
 
                 if (
                     allowedTypes.includes(
@@ -137,16 +155,15 @@ const upload =
                     )
                 ) {
 
-                    callback(
+                    return callback(
                         null,
                         true
                     );
 
-                    return;
                 }
 
 
-                callback(
+                return callback(
                     new Error(
                         "Only JPG, PNG, WebP, MP4, WebM and MOV files are allowed."
                     )
@@ -162,8 +179,11 @@ const upload =
 // ======================================================
 
 router.use(
+
     authMiddleware,
+
     requireTechnician
+
 );
 
 
@@ -172,8 +192,11 @@ router.use(
 // ======================================================
 
 router.get(
+
     "/requests",
+
     getAssignedRequests
+
 );
 
 
@@ -182,23 +205,20 @@ router.get(
 // ======================================================
 
 router.get(
+
     "/requests/:id",
+
     getAssignedRequestById
+
 );
 
 
 // ======================================================
 // SUBMIT WORK REPORT
-//
-// Supports:
-// - work_performed
-// - findings
-// - materials_used
-// - technician_notes
-// - completion_media[]
 // ======================================================
 
 router.post(
+
     "/requests/:id/report",
 
     upload.array(
@@ -207,7 +227,84 @@ router.post(
     ),
 
     submitWorkReport
+
 );
 
 
-module.exports = router;
+// ======================================================
+// UPLOAD ERROR HANDLER
+// ======================================================
+
+router.use(
+
+    (
+        error,
+        req,
+        res,
+        next
+    ) => {
+
+        console.error(
+            "TECHNICIAN UPLOAD ERROR:",
+            error
+        );
+
+
+        if (
+            error instanceof
+            multer.MulterError
+        ) {
+
+            if (
+                error.code ===
+                "LIMIT_FILE_SIZE"
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "One file is too large. Maximum size is 100 MB."
+
+                });
+
+            }
+
+
+            if (
+                error.code ===
+                "LIMIT_FILE_COUNT"
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Maximum 10 files are allowed."
+
+                });
+
+            }
+
+        }
+
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Media upload failed."
+
+        });
+
+    }
+
+);
+
+
+module.exports =
+    router;
