@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
-
+const rateLimit = require("express-rate-limit");
 // ======================================================
 // LOAD ENVIRONMENT VARIABLES
 // ======================================================
@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 // Render automatically provides PORT.
-// Local development uses 5001.
+// Docker/local development uses 5000.
 const PORT = process.env.PORT || 5000;
 
 // ======================================================
@@ -80,7 +80,25 @@ app.use(
         extended: true
     })
 );
+// ======================================================
+// LOGIN RATE LIMITER
+// ======================================================
 
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+
+    max: 10,
+
+    standardHeaders: true,
+
+    legacyHeaders: false,
+
+    message: {
+        success: false,
+        message:
+            "Too many login attempts. Please try again later."
+    }
+});
 // ======================================================
 // UPLOADS
 // ======================================================
@@ -113,6 +131,12 @@ app.use(
 // ======================================================
 // AUTHENTICATION ROUTES
 // ======================================================
+
+// Rate limit ONLY the login endpoint
+app.use(
+    "/api/auth/login",
+    loginLimiter
+);
 
 app.use(
     "/api/auth",
