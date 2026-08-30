@@ -11,7 +11,6 @@ backend/.env
 
 # macOS
 .DS_Store
-
 # Runtime uploads - do not commit user uploads
 backend/uploads/customer/*
 backend/uploads/technician/reports/*

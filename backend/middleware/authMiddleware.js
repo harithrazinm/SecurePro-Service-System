@@ -1,5 +1,24 @@
 const jwt = require("jsonwebtoken");
 
+
+// ======================================================
+// JWT SECRET
+// ======================================================
+
+if (!process.env.JWT_SECRET) {
+    throw new Error(
+        "JWT_SECRET environment variable is not configured."
+    );
+}
+
+const JWT_SECRET =
+    process.env.JWT_SECRET;
+
+
+// ======================================================
+// AUTHENTICATION MIDDLEWARE
+// ======================================================
+
 function authMiddleware(req, res, next) {
 
     try {
@@ -33,18 +52,19 @@ function authMiddleware(req, res, next) {
         }
 
 
-        const token = parts[1];
+        const token =
+            parts[1];
 
 
         const decoded =
             jwt.verify(
                 token,
-                process.env.JWT_SECRET ||
-                "securepro-development-secret"
+                JWT_SECRET
             );
 
 
-        req.user = decoded;
+        req.user =
+            decoded;
 
 
         next();
@@ -58,13 +78,18 @@ function authMiddleware(req, res, next) {
 
         return res.status(401).json({
             success: false,
-            message: "Invalid or expired authentication token."
+            message:
+                "Invalid or expired authentication token."
         });
 
     }
 
 }
 
+
+// ======================================================
+// ADMIN AUTHORIZATION
+// ======================================================
 
 function requireAdmin(req, res, next) {
 
@@ -78,11 +103,14 @@ function requireAdmin(req, res, next) {
     }
 
 
-    if (req.user.role !== "admin") {
+    if (
+        req.user.role !== "admin"
+    ) {
 
         return res.status(403).json({
             success: false,
-            message: "Administrator access required."
+            message:
+                "Administrator access required."
         });
 
     }
@@ -92,6 +120,10 @@ function requireAdmin(req, res, next) {
 
 }
 
+
+// ======================================================
+// TECHNICIAN AUTHORIZATION
+// ======================================================
 
 function requireTechnician(req, res, next) {
 
@@ -105,11 +137,14 @@ function requireTechnician(req, res, next) {
     }
 
 
-    if (req.user.role !== "technician") {
+    if (
+        req.user.role !== "technician"
+    ) {
 
         return res.status(403).json({
             success: false,
-            message: "Technician access required."
+            message:
+                "Technician access required."
         });
 
     }
@@ -120,7 +155,12 @@ function requireTechnician(req, res, next) {
 }
 
 
-module.exports = authMiddleware;
+// ======================================================
+// EXPORT
+// ======================================================
+
+module.exports =
+    authMiddleware;
 
 module.exports.requireAdmin =
     requireAdmin;

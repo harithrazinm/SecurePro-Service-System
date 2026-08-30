@@ -13,7 +13,7 @@ const app = express();
 
 // Render automatically provides PORT.
 // Local development uses 5001.
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 // ======================================================
 // DATABASE
