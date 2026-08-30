@@ -44,7 +44,34 @@ const technicianRoutes =
 // MIDDLEWARE
 // ======================================================
 
-app.use(cors());
+const allowedOrigins = [
+    "https://securepro-service-system-1.onrender.com",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+];
+
+app.use(
+    cors({
+        origin: function (origin, callback) {
+
+            // Allow requests without an Origin
+            // such as Postman or server-to-server requests.
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            return callback(
+                new Error("Not allowed by CORS")
+            );
+        },
+
+        credentials: true
+    })
+);
 
 app.use(express.json());
 
@@ -171,15 +198,42 @@ app.get(
 
     }
 );
+// ======================================================
+// 404 HANDLER
+// ======================================================
+
+app.use((req, res) => {
+
+    res.status(404).json({
+        success: false,
+        message: "API endpoint not found."
+    });
+
+});
+// ======================================================
+// GLOBAL ERROR HANDLER
+// ======================================================
+
+app.use((err, req, res, next) => {
+
+    console.error("Unhandled server error:", {
+        method: req.method,
+        url: req.originalUrl,
+        message: err.message,
+        stack: err.stack
+    });
+
+    res.status(err.status || 500).json({
+        success: false,
+        message: "An unexpected server error occurred."
+    });
+
+});
+
 
 // ======================================================
 // START SERVER
-// ======================================================
-
-// ======================================================
-// START SERVER
-// ======================================================
-
+// =====================================================
 const server =
     app.listen(
         PORT,
