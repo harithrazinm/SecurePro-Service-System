@@ -3,6 +3,8 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 const rateLimit = require("express-rate-limit");
+const quotationRoutes =
+    require("./routes/quotationRoutes");
 // ======================================================
 // LOAD ENVIRONMENT VARIABLES
 // ======================================================
@@ -151,6 +153,17 @@ app.use(
     "/api/admin",
     adminRoutes
 );
+
+
+// ======================================================
+// QUOTATION ROUTES
+// ======================================================
+
+app.use(
+    "/api/admin/quotations",
+    quotationRoutes
+);
+
 
 // ======================================================
 // TECHNICIAN ROUTES
