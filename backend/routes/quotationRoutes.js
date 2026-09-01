@@ -1,14 +1,15 @@
 const express = require("express");
 
 const {
-    createQuotation,
-    getQuotationById,
     getQuotations,
-    getQuotationsByRequest,
-    updateQuotation,
-    sendQuotation,
-    deleteQuotation
+    getQuotationById,
+    createQuotation,
+    sendQuotation
 } = require("../controllers/quotationController");
+
+const {
+    generateQuotationPDF
+} = require("../controllers/quotationPdfController");
 
 const authMiddleware =
     require("../middleware/authMiddleware");
@@ -16,16 +17,11 @@ const authMiddleware =
 const requireAdmin =
     authMiddleware.requireAdmin;
 
-const router =
-    express.Router();
-
-    const {
-    generateQuotationPDF
-} = require("../controllers/quotationPdfController");
+const router = express.Router();
 
 
 // ======================================================
-// ALL QUOTATION ROUTES REQUIRE ADMIN
+// ALL QUOTATION ROUTES REQUIRE ADMIN LOGIN
 // ======================================================
 
 router.use(
@@ -46,6 +42,28 @@ router.get(
 
 
 // ======================================================
+// GET QUOTATION BY ID
+// GET /api/admin/quotations/:id
+// ======================================================
+
+router.get(
+    "/:id",
+    getQuotationById
+);
+
+
+// ======================================================
+// GENERATE QUOTATION PDF
+// GET /api/admin/quotations/:id/pdf
+// ======================================================
+
+router.get(
+    "/:id/pdf",
+    generateQuotationPDF
+);
+
+
+// ======================================================
 // CREATE QUOTATION
 // POST /api/admin/quotations
 // ======================================================
@@ -57,39 +75,6 @@ router.post(
 
 
 // ======================================================
-// GET QUOTATIONS FOR REQUEST
-// GET /api/admin/quotations/request/:requestId
-// ======================================================
-
-router.get(
-    "/request/:requestId",
-    getQuotationsByRequest
-);
-
-
-// ======================================================
-// GET QUOTATION
-// GET /api/admin/quotations/:id
-// ======================================================
-
-router.get(
-    "/:id",
-    getQuotationById
-);
-
-
-// ======================================================
-// UPDATE QUOTATION
-// PUT /api/admin/quotations/:id
-// ======================================================
-
-router.put(
-    "/:id",
-    updateQuotation
-);
-
-
-// ======================================================
 // SEND QUOTATION
 // POST /api/admin/quotations/:id/send
 // ======================================================
@@ -97,27 +82,6 @@ router.put(
 router.post(
     "/:id/send",
     sendQuotation
-);
-
-
-// ======================================================
-// DELETE DRAFT QUOTATION
-// DELETE /api/admin/quotations/:id
-// ======================================================
-
-router.delete(
-    "/:id",
-    deleteQuotation
-);
-
-// ======================================================
-// GENERATE QUOTATION PDF
-// GET /api/admin/quotations/:id/pdf
-// ======================================================
-
-router.get(
-    "/:id/pdf",
-    generateQuotationPDF
 );
 
 
