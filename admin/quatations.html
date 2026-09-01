@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SecurePro | Quotations</title>
+
+    <link
+        rel="stylesheet"
+        href="css/admin.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/quotations.css"
+    >
+</head>
+
+<body>
+
+<div class="admin-layout">
+
+    <!-- SIDEBAR -->
+
+    <aside class="admin-sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="sidebar-mark">
+                S
+            </div>
+
+            <div>
+                <strong>SECUREPRO</strong>
+                <span>System Solutions</span>
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a
+                href="dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a
+                href="requests.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">▤</span>
+                Service Requests
+            </a>
+
+            <a
+                href="quotations.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">▣</span>
+                Quotations
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="admin-profile">
+
+                <div class="admin-avatar">
+                    A
+                </div>
+
+                <div class="admin-profile-info">
+
+                    <strong id="sidebarAdminName">
+                        Admin
+                    </strong>
+
+                    <span>
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+            >
+                <span class="logout-icon">⎋</span>
+                <span class="logout-label">Logout</span>
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+
+            <div>
+
+                <span class="topbar-label">
+                    SECUREPRO ADMINISTRATION
+                </span>
+
+                <h1>
+                    Quotations
+                </h1>
+
+            </div>
+
+
+            <div class="topbar-user">
+
+                <span class="online-dot"></span>
+
+                <span id="topbarAdminName">
+                    Admin
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+
+        <div class="quotation-content">
+
+            <section class="quotation-intro">
+
+                <div>
+
+                    <span class="eyebrow">
+                        SALES & QUOTATIONS
+                    </span>
+
+                    <h2>
+                        Customer quotations
+                    </h2>
+
+                    <p>
+                        Create, review, download and send quotations
+                        to customers.
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="createQuotationButton"
+                    class="primary-button"
+                    type="button"
+                >
+                    + Create Quotation
+                </button>
+
+            </section>
+
+
+            <!-- ERROR -->
+
+            <div
+                id="quotationError"
+                class="quotation-error"
+                hidden
+            ></div>
+
+
+            <!-- TABLE -->
+
+            <section class="quotation-card">
+
+                <div class="quotation-card-header">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            QUOTATION LIST
+                        </span>
+
+                        <h3>
+                            All quotations
+                        </h3>
+
+                    </div>
+
+
+                    <button
+                        id="refreshButton"
+                        class="secondary-button"
+                        type="button"
+                    >
+                        ↻ Refresh
+                    </button>
+
+                </div>
+
+
+                <div class="quotation-toolbar">
+
+                    <div class="search-box">
+
+                        <span>⌕</span>
+
+                        <input
+                            type="search"
+                            id="searchInput"
+                            placeholder="Search quotation, customer or request..."
+                        >
+
+                    </div>
+
+
+                    <select id="statusFilter">
+
+                        <option value="">
+                            All Status
+                        </option>
+
+                        <option value="draft">
+                            Draft
+                        </option>
+
+                        <option value="sent">
+                            Sent
+                        </option>
+
+                        <option value="accepted">
+                            Accepted
+                        </option>
+
+                        <option value="rejected">
+                            Rejected
+                        </option>
+
+                        <option value="expired">
+                            Expired
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Quotation
+                                </th>
+
+                                <th>
+                                    Customer
+                                </th>
+
+                                <th>
+                                    Service
+                                </th>
+
+                                <th>
+                                    Total
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Created
+                                </th>
+
+                                <th>
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="quotationsTableBody">
+
+                            <tr>
+
+                                <td
+                                    colspan="7"
+                                    class="table-loading"
+                                >
+                                    Loading quotations...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- ==================================================
+     CREATE QUOTATION MODAL
+================================================== -->
+
+<div
+    id="quotationModal"
+    class="modal-overlay"
+    hidden
+>
+
+    <div class="quotation-modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="eyebrow">
+                    NEW QUOTATION
+                </span>
+
+                <h2>
+                    Create quotation
+                </h2>
+
+            </div>
+
+
+            <button
+                id="closeModalButton"
+                class="close-button"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="quotationForm">
+
+            <!-- REQUEST -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    Customer Request
+                </div>
+
+
+                <label>
+                    Service Request
+                </label>
+
+                <select
+                    id="requestId"
+                    required
+                >
+
+                    <option value="">
+                        Loading requests...
+                    </option>
+
+                </select>
+
+                <small>
+                    Select the customer service request for this quotation.
+                </small>
+
+            </div>
+
+
+            <!-- ITEMS -->
+
+            <div class="form-section">
+
+                <div class="form-section-heading">
+
+                    <div class="form-section-title">
+                        Quotation Items
+                    </div>
+
+                    <button
+                        type="button"
+                        id="addItemButton"
+                        class="small-button"
+                    >
+                        + Add Item
+                    </button>
+
+                </div>
+
+
+                <div id="itemsContainer">
+
+                    <!-- JS inserts items -->
+
+                </div>
+
+            </div>
+
+
+            <!-- CHARGES -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    Charges
+                </div>
+
+
+                <div class="form-grid">
+
+                    <div>
+
+                        <label>
+                            Discount (RM)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="discount"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label>
+                            Tax (RM)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="tax"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label>
+                            Delivery Charge (RM)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="deliveryCharge"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label>
+                            Validity (Days)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="validityDays"
+                            min="1"
+                            value="30"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- TOTAL -->
+
+            <div class="quotation-summary">
+
+                <div>
+                    <span>Subtotal</span>
+                    <strong id="subtotalDisplay">
+                        RM 0.00
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Discount</span>
+                    <strong id="discountDisplay">
+                        RM 0.00
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Tax</span>
+                    <strong id="taxDisplay">
+                        RM 0.00
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Delivery</span>
+                    <strong id="deliveryDisplay">
+                        RM 0.00
+                    </strong>
+                </div>
+
+                <div class="grand-total">
+                    <span>Total</span>
+                    <strong id="totalDisplay">
+                        RM 0.00
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <!-- NOTES -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    Additional Information
+                </div>
+
+
+                <label>
+                    Notes
+                </label>
+
+                <textarea
+                    id="notes"
+                    rows="3"
+                    placeholder="Quotation notes..."
+                ></textarea>
+
+
+                <label>
+                    Terms & Conditions
+                </label>
+
+                <textarea
+                    id="terms"
+                    rows="3"
+                    placeholder="Payment terms and conditions..."
+                >Payment terms: 50% deposit before service.</textarea>
+
+            </div>
+
+
+            <div
+                id="formError"
+                class="form-error"
+                hidden
+            ></div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="cancelButton"
+                    class="secondary-button"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    id="saveButton"
+                    class="primary-button"
+                >
+                    Save Draft
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script src="js/quotations.js"></script>
+
+</body>
+
+</html>
