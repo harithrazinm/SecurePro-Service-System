@@ -1113,7 +1113,9 @@ function renderAnswers(data) {
 function getAnswerDisplayValue(answer) {
 
     /*
-     * Counter
+     * ======================================
+     * COUNTER
+     * ======================================
      *
      * Example:
      * {"indoor":1,"outdoor":1}
@@ -1148,13 +1150,16 @@ function getAnswerDisplayValue(answer) {
 
         } catch {
 
-            // Fall through.
+            // Continue to other formats.
         }
+
     }
 
 
     /*
-     * Multi-select
+     * ======================================
+     * MULTI-SELECT
+     * ======================================
      */
 
     if (
@@ -1174,16 +1179,21 @@ function getAnswerDisplayValue(answer) {
                 .map(
                     option =>
                         option.option_label_en ||
-                        option.option_value
+                        option.option_label_ms ||
+                        option.option_value ||
+                        ""
                 )
                 .join(", ");
 
         }
+
     }
 
 
     /*
-     * Single-select
+     * ======================================
+     * SINGLE SELECT
+     * ======================================
      */
 
     if (
@@ -1201,17 +1211,21 @@ function getAnswerDisplayValue(answer) {
 
             return (
                 unique[0].option_label_en ||
+                unique[0].option_label_ms ||
                 unique[0].option_value ||
                 answer.text_value ||
                 "—"
             );
 
         }
+
     }
 
 
     /*
-     * Number
+     * ======================================
+     * NUMBER + UNIT
+     * ======================================
      */
 
     if (
@@ -1219,16 +1233,111 @@ function getAnswerDisplayValue(answer) {
         answer.number_value !== undefined
     ) {
 
-        return `${answer.number_value}${
-            answer.unit
-                ? ` ${answer.unit}`
-                : ""
-        }`;
+        const value =
+            answer.number_value;
+
+
+        let unit = "";
+
+
+        /*
+         * Unit can be:
+         *
+         * "metres"
+         *
+         * OR:
+         *
+         * {
+         *     en: "metres",
+         *     ms: "meter"
+         * }
+         */
+
+        if (answer.unit) {
+
+            if (
+                typeof answer.unit === "string"
+            ) {
+
+                unit =
+                    answer.unit;
+
+            } else if (
+                typeof answer.unit === "object"
+            ) {
+
+                /*
+                 * English first
+                 */
+
+                unit =
+                    answer.unit.en ||
+                    answer.unit.ms ||
+                    answer.unit.name ||
+                    answer.unit.value ||
+                    "";
+
+            }
+
+        }
+
+
+        return unit
+            ? `${value} ${unit}`
+            : String(value);
 
     }
 
 
-    return answer.text_value || "—";
+    /*
+     * ======================================
+     * TEXT VALUE
+     * ======================================
+     */
+
+    if (
+        answer.text_value !== null &&
+        answer.text_value !== undefined
+    ) {
+
+        /*
+         * Prevent objects from becoming
+         * [object Object]
+         */
+
+        if (
+            typeof answer.text_value === "object"
+        ) {
+
+            if (Array.isArray(answer.text_value)) {
+
+                return answer.text_value
+                    .join(", ");
+
+            }
+
+
+            return (
+                answer.text_value.en ||
+                answer.text_value.ms ||
+                answer.text_value.name ||
+                answer.text_value.value ||
+                JSON.stringify(
+                    answer.text_value
+                )
+            );
+
+        }
+
+
+        return String(
+            answer.text_value
+        );
+
+    }
+
+
+    return "—";
 }
 
 
