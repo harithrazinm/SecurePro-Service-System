@@ -238,6 +238,62 @@ async function getRequests(req, res) {
 
 }
 
+/*
+ * Jobs become actionable only after an admin uploads payment proof for at
+ * least one quotation linked to the request. This prevents ordinary new
+ * customer enquiries from appearing in the technician assignment queue.
+ */
+async function getJobPendingRequests(req, res) {
+    try {
+        const [requests] = await pool.query(`
+            SELECT sr.id, sr.request_code, sr.customer_name, sr.customer_phone,
+                   sr.customer_email, sr.status, sr.created_at,
+                   s.name_en AS service_name_en, s.name_ms AS service_name_ms,
+                   (
+                       SELECT MAX(q2.payment_proof_uploaded_at)
+                       FROM quotations q2
+                       WHERE q2.request_id = sr.id
+                         AND q2.payment_status = 'proof_uploaded'
+                         AND q2.payment_proof_url IS NOT NULL
+                   ) AS payment_proof_uploaded_at
+            FROM service_requests sr
+            INNER JOIN services s ON s.id = sr.service_id
+            WHERE sr.status = 'pending'
+              AND sr.technician_id IS NULL
+              AND EXISTS (
+                  SELECT 1
+                  FROM quotations q
+                  WHERE q.request_id = sr.id
+                    AND q.payment_status = 'proof_uploaded'
+                    AND q.payment_proof_url IS NOT NULL
+              )
+            ORDER BY payment_proof_uploaded_at DESC
+        `);
+
+        return res.json({
+            success: true,
+            data: requests.map(request => ({
+                id: request.id,
+                request_code: request.request_code,
+                customer: {
+                    name: request.customer_name,
+                    phone: request.customer_phone,
+                    email: request.customer_email
+                },
+                service: {
+                    name: request.service_name_en || request.service_name_ms || "Service"
+                },
+                status: request.status,
+                payment_proof_uploaded_at: request.payment_proof_uploaded_at,
+                created_at: request.created_at
+            }))
+        });
+    } catch (error) {
+        console.error("Get job pending requests error:", error);
+        return res.status(500).json({ success: false, message: "Unable to retrieve job pending requests." });
+    }
+}
+
 
 /*
  * ======================================================
@@ -1773,6 +1829,7 @@ async function reviewTechnicianReport(req, res) {
  */
 
 module.exports = {
+    getJobPendingRequests,
 
     getRequests,
 

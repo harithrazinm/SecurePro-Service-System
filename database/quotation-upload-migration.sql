@@ -7,3 +7,5 @@ ALTER TABLE quotations
     ADD COLUMN payment_proof_uploaded_at TIMESTAMP NULL AFTER payment_proof_name,
     ADD COLUMN payment_status ENUM('not_received', 'proof_uploaded', 'verified')
         NOT NULL DEFAULT 'not_received' AFTER payment_proof_uploaded_at;
+
+

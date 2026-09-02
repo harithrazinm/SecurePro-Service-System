@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePro | Job Pending</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/requests.css">
+    <link rel="stylesheet" href="css/admin-theme.css">
+</head>
+
+<body>
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-mark">S</div>
+                <div><strong>SECUREPRO</strong><span>System Solutions</span></div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><span class="nav-icon">⌂</span>Dashboard</a>
+                <a href="requests.html" class="nav-item"><span class="nav-icon">▤</span>Service Requests</a>
+                <a href="job-pending.html" class="nav-item active"><span class="nav-icon">◷</span>Job Pending</a>
+                <a href="quotations.html" class="nav-item"><span class="nav-icon">▣</span>Quotations</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <div class="admin-profile">
+                    <div class="admin-avatar">A</div>
+                    <div class="admin-profile-info"><strong
+                            id="sidebarAdminName">Admin</strong><span>Administrator</span></div>
+                </div>
+                <button id="logoutButton" class="logout-button" type="button"><span class="logout-icon">⎋</span><span
+                        class="logout-label">Logout</span></button>
+            </div>
+        </aside>
+        <main class="admin-main">
+            <header class="admin-topbar">
+                <div><span class="topbar-label">JOB MANAGEMENT</span>
+                    <h1>Job Pending</h1>
+                </div>
+                <div class="topbar-user"><span class="online-dot"></span><span id="topbarAdminName">Admin</span></div>
+            </header>
+            <div class="dashboard-content">
+                <section class="dashboard-intro">
+                    <div><span class="eyebrow">READY TO ASSIGN</span>
+                        <h2>Paid jobs awaiting a technician</h2>
+                        <p>Jobs appear here automatically after payment proof is uploaded. Open a job to assign its
+                            technician and schedule.</p>
+                    </div><button id="refreshButton" class="refresh-button" type="button">↻
+                        <span>Refresh</span></button>
+                </section>
+                <section class="requests-section">
+                    <div class="section-heading">
+                        <div><span class="eyebrow">ASSIGNMENT QUEUE</span>
+                            <h2>Job pending</h2>
+                        </div><span id="requestTotalLabel" class="request-total">Loading...</span>
+                    </div>
+                    <div class="request-toolbar">
+                        <div class="search-box"><span>⌕</span><input id="searchInput" type="search"
+                                placeholder="Search job, customer or phone..."></div>
+                    </div>
+                    <div id="dashboardError" class="dashboard-error" hidden></div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Job</th>
+                                    <th>Customer</th>
+                                    <th>Service</th>
+                                    <th>Payment proof</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requestsTableBody">
+                                <tr>
+                                    <td colspan="5" class="table-loading">Loading job pending list...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script src="js/job-pending.js"></script>
+</body>
+
+</html>

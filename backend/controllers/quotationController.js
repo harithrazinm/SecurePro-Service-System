@@ -184,12 +184,23 @@ async function sendQuotationByEmail(req, res) {
 }
 
 async function uploadPaymentProof(req, res) {
+    const connection = await pool.getConnection();
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, message: "Upload a payment proof image or PDF." });
         }
         const file = uploadDetails(req.file);
-        const [result] = await pool.query(
+        await connection.beginTransaction();
+        const [quotationRows] = await connection.query(
+            "SELECT request_id FROM quotations WHERE id = ? LIMIT 1",
+            [req.params.id]
+        );
+        if (!quotationRows.length) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, message: "Quotation not found." });
+        }
+
+        const [result] = await connection.query(
             `UPDATE quotations
              SET payment_proof_url = ?, payment_proof_name = ?,
                  payment_proof_uploaded_at = CURRENT_TIMESTAMP,
@@ -198,12 +209,34 @@ async function uploadPaymentProof(req, res) {
             [file.url, file.name, req.params.id]
         );
         if (!result.affectedRows) {
+            await connection.rollback();
             return res.status(404).json({ success: false, message: "Quotation not found." });
         }
-        return res.json({ success: true, message: "Payment proof uploaded successfully.", data: file });
+
+        /*
+         * A request is only listed in the Job Pending queue when a payment
+         * proof exists. Keep an unassigned request in its pending state; do
+         * not overwrite an assignment if a proof is re-uploaded later.
+         */
+        await connection.query(
+            `UPDATE service_requests
+             SET status = 'pending'
+             WHERE id = ? AND technician_id IS NULL AND status = 'pending'`,
+            [quotationRows[0].request_id]
+        );
+
+        await connection.commit();
+        return res.json({
+            success: true,
+            message: "Payment proof uploaded. The job is now ready for technician assignment.",
+            data: { ...file, request_id: quotationRows[0].request_id }
+        });
     } catch (error) {
+        await connection.rollback();
         console.error("Upload payment proof error:", error);
         return res.status(500).json({ success: false, message: "Unable to upload payment proof." });
+    } finally {
+        connection.release();
     }
 }
 

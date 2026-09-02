@@ -4,6 +4,7 @@ const {
     getRequests,
     getRequestById,
     getDashboardSummary,
+    getJobPendingRequests,
     getTechnicians,
     updateRequest,
     reviewTechnicianReport
@@ -55,6 +56,12 @@ router.get(
 router.get(
     "/requests",
     getRequests
+);
+
+// Paid requests waiting for technician assignment.
+router.get(
+    "/job-pending",
+    getJobPendingRequests
 );
 
 
