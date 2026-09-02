@@ -56,6 +56,17 @@ function formatStatus(value) {
     return String(value || "draft").replaceAll("_", " ").replace(/\b\w/g, character => character.toUpperCase());
 }
 
+function followUpInfo(quotation, number) {
+    const sentAt = quotation.sent_at ? new Date(quotation.sent_at) : null;
+    const completedAt = quotation[`follow_up_${number}_sent_at`];
+    if (completedAt) return { label: `FU${number} sent ${formatDate(completedAt)}`, enabled: false, complete: true };
+    if (!sentAt || Number.isNaN(sentAt.getTime())) return { label: `FU${number}: send quotation first`, enabled: false };
+    const dueAt = new Date(sentAt);
+    dueAt.setDate(dueAt.getDate() + (number === 1 ? 2 : 5));
+    const enabled = new Date() >= dueAt;
+    return { label: enabled ? `FU${number} ready` : `FU${number} due ${formatDate(dueAt)}`, enabled };
+}
+
 function renderQuotations() {
     const search = $("#searchInput").value.trim().toLowerCase();
     const status = $("#statusFilter").value;
@@ -64,30 +75,35 @@ function renderQuotations() {
         return (!search || text.includes(search)) && (!status || quotation.status === status);
     });
     if (!filtered.length) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="table-empty">No quotations found.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" class="table-empty">No quotations found.</td></tr>';
         return;
     }
-    tableBody.innerHTML = filtered.map(quotation => `
+    tableBody.innerHTML = filtered.map(quotation => {
+        const followUp1 = followUpInfo(quotation, 1);
+        const followUp2 = followUpInfo(quotation, 2);
+        return `
         <tr>
             <td><span class="quotation-number">${escapeHtml(quotation.quotation_number)}</span><span class="quotation-request">${escapeHtml(quotation.request_code || "—")}</span></td>
             <td><span class="customer-name">${escapeHtml(quotation.customer_name || "—")}</span><span class="customer-email">${escapeHtml(quotation.customer_email || "—")}</span></td>
             <td><span class="service-name">${escapeHtml(quotation.service_name || "—")}</span></td>
             <td><span class="quotation-status status-${escapeHtml(quotation.status)}">${formatStatus(quotation.status)}</span></td>
             <td><span class="date-text">${formatDate(quotation.sent_at)}</span></td>
+            <td><div class="follow-up-stack"><button class="follow-up-button ${followUp1.complete ? "complete" : ""}" data-follow-up="1" data-id="${quotation.id}" ${followUp1.enabled ? "" : "disabled"}>${followUp1.label}</button><button class="follow-up-button ${followUp2.complete ? "complete" : ""}" data-follow-up="2" data-id="${quotation.id}" ${followUp2.enabled ? "" : "disabled"}>${followUp2.label}</button></div></td>
             <td>${quotation.payment_proof_url ? `<button class="action-button" data-open-proof="${quotation.id}">View proof</button><span class="quotation-request">${formatDate(quotation.payment_proof_uploaded_at)}</span>` : '<span class="date-text">Not uploaded</span>'}</td>
             <td><div class="action-group"><button class="action-button" data-open-quotation="${quotation.id}">View PDF</button><button class="action-button send" data-email="${quotation.id}">Email</button><button class="action-button send" data-whatsapp="${quotation.id}">WhatsApp</button><button class="action-button" data-upload-proof="${quotation.id}">Add proof</button></div></td>
-        </tr>`).join("");
+        </tr>`;
+    }).join("");
 }
 
 async function loadQuotations() {
     try {
         hideError();
-        tableBody.innerHTML = '<tr><td colspan="7" class="table-loading">Loading quotations...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" class="table-loading">Loading quotations...</td></tr>';
         const result = await apiRequest("/admin/quotations");
         if (result) { quotations = result.data || []; renderQuotations(); }
     } catch (error) {
         showError(error.message);
-        tableBody.innerHTML = '<tr><td colspan="7" class="table-empty">Unable to load quotations.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" class="table-empty">Unable to load quotations.</td></tr>';
     }
 }
 
@@ -167,6 +183,30 @@ async function sendWhatsApp(id) {
     } catch (error) { showError(error.message); }
 }
 
+async function sendFollowUp(id, number) {
+    const quotation = quotations.find(item => item.id === id);
+    if (!quotation?.customer_phone) return showError("This customer does not have a WhatsApp phone number.");
+    const popup = window.open("", "_blank");
+    try {
+        const result = await apiRequest(`/admin/quotations/${encodeURIComponent(id)}/follow-up/${number}`, { method: "POST" });
+        if (!result) return;
+        let phone = String(quotation.customer_phone).replace(/\D/g, "");
+        if (phone.startsWith("0")) phone = `60${phone.slice(1)}`;
+        if (!phone.startsWith("60")) phone = `60${phone}`;
+        const customer = quotation.customer_name || "Pelanggan";
+        const message = number === 1
+            ? `Hi ${customer} 👋 Kami ingin membuat susulan mengenai sebut harga yang kami hantar sebelum ini. Adakah anda sudah berkesempatan untuk menyemaknya? Sila maklumkan jika anda mempunyai sebarang pertanyaan atau memerlukan penjelasan. Terima kasih! 😊`
+            : `Hi ${customer}, kami ingin membuat susulan sekali lagi mengenai sebut harga anda untuk ${quotation.service_name || "perkhidmatan kami"}. Jika anda berminat untuk meneruskan, sila maklumkan kepada kami dan kami boleh mengatur langkah seterusnya. Kami sedia membantu jika anda mempunyai sebarang pertanyaan. Terima kasih kerana memilih SecurePro System Solution. 😊`;
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        if (popup) popup.location.href = url;
+        else window.open(url, "_blank", "noopener,noreferrer");
+        await loadQuotations();
+    } catch (error) {
+        if (popup) popup.close();
+        showError(error.message);
+    }
+}
+
 function openFile(url) {
     if (url) window.open(url, "_blank", "noopener,noreferrer");
 }
@@ -194,12 +234,13 @@ async function uploadPaymentProof() {
 tableBody.addEventListener("click", event => {
     const button = event.target.closest("button");
     if (!button) return;
-    const id = button.dataset.openQuotation || button.dataset.openProof || button.dataset.email || button.dataset.whatsapp || button.dataset.uploadProof;
+    const id = button.dataset.id || button.dataset.openQuotation || button.dataset.openProof || button.dataset.email || button.dataset.whatsapp || button.dataset.uploadProof;
     const quotation = quotations.find(item => item.id === id);
     if (button.dataset.openQuotation) openFile(quotation?.quotation_file_url);
     if (button.dataset.openProof) openFile(quotation?.payment_proof_url);
     if (button.dataset.email) sendEmail(id);
     if (button.dataset.whatsapp) sendWhatsApp(id);
+    if (button.dataset.followUp) sendFollowUp(id, Number(button.dataset.followUp));
     if (button.dataset.uploadProof) choosePaymentProof(id);
 });
 

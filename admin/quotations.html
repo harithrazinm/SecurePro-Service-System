@@ -21,12 +21,12 @@
     <main class="admin-main">
         <header class="admin-topbar"><div><span class="topbar-label">SECUREPRO ADMINISTRATION</span><h1>Quotations</h1></div><div class="topbar-user"><span class="online-dot"></span><span id="topbarAdminName">Admin</span></div></header>
         <div class="quotation-content">
-            <section class="quotation-intro"><div><span class="eyebrow">SALES &amp; QUOTATIONS</span><h2>Customer quotations</h2><p>Upload a prepared quotation, record when it is sent, and keep the customer's payment proof.</p></div><button id="createQuotationButton" class="primary-button" type="button">+ Upload Quotation</button></section>
+            <section class="quotation-intro quotation-hero"><div><span class="eyebrow">SALES &amp; QUOTATIONS</span><h2>Customer quotations</h2><p>Upload prepared quotations, send them with WhatsApp or email, and track each customer follow-up.</p></div><button id="createQuotationButton" class="primary-button hero-button" type="button">+ Upload Quotation</button></section>
             <div id="quotationError" class="quotation-error" hidden></div>
             <section class="quotation-card">
                 <div class="quotation-card-header"><div><span class="eyebrow">QUOTATION LIST</span><h3>All quotations</h3></div><button id="refreshButton" class="secondary-button" type="button">↻ Refresh</button></div>
                 <div class="quotation-toolbar"><div class="search-box"><span>⌕</span><input type="search" id="searchInput" placeholder="Search quotation, customer or request..."></div><select id="statusFilter"><option value="">All Status</option><option value="draft">Draft</option><option value="sent">Sent</option><option value="accepted">Accepted</option><option value="rejected">Rejected</option><option value="expired">Expired</option></select></div>
-                <div class="table-wrapper"><table><thead><tr><th>Quotation</th><th>Customer</th><th>Service</th><th>Status</th><th>Sent</th><th>Payment proof</th><th>Actions</th></tr></thead><tbody id="quotationsTableBody"><tr><td colspan="7" class="table-loading">Loading quotations...</td></tr></tbody></table></div>
+                <div class="table-wrapper"><table><thead><tr><th>Quotation</th><th>Customer</th><th>Service</th><th>Status</th><th>Sent</th><th>Follow-up</th><th>Payment proof</th><th>Actions</th></tr></thead><tbody id="quotationsTableBody"><tr><td colspan="8" class="table-loading">Loading quotations...</td></tr></tbody></table></div>
             </section>
         </div>
     </main>

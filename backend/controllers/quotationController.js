@@ -207,11 +207,55 @@ async function uploadPaymentProof(req, res) {
     }
 }
 
+async function recordFollowUp(req, res) {
+    try {
+        const followUpNumber = Number(req.params.number);
+        if (![1, 2].includes(followUpNumber)) {
+            return res.status(400).json({ success: false, message: "Invalid follow-up number." });
+        }
+
+        const [rows] = await pool.query(
+            `SELECT id, sent_at, follow_up_1_sent_at, follow_up_2_sent_at
+             FROM quotations WHERE id = ? LIMIT 1`,
+            [req.params.id]
+        );
+        if (!rows.length) {
+            return res.status(404).json({ success: false, message: "Quotation not found." });
+        }
+
+        const quotation = rows[0];
+        if (!quotation.sent_at) {
+            return res.status(400).json({ success: false, message: "Mark the quotation as sent before sending a follow-up." });
+        }
+
+        const field = followUpNumber === 1 ? "follow_up_1_sent_at" : "follow_up_2_sent_at";
+        if (quotation[field]) {
+            return res.status(400).json({ success: false, message: `Follow-up ${followUpNumber} has already been recorded.` });
+        }
+
+        const dueAt = new Date(quotation.sent_at);
+        dueAt.setDate(dueAt.getDate() + (followUpNumber === 1 ? 2 : 5));
+        if (new Date() < dueAt) {
+            return res.status(400).json({
+                success: false,
+                message: `Follow-up ${followUpNumber} is available on ${dueAt.toLocaleDateString("en-MY")}.`
+            });
+        }
+
+        await pool.query(`UPDATE quotations SET ${field} = CURRENT_TIMESTAMP WHERE id = ?`, [quotation.id]);
+        return res.json({ success: true, message: `Follow-up ${followUpNumber} recorded.` });
+    } catch (error) {
+        console.error("Record follow-up error:", error);
+        return res.status(500).json({ success: false, message: "Unable to record follow-up." });
+    }
+}
+
 module.exports = {
     createQuotation,
     getQuotationById,
     getQuotations,
     sendQuotation,
     sendQuotationByEmail,
-    uploadPaymentProof
+    uploadPaymentProof,
+    recordFollowUp
 };

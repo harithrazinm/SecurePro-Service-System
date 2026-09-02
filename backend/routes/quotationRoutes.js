@@ -9,7 +9,8 @@ const {
     createQuotation,
     sendQuotation,
     sendQuotationByEmail,
-    uploadPaymentProof
+    uploadPaymentProof,
+    recordFollowUp
 } = require("../controllers/quotationController");
 
 const router = express.Router();
@@ -56,6 +57,7 @@ router.post("/", upload.single("quotation_file"), createQuotation);
 router.post("/:id/send", sendQuotation);
 router.post("/:id/email", sendQuotationByEmail);
 router.post("/:id/payment-proof", upload.single("payment_proof"), uploadPaymentProof);
+router.post("/:id/follow-up/:number", recordFollowUp);
 
 router.use((error, req, res, next) => {
     if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
