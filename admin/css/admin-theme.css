@@ -95,19 +95,38 @@ tbody tr:hover { background: #f8fbff; }
 /* Mobile navigation and content */
 @media (max-width: 900px) {
     .admin-layout { display: block; }
-    .admin-sidebar { width: 100%; min-height: auto; padding: 14px 18px; position: static; }
+    .admin-sidebar {
+        width: 100%;
+        min-height: auto;
+        height: auto !important;
+        max-height: none !important;
+        padding: 14px 18px;
+        position: static !important;
+        overflow: visible !important;
+    }
     .sidebar-brand { padding: 0 0 13px; }
-    .sidebar-nav { display: flex; overflow-x: auto; padding-bottom: 3px; }
+    .sidebar-nav {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto;
+        padding-bottom: 3px;
+    }
     .nav-item { flex: 0 0 auto; }
-    .sidebar-bottom { display: flex; align-items: center; gap: 14px; margin-top: 13px; padding: 12px 0 0; }
-    .admin-profile { margin-bottom: 0; }
-    .logout-button { width: auto; }
+    .sidebar-bottom {
+        display: flex !important;
+        align-items: center;
+        gap: 14px;
+        margin-top: 13px;
+        padding: 12px 0 0;
+    }
+    .admin-profile { display: none; }
+    .logout-button { width: 100% !important; text-align: center; }
     .admin-topbar { min-height: 74px; padding: 15px 22px; }
     .dashboard-content, .request-content, .quotation-content { padding: 23px 22px 42px; }
 }
 
 @media (max-width: 640px) {
-    .sidebar-bottom { display: none; }
+    .sidebar-bottom { display: flex !important; }
     .admin-topbar h1 { font-size: 20px; }
     .topbar-user { font-size: 11px; }
     .dashboard-content, .request-content, .quotation-content { padding: 18px 15px 36px; }
