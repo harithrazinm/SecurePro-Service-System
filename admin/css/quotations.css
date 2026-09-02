@@ -103,6 +103,12 @@
     font-size: 12px;
 }
 
+.form-error[hidden],
+.quotation-error[hidden],
+#sendQuotationError[hidden] {
+    display: none !important;
+}
+
 
 /* =====================================================
    CARD
@@ -144,34 +150,49 @@
     flex: 1;
     max-width: 500px;
     height: 40px;
+
     display: flex;
     align-items: center;
+
     gap: 9px;
+
     padding: 0 12px;
+
     border: 1px solid var(--border);
     border-radius: 8px;
+
     color: var(--text-faint);
 }
 
 .search-box input {
     width: 100%;
+
     border: none;
     outline: none;
+
     background: transparent;
+
     font: inherit;
     font-size: 12px;
+
     color: var(--text-primary);
 }
 
 .quotation-toolbar select {
     height: 40px;
+
     border: 1px solid var(--border);
     border-radius: 8px;
+
     padding: 0 12px;
+
     background: white;
+
     color: var(--text-secondary);
+
     font: inherit;
     font-size: 12px;
+
     cursor: pointer;
 }
 
@@ -183,12 +204,15 @@
 .table-wrapper {
     width: 100%;
     overflow-x: auto;
-    border-top: 1px solid var(--border-soft);
+
+    border-top:
+        1px solid var(--border-soft);
 }
 
 table {
     width: 100%;
-    min-width: 1050px;
+    min-width: 1200px;
+
     border-collapse: collapse;
 }
 
@@ -198,19 +222,30 @@ thead {
 
 th {
     padding: 12px 17px;
+
     text-align: left;
+
     color: var(--text-muted);
+
     font-size: 9px;
+
     text-transform: uppercase;
+
     letter-spacing: .7px;
+
     font-weight: 800;
+
     white-space: nowrap;
 }
 
 td {
     padding: 15px 17px;
-    border-top: 1px solid var(--border-soft);
+
+    border-top:
+        1px solid var(--border-soft);
+
     font-size: 12px;
+
     vertical-align: middle;
 }
 
@@ -220,14 +255,19 @@ tbody tr:hover {
 
 .quotation-number {
     display: block;
+
     font-weight: 800;
+
     color: var(--text-primary);
 }
 
 .quotation-request {
     display: block;
+
     margin-top: 3px;
+
     font-size: 9px;
+
     color: var(--text-faint);
 }
 
@@ -237,8 +277,11 @@ tbody tr:hover {
 
 .customer-email {
     display: block;
+
     margin-top: 3px;
+
     font-size: 10px;
+
     color: var(--text-faint);
 }
 
@@ -248,18 +291,22 @@ tbody tr:hover {
 
 .total-amount {
     font-weight: 800;
+
     white-space: nowrap;
 }
 
 .date-text {
     white-space: nowrap;
+
     color: var(--text-secondary);
 }
 
 .table-loading,
 .table-empty {
     text-align: center;
+
     padding: 55px 20px;
+
     color: var(--text-faint);
 }
 
@@ -270,11 +317,17 @@ tbody tr:hover {
 
 .quotation-status {
     display: inline-flex;
+
     padding: 5px 9px;
+
     border-radius: 999px;
+
     font-size: 9px;
+
     font-weight: 800;
+
     text-transform: capitalize;
+
     white-space: nowrap;
 }
 
@@ -303,6 +356,11 @@ tbody tr:hover {
     color: #a16207;
 }
 
+.status-proof_uploaded {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
 
 /* =====================================================
    ACTIONS
@@ -310,19 +368,29 @@ tbody tr:hover {
 
 .action-group {
     display: flex;
+
     gap: 5px;
+
     flex-wrap: wrap;
 }
 
 .action-button {
     border: 1px solid var(--border);
+
     background: white;
+
     color: var(--text-primary);
+
     border-radius: 6px;
+
     padding: 6px 8px;
+
     font-size: 10px;
+
     font-weight: 700;
+
     cursor: pointer;
+
     white-space: nowrap;
 }
 
@@ -332,61 +400,207 @@ tbody tr:hover {
 
 .action-button.send {
     border-color: var(--accent);
+
     color: var(--accent);
 }
 
 
 /* =====================================================
-   MODAL
+   CREATE QUOTATION MODAL
 ===================================================== */
 
 .modal-overlay {
     position: fixed;
+
     inset: 0;
-    z-index: 1000;
+
+    z-index: 9999;
+
     display: flex;
+
     justify-content: center;
+
     align-items: center;
+
     padding: 20px;
-    background: rgba(15, 23, 42, .55);
+
+    background:
+        rgba(15, 23, 42, .55);
+
+    backdrop-filter:
+        blur(4px);
+
+    overflow-y: auto;
 }
 
 .modal-overlay[hidden] {
-    display: none;
+    display: none !important;
 }
+
+
+/* =====================================================
+   CREATE QUOTATION WINDOW
+===================================================== */
 
 .quotation-modal {
-    width: min(760px, 100%);
-    max-height: 92vh;
-    overflow-y: auto;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 25px 70px rgba(15, 23, 42, .2);
+    position: relative;
+
+    width:
+        min(760px, 100%);
+
+    max-height:
+        92vh;
+
+    overflow-y:
+        auto;
+
+    background:
+        #ffffff;
+
+    border-radius:
+        15px;
+
+    box-shadow:
+        0 25px 70px
+        rgba(15, 23, 42, .20);
+
+    animation:
+        quotationModalIn
+        .2s ease;
 }
 
+
+@keyframes quotationModalIn {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(12px)
+            scale(.98);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+
+    }
+
+}
+
+
+/* =====================================================
+   MODAL HEADER
+===================================================== */
+
 .modal-header {
-    padding: 23px 25px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    border-bottom: 1px solid var(--border);
+
+    position:
+        sticky;
+
+    top:
+        0;
+
+    z-index:
+        10;
+
+    padding:
+        23px 25px;
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        flex-start;
+
+    gap:
+        20px;
+
+    background:
+        #ffffff;
+
+    border-bottom:
+        1px solid var(--border);
 }
 
 .modal-header h2 {
-    margin-top: 5px;
-    color: var(--text-primary);
-    font-size: 22px;
+
+    margin-top:
+        5px;
+
+    color:
+        var(--text-primary);
+
+    font-size:
+        22px;
 }
 
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
+
 .close-button {
-    width: 34px;
-    height: 34px;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    background: white;
-    color: var(--text-secondary);
-    font-size: 22px;
-    line-height: 1;
+
+    width:
+        34px;
+
+    height:
+        34px;
+
+    flex-shrink:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        50%;
+
+    background:
+        white;
+
+    color:
+        var(--text-secondary);
+
+    font-size:
+        22px;
+
+    line-height:
+        1;
+
+    transition:
+        .15s ease;
+}
+
+.close-button:hover {
+
+    background:
+        #f1f5f9;
+
+    color:
+        var(--text-primary);
+
+    transform:
+        rotate(90deg);
 }
 
 
@@ -395,75 +609,155 @@ tbody tr:hover {
 ===================================================== */
 
 #quotationForm {
-    padding: 25px;
+
+    padding:
+        25px;
 }
 
 .form-section {
-    margin-bottom: 25px;
+
+    margin-bottom:
+        25px;
 }
 
 .form-section-title {
-    margin-bottom: 12px;
-    color: var(--text-primary);
-    font-size: 13px;
-    font-weight: 800;
+
+    margin-bottom:
+        12px;
+
+    color:
+        var(--text-primary);
+
+    font-size:
+        13px;
+
+    font-weight:
+        800;
 }
 
 .form-section-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-    margin-bottom: 12px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        15px;
+
+    margin-bottom:
+        12px;
 }
 
 .form-section-heading .form-section-title {
-    margin: 0;
+
+    margin:
+        0;
 }
 
 .form-section label {
-    display: block;
-    margin: 12px 0 6px;
-    color: var(--text-secondary);
-    font-size: 11px;
-    font-weight: 700;
+
+    display:
+        block;
+
+    margin:
+        12px 0 6px;
+
+    color:
+        var(--text-secondary);
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
 }
 
 .form-section input,
 .form-section select,
 .form-section textarea {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 10px 11px;
-    background: white;
-    color: var(--text-primary);
-    font: inherit;
-    font-size: 12px;
-    outline: none;
+
+    width:
+        100%;
+
+    box-sizing:
+        border-box;
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        7px;
+
+    padding:
+        10px 11px;
+
+    background:
+        white;
+
+    color:
+        var(--text-primary);
+
+    font:
+        inherit;
+
+    font-size:
+        12px;
+
+    outline:
+        none;
 }
 
 .form-section textarea {
-    resize: vertical;
+
+    resize:
+        vertical;
+
+    min-height:
+        90px;
 }
 
 .form-section input:focus,
 .form-section select:focus,
 .form-section textarea:focus {
-    border-color: var(--accent);
+
+    border-color:
+        var(--accent);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37, 99, 235, .08);
 }
 
 .form-section small {
-    display: block;
-    margin-top: 6px;
-    color: var(--text-faint);
-    font-size: 10px;
+
+    display:
+        block;
+
+    margin-top:
+        6px;
+
+    color:
+        var(--text-faint);
+
+    font-size:
+        10px;
 }
 
 .form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap:
+        10px;
 }
 
 
@@ -472,35 +766,103 @@ tbody tr:hover {
 ===================================================== */
 
 .item-row {
-    display: grid;
-    grid-template-columns: 1fr 90px 120px 110px 35px;
-    gap: 7px;
-    align-items: end;
-    margin-bottom: 8px;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr
+        90px
+        120px
+        110px
+        35px;
+
+    gap:
+        7px;
+
+    align-items:
+        end;
+
+    margin-bottom:
+        8px;
+}
+
+.item-row > div {
+
+    min-width:
+        0;
+}
+
+.item-row input {
+
+    box-sizing:
+        border-box;
 }
 
 .item-amount {
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 0 8px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    background: #f9fafb;
-    font-size: 11px;
-    font-weight: 800;
+
+    height:
+        38px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        flex-end;
+
+    padding:
+        0 8px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        7px;
+
+    background:
+        #f9fafb;
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+
+    white-space:
+        nowrap;
 }
 
 .remove-item {
-    width: 35px;
-    height: 38px;
-    border: 1px solid #fecaca;
-    border-radius: 7px;
-    background: var(--cancelled-bg);
-    color: var(--cancelled-text);
-    cursor: pointer;
-    font-weight: 800;
+
+    width:
+        35px;
+
+    height:
+        38px;
+
+    border:
+        1px solid #fecaca;
+
+    border-radius:
+        7px;
+
+    background:
+        var(--cancelled-bg);
+
+    color:
+        var(--cancelled-text);
+
+    cursor:
+        pointer;
+
+    font-weight:
+        800;
+
+    font-size:
+        15px;
 }
 
 
@@ -509,35 +871,81 @@ tbody tr:hover {
 ===================================================== */
 
 .quotation-summary {
-    margin-bottom: 25px;
-    padding: 16px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: #f9fafb;
+
+    margin-bottom:
+        25px;
+
+    padding:
+        16px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        10px;
+
+    background:
+        #f9fafb;
 }
 
 .quotation-summary > div {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
-    color: var(--text-secondary);
-    font-size: 12px;
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    gap:
+        20px;
+
+    padding:
+        6px 0;
+
+    color:
+        var(--text-secondary);
+
+    font-size:
+        12px;
 }
 
 .quotation-summary strong {
-    color: var(--text-primary);
+
+    color:
+        var(--text-primary);
 }
 
 .quotation-summary .grand-total {
-    margin-top: 8px;
-    padding-top: 13px;
-    border-top: 1px solid var(--border);
-    font-size: 15px;
+
+    margin-top:
+        8px;
+
+    padding-top:
+        13px;
+
+    border-top:
+        1px solid var(--border);
+
+    color:
+        var(--text-primary);
+
+    font-size:
+        15px;
+
+    font-weight:
+        800;
 }
 
 .quotation-summary .grand-total strong {
-    color: var(--accent);
-    font-size: 18px;
+
+    color:
+        var(--accent);
+
+    font-size:
+        18px;
 }
 
 
@@ -546,11 +954,445 @@ tbody tr:hover {
 ===================================================== */
 
 .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding-top: 18px;
-    border-top: 1px solid var(--border);
+
+    display:
+        flex;
+
+    justify-content:
+        flex-end;
+
+    align-items:
+        center;
+
+    gap:
+        8px;
+
+    padding-top:
+        18px;
+
+    border-top:
+        1px solid var(--border);
+}
+
+
+/* =====================================================
+   SEND QUOTATION MODAL
+===================================================== */
+
+.send-quotation-modal {
+
+    position:
+        relative;
+
+    width:
+        min(560px, 100%);
+
+    max-height:
+        92vh;
+
+    overflow-y:
+        auto;
+
+    background:
+        #ffffff;
+
+    border-radius:
+        15px;
+
+    box-shadow:
+        0 25px 70px
+        rgba(15, 23, 42, .20);
+
+    animation:
+        quotationModalIn
+        .2s ease;
+}
+
+
+/* =====================================================
+   SEND HEADER
+===================================================== */
+
+.send-quotation-modal .modal-header {
+
+    position:
+        relative;
+
+    padding:
+        23px 25px;
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        flex-start;
+
+    gap:
+        20px;
+
+    background:
+        #ffffff;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+
+/* =====================================================
+   SEND BODY
+===================================================== */
+
+.send-quotation-body {
+
+    padding:
+        25px;
+}
+
+
+/* =====================================================
+   CUSTOMER INFORMATION
+===================================================== */
+
+.send-quotation-info {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        10px;
+
+    padding:
+        15px;
+
+    margin-bottom:
+        24px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        10px;
+
+    background:
+        #f9fafb;
+}
+
+.send-info-row {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        4px;
+
+    min-width:
+        0;
+
+    padding:
+        7px 0;
+}
+
+.send-info-row span {
+
+    color:
+        var(--text-muted);
+
+    font-size:
+        10px;
+
+    text-transform:
+        uppercase;
+
+    letter-spacing:
+        .05em;
+}
+
+.send-info-row strong {
+
+    color:
+        var(--text-primary);
+
+    font-size:
+        12px;
+
+    word-break:
+        break-word;
+}
+
+.send-info-row.total {
+
+    grid-column:
+        1 / -1;
+
+    margin-top:
+        5px;
+
+    padding-top:
+        13px;
+
+    border-top:
+        1px solid var(--border);
+}
+
+.send-info-row.total strong {
+
+    color:
+        var(--accent);
+
+    font-size:
+        17px;
+}
+
+
+/* =====================================================
+   SEND METHOD TITLE
+===================================================== */
+
+.send-method-title {
+
+    margin-bottom:
+        10px;
+
+    color:
+        var(--text-primary);
+
+    font-size:
+        12px;
+
+    font-weight:
+        800;
+}
+
+
+/* =====================================================
+   SEND METHOD GRID
+===================================================== */
+
+.send-method-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:
+        10px;
+}
+
+
+/* =====================================================
+   SEND METHOD BUTTON
+===================================================== */
+
+.send-method {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    min-height:
+        90px;
+
+    padding:
+        14px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        10px;
+
+    background:
+        #ffffff;
+
+    color:
+        var(--text-primary);
+
+    text-align:
+        left;
+
+    cursor:
+        pointer;
+
+    transition:
+        transform .15s ease,
+        border-color .15s ease,
+        box-shadow .15s ease;
+}
+
+.send-method:hover {
+
+    transform:
+        translateY(-1px);
+
+    border-color:
+        var(--accent);
+
+    box-shadow:
+        0 5px 18px
+        rgba(15, 23, 42, .07);
+}
+
+.send-method:disabled {
+
+    opacity:
+        .6;
+
+    cursor:
+        wait;
+
+    transform:
+        none;
+
+    box-shadow:
+        none;
+}
+
+
+/* =====================================================
+   SEND METHOD ICON
+===================================================== */
+
+.send-method-icon {
+
+    width:
+        40px;
+
+    height:
+        40px;
+
+    flex-shrink:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        10px;
+
+    background:
+        var(--accent-soft);
+
+    font-size:
+        19px;
+}
+
+
+/* =====================================================
+   SEND METHOD CONTENT
+===================================================== */
+
+.send-method-content {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        4px;
+
+    min-width:
+        0;
+}
+
+.send-method-content strong {
+
+    color:
+        var(--text-primary);
+
+    font-size:
+        12px;
+}
+
+.send-method-content small {
+
+    margin:
+        0;
+
+    color:
+        var(--text-muted);
+
+    font-size:
+        9px;
+
+    line-height:
+        1.45;
+}
+
+
+/* =====================================================
+   SEND ERROR
+===================================================== */
+
+#sendQuotationError {
+
+    margin:
+        15px 0 0;
+
+    padding:
+        11px 13px;
+
+    border:
+        1px solid #fecaca;
+
+    border-radius:
+        9px;
+
+    background:
+        #fef2f2;
+
+    color:
+        #b91c1c;
+
+    font-size:
+        11px;
+}
+
+
+/* =====================================================
+   SEND MODAL ACTIONS
+===================================================== */
+
+.send-quotation-modal .modal-actions {
+
+    padding:
+        0 25px 25px;
+
+    border-top:
+        0;
+}
+
+
+/* =====================================================
+   HIDDEN
+===================================================== */
+
+[hidden] {
+    display:
+        none !important;
 }
 
 
@@ -561,7 +1403,9 @@ tbody tr:hover {
 @media (max-width: 900px) {
 
     .quotation-content {
-        padding: 28px 25px;
+
+        padding:
+            28px 25px;
     }
 
 }
@@ -570,64 +1414,423 @@ tbody tr:hover {
 @media (max-width: 650px) {
 
     .quotation-content {
-        padding: 22px 15px 35px;
+
+        padding:
+            22px 15px 35px;
     }
+
 
     .quotation-intro {
-        flex-direction: column;
-        align-items: stretch;
+
+        flex-direction:
+            column;
+
+        align-items:
+            stretch;
     }
+
 
     .quotation-intro h2 {
-        font-size: 23px;
+
+        font-size:
+            23px;
     }
+
 
     .quotation-intro .primary-button {
-        width: 100%;
+
+        width:
+            100%;
     }
+
 
     .quotation-card-header {
-        padding: 19px 16px 16px;
-        align-items: flex-start;
-        flex-direction: column;
+
+        padding:
+            19px 16px 16px;
+
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
     }
+
 
     .quotation-toolbar {
-        padding: 0 16px 16px;
-        flex-direction: column;
+
+        padding:
+            0 16px 16px;
+
+        flex-direction:
+            column;
     }
+
 
     .search-box {
-        max-width: none;
-        width: 100%;
+
+        max-width:
+            none;
+
+        width:
+            100%;
     }
+
 
     .quotation-toolbar select {
-        width: 100%;
+
+        width:
+            100%;
     }
 
-    .quotation-modal {
-        max-height: 95vh;
+
+    .modal-overlay {
+
+        padding:
+            12px;
+
+        align-items:
+            flex-start;
     }
+
+
+    .quotation-modal,
+    .send-quotation-modal {
+
+        width:
+            100%;
+
+        max-height:
+            calc(100vh - 24px);
+
+        border-radius:
+            14px;
+    }
+
+
+    .modal-header,
+    .send-quotation-modal .modal-header {
+
+        padding:
+            20px;
+    }
+
 
     #quotationForm {
-        padding: 18px;
+
+        padding:
+            20px;
     }
+
 
     .form-grid {
-        grid-template-columns: 1fr;
+
+        grid-template-columns:
+            1fr;
     }
+
 
     .item-row {
-        grid-template-columns: 1fr 1fr;
+
+        grid-template-columns:
+            1fr 1fr;
     }
+
 
     .item-row > :first-child {
-        grid-column: 1 / -1;
+
+        grid-column:
+            1 / -1;
     }
 
-    .item-amount {
-        justify-content: flex-start;
+
+    .item-row > :nth-child(4) {
+
+        grid-column:
+            1 / 2;
     }
 
+
+    .remove-item {
+
+        grid-column:
+            2 / 3;
+
+        align-self:
+            end;
+    }
+
+
+    .send-quotation-body {
+
+        padding:
+            20px;
+    }
+
+
+    .send-quotation-info {
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .send-info-row.total {
+
+        grid-column:
+            auto;
+    }
+
+
+    .send-method-grid {
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .send-quotation-modal .modal-actions {
+
+        padding:
+            0 20px 20px;
+    }
+
+}
+
+/* =========================================================
+   CREATE QUOTATION BUTTON - FINAL FIX
+   ========================================================= */
+
+.create-quotation-button,
+.create-quotation-btn,
+#createQuotationButton,
+#createQuotationBtn,
+button[id*="createQuotation"],
+button[class*="create-quotation"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    min-height: 46px !important;
+    padding: 0 22px !important;
+
+    border: 1px solid #2563eb !important;
+    border-radius: 9px !important;
+
+    background: #2563eb !important;
+    color: #ffffff !important;
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif !important;
+
+    font-size: 12px !important;
+    font-weight: 800 !important;
+
+    line-height: 1 !important;
+    text-decoration: none !important;
+
+    cursor: pointer !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+
+    box-shadow: none !important;
+
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease !important;
+}
+
+.create-quotation-button:hover,
+.create-quotation-btn:hover,
+#createQuotationButton:hover,
+#createQuotationBtn:hover,
+button[id*="createQuotation"]:hover,
+button[class*="create-quotation"]:hover {
+    background: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+    color: #ffffff !important;
+
+    transform: translateY(-1px);
+}
+
+.create-quotation-button:active,
+.create-quotation-btn:active,
+#createQuotationButton:active,
+#createQuotationBtn:active,
+button[id*="createQuotation"]:active,
+button[class*="create-quotation"]:active {
+    transform: translateY(0);
+}
+
+/* =========================================================
+   QUOTATION TABLE - ROW LINES
+   ========================================================= */
+
+.quotations-table,
+.quotation-table,
+table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+/* Header bottom line */
+.quotations-table thead tr,
+.quotation-table thead tr,
+table thead tr {
+    border-bottom: 1px solid #d0d5dd !important;
+}
+
+/* Header cells */
+.quotations-table thead th,
+.quotation-table thead th,
+table thead th {
+    border-bottom: 1px solid #d0d5dd !important;
+}
+
+/* Each quotation row */
+.quotations-table tbody tr,
+.quotation-table tbody tr,
+table tbody tr {
+    border-bottom: 1px solid #d0d5dd !important;
+}
+
+/* Individual cells create reliable row separators */
+.quotations-table tbody td,
+.quotation-table tbody td,
+table tbody td {
+    border-bottom: 1px solid #d0d5dd !important;
+}
+
+/* Remove line from final row */
+.quotations-table tbody tr:last-child td,
+.quotation-table tbody tr:last-child td,
+table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* =========================================================
+   QUOTATION LIST - CLEAR ROW SEPARATORS
+   ========================================================= */
+
+.requests-section table,
+.quotations-section table,
+.quotation-list table,
+.table-wrapper table {
+    width: 100%;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+}
+
+.table-wrapper thead {
+    border-bottom: 1px solid #d0d5dd !important;
+}
+
+.table-wrapper thead th {
+    border-bottom: 1px solid #d0d5dd !important;
+}
+
+.table-wrapper tbody tr {
+    border-bottom: 1px solid #d0d5dd !important;
+}
+
+.table-wrapper tbody td {
+    border-bottom: 1px solid #d0d5dd !important;
+}
+
+/* Keep the final row clean */
+.table-wrapper tbody tr:last-child td {
+    border-bottom: 0 !important;
+}
+
+/* =========================================================
+   CREATE QUOTATION - ITEM ROW
+   ========================================================= */
+
+.quotation-items,
+.quotation-item,
+.quotation-item-row {
+    width: 100%;
+}
+
+.quotation-item,
+.quotation-item-row {
+    display: grid;
+    align-items: center;
+    gap: 12px;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid #d0d5dd !important;
+}
+
+.quotation-item:last-child,
+.quotation-item-row:last-child {
+    border-bottom: 0 !important;
+}
+
+/* Inputs inside quotation items */
+.quotation-item input,
+.quotation-item select,
+.quotation-item-row input,
+.quotation-item-row select {
+    min-height: 40px;
+
+    border: 1px solid #d0d5dd !important;
+    border-radius: 8px !important;
+
+    background: #ffffff !important;
+}
+
+/* Amount */
+.quotation-item .amount,
+.quotation-item-row .amount {
+    min-height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    padding: 0 12px;
+
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+    font-weight: 700;
+}
+
+/* =========================================================
+   CHARGES INPUTS
+   ========================================================= */
+
+.quotation-form input,
+.quotation-form select,
+.quotation-form textarea,
+#quotationForm input,
+#quotationForm select,
+#quotationForm textarea {
+    border: 1px solid #d0d5dd !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+}
+
+.quotation-form input:focus,
+.quotation-form select:focus,
+.quotation-form textarea:focus,
+#quotationForm input:focus,
+#quotationForm select:focus,
+#quotationForm textarea:focus {
+    border-color: #2563eb !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10) !important;
 }
