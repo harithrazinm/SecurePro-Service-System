@@ -1116,9 +1116,6 @@ function getAnswerDisplayValue(answer) {
      * ======================================
      * COUNTER
      * ======================================
-     *
-     * Example:
-     * {"indoor":1,"outdoor":1}
      */
 
     if (
@@ -1129,28 +1126,36 @@ function getAnswerDisplayValue(answer) {
         try {
 
             const values =
-                JSON.parse(
-                    answer.text_value
-                );
+                typeof answer.text_value === "string"
+                    ? JSON.parse(answer.text_value)
+                    : answer.text_value;
 
 
             if (
                 values &&
-                typeof values === "object"
+                typeof values === "object" &&
+                !Array.isArray(values)
             ) {
 
                 return Object.entries(values)
                     .map(
-                        ([key, value]) =>
-                            `${formatLabel(key)}: ${value}`
+                        ([key, value]) => {
+
+                            return `${formatLabel(key)}: ${formatObjectValue(value)}`;
+
+                        }
                     )
                     .join(" • ");
 
             }
 
-        } catch {
+        } catch (error) {
 
-            // Continue to other formats.
+            console.warn(
+                "Unable to parse counter:",
+                error
+            );
+
         }
 
     }
@@ -1158,7 +1163,7 @@ function getAnswerDisplayValue(answer) {
 
     /*
      * ======================================
-     * MULTI-SELECT
+     * MULTI SELECT
      * ======================================
      */
 
@@ -1177,11 +1182,16 @@ function getAnswerDisplayValue(answer) {
 
             return unique
                 .map(
-                    option =>
-                        option.option_label_en ||
-                        option.option_label_ms ||
-                        option.option_value ||
-                        ""
+                    option => {
+
+                        return (
+                            option.option_label_en ||
+                            option.option_label_ms ||
+                            option.option_value ||
+                            formatObjectValue(option)
+                        );
+
+                    }
                 )
                 .join(", ");
 
@@ -1209,12 +1219,15 @@ function getAnswerDisplayValue(answer) {
 
         if (unique.length) {
 
+            const option =
+                unique[0];
+
+
             return (
-                unique[0].option_label_en ||
-                unique[0].option_label_ms ||
-                unique[0].option_value ||
-                answer.text_value ||
-                "—"
+                option.option_label_en ||
+                option.option_label_ms ||
+                option.option_value ||
+                formatObjectValue(option)
             );
 
         }
@@ -1233,58 +1246,26 @@ function getAnswerDisplayValue(answer) {
         answer.number_value !== undefined
     ) {
 
-        const value =
-            answer.number_value;
+        const numberValue =
+            formatObjectValue(
+                answer.number_value
+            );
 
 
-        let unit = "";
+        const unit =
+            formatUnit(
+                answer.unit
+            );
 
 
-        /*
-         * Unit can be:
-         *
-         * "metres"
-         *
-         * OR:
-         *
-         * {
-         *     en: "metres",
-         *     ms: "meter"
-         * }
-         */
+        if (unit) {
 
-        if (answer.unit) {
-
-            if (
-                typeof answer.unit === "string"
-            ) {
-
-                unit =
-                    answer.unit;
-
-            } else if (
-                typeof answer.unit === "object"
-            ) {
-
-                /*
-                 * English first
-                 */
-
-                unit =
-                    answer.unit.en ||
-                    answer.unit.ms ||
-                    answer.unit.name ||
-                    answer.unit.value ||
-                    "";
-
-            }
+            return `${numberValue} ${unit}`;
 
         }
 
 
-        return unit
-            ? `${value} ${unit}`
-            : String(value);
+        return numberValue;
 
     }
 
@@ -1297,40 +1278,11 @@ function getAnswerDisplayValue(answer) {
 
     if (
         answer.text_value !== null &&
-        answer.text_value !== undefined
+        answer.text_value !== undefined &&
+        answer.text_value !== ""
     ) {
 
-        /*
-         * Prevent objects from becoming
-         * [object Object]
-         */
-
-        if (
-            typeof answer.text_value === "object"
-        ) {
-
-            if (Array.isArray(answer.text_value)) {
-
-                return answer.text_value
-                    .join(", ");
-
-            }
-
-
-            return (
-                answer.text_value.en ||
-                answer.text_value.ms ||
-                answer.text_value.name ||
-                answer.text_value.value ||
-                JSON.stringify(
-                    answer.text_value
-                )
-            );
-
-        }
-
-
-        return String(
+        return formatObjectValue(
             answer.text_value
         );
 
@@ -1340,6 +1292,358 @@ function getAnswerDisplayValue(answer) {
     return "—";
 }
 
+
+/* ========================================
+   FORMAT UNIT
+======================================== */
+
+function formatUnit(unit) {
+
+    if (
+        unit === null ||
+        unit === undefined ||
+        unit === ""
+    ) {
+
+        return "";
+
+    }
+
+
+    /*
+     * Already a normal string
+     */
+
+    if (
+        typeof unit === "string"
+    ) {
+
+        return unit;
+
+    }
+
+
+    /*
+     * Number
+     */
+
+    if (
+        typeof unit === "number"
+    ) {
+
+        return String(unit);
+
+    }
+
+
+    /*
+     * Array
+     */
+
+    if (
+        Array.isArray(unit)
+    ) {
+
+        return unit
+            .map(
+                item =>
+                    formatObjectValue(item)
+            )
+            .filter(Boolean)
+            .join(", ");
+
+    }
+
+
+    /*
+     * Object
+     */
+
+    if (
+        typeof unit === "object"
+    ) {
+
+        /*
+         * Try common unit structures.
+         */
+
+        const possibleValues = [
+
+            unit.en,
+
+            unit.ms,
+
+            unit.label,
+
+            unit.name,
+
+            unit.value,
+
+            unit.unit,
+
+            unit.symbol,
+
+            unit.text
+
+        ];
+
+
+        for (
+            const value of possibleValues
+        ) {
+
+            if (
+                value !== null &&
+                value !== undefined &&
+                value !== ""
+            ) {
+
+                /*
+                 * Nested object
+                 */
+
+                if (
+                    typeof value === "object"
+                ) {
+
+                    const nested =
+                        formatObjectValue(value);
+
+
+                    if (nested) {
+
+                        return nested;
+
+                    }
+
+                } else {
+
+                    return String(value);
+
+                }
+
+            }
+
+        }
+
+
+        /*
+         * Last resort:
+         * inspect every property.
+         */
+
+        for (
+            const key of Object.keys(unit)
+        ) {
+
+            const value =
+                unit[key];
+
+
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
+
+                continue;
+
+            }
+
+
+            if (
+                typeof value === "string" ||
+                typeof value === "number"
+            ) {
+
+                return String(value);
+
+            }
+
+
+            if (
+                typeof value === "object"
+            ) {
+
+                const nested =
+                    formatObjectValue(value);
+
+
+                if (nested) {
+
+                    return nested;
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+    return "";
+}
+
+
+/* ========================================
+   FORMAT ANY OBJECT SAFELY
+======================================== */
+
+function formatObjectValue(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    /*
+     * String
+     */
+
+    if (
+        typeof value === "string"
+    ) {
+
+        return value;
+
+    }
+
+
+    /*
+     * Number / Boolean
+     */
+
+    if (
+        typeof value === "number" ||
+        typeof value === "boolean"
+    ) {
+
+        return String(value);
+
+    }
+
+
+    /*
+     * Array
+     */
+
+    if (
+        Array.isArray(value)
+    ) {
+
+        return value
+            .map(
+                item =>
+                    formatObjectValue(item)
+            )
+            .filter(Boolean)
+            .join(", ");
+
+    }
+
+
+    /*
+     * Object
+     */
+
+    if (
+        typeof value === "object"
+    ) {
+
+        /*
+         * Common translated values
+         */
+
+        const possibleValues = [
+
+            value.en,
+
+            value.ms,
+
+            value.label,
+
+            value.name,
+
+            value.value,
+
+            value.text,
+
+            value.symbol
+
+        ];
+
+
+        for (
+            const item of possibleValues
+        ) {
+
+            if (
+                item !== null &&
+                item !== undefined &&
+                item !== ""
+            ) {
+
+                const formatted =
+                    formatObjectValue(item);
+
+
+                if (formatted) {
+
+                    return formatted;
+
+                }
+
+            }
+
+        }
+
+
+        /*
+         * Try every object property
+         */
+
+        for (
+            const key of Object.keys(value)
+        ) {
+
+            const item =
+                value[key];
+
+
+            if (
+                item === null ||
+                item === undefined ||
+                item === ""
+            ) {
+
+                continue;
+
+            }
+
+
+            const formatted =
+                formatObjectValue(item);
+
+
+            if (formatted) {
+
+                return formatted;
+
+            }
+
+        }
+
+    }
+
+
+    return "";
+}
 
 /* ========================================
    DUPLICATE OPTIONS
