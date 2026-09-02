@@ -82,6 +82,64 @@ function safeJsonParse(value) {
 
 /*
  * ==========================================================
+ * GET UNIT VALUE
+ * ==========================================================
+ *
+ * Converts bilingual unit objects into a simple database value.
+ *
+ * Example:
+ *
+ * {
+ *     en: "m",
+ *     ms: "m"
+ * }
+ *
+ * becomes:
+ *
+ * "m"
+ *
+ * This prevents:
+ *
+ * [object Object]
+ *
+ * from being stored in MySQL.
+ *
+ * ==========================================================
+ */
+
+function getUnitValue(unit) {
+
+    if (
+        unit === null ||
+        unit === undefined ||
+        unit === ""
+    ) {
+
+        return null;
+
+    }
+
+
+    if (
+        typeof unit === "object"
+    ) {
+
+        return (
+            unit.en ||
+            unit.ms ||
+            null
+        );
+
+    }
+
+
+    return String(unit);
+
+}
+
+
+/*
+ * ==========================================================
  * CREATE SERVICE REQUEST
  * ==========================================================
  */
@@ -363,7 +421,7 @@ async function createRequest(
          * ==================================================
          * SAVE ANSWERS
          * ==================================================
-         */
+ */
 
         for (
             const [
@@ -420,6 +478,12 @@ async function createRequest(
             let numberValue = null;
 
 
+            /*
+             * ==================================================
+             * NUMBER / MEASUREMENT
+             * ==================================================
+             */
+
             if (
                 question.question_type === "number" ||
                 question.question_type === "measurement"
@@ -441,6 +505,12 @@ async function createRequest(
             }
 
 
+            /*
+             * ==================================================
+             * COUNTER
+             * ==================================================
+             */
+
             else if (
                 question.question_type === "counter"
             ) {
@@ -450,6 +520,12 @@ async function createRequest(
 
             }
 
+
+            /*
+             * ==================================================
+             * OTHER ANSWERS
+             * ==================================================
+             */
 
             else {
 
@@ -461,6 +537,43 @@ async function createRequest(
 
             }
 
+
+            /*
+             * ==================================================
+             * UNIT
+             * ==================================================
+             *
+             * IMPORTANT:
+             *
+             * question.unit may be:
+             *
+             * {
+             *     en: "m",
+             *     ms: "m"
+             * }
+             *
+             * We convert it into:
+             *
+             * "m"
+             *
+             * instead of:
+             *
+             * "[object Object]"
+             *
+             * ==================================================
+             */
+
+            const unitValue =
+                getUnitValue(
+                    question.unit
+                );
+
+
+            /*
+             * ==================================================
+             * INSERT ANSWER
+             * ==================================================
+             */
 
             await connection.query(
                 `
@@ -484,13 +597,15 @@ async function createRequest(
                     question.question_type,
                     textValue,
                     numberValue,
-                    question.unit || null
+                    unitValue
                 ]
             );
 
 
             /*
+             * ==================================================
              * SAVE SINGLE / MULTI OPTIONS
+             * ==================================================
              */
 
             if (
@@ -591,61 +706,61 @@ async function createRequest(
         }
 
 
-/*
- * ==================================================
- * SAVE PHOTOS
- * ==================================================
- */
+        /*
+         * ==================================================
+         * SAVE PHOTOS
+         * ==================================================
+         */
 
-for (
-    const file
-    of files
-) {
+        for (
+            const file
+            of files
+        ) {
 
-    console.log(
-        "Saving Cloudinary customer photo:",
-        {
-            originalName:
-                file.originalname,
+            console.log(
+                "Saving Cloudinary customer photo:",
+                {
+                    originalName:
+                        file.originalname,
 
-            cloudinaryUrl:
-                file.path,
+                    cloudinaryUrl:
+                        file.path,
 
-            publicId:
-                file.filename,
+                    publicId:
+                        file.filename,
 
-            mimeType:
-                file.mimetype,
+                    mimeType:
+                        file.mimetype,
 
-            size:
-                file.size
+                    size:
+                        file.size
+                }
+            );
+
+
+            const databasePath =
+                file.path;
+
+
+            await connection.query(
+                `
+                INSERT INTO customer_photos (
+                    id,
+                    request_id,
+                    file_name,
+                    file_path
+                )
+                VALUES (?, ?, ?, ?)
+                `,
+                [
+                    uuid(),
+                    requestId,
+                    file.originalname,
+                    databasePath
+                ]
+            );
+
         }
-    );
-
-
-    const databasePath =
-        file.path;
-
-
-    await connection.query(
-        `
-        INSERT INTO customer_photos (
-            id,
-            request_id,
-            file_name,
-            file_path
-        )
-        VALUES (?, ?, ?, ?)
-        `,
-        [
-            uuid(),
-            requestId,
-            file.originalname,
-            databasePath
-        ]
-    );
-
-}
 
 
         /*
@@ -726,7 +841,7 @@ for (
         });
 
 
-      } catch (error) {
+    } catch (error) {
 
         if (
             connection &&
