@@ -20,7 +20,9 @@ const storage = new CloudinaryStorage({
         folder: file.fieldname === "payment_proof"
             ? "securepro/payment-proofs"
             : "securepro/quotations",
-        resource_type: "auto",
+        /* PDFs must use Cloudinary's raw delivery type. Images and PDFs used
+         * as payment proof may remain automatic. */
+        resource_type: file.fieldname === "quotation_file" ? "raw" : "auto",
         use_filename: true,
         unique_filename: true
     })
