@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,46 +9,123 @@
     <link rel="stylesheet" href="css/quotations.css">
     <link rel="stylesheet" href="css/admin-theme.css">
 </head>
+
 <body>
-<div class="admin-layout">
-    <aside class="admin-sidebar">
-        <div class="sidebar-brand"><div class="sidebar-mark">S</div><div><strong>SECUREPRO</strong><span>System Solutions</span></div></div>
-        <nav class="sidebar-nav">
-            <a href="dashboard.html" class="nav-item"><span class="nav-icon">⌂</span>Dashboard</a>
-            <a href="requests.html" class="nav-item"><span class="nav-icon">▤</span>Service Requests</a>
-            <a href="job-pending.html" class="nav-item"><span class="nav-icon">◷</span>Job Pending</a>
-            <a href="quotations.html" class="nav-item active"><span class="nav-icon">▣</span>Quotations</a>
-        </nav>
-        <div class="sidebar-bottom"><div class="admin-profile"><div class="admin-avatar">A</div><div class="admin-profile-info"><strong id="sidebarAdminName">Admin</strong><span>Administrator</span></div></div><button id="logoutButton" class="logout-button" type="button">⎋ <span class="logout-label">Logout</span></button></div>
-    </aside>
-    <main class="admin-main">
-        <header class="admin-topbar"><div><span class="topbar-label">SECUREPRO ADMINISTRATION</span><h1>Quotations</h1></div><div class="topbar-user"><span class="online-dot"></span><span id="topbarAdminName">Admin</span></div></header>
-        <div class="quotation-content">
-            <section class="quotation-intro quotation-hero"><div><span class="eyebrow">SALES &amp; QUOTATIONS</span><h2>Customer quotations</h2><p>Upload prepared quotations, send them with WhatsApp or email, and track each customer follow-up.</p></div><button id="createQuotationButton" class="primary-button hero-button" type="button">+ Upload Quotation</button></section>
-            <div id="quotationError" class="quotation-error" hidden></div>
-            <section class="quotation-card">
-                <div class="quotation-card-header"><div><span class="eyebrow">QUOTATION LIST</span><h3>All quotations</h3></div><button id="refreshButton" class="secondary-button" type="button">↻ Refresh</button></div>
-                <div class="quotation-toolbar"><div class="search-box"><span>⌕</span><input type="search" id="searchInput" placeholder="Search quotation, customer or request..."></div><select id="statusFilter"><option value="">All Status</option><option value="draft">Draft</option><option value="sent">Sent</option><option value="accepted">Accepted</option><option value="rejected">Rejected</option><option value="expired">Expired</option></select></div>
-                <div class="table-wrapper"><table><thead><tr><th>Quotation</th><th>Customer</th><th>Service</th><th>Status</th><th>Sent</th><th>Follow-up</th><th>Payment proof</th><th>Actions</th></tr></thead><tbody id="quotationsTableBody"><tr><td colspan="8" class="table-loading">Loading quotations...</td></tr></tbody></table></div>
-            </section>
-        </div>
-    </main>
-</div>
-
-<div id="quotationModal" class="modal-overlay" hidden>
-    <div class="quotation-modal">
-        <div class="modal-header"><div><span class="eyebrow">NEW QUOTATION</span><h2>Upload quotation</h2></div><button id="closeModalButton" class="close-button" type="button">×</button></div>
-        <form id="quotationForm">
-            <div class="form-section"><div class="form-section-title">Customer request</div><label for="requestId">Service Request</label><select id="requestId" required><option value="">Loading requests...</option></select><small>Choose the customer this quotation belongs to.</small></div>
-            <div class="form-section"><div class="form-section-title">Quotation document</div><label for="quotationFile">Quotation PDF</label><input id="quotationFile" type="file" accept="application/pdf,.pdf" required><small>PDF only, up to 10 MB. The document is stored securely in Cloudinary.</small></div>
-            <div class="form-section"><div class="form-section-title">Optional note</div><label for="notes">Internal notes</label><textarea id="notes" rows="3" placeholder="Optional internal note..."></textarea></div>
-            <div id="formError" class="form-error" hidden></div>
-            <div class="modal-actions"><button id="cancelButton" type="button" class="secondary-button">Cancel</button><button id="saveButton" type="submit" class="primary-button">Upload quotation</button></div>
-        </form>
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-mark">S</div>
+                <div><strong>SECUREPRO</strong><span>System Solutions</span></div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><span class="nav-icon">⌂</span>Dashboard</a>
+                <a href="requests.html" class="nav-item"><span class="nav-icon">▤</span>Service Requests</a>
+                <a href="job-pending.html" class="nav-item"><span class="nav-icon">◷</span>Job Pending</a>
+                <a href="quotations.html" class="nav-item active"><span class="nav-icon">▣</span>Quotations</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <div class="admin-profile">
+                    <div class="admin-avatar">A</div>
+                    <div class="admin-profile-info"><strong
+                            id="sidebarAdminName">Admin</strong><span>Administrator</span></div>
+                </div><button id="logoutButton" class="logout-button" type="button">⎋ <span
+                        class="logout-label">Logout</span></button>
+            </div>
+        </aside>
+        <main class="admin-main">
+            <header class="admin-topbar">
+                <div><span class="topbar-label">SECUREPRO ADMINISTRATION</span>
+                    <h1>Quotations</h1>
+                </div>
+                <div class="topbar-user"><span class="online-dot"></span><span id="topbarAdminName">Admin</span></div>
+            </header>
+            <div class="quotation-content">
+                <section class="quotation-intro quotation-hero">
+                    <div><span class="eyebrow">SALES &amp; QUOTATIONS</span>
+                        <h2>Customer quotations</h2>
+                        <p>Upload prepared quotations, send them with WhatsApp or email, and track each customer
+                            follow-up.</p>
+                    </div><button id="createQuotationButton" class="primary-button hero-button" type="button">+ Upload
+                        Quotation</button>
+                </section>
+                <div id="quotationError" class="quotation-error" hidden></div>
+                <section class="quotation-card">
+                    <div class="quotation-card-header">
+                        <div><span class="eyebrow">QUOTATION LIST</span>
+                            <h3>All quotations</h3>
+                        </div><button id="refreshButton" class="secondary-button" type="button">↻ Refresh</button>
+                    </div>
+                    <div class="quotation-toolbar">
+                        <div class="search-box"><span>⌕</span><input type="search" id="searchInput"
+                                placeholder="Search quotation, customer or request..."></div><select id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="sent">Sent</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Quotation</th>
+                                    <th>Customer</th>
+                                    <th>Service</th>
+                                    <th>Status</th>
+                                    <th>Sent</th>
+                                    <th>Follow-up</th>
+                                    <th>Payment proof</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quotationsTableBody">
+                                <tr>
+                                    <td colspan="8" class="table-loading">Loading quotations...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
     </div>
-</div>
 
-<input id="paymentProofFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" hidden>
-<script src="js/quotations.js"></script>
+    <div id="quotationModal" class="modal-overlay" hidden>
+        <div class="quotation-modal">
+            <div class="modal-header">
+                <div><span class="eyebrow">NEW QUOTATION</span>
+                    <h2>Upload quotation</h2>
+                </div><button id="closeModalButton" class="close-button" type="button">×</button>
+            </div>
+            <form id="quotationForm">
+                <div class="form-section">
+                    <div class="form-section-title">Customer request</div><label for="requestId">Service
+                        Request</label><select id="requestId" required>
+                        <option value="">Loading requests...</option>
+                    </select><small>Choose the customer this quotation belongs to.</small>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title">Quotation document</div><label for="quotationFile">Quotation
+                        PDF</label><input id="quotationFile" type="file" accept="application/pdf,.pdf"
+                        required><small>PDF only, up to 10 MB. The document is stored securely in Cloudinary.</small>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title">Optional note</div><label for="notes">Internal
+                        notes</label><textarea id="notes" rows="3" placeholder="Optional internal note..."></textarea>
+                </div>
+                <div id="formError" class="form-error" hidden></div>
+                <div class="modal-actions"><button id="cancelButton" type="button"
+                        class="secondary-button">Cancel</button><button id="saveButton" type="submit"
+                        class="primary-button">Upload quotation</button></div>
+            </form>
+        </div>
+    </div>
+
+    <input id="paymentProofFile" type="file"
+        accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" hidden>
+    <script src="js/quotations.js"></script>
 </body>
+
 </html>
