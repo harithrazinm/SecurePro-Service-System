@@ -24,6 +24,7 @@ const storage = new CloudinaryStorage({
         /* PDFs must use Cloudinary's raw delivery type. Images and PDFs used
          * as payment proof may remain automatic. */
         resource_type: file.fieldname === "quotation_file" ? "raw" : "auto",
+        format: file.fieldname === "quotation_file" ? "pdf" : undefined,
         use_filename: true,
         unique_filename: true
     })

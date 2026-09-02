@@ -7,6 +7,15 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
+function quotationPdfUrl(url) {
+    if (!url) return "";
+    const [path, query] = String(url).split("?");
+    const normalizedPath = path.toLowerCase().endsWith(".pdf")
+        ? path
+        : `${path}.pdf`;
+    return query ? `${normalizedPath}?${query}` : normalizedPath;
+}
+
 async function sendQuotationEmail({
     customerEmail,
     customerName,
@@ -27,6 +36,7 @@ async function sendQuotationEmail({
     const safeName = escapeHtml(customerName || "Customer");
     const safeNumber = escapeHtml(quotationNumber);
     const senderName = process.env.BREVO_SENDER_NAME || "SecurePro System Solutions";
+    const fileUrl = quotationPdfUrl(quotationFileUrl);
 
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
@@ -48,7 +58,7 @@ async function sendQuotationEmail({
 
 Please find attached quotation ${quotationNumber} from SecurePro System Solutions.
 
-You can also view it here: ${quotationFileUrl}
+You can also view it here: ${fileUrl}
 
 Thank you for choosing SecurePro System Solutions.`,
             htmlContent:
@@ -56,12 +66,12 @@ Thank you for choosing SecurePro System Solutions.`,
     <h2 style="color:#1d4ed8">SecurePro System Solutions</h2>
     <p>Dear ${safeName},</p>
     <p>Please find attached quotation <strong>${safeNumber}</strong>.</p>
-    <p><a href="${quotationFileUrl}" style="display:inline-block;padding:10px 16px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px">View quotation</a></p>
+    <p><a href="${fileUrl}" style="display:inline-block;padding:10px 16px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px">View quotation</a></p>
     <p>Thank you for choosing SecurePro System Solutions.</p>
 </div>`,
-            attachment: quotationFileUrl
+            attachment: fileUrl
                 ? [{
-                    url: quotationFileUrl,
+                    url: fileUrl,
                     name: quotationFileName || `${quotationNumber}.pdf`
                 }]
                 : []
