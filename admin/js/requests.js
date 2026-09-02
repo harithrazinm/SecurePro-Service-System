@@ -1,5 +1,39 @@
-const API_BASE =
-    "https://securepro-service-system.onrender.com/api";
+/*
+ * ========================================
+ * SECUREPRO ADMIN
+ * SERVICE REQUESTS PAGE
+ * ========================================
+ *
+ * This page displays ALL service requests.
+ *
+ * LOCAL DEVELOPMENT:
+ * http://localhost:5001/api
+ *
+ * PRODUCTION:
+ * https://securepro-service-system.onrender.com/api
+ *
+ */
+
+
+/*
+ * ========================================
+ * API CONFIGURATION
+ * ========================================
+ *
+ * Use localhost while testing locally.
+ *
+ */
+
+const API_BASE = 
+       "https://securepro-service-system.onrender.com/api";
+  //  "http://localhost:5001/api";
+
+
+/*
+ * ========================================
+ * AUTHENTICATION
+ * ========================================
+ */
 
 const token =
     localStorage.getItem(
@@ -15,6 +49,7 @@ const storedUser =
 
 let adminUser = null;
 
+
 try {
 
     adminUser =
@@ -22,7 +57,12 @@ try {
             storedUser || "null"
         );
 
-} catch {
+} catch (error) {
+
+    console.error(
+        "Unable to parse admin user:",
+        error
+    );
 
     adminUser = null;
 
@@ -31,7 +71,7 @@ try {
 
 /*
  * ========================================
- * AUTHENTICATION
+ * CHECK ADMIN LOGIN
  * ========================================
  */
 
@@ -58,30 +98,36 @@ const requestsTableBody =
         "#requestsTableBody"
     );
 
+
 const requestTotalLabel =
     document.querySelector(
         "#requestTotalLabel"
     );
+
 
 const dashboardError =
     document.querySelector(
         "#dashboardError"
     );
 
+
 const searchInput =
     document.querySelector(
         "#searchInput"
     );
+
 
 const statusFilter =
     document.querySelector(
         "#statusFilter"
     );
 
+
 const refreshButton =
     document.querySelector(
         "#refreshButton"
     );
+
 
 const logoutButton =
     document.querySelector(
@@ -95,18 +141,34 @@ const logoutButton =
  * ========================================
  */
 
-if (adminUser) {
-
+const sidebarAdminName =
     document.querySelector(
         "#sidebarAdminName"
-    ).textContent =
-        adminUser.name || "Admin";
+    );
 
 
+const topbarAdminName =
     document.querySelector(
         "#topbarAdminName"
-    ).textContent =
-        adminUser.name || "Admin";
+    );
+
+
+if (adminUser) {
+
+    if (sidebarAdminName) {
+
+        sidebarAdminName.textContent =
+            adminUser.name || "Admin";
+
+    }
+
+
+    if (topbarAdminName) {
+
+        topbarAdminName.textContent =
+            adminUser.name || "Admin";
+
+    }
 
 }
 
@@ -122,152 +184,144 @@ async function apiRequest(
     options = {}
 ) {
 
-    const response =
-        await fetch(
-            `${API_BASE}${url}`,
-            {
-                ...options,
-
-                headers: {
-
-                    ...(options.headers || {}),
-
-                    Authorization:
-                        `Bearer ${token}`
-
-                }
-
-            }
-        );
-
-
-    if (
-        response.status === 401 ||
-        response.status === 403
-    ) {
-
-        localStorage.removeItem(
-            "securepro_admin_token"
-        );
-
-        localStorage.removeItem(
-            "securepro_admin_user"
-        );
-
-        window.location.href =
-            "login.html";
-
-        return null;
-
-    }
-
-
-    const result =
-        await response.json();
-
-
-    if (
-        !response.ok ||
-        !result.success
-    ) {
-
-        throw new Error(
-            result.message ||
-            "Request failed."
-        );
-
-    }
-
-
-    return result;
-
-}
-
-
-/*
- * ========================================
- * ERROR
- * ========================================
- */
-
-function showError(message) {
-
-    dashboardError.textContent =
-        message;
-
-    dashboardError.hidden = false;
-
-}
-
-
-function hideError() {
-
-    dashboardError.hidden = true;
-
-    dashboardError.textContent = "";
-
-}
-
-
-/*
- * ========================================
- * DASHBOARD SUMMARY
- * ========================================
- */
-
-async function loadDashboard() {
-
     try {
 
+        const response =
+            await fetch(
+                `${API_BASE}${url}`,
+                {
+                    ...options,
+
+                    headers: {
+
+                        ...(options.headers || {}),
+
+                        Authorization:
+                            `Bearer ${token}`
+
+                    }
+
+                }
+            );
+
+
+        /*
+         * ====================================
+         * AUTHORIZATION ERROR
+         * ====================================
+         */
+
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
+
+            localStorage.removeItem(
+                "securepro_admin_token"
+            );
+
+            localStorage.removeItem(
+                "securepro_admin_user"
+            );
+
+            window.location.href =
+                "login.html";
+
+            return null;
+
+        }
+
+
+        /*
+         * ====================================
+         * READ RESPONSE
+         * ====================================
+         */
+
         const result =
-            await apiRequest(
-                "/admin/dashboard"
+            await response.json();
+
+
+        /*
+         * ====================================
+         * API ERROR
+         * ====================================
+         */
+
+        if (
+            !response.ok ||
+            !result.success
+        ) {
+
+            throw new Error(
+                result.message ||
+                "Request failed."
             );
 
-
-        if (!result) return;
-
-
-        const data =
-            result.data;
+        }
 
 
-        totalCount.textContent =
-            Number(data.total || 0);
-
-
-        pendingCount.textContent =
-            Number(data.pending || 0);
-
-
-        assignedCount.textContent =
-            Number(data.assigned || 0);
-
-
-        progressCount.textContent =
-            Number(
-                data.in_progress || 0
-            );
-
-
-        completedCount.textContent =
-            Number(
-                data.completed || 0
-            );
+        return result;
 
 
     } catch (error) {
 
         console.error(
-            "Dashboard error:",
+            "API Request Error:",
             error
         );
 
-        showError(
-            error.message
-        );
+        throw error;
 
     }
+
+}
+
+
+/*
+ * ========================================
+ * SHOW ERROR
+ * ========================================
+ */
+
+function showError(
+    message
+) {
+
+    if (!dashboardError) {
+        return;
+    }
+
+
+    dashboardError.textContent =
+        message;
+
+
+    dashboardError.hidden =
+        false;
+
+}
+
+
+/*
+ * ========================================
+ * HIDE ERROR
+ * ========================================
+ */
+
+function hideError() {
+
+    if (!dashboardError) {
+        return;
+    }
+
+
+    dashboardError.hidden =
+        true;
+
+
+    dashboardError.textContent =
+        "";
 
 }
 
@@ -285,28 +339,48 @@ async function loadRequests() {
         hideError();
 
 
-        requestsTableBody.innerHTML = `
-            <tr>
-                <td
-                    colspan="7"
-                    class="table-loading"
-                >
-                    Loading requests...
-                </td>
-            </tr>
-        `;
+        /*
+         * ====================================
+         * LOADING MESSAGE
+         * ====================================
+         */
 
+        if (requestsTableBody) {
+
+            requestsTableBody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="7"
+                        class="table-loading"
+                    >
+                        Loading service requests...
+                    </td>
+                </tr>
+            `;
+
+        }
+
+
+        /*
+         * ====================================
+         * SEARCH + STATUS
+         * ====================================
+         */
 
         const params =
             new URLSearchParams();
 
 
         const search =
-            searchInput.value.trim();
+            searchInput
+                ? searchInput.value.trim()
+                : "";
 
 
         const status =
-            statusFilter.value;
+            statusFilter
+                ? statusFilter.value
+                : "";
 
 
         if (search) {
@@ -333,6 +407,26 @@ async function loadRequests() {
             params.toString();
 
 
+        /*
+         * ====================================
+         * GET ALL REQUESTS
+         * ====================================
+         *
+         * IMPORTANT:
+         *
+         * There is NO:
+         *
+         * slice(0, 5)
+         *
+         * limit = 5
+         *
+         * pagination
+         *
+         *
+         * The API returns all requests.
+         *
+         */
+
         const result =
             await apiRequest(
                 `/admin/requests${
@@ -343,11 +437,48 @@ async function loadRequests() {
             );
 
 
-        if (!result) return;
+        if (!result) {
+            return;
+        }
 
+
+        /*
+         * ====================================
+         * GET DATA
+         * ====================================
+         */
+
+        let requests =
+            result.data;
+
+
+        /*
+         * ====================================
+         * SAFETY CHECK
+         * ====================================
+         */
+
+        if (!Array.isArray(requests)) {
+
+            requests = [];
+
+        }
+
+
+        console.log(
+            "Service requests received:",
+            requests.length
+        );
+
+
+        /*
+         * ====================================
+         * RENDER ALL REQUESTS
+         * ====================================
+         */
 
         renderRequests(
-            result.data
+            requests
         );
 
 
@@ -358,21 +489,27 @@ async function loadRequests() {
             error
         );
 
+
         showError(
-            error.message
+            error.message ||
+            "Unable to load service requests."
         );
 
 
-        requestsTableBody.innerHTML = `
-            <tr>
-                <td
-                    colspan="7"
-                    class="table-empty"
-                >
-                    Unable to load requests.
-                </td>
-            </tr>
-        `;
+        if (requestsTableBody) {
+
+            requestsTableBody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="7"
+                        class="table-empty"
+                    >
+                        Unable to load requests.
+                    </td>
+                </tr>
+            `;
+
+        }
 
     }
 
@@ -389,29 +526,78 @@ function renderRequests(
     requests
 ) {
 
-    requestTotalLabel.textContent =
-        `${requests.length} request${
-            requests.length === 1
-                ? ""
-                : "s"
-        }`;
+    /*
+     * ====================================
+     * MAKE SURE ARRAY
+     * ====================================
+     */
 
+    if (!Array.isArray(requests)) {
+
+        requests = [];
+
+    }
+
+
+    /*
+     * ====================================
+     * UPDATE TOTAL
+     * ====================================
+     */
+
+    if (requestTotalLabel) {
+
+        requestTotalLabel.textContent =
+            `${requests.length} request${
+                requests.length === 1
+                    ? ""
+                    : "s"
+            }`;
+
+    }
+
+
+    /*
+     * ====================================
+     * EMPTY STATE
+     * ====================================
+     */
 
     if (
-        !requests ||
         requests.length === 0
     ) {
 
-        requestsTableBody.innerHTML = `
-            <tr>
-                <td
-                    colspan="7"
-                    class="table-empty"
-                >
-                    No service requests found.
-                </td>
-            </tr>
-        `;
+        if (requestsTableBody) {
+
+            requestsTableBody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="7"
+                        class="table-empty"
+                    >
+                        No service requests found.
+                    </td>
+                </tr>
+            `;
+
+        }
+
+        return;
+
+    }
+
+
+    /*
+     * ====================================
+     * RENDER EVERY REQUEST
+     * ====================================
+     */
+
+    if (!requestsTableBody) {
+
+        console.error(
+            "ERROR: #requestsTableBody was not found."
+        );
 
         return;
 
@@ -419,162 +605,282 @@ function renderRequests(
 
 
     requestsTableBody.innerHTML =
-        requests.map(
-            request => {
+        requests
+            .map(
+                request => {
 
-                const date =
-                    formatDate(
-                        request.created_at
-                    );
+                    /*
+                     * ==========================
+                     * REQUEST DATE
+                     * ==========================
+                     */
 
-
-                const serviceName =
-                    request.service &&
-                    request.service.name
-                        ? request.service.name.en
-                        : "—";
-
-
-                const technician =
-                    request.technician
-                        ? request.technician.name
-                        : null;
+                    const date =
+                        formatDate(
+                            request.created_at
+                        );
 
 
-                const status =
-                    request.status ||
-                    "pending";
+                    /*
+                     * ==========================
+                     * SERVICE NAME
+                     * ==========================
+                     */
+
+                    let serviceName =
+                        "—";
 
 
-                return `
-                    <tr>
+                    if (
+                        request.service &&
+                        request.service.name
+                    ) {
 
-                        <td>
+                        if (
+                            typeof request.service.name ===
+                            "object"
+                        ) {
 
-                            <span
-                                class="request-code"
-                            >
+                            serviceName =
+                                request.service.name.en ||
+                                request.service.name.ms ||
+                                "—";
+
+                        } else {
+
+                            serviceName =
+                                request.service.name;
+
+                        }
+
+                    }
+
+
+                    /*
+                     * ==========================
+                     * TECHNICIAN
+                     * ==========================
+                     */
+
+                    const technician =
+                        request.technician
+                            ? request.technician.name
+                            : null;
+
+
+                    /*
+                     * ==========================
+                     * STATUS
+                     * ==========================
+                     */
+
+                    const status =
+                        request.status ||
+                        "pending";
+
+
+                    /*
+                     * ==========================
+                     * CUSTOMER
+                     * ==========================
+                     */
+
+                    const customer =
+                        request.customer || {};
+
+
+                    const customerName =
+                        customer.name ||
+                        "—";
+
+
+                    const customerPhone =
+                        customer.phone ||
+                        "—";
+
+
+                    /*
+                     * ==========================
+                     * REQUEST CODE
+                     * ==========================
+                     */
+
+                    const requestCode =
+                        request.request_code ||
+                        "—";
+
+
+                    /*
+                     * ==========================
+                     * REQUEST ID
+                     * ==========================
+                     */
+
+                    const requestId =
+                        request.id ||
+                        "";
+
+
+                    /*
+                     * ==========================
+                     * RETURN ROW
+                     * ==========================
+                     */
+
+                    return `
+                        <tr>
+
+                            <!-- REQUEST -->
+
+                            <td>
+
+                                <span
+                                    class="request-code"
+                                >
+                                    ${escapeHtml(
+                                        requestCode
+                                    )}
+                                </span>
+
+                                <span
+                                    class="request-date"
+                                >
+                                    ${escapeHtml(
+                                        date
+                                    )}
+                                </span>
+
+                            </td>
+
+
+                            <!-- CUSTOMER -->
+
+                            <td>
+
+                                <span
+                                    class="customer-name"
+                                >
+                                    ${escapeHtml(
+                                        customerName
+                                    )}
+                                </span>
+
+                                <span
+                                    class="customer-phone"
+                                >
+                                    ${escapeHtml(
+                                        customerPhone
+                                    )}
+                                </span>
+
+                            </td>
+
+
+                            <!-- SERVICE -->
+
+                            <td>
+
+                                <span
+                                    class="service-name"
+                                >
+                                    ${escapeHtml(
+                                        serviceName
+                                    )}
+                                </span>
+
+                            </td>
+
+
+                            <!-- STATUS -->
+
+                            <td>
+
+                                <span
+                                    class="
+                                        status-badge
+                                        status-${escapeHtml(
+                                            status
+                                        )}
+                                    "
+                                >
+                                    ${escapeHtml(
+                                        formatStatus(
+                                            status
+                                        )
+                                    )}
+                                </span>
+
+                            </td>
+
+
+                            <!-- TECHNICIAN -->
+
+                            <td>
+
+                                ${
+                                    technician
+                                        ? `
+                                            <span>
+                                                ${escapeHtml(
+                                                    technician
+                                                )}
+                                            </span>
+                                          `
+                                        : `
+                                            <span
+                                                class="
+                                                    technician-empty
+                                                "
+                                            >
+                                                Not assigned
+                                            </span>
+                                          `
+                                }
+
+                            </td>
+
+
+                            <!-- CREATED DATE -->
+
+                            <td>
+
                                 ${escapeHtml(
-                                    request.request_code
+                                    date
                                 )}
-                            </span>
 
-                            <span
-                                class="request-date"
-                            >
-                                ${date}
-                            </span>
-
-                        </td>
+                            </td>
 
 
-                        <td>
+                            <!-- VIEW -->
 
-                            <span
-                                class="customer-name"
-                            >
-                                ${escapeHtml(
-                                    request.customer.name
-                                )}
-                            </span>
+                            <td>
 
-                            <span
-                                class="customer-phone"
-                            >
-                                ${escapeHtml(
-                                    request.customer.phone
-                                )}
-                            </span>
+                                <a
+                                    class="view-button"
+                                    href="request.html?id=${
+                                        encodeURIComponent(
+                                            requestId
+                                        )
+                                    }"
+                                >
+                                    View
+                                </a>
 
-                        </td>
+                            </td>
 
+                        </tr>
+                    `;
 
-                        <td>
-
-                            <span
-                                class="service-name"
-                            >
-                                ${escapeHtml(
-                                    serviceName
-                                )}
-                            </span>
-
-                        </td>
-
-
-                        <td>
-
-                            <span
-                                class="
-                                    status-badge
-                                    status-${status}
-                                "
-                            >
-                                ${formatStatus(
-                                    status
-                                )}
-                            </span>
-
-                        </td>
-
-
-                        <td>
-
-                            ${
-                                technician
-                                    ? `
-                                        <span>
-                                            ${escapeHtml(
-                                                technician
-                                            )}
-                                        </span>
-                                      `
-                                    : `
-                                        <span
-                                            class="
-                                                technician-empty
-                                            "
-                                        >
-                                            Not assigned
-                                        </span>
-                                      `
-                            }
-
-                        </td>
-
-
-                        <td>
-                            ${date}
-                        </td>
-
-
-                        <td>
-
-                            <a
-                                class="view-button"
-                                href="request.html?id=${
-                                    encodeURIComponent(
-                                        request.id
-                                    )
-                                }"
-                            >
-                                View
-                            </a>
-
-                        </td>
-
-                    </tr>
-                `;
-
-            }
-        ).join("");
+                }
+            )
+            .join("");
 
 }
 
 
 /*
  * ========================================
- * STATUS TEXT
+ * FORMAT STATUS
  * ========================================
  */
 
@@ -582,7 +888,14 @@ function formatStatus(
     status
 ) {
 
-    return status
+    if (!status) {
+
+        return "Pending";
+
+    }
+
+
+    return String(status)
         .replaceAll(
             "_",
             " "
@@ -598,7 +911,7 @@ function formatStatus(
 
 /*
  * ========================================
- * DATE
+ * FORMAT DATE
  * ========================================
  */
 
@@ -607,7 +920,9 @@ function formatDate(
 ) {
 
     if (!value) {
+
         return "—";
+
     }
 
 
@@ -648,7 +963,9 @@ function escapeHtml(
     value
 ) {
 
-    return String(value ?? "")
+    return String(
+        value ?? ""
+    )
         .replaceAll(
             "&",
             "&amp;"
@@ -675,81 +992,158 @@ function escapeHtml(
 
 /*
  * ========================================
- * EVENTS
+ * REFRESH BUTTON
  * ========================================
  */
 
-refreshButton.addEventListener(
-    "click",
-    async () => {
+if (refreshButton) {
 
-        await loadRequests();
+    refreshButton.addEventListener(
+        "click",
+        async () => {
 
-    }
-);
+            await loadRequests();
 
+        }
+    );
 
-statusFilter.addEventListener(
-    "change",
-    loadRequests
-);
+}
 
 
-let searchTimer;
+/*
+ * ========================================
+ * STATUS FILTER
+ * ========================================
+ */
 
-searchInput.addEventListener(
-    "input",
-    () => {
+if (statusFilter) {
 
-        clearTimeout(
-            searchTimer
-        );
+    statusFilter.addEventListener(
+        "change",
+        async () => {
 
-        searchTimer =
-            setTimeout(
-                loadRequests,
-                350
+            await loadRequests();
+
+        }
+    );
+
+}
+
+
+/*
+ * ========================================
+ * SEARCH
+ * ========================================
+ */
+
+let searchTimer = null;
+
+
+if (searchInput) {
+
+    searchInput.addEventListener(
+        "input",
+        () => {
+
+            clearTimeout(
+                searchTimer
             );
 
-    }
-);
+
+            searchTimer =
+                setTimeout(
+                    () => {
+
+                        loadRequests();
+
+                    },
+                    350
+                );
+
+        }
+    );
+
+}
 
 
-document.querySelector(
-    "#requestsNav"
-).addEventListener(
-    "click",
-    event => {
+/*
+ * ========================================
+ * REQUESTS NAVIGATION
+ * ========================================
+ *
+ * IMPORTANT:
+ *
+ * The element may not exist on this page.
+ *
+ * Therefore we check it before using
+ * addEventListener().
+ *
+ */
 
-        event.preventDefault();
-
-        document.querySelector(
-            "#requests"
-        ).scrollIntoView({
-            behavior: "smooth"
-        });
-
-    }
-);
+const requestsNav =
+    document.querySelector(
+        "#requestsNav"
+    );
 
 
-logoutButton.addEventListener(
-    "click",
-    () => {
+if (requestsNav) {
 
-        localStorage.removeItem(
-            "securepro_admin_token"
-        );
+    requestsNav.addEventListener(
+        "click",
+        event => {
 
-        localStorage.removeItem(
-            "securepro_admin_user"
-        );
+            event.preventDefault();
 
-        window.location.href =
-            "login.html";
 
-    }
-);
+            const requestsSection =
+                document.querySelector(
+                    "#requests"
+                );
+
+
+            if (requestsSection) {
+
+                requestsSection.scrollIntoView({
+                    behavior: "smooth"
+                });
+
+            }
+
+        }
+    );
+
+}
+
+
+/*
+ * ========================================
+ * LOGOUT
+ * ========================================
+ */
+
+if (logoutButton) {
+
+    logoutButton.addEventListener(
+        "click",
+        () => {
+
+            localStorage.removeItem(
+                "securepro_admin_token"
+            );
+
+
+            localStorage.removeItem(
+                "securepro_admin_user"
+            );
+
+
+            window.location.href =
+                "login.html";
+
+        }
+    );
+
+}
 
 
 /*
@@ -760,9 +1154,37 @@ logoutButton.addEventListener(
 
 async function init() {
 
+    console.log(
+        "========================================"
+    );
+
+    console.log(
+        "SecurePro Service Orders"
+    );
+
+    console.log(
+        "Loading ALL service requests..."
+    );
+
+    console.log(
+        "API:",
+        API_BASE
+    );
+
+    console.log(
+        "========================================"
+    );
+
+
     await loadRequests();
 
 }
 
+
+/*
+ * ========================================
+ * START
+ * ========================================
+ */
 
 init();
