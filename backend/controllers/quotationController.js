@@ -39,7 +39,15 @@ async function createQuotation(req, res) {
     const connection = await pool.getConnection();
 
     try {
-        const { request_id: requestId, notes = null } = req.body;
+        /*
+         * Multer normally provides the multipart fields in req.body. Some
+         * Cloudinary/Multer deployments can finish the file stream without
+         * populating it, so the browser also supplies these values as query
+         * parameters. This keeps uploads working in both cases.
+         */
+        const body = req.body || {};
+        const requestId = body.request_id || req.query.request_id;
+        const notes = body.notes ?? req.query.notes ?? null;
 
         if (!requestId) {
             return res.status(400).json({ success: false, message: "Service request is required." });

@@ -75,7 +75,7 @@ function renderQuotations() {
             <td><span class="quotation-status status-${escapeHtml(quotation.status)}">${formatStatus(quotation.status)}</span></td>
             <td><span class="date-text">${formatDate(quotation.sent_at)}</span></td>
             <td>${quotation.payment_proof_url ? `<button class="action-button" data-open-proof="${quotation.id}">View proof</button><span class="quotation-request">${formatDate(quotation.payment_proof_uploaded_at)}</span>` : '<span class="date-text">Not uploaded</span>'}</td>
-            <td><div class="action-group"><button class="action-button" data-open-quotation="${quotation.id}">View PDF</button><button class="action-button send" data-send="${quotation.id}">Mark sent</button><button class="action-button" data-upload-proof="${quotation.id}">Add proof</button></div></td>
+            <td><div class="action-group"><button class="action-button" data-open-quotation="${quotation.id}">View PDF</button><button class="action-button send" data-email="${quotation.id}">Email</button><button class="action-button send" data-whatsapp="${quotation.id}">WhatsApp</button><button class="action-button" data-upload-proof="${quotation.id}">Add proof</button></div></td>
         </tr>`).join("");
 }
 
@@ -115,14 +115,16 @@ async function submitQuotation(event) {
     const file = $("#quotationFile").files[0];
     if (!file) return showError("Choose the quotation PDF to upload.", $("#formError"));
     const body = new FormData();
-    body.append("request_id", requestSelect.value);
-    body.append("notes", $("#notes").value.trim());
     body.append("quotation_file", file);
     const saveButton = $("#saveButton");
     try {
         saveButton.disabled = true;
         saveButton.textContent = "Uploading...";
-        const result = await apiRequest("/admin/quotations", { method: "POST", body });
+        const query = new URLSearchParams({
+            request_id: requestSelect.value,
+            notes: $("#notes").value.trim()
+        });
+        const result = await apiRequest(`/admin/quotations?${query}`, { method: "POST", body });
         if (result) { closeModal(); await loadQuotations(); alert(result.message); }
     } catch (error) {
         showError(error.message, $("#formError"));
@@ -137,6 +139,31 @@ async function markSent(id) {
     try {
         const result = await apiRequest(`/admin/quotations/${encodeURIComponent(id)}/send`, { method: "POST" });
         if (result) { await loadQuotations(); alert(result.message); }
+    } catch (error) { showError(error.message); }
+}
+
+async function sendEmail(id) {
+    const quotation = quotations.find(item => item.id === id);
+    if (!quotation?.customer_email) return showError("This customer does not have an email address.");
+    if (!confirm(`Email ${quotation.quotation_number} to ${quotation.customer_email}?`)) return;
+    try {
+        const result = await apiRequest(`/admin/quotations/${encodeURIComponent(id)}/email`, { method: "POST" });
+        if (result) { await loadQuotations(); alert(result.message); }
+    } catch (error) { showError(error.message); }
+}
+
+async function sendWhatsApp(id) {
+    const quotation = quotations.find(item => item.id === id);
+    if (!quotation?.customer_phone) return showError("This customer does not have a WhatsApp phone number.");
+    try {
+        const result = await apiRequest(`/admin/quotations/${encodeURIComponent(id)}/send`, { method: "POST" });
+        if (!result) return;
+        let phone = String(quotation.customer_phone).replace(/\D/g, "");
+        if (phone.startsWith("0")) phone = `60${phone.slice(1)}`;
+        if (!phone.startsWith("60")) phone = `60${phone}`;
+        const message = `Hello ${quotation.customer_name || "Customer"},\n\nYour SecurePro quotation ${quotation.quotation_number} is ready.\n\nView quotation: ${quotation.quotation_file_url}\n\nThank you.`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+        await loadQuotations();
     } catch (error) { showError(error.message); }
 }
 
@@ -167,11 +194,12 @@ async function uploadPaymentProof() {
 tableBody.addEventListener("click", event => {
     const button = event.target.closest("button");
     if (!button) return;
-    const id = button.dataset.openQuotation || button.dataset.openProof || button.dataset.send || button.dataset.uploadProof;
+    const id = button.dataset.openQuotation || button.dataset.openProof || button.dataset.email || button.dataset.whatsapp || button.dataset.uploadProof;
     const quotation = quotations.find(item => item.id === id);
     if (button.dataset.openQuotation) openFile(quotation?.quotation_file_url);
     if (button.dataset.openProof) openFile(quotation?.payment_proof_url);
-    if (button.dataset.send) markSent(id);
+    if (button.dataset.email) sendEmail(id);
+    if (button.dataset.whatsapp) sendWhatsApp(id);
     if (button.dataset.uploadProof) choosePaymentProof(id);
 });
 
