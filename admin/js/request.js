@@ -1236,38 +1236,108 @@ function getAnswerDisplayValue(answer) {
 
 
     /*
-     * ======================================
-     * NUMBER + UNIT
-     * ======================================
+ * ======================================
+ * NUMBER + UNIT
+ * ======================================
+ */
+
+if (
+    answer.number_value !== null &&
+    answer.number_value !== undefined
+) {
+
+    const rawNumber =
+        Number(answer.number_value);
+
+    const questionCode =
+        String(
+            answer.question_code || ""
+        ).toLowerCase();
+
+    /*
+     * Measurement / size fields
+     * Keep decimal values.
      */
+    const decimalFields = [
+        "arm_length",
+        "pump_height",
+        "pipe_length",
+        "length",
+        "width",
+        "height",
+        "size",
+        "dimension"
+    ];
+
+    const isDecimalField =
+        decimalFields.includes(
+            questionCode
+        );
+
+    let numberValue;
 
     if (
-        answer.number_value !== null &&
-        answer.number_value !== undefined
+        !Number.isNaN(rawNumber)
     ) {
 
-        const numberValue =
+        if (isDecimalField) {
+
+            /*
+             * Size / measurement:
+             * show up to 2 decimal places,
+             * but remove unnecessary zeros.
+             *
+             * 5      → 5
+             * 5.5    → 5.5
+             * 5.50   → 5.5
+             * 5.25   → 5.25
+             */
+            numberValue =
+                rawNumber
+                    .toFixed(2)
+                    .replace(/\.?0+$/, "");
+
+        } else {
+
+            /*
+             * Quantity / count:
+             * always whole number.
+             *
+             * 5.000 → 5
+             * 1.000 → 1
+             */
+            numberValue =
+                Math.round(
+                    rawNumber
+                ).toString();
+
+        }
+
+    } else {
+
+        numberValue =
             formatObjectValue(
                 answer.number_value
             );
 
-
-        const unit =
-            formatUnit(
-                answer.unit
-            );
+    }
 
 
-        if (unit) {
+    const unit =
+        formatUnit(
+            answer.unit
+        );
 
-            return `${numberValue} ${unit}`;
 
-        }
+    if (unit) {
 
-
-        return numberValue;
+        return `${numberValue} ${unit}`;
 
     }
+
+
+    return numberValue;
+}
 
 
     /*
