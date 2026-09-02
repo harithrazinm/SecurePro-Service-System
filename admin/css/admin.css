@@ -957,3 +957,11 @@ body {
         font-size: 11px;
     }
 }
+
+.refresh-button {
+    color: #000000;
+}
+
+.refresh-button span {
+    color: #000000;
+}
