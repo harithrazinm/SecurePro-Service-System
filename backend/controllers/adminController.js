@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const crypto = require("crypto");
 
+
 /*
  * ======================================================
  * GET ALL SERVICE REQUESTS
@@ -238,60 +239,318 @@ async function getRequests(req, res) {
 
 }
 
+
 /*
- * Jobs become actionable only after an admin uploads payment proof for at
- * least one quotation linked to the request. This prevents ordinary new
- * customer enquiries from appearing in the technician assignment queue.
+ * ======================================================
+ * GET JOB PENDING REQUESTS
+ *
+ * JOB PENDING means:
+ *
+ * - Payment proof uploaded
+ * - Job is not completed
+ * - Job is not cancelled
+ * - Technician report is NOT approved
+ *
+ * Therefore:
+ *
+ * NEW JOB
+ * ASSIGNED JOB
+ * IN PROGRESS
+ * WAITING PARTS
+ * REPORT SUBMITTED
+ * REPORT REJECTED
+ *
+ * all remain in Job Pending.
+ *
+ * Once admin approves the technician report:
+ *
+ * service_report.status = approved
+ * service_request.status = completed
+ *
+ * and the job disappears from Job Pending.
+ * ======================================================
  */
+
 async function getJobPendingRequests(req, res) {
+
     try {
-        const [requests] = await pool.query(`
-            SELECT sr.id, sr.request_code, sr.customer_name, sr.customer_phone,
-                   sr.customer_email, sr.status, sr.created_at,
-                   s.name_en AS service_name_en, s.name_ms AS service_name_ms,
-                   (
-                       SELECT MAX(q2.payment_proof_uploaded_at)
-                       FROM quotations q2
-                       WHERE q2.request_id = sr.id
-                         AND q2.payment_status = 'proof_uploaded'
-                         AND q2.payment_proof_url IS NOT NULL
-                   ) AS payment_proof_uploaded_at
-            FROM service_requests sr
-            INNER JOIN services s ON s.id = sr.service_id
-            WHERE sr.status = 'pending'
-              AND sr.technician_id IS NULL
-              AND EXISTS (
-                  SELECT 1
-                  FROM quotations q
-                  WHERE q.request_id = sr.id
-                    AND q.payment_status = 'proof_uploaded'
-                    AND q.payment_proof_url IS NOT NULL
-              )
-            ORDER BY payment_proof_uploaded_at DESC
-        `);
+
+        const [requests] =
+            await pool.query(
+                `
+                SELECT
+
+                    sr.id,
+
+                    sr.request_code,
+
+                    sr.customer_name,
+
+                    sr.customer_phone,
+
+                    sr.customer_email,
+
+                    sr.status,
+
+                    sr.technician_id,
+
+                    sr.created_at,
+
+                    sr.scheduled_date,
+
+                    sr.scheduled_time,
+
+                    u.name AS technician_name,
+
+                    s.name_en AS service_name_en,
+
+                    s.name_ms AS service_name_ms,
+
+                    (
+                        SELECT
+                            MAX(q2.payment_proof_uploaded_at)
+
+                        FROM quotations q2
+
+                        WHERE
+                            q2.request_id = sr.id
+
+                            AND q2.payment_status =
+                                'proof_uploaded'
+
+                            AND q2.payment_proof_url IS NOT NULL
+
+                    ) AS payment_proof_uploaded_at,
+
+
+                    (
+                        SELECT
+                            r2.status
+
+                        FROM service_reports r2
+
+                        WHERE
+                            r2.request_id = sr.id
+
+                        ORDER BY
+                            r2.created_at DESC
+
+                        LIMIT 1
+
+                    ) AS latest_report_status,
+
+
+                    (
+                        SELECT
+                            r2.submitted_at
+
+                        FROM service_reports r2
+
+                        WHERE
+                            r2.request_id = sr.id
+
+                        ORDER BY
+                            r2.created_at DESC
+
+                        LIMIT 1
+
+                    ) AS latest_report_submitted_at
+
+
+                FROM service_requests sr
+
+
+                INNER JOIN services s
+                    ON s.id = sr.service_id
+
+
+                LEFT JOIN users u
+                    ON u.id = sr.technician_id
+
+
+                WHERE
+
+                    /*
+                     * Job must have payment proof.
+                     */
+
+                    EXISTS (
+
+                        SELECT 1
+
+                        FROM quotations q
+
+                        WHERE
+                            q.request_id = sr.id
+
+                            AND q.payment_status =
+                                'proof_uploaded'
+
+                            AND q.payment_proof_url IS NOT NULL
+
+                    )
+
+
+                    /*
+                     * Completed jobs are no longer pending.
+                     */
+
+                    AND sr.status != 'completed'
+
+
+                    /*
+                     * Cancelled jobs are no longer pending.
+                     */
+
+                    AND sr.status != 'cancelled'
+
+
+                    /*
+                     * If a report exists,
+                     * it must NOT be approved.
+                     *
+                     * No report:
+                     *     still pending
+                     *
+                     * Submitted:
+                     *     still pending
+                     *
+                     * Rejected:
+                     *     still pending
+                     *
+                     * Approved:
+                     *     disappears
+                     */
+
+                    AND NOT EXISTS (
+
+                        SELECT 1
+
+                        FROM service_reports approved_report
+
+                        WHERE
+                            approved_report.request_id =
+                                sr.id
+
+                            AND approved_report.status =
+                                'approved'
+
+                    )
+
+
+                ORDER BY
+
+                    payment_proof_uploaded_at DESC,
+
+                    sr.created_at DESC
+                `
+            );
+
 
         return res.json({
+
             success: true,
-            data: requests.map(request => ({
-                id: request.id,
-                request_code: request.request_code,
-                customer: {
-                    name: request.customer_name,
-                    phone: request.customer_phone,
-                    email: request.customer_email
-                },
-                service: {
-                    name: request.service_name_en || request.service_name_ms || "Service"
-                },
-                status: request.status,
-                payment_proof_uploaded_at: request.payment_proof_uploaded_at,
-                created_at: request.created_at
-            }))
+
+            data:
+                requests.map(
+                    request => ({
+
+                        id:
+                            request.id,
+
+                        request_code:
+                            request.request_code,
+
+
+                        customer: {
+
+                            name:
+                                request.customer_name,
+
+                            phone:
+                                request.customer_phone,
+
+                            email:
+                                request.customer_email
+
+                        },
+
+
+                        service: {
+
+                            name:
+                                request.service_name_en ||
+                                request.service_name_ms ||
+                                "Service"
+
+                        },
+
+
+                        status:
+                            request.status,
+
+
+                        technician:
+                            request.technician_id
+                                ? {
+
+                                    id:
+                                        request.technician_id,
+
+                                    name:
+                                        request.technician_name
+
+                                }
+                                : null,
+
+
+                        scheduled_date:
+                            request.scheduled_date,
+
+                        scheduled_time:
+                            request.scheduled_time,
+
+
+                        payment_proof_uploaded_at:
+                            request.payment_proof_uploaded_at,
+
+
+                        latest_report_status:
+                            request.latest_report_status,
+
+
+                        latest_report_submitted_at:
+                            request.latest_report_submitted_at,
+
+
+                        created_at:
+                            request.created_at
+
+                    })
+                )
+
         });
+
+
     } catch (error) {
-        console.error("Get job pending requests error:", error);
-        return res.status(500).json({ success: false, message: "Unable to retrieve job pending requests." });
+
+        console.error(
+            "Get job pending requests error:",
+            error
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to retrieve job pending requests."
+
+        });
+
     }
+
 }
 
 
@@ -311,12 +570,6 @@ async function getRequestById(req, res) {
             id
         } = req.params;
 
-
-        /*
-         * ==================================================
-         * REQUEST
-         * ==================================================
-         */
 
         const [requests] =
             await pool.query(
@@ -341,10 +594,6 @@ async function getRequestById(req, res) {
             );
 
 
-        /*
-         * REQUEST NOT FOUND
-         */
-
         if (
             requests.length === 0
         ) {
@@ -364,12 +613,6 @@ async function getRequestById(req, res) {
         const request =
             requests[0];
 
-
-        /*
-         * ==================================================
-         * QUESTIONS / ANSWERS
-         * ==================================================
-         */
 
         const [answers] =
             await pool.query(
@@ -402,12 +645,6 @@ async function getRequestById(req, res) {
                 [id]
             );
 
-
-        /*
-         * ==================================================
-         * MULTI / SINGLE OPTIONS
-         * ==================================================
-         */
 
         const answerIds =
             answers.map(
@@ -459,12 +696,6 @@ async function getRequestById(req, res) {
         }
 
 
-        /*
-         * ==================================================
-         * CUSTOMER PHOTOS
-         * ==================================================
-         */
-
         const [photos] =
             await pool.query(
                 `
@@ -484,12 +715,6 @@ async function getRequestById(req, res) {
                 [id]
             );
 
-
-        /*
-         * ==================================================
-         * TECHNICIAN WORK REPORT
-         * ==================================================
-         */
 
         const [reports] =
             await pool.query(
@@ -513,6 +738,8 @@ async function getRequestById(req, res) {
                     sr.reviewed_at,
                     sr.reviewed_by,
 
+                    sr.review_remarks,
+
                     sr.created_at,
                     sr.updated_at
 
@@ -534,15 +761,6 @@ async function getRequestById(req, res) {
                 ? reports[0]
                 : null;
 
-
-        /*
-         * ==================================================
-         * TECHNICIAN COMPLETION MEDIA
-         *
-         * Photos and videos uploaded by technician
-         * after finishing the work.
-         * ==================================================
-         */
 
         let completionMedia = [];
 
@@ -592,12 +810,6 @@ async function getRequestById(req, res) {
         }
 
 
-        /*
-         * ==================================================
-         * TECHNICIAN
-         * ==================================================
-         */
-
         let technician = null;
 
 
@@ -642,21 +854,11 @@ async function getRequestById(req, res) {
         }
 
 
-        /*
-         * ==================================================
-         * FINAL RESPONSE
-         * ==================================================
-         */
-
         return res.json({
 
             success: true,
 
             data: {
-
-                /*
-                 * REQUEST
-                 */
 
                 id:
                     request.id,
@@ -664,10 +866,6 @@ async function getRequestById(req, res) {
                 request_code:
                     request.request_code,
 
-
-                /*
-                 * SERVICE
-                 */
 
                 service: {
 
@@ -690,10 +888,6 @@ async function getRequestById(req, res) {
                 },
 
 
-                /*
-                 * CUSTOMER
-                 */
-
                 customer: {
 
                     name:
@@ -714,45 +908,36 @@ async function getRequestById(req, res) {
                 },
 
 
-                /*
-                 * STATUS
-                 */
-
                 status:
                     request.status,
 
 
-                /*
-                 * TECHNICIAN
-                 */
-
                 technician:
                     technician,
 
-                    schedule: {
 
-    date:
-        request.scheduled_date,
+                schedule: {
 
-    time:
-        request.scheduled_time
+                    date:
+                        request.scheduled_date,
 
-},
+                    time:
+                        request.scheduled_time
 
-assigned_at:
-    request.assigned_at,
+                },
 
 
-admin_notes:
-    request.admin_notes,
-
-admin_notes_updated_at:
-    request.admin_notes_updated_at,
+                assigned_at:
+                    request.assigned_at,
 
 
-                /*
-                 * CUSTOMER QUESTIONS / ANSWERS
-                 */
+                admin_notes:
+                    request.admin_notes,
+
+
+                admin_notes_updated_at:
+                    request.admin_notes_updated_at,
+
 
                 answers:
                     answers.map(
@@ -810,37 +995,17 @@ admin_notes_updated_at:
                     ),
 
 
-                /*
-                 * CUSTOMER PHOTOS
-                 */
-
                 photos:
                     photos,
 
-
-                /*
-                 * ==================================================
-                 * TECHNICIAN WORK REPORT
-                 * ==================================================
-                 */
 
                 report:
                     report,
 
 
-                /*
-                 * ==================================================
-                 * TECHNICIAN COMPLETION MEDIA
-                 * ==================================================
-                 */
-
                 completion_media:
                     completionMedia,
 
-
-                /*
-                 * DATES
-                 */
 
                 created_at:
                     request.created_at,
@@ -861,6 +1026,7 @@ admin_notes_updated_at:
             "Get request details error:",
             error
         );
+
 
         return res.status(500).json({
 
@@ -938,6 +1104,7 @@ async function getDashboardSummary(req, res) {
             error
         );
 
+
         return res.status(500).json({
 
             success: false,
@@ -1001,6 +1168,7 @@ async function getTechnicians(req, res) {
             error
         );
 
+
         return res.status(500).json({
 
             success: false,
@@ -1020,6 +1188,14 @@ async function getTechnicians(req, res) {
  * UPDATE SERVICE REQUEST
  *
  * PUT /api/admin/requests/:id
+ *
+ * IMPORTANT:
+ *
+ * Assigning a technician does NOT automatically
+ * complete or remove the job from Job Pending.
+ *
+ * The job remains visible until the technician
+ * report is approved.
  * ======================================================
  */
 
@@ -1028,11 +1204,11 @@ async function updateRequest(req, res) {
     const connection =
         await pool.getConnection();
 
+
     try {
 
         const requestId =
             req.params.id;
-            const id = req.params.id;
 
 
         const {
@@ -1043,38 +1219,42 @@ async function updateRequest(req, res) {
             admin_notes
         } = req.body;
 
-console.log("================================");
-console.log("UPDATE REQUEST BODY:");
-console.log(req.body);
-console.log("REQUEST ID:", id);
-console.log("================================");
-
-        /*
-         * ==========================================
-         * CHECK REQUEST EXISTS
-         * ==========================================
-         */
 
         const [requests] =
             await connection.query(
                 `
                 SELECT
+
                     id,
                     status,
-                    technician_id
+                    technician_id,
+                    scheduled_date,
+                    scheduled_time,
+                    admin_notes
+
                 FROM service_requests
+
                 WHERE id = ?
+
                 LIMIT 1
                 `,
-                [requestId]
+                [
+                    requestId
+                ]
             );
 
 
-        if (requests.length === 0) {
+        if (
+            requests.length === 0
+        ) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Service request not found."
+
+                message:
+                    "Service request not found."
+
             });
 
         }
@@ -1083,77 +1263,6 @@ console.log("================================");
         const request =
             requests[0];
 
-
-        /*
-         * ==========================================
-         * VALIDATE TECHNICIAN
-         * ==========================================
-         */
-
-        if (technician_id) {
-
-            const [technicians] =
-                await connection.query(
-                    `
-                    SELECT
-                        id,
-                        name
-                    FROM users
-                    WHERE id = ?
-                    AND role = 'technician'
-                    AND status = 'active'
-                    LIMIT 1
-                    `,
-                    [technician_id]
-                );
-
-
-            if (technicians.length === 0) {
-
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Selected technician is not valid or inactive."
-                });
-
-            }
-
-        }
-
-
-        /*
-         * ==========================================
-         * DETERMINE FINAL STATUS
-         *
-         * If technician is assigned,
-         * automatically change pending to assigned.
-         * ==========================================
-         */
-
-        let finalStatus =
-            status ||
-            request.status;
-
-
-        if (
-            technician_id &&
-            (
-                !status ||
-                status === "pending"
-            )
-        ) {
-
-            finalStatus =
-                "assigned";
-
-        }
-
-
-        /*
-         * ==========================================
-         * VALIDATE STATUS
-         * ==========================================
-         */
 
         const allowedStatuses = [
 
@@ -1173,57 +1282,152 @@ console.log("================================");
 
 
         if (
-            !allowedStatuses.includes(
-                finalStatus
-            )
+            status &&
+            !allowedStatuses.includes(status)
         ) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Invalid request status."
+
+                message:
+                    "Invalid request status."
+
             });
 
         }
 
 
+        if (technician_id) {
+
+            const [technicians] =
+                await connection.query(
+                    `
+                    SELECT
+
+                        id,
+                        name,
+                        email
+
+                    FROM users
+
+                    WHERE
+                        id = ?
+
+                        AND role = 'technician'
+
+                        AND status = 'active'
+
+                    LIMIT 1
+                    `,
+                    [
+                        technician_id
+                    ]
+                );
+
+
+            if (
+                technicians.length === 0
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Selected technician is not valid or inactive."
+
+                });
+
+            }
+
+        }
+
+
         /*
-         * ==========================================
-         * ASSIGNMENT VALIDATION
-         * ==========================================
+         * Keep the supplied status if one was
+         * explicitly sent.
+         *
+         * Otherwise keep the current status.
+         *
+         * IMPORTANT:
+         *
+         * The admin frontend currently sends
+         * selectedStatus.
+         *
+         * Therefore, when assigning a technician,
+         * the frontend should keep selectedStatus
+         * as "pending".
          */
+
+        const finalStatus =
+            status !== undefined &&
+            status !== null &&
+            status !== ""
+                ? status
+                : request.status;
+
+
+        const finalTechnician =
+            technician_id !== undefined
+                ? (
+                    technician_id ||
+                    null
+                )
+                : request.technician_id;
+
+
+        const finalScheduledDate =
+            scheduled_date !== undefined
+                ? (
+                    scheduled_date ||
+                    null
+                )
+                : request.scheduled_date;
+
+
+        const finalScheduledTime =
+            scheduled_time !== undefined
+                ? (
+                    scheduled_time ||
+                    null
+                )
+                : request.scheduled_time;
+
+
+        const finalAdminNotes =
+            admin_notes !== undefined
+                ? (
+                    admin_notes ||
+                    null
+                )
+                : request.admin_notes;
+
 
         if (
-            technician_id &&
-            !scheduled_date
+            finalTechnician &&
+            !finalScheduledDate
         ) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message:
                     "Scheduled date is required when assigning a technician."
+
             });
 
         }
 
-
-        /*
-         * ==========================================
-         * START TRANSACTION
-         * ==========================================
-         */
 
         await connection.beginTransaction();
 
 
-        /*
-         * ==========================================
-         * UPDATE REQUEST
-         * ==========================================
-         */
-
         await connection.query(
             `
             UPDATE service_requests
+
             SET
 
                 status = ?,
@@ -1236,26 +1440,49 @@ console.log("================================");
 
                 assigned_at =
                     CASE
+
                         WHEN ? IS NOT NULL
-                        THEN NOW()
-                        ELSE assigned_at
+
+                        THEN
+                            COALESCE(
+                                assigned_at,
+                                NOW()
+                            )
+
+                        ELSE
+                            assigned_at
+
                     END,
 
                 admin_notes = ?,
 
                 admin_notes_updated_at =
                     CASE
+
                         WHEN ? IS NOT NULL
-                        THEN NOW()
-                        ELSE admin_notes_updated_at
+
+                        THEN
+                            NOW()
+
+                        ELSE
+                            admin_notes_updated_at
+
                     END,
 
                 admin_notes_updated_by =
                     CASE
+
                         WHEN ? IS NOT NULL
-                        THEN ?
-                        ELSE admin_notes_updated_by
-                    END
+
+                        THEN
+                            ?
+
+                        ELSE
+                            admin_notes_updated_by
+
+                    END,
+
+                updated_at = NOW()
 
             WHERE id = ?
             `,
@@ -1263,19 +1490,23 @@ console.log("================================");
 
                 finalStatus,
 
-                technician_id || null,
+                finalTechnician,
 
-                scheduled_date || null,
+                finalScheduledDate,
 
-                scheduled_time || null,
+                finalScheduledTime,
 
-                technician_id || null,
+                finalTechnician,
 
-                admin_notes || null,
+                finalAdminNotes,
 
-                admin_notes || null,
+                admin_notes !== undefined
+                    ? finalAdminNotes
+                    : null,
 
-                admin_notes || null,
+                admin_notes !== undefined
+                    ? finalAdminNotes
+                    : null,
 
                 req.user.id,
 
@@ -1284,13 +1515,6 @@ console.log("================================");
             ]
         );
 
-
-        /*
-         * ==========================================
-         * SAVE STATUS HISTORY
-         * Only create history when status changed.
-         * ==========================================
-         */
 
         if (
             request.status !==
@@ -1322,7 +1546,7 @@ console.log("================================");
 
                     req.user.id,
 
-                    admin_notes ||
+                    finalAdminNotes ||
                     "Request updated by administrator."
 
                 ]
@@ -1331,25 +1555,14 @@ console.log("================================");
         }
 
 
-        /*
-         * ==========================================
-         * COMMIT
-         * ==========================================
-         */
-
         await connection.commit();
 
-
-        /*
-         * ==========================================
-         * GET UPDATED REQUEST
-         * ==========================================
-         */
 
         const [updatedRequests] =
             await connection.query(
                 `
                 SELECT
+
                     sr.*,
 
                     u.id AS technician_user_id,
@@ -1367,8 +1580,14 @@ console.log("================================");
 
                 LIMIT 1
                 `,
-                [requestId]
+                [
+                    requestId
+                ]
             );
+
+
+        const updated =
+            updatedRequests[0];
 
 
         return res.json({
@@ -1378,15 +1597,67 @@ console.log("================================");
             message:
                 "Service request updated successfully.",
 
-            data:
-                updatedRequests[0]
+            data: {
+
+                id:
+                    updated.id,
+
+                request_code:
+                    updated.request_code,
+
+                status:
+                    updated.status,
+
+                technician:
+                    updated.technician_user_id
+                        ? {
+
+                            id:
+                                updated.technician_user_id,
+
+                            name:
+                                updated.technician_name,
+
+                            email:
+                                updated.technician_email
+
+                        }
+                        : null,
+
+                scheduled_date:
+                    updated.scheduled_date,
+
+                scheduled_time:
+                    updated.scheduled_time,
+
+                admin_notes:
+                    updated.admin_notes,
+
+                updated_at:
+                    updated.updated_at
+
+            }
 
         });
 
 
     } catch (error) {
 
-        await connection.rollback();
+        try {
+
+            await connection.rollback();
+
+        } catch (
+            rollbackError
+        ) {
+
+            console.error(
+                "Rollback error:",
+                rollbackError
+            );
+
+        }
+
 
         console.error(
             "Update request error:",
@@ -1403,7 +1674,6 @@ console.log("================================");
 
         });
 
-
     } finally {
 
         connection.release();
@@ -1412,24 +1682,22 @@ console.log("================================");
 
 }
 
+
 /*
  * ======================================================
  * REVIEW TECHNICIAN WORK REPORT
  *
- * POST /api/admin/requests/:id/report/review
+ * APPROVE:
  *
- * Body:
+ * report = approved
+ * request = completed
  *
- * {
- *     "action": "approve"
- * }
+ * REJECT:
  *
- * OR
+ * report = rejected
+ * request = pending
  *
- * {
- *     "action": "reject",
- *     "reason": "Please upload clearer completion photos."
- * }
+ * Therefore rejected jobs remain in Job Pending.
  * ======================================================
  */
 
@@ -1438,31 +1706,37 @@ async function reviewTechnicianReport(req, res) {
     const connection =
         await pool.getConnection();
 
+
     try {
 
         const requestId =
             req.params.id;
 
+
         const adminId =
             req.user.id;
 
+
         const action =
             String(
-                req.body.action || ""
+                req.body.action ||
+                ""
             )
             .trim()
             .toLowerCase();
 
+
         const reason =
             String(
-                req.body.reason || ""
+                req.body.reason ||
+                ""
             )
             .trim();
 
 
-        // ==================================================
-        // VALIDATE ACTION
-        // ==================================================
+        /*
+         * VALIDATE ACTION
+         */
 
         if (
             action !== "approve" &&
@@ -1481,9 +1755,9 @@ async function reviewTechnicianReport(req, res) {
         }
 
 
-        // ==================================================
-        // REJECTION REASON REQUIRED
-        // ==================================================
+        /*
+         * REJECTION REASON REQUIRED
+         */
 
         if (
             action === "reject" &&
@@ -1502,19 +1776,23 @@ async function reviewTechnicianReport(req, res) {
         }
 
 
-        // ==================================================
-        // FIND REQUEST
-        // ==================================================
+        /*
+         * FIND REQUEST
+         */
 
         const [requests] =
             await connection.query(
                 `
                 SELECT
+
                     id,
                     status,
                     technician_id
+
                 FROM service_requests
+
                 WHERE id = ?
+
                 LIMIT 1
                 `,
                 [
@@ -1523,7 +1801,9 @@ async function reviewTechnicianReport(req, res) {
             );
 
 
-        if (!requests.length) {
+        if (
+            !requests.length
+        ) {
 
             return res.status(404).json({
 
@@ -1541,14 +1821,35 @@ async function reviewTechnicianReport(req, res) {
             requests[0];
 
 
-        // ==================================================
-        // FIND LATEST TECHNICIAN REPORT
-        // ==================================================
+        /*
+         * REQUEST MUST HAVE TECHNICIAN
+         */
+
+        if (
+            !request.technician_id
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This request has no assigned technician."
+
+            });
+
+        }
+
+
+        /*
+         * FIND LATEST REPORT
+         */
 
         const [reports] =
             await connection.query(
                 `
                 SELECT
+
                     id,
                     request_id,
                     technician_id,
@@ -1557,11 +1858,17 @@ async function reviewTechnicianReport(req, res) {
                     findings,
                     materials_used,
                     technician_notes
+
                 FROM service_reports
+
                 WHERE
                     request_id = ?
+
                     AND technician_id = ?
-                ORDER BY created_at DESC
+
+                ORDER BY
+                    created_at DESC
+
                 LIMIT 1
                 `,
                 [
@@ -1571,7 +1878,9 @@ async function reviewTechnicianReport(req, res) {
             );
 
 
-        if (!reports.length) {
+        if (
+            !reports.length
+        ) {
 
             return res.status(404).json({
 
@@ -1589,13 +1898,13 @@ async function reviewTechnicianReport(req, res) {
             reports[0];
 
 
-        // ==================================================
-        // PREVENT REVIEWING ALREADY APPROVED REPORT
-        // ==================================================
+        /*
+         * ONLY SUBMITTED REPORTS CAN BE REVIEWED
+         */
 
         if (
-            report.status ===
-            "approved"
+            report.status !==
+            "submitted"
         ) {
 
             return res.status(400).json({
@@ -1603,48 +1912,28 @@ async function reviewTechnicianReport(req, res) {
                 success: false,
 
                 message:
-                    "This technician report has already been approved."
+                    `This technician report cannot be reviewed because its current status is "${report.status}".`
 
             });
 
         }
 
 
-        // ==================================================
-        // PREVENT REVIEWING ALREADY REJECTED REPORT
-        // ==================================================
-
-        if (
-            report.status ===
-            "rejected"
-        ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "This technician report has already been rejected and can be resubmitted by the technician."
-
-            });
-
-        }
-
-
-        // ==================================================
-        // START TRANSACTION
-        // ==================================================
+        /*
+         * START TRANSACTION
+         */
 
         await connection.beginTransaction();
 
 
-        // ==================================================
-        // APPROVE
-        // ==================================================
+        /*
+         * ==========================================
+         * APPROVE
+         * ==========================================
+         */
 
         if (
-            action ===
-            "approve"
+            action === "approve"
         ) {
 
             await connection.query(
@@ -1652,13 +1941,18 @@ async function reviewTechnicianReport(req, res) {
                 UPDATE service_reports
 
                 SET
-                    status = 'approved',
 
-                    reviewed_at = NOW(),
+                    status =
+                        'approved',
 
-                    reviewed_by = ?,
+                    reviewed_at =
+                        NOW(),
 
-                    review_remarks = NULL
+                    reviewed_by =
+                        ?,
+
+                    review_remarks =
+                        NULL
 
                 WHERE id = ?
                 `,
@@ -1674,11 +1968,15 @@ async function reviewTechnicianReport(req, res) {
                 UPDATE service_requests
 
                 SET
-                    status = 'completed',
 
-                    completed_at = NOW(),
+                    status =
+                        'completed',
 
-                    updated_at = NOW()
+                    completed_at =
+                        NOW(),
+
+                    updated_at =
+                        NOW()
 
                 WHERE id = ?
                 `,
@@ -1696,7 +1994,7 @@ async function reviewTechnicianReport(req, res) {
                 success: true,
 
                 message:
-                    "Technician work report approved successfully.",
+                    "Technician work report approved successfully. The job is now completed.",
 
                 data: {
 
@@ -1719,22 +2017,29 @@ async function reviewTechnicianReport(req, res) {
         }
 
 
-        // ==================================================
-        // REJECT
-        // ==================================================
+        /*
+         * ==========================================
+         * REJECT
+         * ==========================================
+         */
 
         await connection.query(
             `
             UPDATE service_reports
 
             SET
-                status = 'rejected',
 
-                reviewed_at = NOW(),
+                status =
+                    'rejected',
 
-                reviewed_by = ?,
+                reviewed_at =
+                    NOW(),
 
-                review_remarks = ?
+                reviewed_by =
+                    ?,
+
+                review_remarks =
+                    ?
 
             WHERE id = ?
             `,
@@ -1746,14 +2051,31 @@ async function reviewTechnicianReport(req, res) {
         );
 
 
+        /*
+         * IMPORTANT:
+         *
+         * Rejected report returns the request
+         * to pending.
+         *
+         * It remains visible in Job Pending.
+         *
+         * The technician can submit a new report.
+         */
+
         await connection.query(
             `
             UPDATE service_requests
 
             SET
-                status = 'in_progress',
 
-                updated_at = NOW()
+                status =
+                    'pending',
+
+                completed_at =
+                    NULL,
+
+                updated_at =
+                    NOW()
 
             WHERE id = ?
             `,
@@ -1771,7 +2093,7 @@ async function reviewTechnicianReport(req, res) {
             success: true,
 
             message:
-                "Technician work report rejected.",
+                "Technician work report rejected. The job remains in Job Pending and the technician can resubmit the report.",
 
             data: {
 
@@ -1785,7 +2107,7 @@ async function reviewTechnicianReport(req, res) {
                     "rejected",
 
                 request_status:
-                    "in_progress",
+                    "pending",
 
                 review_remarks:
                     reason
@@ -1797,7 +2119,21 @@ async function reviewTechnicianReport(req, res) {
 
     } catch (error) {
 
-        await connection.rollback();
+        try {
+
+            await connection.rollback();
+
+        } catch (
+            rollbackError
+        ) {
+
+            console.error(
+                "Rollback error:",
+                rollbackError
+            );
+
+        }
+
 
         console.error(
             "Review technician report error:",
@@ -1814,7 +2150,6 @@ async function reviewTechnicianReport(req, res) {
 
         });
 
-
     } finally {
 
         connection.release();
@@ -1822,6 +2157,8 @@ async function reviewTechnicianReport(req, res) {
     }
 
 }
+
+
 /*
  * ======================================================
  * EXPORTS
@@ -1829,6 +2166,7 @@ async function reviewTechnicianReport(req, res) {
  */
 
 module.exports = {
+
     getJobPendingRequests,
 
     getRequests,
