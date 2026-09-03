@@ -616,8 +616,8 @@ function renderAnswers(data) {
                                             >
 
                                                 ${escapeHtml(
-                                                    answer.unit
-                                                )}
+    formatUnit(answer.unit)
+)}
 
                                             </div>
                                         `
@@ -636,6 +636,69 @@ function renderAnswers(data) {
 
 }
 
+
+/* =========================================================
+   FORMAT UNIT
+========================================================= */
+
+function formatUnit(unit) {
+
+    if (
+        unit === null ||
+        unit === undefined ||
+        unit === ""
+    ) {
+        return "";
+    }
+
+    if (
+        typeof unit === "string" ||
+        typeof unit === "number"
+    ) {
+        return String(unit);
+    }
+
+    if (Array.isArray(unit)) {
+
+        return unit
+            .map(
+                item =>
+                    formatUnit(item)
+            )
+            .filter(Boolean)
+            .join(", ");
+    }
+
+    if (typeof unit === "object") {
+
+        const possibleValues = [
+            unit.en,
+            unit.ms,
+            unit.label,
+            unit.name,
+            unit.value,
+            unit.unit,
+            unit.symbol,
+            unit.text
+        ];
+
+        for (const value of possibleValues) {
+
+            if (
+                value !== null &&
+                value !== undefined &&
+                value !== ""
+            ) {
+
+                return typeof value === "object"
+                    ? formatUnit(value)
+                    : String(value);
+            }
+        }
+    }
+
+    return "";
+}
 
 /* =========================================================
    GET ANSWER DISPLAY VALUE
@@ -776,32 +839,86 @@ function getAnswerDisplayValue(answer) {
 
 
     /*
-     * ------------------------------------------------------
-     * 4. NUMBER
-     * ------------------------------------------------------
+ * ------------------------------------------------------
+ * 4. NUMBER
+ * ------------------------------------------------------
+ */
+
+if (
+    answer.number_value !== null &&
+    answer.number_value !== undefined
+) {
+
+    const rawNumber =
+        Number(answer.number_value);
+
+    const questionCode =
+        String(
+            answer.question_code || ""
+        ).toLowerCase();
+
+    /*
+     * Measurement / size fields
+     * can contain decimal values.
      */
+    const decimalFields = [
+        "arm_length",
+        "pump_height",
+        "pipe_length",
+        "length",
+        "width",
+        "height",
+        "size",
+        "dimension"
+    ];
 
-    if (
-        answer.number_value !== null &&
-        answer.number_value !== undefined
-    ) {
+    const isDecimalField =
+        decimalFields.includes(
+            questionCode
+        );
 
-        const numberValue =
+    let numberValue;
+
+    if (!Number.isNaN(rawNumber)) {
+
+        if (isDecimalField) {
+
+            numberValue =
+                rawNumber
+                    .toFixed(2)
+                    .replace(/\.?0+$/, "");
+
+        } else {
+
+            numberValue =
+                Math.round(
+                    rawNumber
+                ).toString();
+
+        }
+
+    } else {
+
+        numberValue =
             String(
                 answer.number_value
             );
 
+    }
 
-        if (answer.unit) {
+    const unit =
+        formatUnit(
+            answer.unit
+        );
 
-            return `${numberValue} ${answer.unit}`;
+    if (unit) {
 
-        }
-
-
-        return numberValue;
+        return `${numberValue} ${unit}`;
 
     }
+
+    return numberValue;
+}
 
 
     /*
