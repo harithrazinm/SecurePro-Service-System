@@ -1,6 +1,6 @@
-const API_BASE = "http://localhost:5001/api";
+//const API_BASE = "http://localhost:5001/api";
 
-//const API_BASE="https://securepro-service-system.onrender.com/api";
+const API_BASE="https://securepro-service-system.onrender.com/api";
 const TOKEN_KEY="securepro_super_admin_token", USER_KEY="securepro_super_admin_user";
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");

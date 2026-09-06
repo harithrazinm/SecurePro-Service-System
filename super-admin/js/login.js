@@ -1,6 +1,6 @@
-//const API_BASE = "https://securepro-service-system.onrender.com/api";
+const API_BASE = "https://securepro-service-system.onrender.com/api";
 
-const API_BASE = "http://localhost:5001/api";
+//const API_BASE = "http://localhost:5001/api";
 const form = document.querySelector("#loginForm");
 const emailInput = document.querySelector("#email");
 const passwordInput = document.querySelector("#password");
