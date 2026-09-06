@@ -121,6 +121,31 @@ function requireAdmin(req, res, next) {
 }
 
 
+
+// ======================================================
+// SUPER ADMIN AUTHORIZATION
+// Super Admin is strictly read-only.
+// ======================================================
+
+function requireSuperAdmin(req, res, next) {
+
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: "Authentication required."
+        });
+    }
+
+    if (req.user.role !== "super_admin") {
+        return res.status(403).json({
+            success: false,
+            message: "Super administrator access required."
+        });
+    }
+
+    next();
+}
+
 // ======================================================
 // TECHNICIAN AUTHORIZATION
 // ======================================================
@@ -167,3 +192,6 @@ module.exports.requireAdmin =
 
 module.exports.requireTechnician =
     requireTechnician;
+
+module.exports.requireSuperAdmin =
+    requireSuperAdmin;

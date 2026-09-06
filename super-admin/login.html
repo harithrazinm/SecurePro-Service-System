@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>SecurePro | Super Admin Login</title>
+<link rel="stylesheet" href="css/super-admin.css">
+</head>
+<body>
+<div class="login-page">
+    <section class="brand-panel">
+        <div class="brand-inner">
+            <div class="mark">S</div>
+            <strong>SECUREPRO</strong>
+            <span>System Solutions</span>
+            <div class="message">
+                <small>SUPER ADMINISTRATION</small>
+                <h1>Monitor every project from one place.</h1>
+                <p>Read-only access to quotations, payment proofs, technician progress and project completion.</p>
+            </div>
+            <div class="footer">● SecurePro Monitoring System</div>
+        </div>
+    </section>
+    <section class="login-panel">
+        <div class="login-box">
+            <div class="eyebrow">SECUREPRO INTERNAL SYSTEM</div>
+            <h2>Super Admin</h2>
+            <p>Sign in to monitor SecurePro operations. This account is read-only.</p>
+            <form id="loginForm">
+                <label>Email Address</label>
+                <input id="email" type="email" placeholder="superadmin@securepro.com" autocomplete="username" required>
+                <label>Password</label>
+                <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+                <div id="loginError" class="error" hidden></div>
+                <button id="loginButton" type="submit">Sign In <span>→</span></button>
+            </form>
+            <div class="security">✓ Monitoring access only — no editing permissions</div>
+        </div>
+    </section>
+</div>
+<script src="js/login.js"></script>
+</body>
+</html>

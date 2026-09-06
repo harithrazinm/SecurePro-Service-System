@@ -1,3 +1,69 @@
+
+/* ==========================================================
+   START ASSIGNED JOB
+
+   POST /api/technician/requests/:id/start
+========================================================== */
+
+async function startAssignedRequest(req, res) {
+    try {
+        const [requests] = await pool.query(
+            `SELECT id, status, technician_id, technician_started_at
+             FROM service_requests
+             WHERE id = ? AND technician_id = ?
+             LIMIT 1`,
+            [req.params.id, req.user.id]
+        );
+
+        if (!requests.length) {
+            return res.status(404).json({
+                success: false,
+                message: "Request not found or is not assigned to you."
+            });
+        }
+
+        const request = requests[0];
+
+        if (request.status === "completed" || request.status === "cancelled") {
+            return res.status(400).json({
+                success: false,
+                message: "This job can no longer be started."
+            });
+        }
+
+        await pool.query(
+            `UPDATE service_requests
+             SET technician_started_at = COALESCE(technician_started_at, NOW()),
+                 updated_at = NOW()
+             WHERE id = ? AND technician_id = ?`,
+            [req.params.id, req.user.id]
+        );
+
+        const [rows] = await pool.query(
+            `SELECT technician_started_at
+             FROM service_requests
+             WHERE id = ?
+             LIMIT 1`,
+            [req.params.id]
+        );
+
+        return res.json({
+            success: true,
+            message: "Job started successfully.",
+            data: {
+                request_id: req.params.id,
+                technician_started_at: rows[0]?.technician_started_at || null
+            }
+        });
+    } catch (error) {
+        console.error("Start assigned request error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to start the job."
+        });
+    }
+}
+
 const crypto = require("crypto");
 const pool = require("../config/db");
 
@@ -48,6 +114,8 @@ console.log("TECHNICIAN ID USED:", req.user.id);
                     sr.scheduled_time,
 
                     sr.assigned_at,
+
+                    sr.technician_started_at,
 
                     sr.created_at,
 
@@ -165,6 +233,8 @@ async function getAssignedRequestById(req, res) {
                     sr.scheduled_time,
 
                     sr.assigned_at,
+
+                    sr.technician_started_at,
 
                     sr.created_at,
 
@@ -675,9 +745,14 @@ async function submitWorkReport(req, res) {
 
                 SET
 
-                    status = 'in_progress',
+                    technician_started_at =
+                        COALESCE(
+                            technician_started_at,
+                            NOW()
+                        ),
 
-                    updated_at = NOW()
+                    updated_at =
+                        NOW()
 
                 WHERE id = ?
                 `,
@@ -874,9 +949,14 @@ async function submitWorkReport(req, res) {
 
             SET
 
-                status = 'in_progress',
+                technician_started_at =
+                    COALESCE(
+                        technician_started_at,
+                        NOW()
+                    ),
 
-                updated_at = NOW()
+                updated_at =
+                    NOW()
 
             WHERE id = ?
             `,
@@ -990,6 +1070,8 @@ async function submitWorkReport(req, res) {
 ========================================================== */
 
 module.exports = {
+
+    startAssignedRequest,
 
     getAssignedRequests,
 

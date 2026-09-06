@@ -1360,7 +1360,7 @@ async function updateRequest(req, res) {
          * as "pending".
          */
 
-        const finalStatus =
+        let finalStatus =
             status !== undefined &&
             status !== null &&
             status !== ""
@@ -1375,6 +1375,20 @@ async function updateRequest(req, res) {
                     null
                 )
                 : request.technician_id;
+
+
+        /*
+         * A technician assignment does not move the job out of
+         * Job Pending. The request remains pending until the
+         * Admin approves the technician report.
+         */
+        if (
+            finalTechnician &&
+            finalStatus !== "completed" &&
+            finalStatus !== "cancelled"
+        ) {
+            finalStatus = "pending";
+        }
 
 
         const finalScheduledDate =

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>SecurePro | Super Admin Projects</title>
+<link rel="stylesheet" href="css/super-admin.css">
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+    <div class="brand"><div class="mark">S</div><div><strong>SECUREPRO</strong><span>System Solutions</span></div></div>
+    <nav><a href="dashboard.html">⌂ <span>Dashboard</span></a><a class="active" href="projects.html">▤ <span>Projects</span></a></nav>
+    <div class="profile"><div class="avatar">S</div><div><strong id="adminName">Super Admin</strong><span>Monitoring Only</span></div><button id="logoutButton">⎋</button></div>
+</aside>
+<main class="main">
+<header class="topbar"><div><small>SUPER ADMINISTRATION</small><h1>Projects</h1></div><div class="online">● <span id="topName">Super Admin</span></div></header>
+<section class="content">
+<div class="intro">
+<div><span class="eyebrow">READ-ONLY</span><h2>All project activity</h2><p>View quotation, payment, technician and report progress.</p></div>
+<button id="refreshButton" class="refresh">↻ Refresh</button>
+</div>
+<div class="toolbar"><input id="searchInput" placeholder="Search project, customer or technician..."><select id="statusFilter"><option value="">All Status</option><option value="pending">Pending</option><option value="assigned">Assigned</option><option value="in_progress">In Progress</option><option value="waiting_parts">Waiting Parts</option><option value="completed">Completed</option></select></div>
+<section class="panel"><div class="panel-head"><h2 id="countLabel">Projects</h2></div><div class="table-wrap"><table><thead><tr><th>Request</th><th>Customer</th><th>Service</th><th>Quotation</th><th>Payment</th><th>Technician</th><th>Report</th><th>Status</th><th></th></tr></thead><tbody id="projectTable"><tr><td colspan="9" class="empty">Loading...</td></tr></tbody></table></div></section>
+</section></main></div>
+<script src="js/projects.js"></script>
+</body>
+</html>

@@ -3,19 +3,26 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 const rateLimit = require("express-rate-limit");
-const quotationRoutes =
-    require("./routes/quotationRoutes");
+
 // ======================================================
 // LOAD ENVIRONMENT VARIABLES
 // ======================================================
 
 dotenv.config();
 
+// ======================================================
+// LOAD ROUTES AFTER ENVIRONMENT VARIABLES
+// ======================================================
+
+const quotationRoutes =
+    require("./routes/quotationRoutes");
+
 const app = express();
 
 // Render automatically provides PORT.
 // Docker/local development uses 5000.
-const PORT = process.env.PORT || 5000;
+// Your current local backend uses 5001.
+const PORT = process.env.PORT || 5001;
 
 // ======================================================
 // DATABASE
@@ -42,14 +49,25 @@ const adminRoutes =
 const technicianRoutes =
     require("./routes/technicianRoutes");
 
+const superAdminRoutes =
+    require("./routes/superAdminRoutes");
+
 // ======================================================
-// MIDDLEWARE
+// CORS
 // ======================================================
 
+// Local frontend
+// Render frontend
+// Existing SecurePro frontend
 const allowedOrigins = [
-    "https://securepro-service-system-1.onrender.com",
     "http://localhost:5500",
-    "http://127.0.0.1:5500"
+    "http://127.0.0.1:5500",
+
+    "http://localhost:5501",
+    "http://127.0.0.1:5501",
+
+    "https://securepro-service-system-1.onrender.com",
+    "https://securepro-service-system.onrender.com"
 ];
 
 app.use(
@@ -66,14 +84,36 @@ app.use(
                 return callback(null, true);
             }
 
+            console.warn(
+                `CORS blocked origin: ${origin}`
+            );
+
             return callback(
                 new Error("Not allowed by CORS")
             );
         },
 
+        methods: [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"
+        ],
+
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization"
+        ],
+
         credentials: true
     })
 );
+
+// ======================================================
+// BODY PARSERS
+// ======================================================
 
 app.use(express.json());
 
@@ -82,12 +122,13 @@ app.use(
         extended: true
     })
 );
+
 // ======================================================
 // LOGIN RATE LIMITER
 // ======================================================
 
 const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000,
 
     max: 10,
 
@@ -101,6 +142,7 @@ const loginLimiter = rateLimit({
             "Too many login attempts. Please try again later."
     }
 });
+
 // ======================================================
 // UPLOADS
 // ======================================================
@@ -154,7 +196,6 @@ app.use(
     adminRoutes
 );
 
-
 // ======================================================
 // QUOTATION ROUTES
 // ======================================================
@@ -163,7 +204,6 @@ app.use(
     "/api/admin/quotations",
     quotationRoutes
 );
-
 
 // ======================================================
 // TECHNICIAN ROUTES
@@ -175,6 +215,15 @@ app.use(
 );
 
 // ======================================================
+// SUPER ADMIN MONITORING ROUTES
+// ======================================================
+
+app.use(
+    "/api/super-admin",
+    superAdminRoutes
+);
+
+// ======================================================
 // HEALTH CHECK
 // ======================================================
 
@@ -182,16 +231,16 @@ app.get(
     "/api/health",
     async (req, res) => {
 
+        let connection;
+
         try {
 
-            const connection =
+            connection =
                 await pool.getConnection();
 
             await connection.query(
                 "SELECT 1"
             );
-
-            connection.release();
 
             res.json({
                 success: true,
@@ -214,8 +263,13 @@ app.get(
                     "SecurePro API is running, but database connection failed."
             });
 
-        }
+        } finally {
 
+            if (connection) {
+                connection.release();
+            }
+
+        }
     }
 );
 
@@ -235,42 +289,55 @@ app.get(
 
     }
 );
+
 // ======================================================
 // 404 HANDLER
 // ======================================================
 
-app.use((req, res) => {
+app.use(
+    (req, res) => {
 
-    res.status(404).json({
-        success: false,
-        message: "API endpoint not found."
-    });
+        res.status(404).json({
+            success: false,
+            message:
+                "API endpoint not found."
+        });
 
-});
+    }
+);
+
 // ======================================================
 // GLOBAL ERROR HANDLER
 // ======================================================
 
-app.use((err, req, res, next) => {
+app.use(
+    (err, req, res, next) => {
 
-    console.error("Unhandled server error:", {
-        method: req.method,
-        url: req.originalUrl,
-        message: err.message,
-        stack: err.stack
-    });
+        console.error(
+            "Unhandled server error:",
+            {
+                method: req.method,
+                url: req.originalUrl,
+                message: err.message,
+                stack: err.stack
+            }
+        );
 
-    res.status(err.status || 500).json({
-        success: false,
-        message: "An unexpected server error occurred."
-    });
+        res.status(
+            err.status || 500
+        ).json({
+            success: false,
+            message:
+                "An unexpected server error occurred."
+        });
 
-});
-
+    }
+);
 
 // ======================================================
 // START SERVER
-// =====================================================
+// ======================================================
+
 const server =
     app.listen(
         PORT,
@@ -304,6 +371,9 @@ const server =
         }
     );
 
+// ======================================================
+// SERVER ERROR
+// ======================================================
 
 server.on(
     "error",

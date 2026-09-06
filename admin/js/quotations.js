@@ -195,8 +195,8 @@ async function sendFollowUp(id, number) {
         if (!phone.startsWith("60")) phone = `60${phone}`;
         const customer = quotation.customer_name || "Pelanggan";
         const message = number === 1
-            ? `Hi ${customer} 👋 Kami ingin membuat susulan mengenai sebut harga yang kami hantar sebelum ini. Adakah anda sudah berkesempatan untuk menyemaknya? Sila maklumkan jika anda mempunyai sebarang pertanyaan atau memerlukan penjelasan. Terima kasih! 😊`
-            : `Hi ${customer}, kami ingin membuat susulan sekali lagi mengenai sebut harga anda untuk ${quotation.service_name || "perkhidmatan kami"}. Jika anda berminat untuk meneruskan, sila maklumkan kepada kami dan kami boleh mengatur langkah seterusnya. Kami sedia membantu jika anda mempunyai sebarang pertanyaan. Terima kasih kerana memilih SecurePro System Solution. 😊`;
+            ? `Hi ${customer}  Kami ingin membuat susulan mengenai  harga yang kami hantar sebelum ini. Adakah anda sudah berkesempatan untuk menyemaknya? Sila maklumkan jika anda mempunyai sebarang pertanyaan atau memerlukan penjelasan. Terima kasih!`
+            : `Hi ${customer}, kami ingin membuat susulan sekali lagi mengenai  harga anda untuk ${quotation.service_name || "perkhidmatan kami"}. Jika anda berminat untuk meneruskan, sila maklumkan kepada kami dan kami boleh mengatur langkah seterusnya. Kami sedia membantu jika anda mempunyai sebarang pertanyaan. Terima kasih kerana memilih Sonic System Solution. 😊`;
         const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
         if (popup) popup.location.href = url;
         else window.open(url, "_blank", "noopener,noreferrer");
