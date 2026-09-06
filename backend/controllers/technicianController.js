@@ -113,9 +113,17 @@ console.log("TECHNICIAN ID USED:", req.user.id);
 
                     sr.scheduled_time,
 
-                    sr.assigned_at,
+                    CASE
+    WHEN sr.technician_id IS NOT NULL
+    THEN sr.updated_at
+    ELSE NULL
+END AS assigned_at,
 
-                    sr.technician_started_at,
+CASE
+    WHEN sr.status = 'in_progress'
+    THEN sr.updated_at
+    ELSE NULL
+END AS technician_started_at,
 
                     sr.created_at,
 
