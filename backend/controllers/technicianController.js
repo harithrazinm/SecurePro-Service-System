@@ -237,16 +237,22 @@ async function getAssignedRequestById(req, res) {
                     sr.status,
 
                     sr.scheduled_date,
+sr.scheduled_time,
 
-                    sr.scheduled_time,
+CASE
+    WHEN sr.technician_id IS NOT NULL
+    THEN sr.updated_at
+    ELSE NULL
+END AS assigned_at,
 
-                    sr.assigned_at,
+CASE
+    WHEN sr.status = 'in_progress'
+    THEN sr.updated_at
+    ELSE NULL
+END AS technician_started_at,
 
-                    sr.technician_started_at,
-
-                    sr.created_at,
-
-                    sr.updated_at,
+sr.created_at,
+sr.updated_at,
 
 
                    s.name_en AS service_name
