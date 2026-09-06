@@ -22,3 +22,7 @@ backend/uploads/technician/reports/*
 # Aiven database files
 database/ca.pem
 database/securepro-data.sql
+
+# Backup files
+*.backup
+*.bak
