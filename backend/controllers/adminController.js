@@ -275,262 +275,116 @@ async function getJobPendingRequests(req, res) {
 
     try {
 
-        const [requests] =
-            await pool.query(
-                `
-                SELECT
+        const [requests] = await pool.query(`
+            SELECT
 
-                    sr.id,
+                sr.id,
+                sr.request_code,
+                sr.customer_name,
+                sr.customer_phone,
+                sr.customer_email,
+                sr.status,
+                sr.technician_id,
+                sr.created_at,
+                sr.scheduled_date,
+                sr.scheduled_time,
 
-                    sr.request_code,
+                u.name AS technician_name,
 
-                    sr.customer_name,
+                s.name_en AS service_name_en,
+                s.name_ms AS service_name_ms,
 
-                    sr.customer_phone,
+                q.payment_proof_uploaded_at
 
-                    sr.customer_email,
+            FROM service_requests sr
 
-                    sr.status,
+            INNER JOIN services s
+                ON s.id = sr.service_id
 
-                    sr.technician_id,
+            LEFT JOIN users u
+                ON u.id = sr.technician_id
 
-                    sr.created_at,
+            INNER JOIN quotations q
+                ON q.request_id = sr.id
 
-                    sr.scheduled_date,
+            WHERE
+                sr.status = 'pending'
 
-                    sr.scheduled_time,
+                AND sr.technician_id IS NULL
 
-                    u.name AS technician_name,
+                AND q.payment_status = 'proof_uploaded'
 
-                    s.name_en AS service_name_en,
+                AND q.payment_proof_url IS NOT NULL
 
-                    s.name_ms AS service_name_ms,
-
-                    (
-                        SELECT
-                            MAX(q2.payment_proof_uploaded_at)
-
-                        FROM quotations q2
-
-                        WHERE
-                            q2.request_id = sr.id
-
-                            AND q2.payment_status =
-                                'proof_uploaded'
-
-                            AND q2.payment_proof_url IS NOT NULL
-
-                    ) AS payment_proof_uploaded_at,
-
-
-                    (
-                        SELECT
-                            r2.status
-
-                        FROM service_reports r2
-
-                        WHERE
-                            r2.request_id = sr.id
-
-                        ORDER BY
-                            r2.created_at DESC
-
-                        LIMIT 1
-
-                    ) AS latest_report_status,
-
-
-                    (
-                        SELECT
-                            r2.submitted_at
-
-                        FROM service_reports r2
-
-                        WHERE
-                            r2.request_id = sr.id
-
-                        ORDER BY
-                            r2.created_at DESC
-
-                        LIMIT 1
-
-                    ) AS latest_report_submitted_at
-
-
-                FROM service_requests sr
-
-
-                INNER JOIN services s
-                    ON s.id = sr.service_id
-
-
-                LEFT JOIN users u
-                    ON u.id = sr.technician_id
-
-
-                WHERE
-
-                    /*
-                     * Job must have payment proof.
-                     */
-
-                    EXISTS (
-
-                        SELECT 1
-
-                        FROM quotations q
-
-                        WHERE
-                            q.request_id = sr.id
-
-                            AND q.payment_status =
-                                'proof_uploaded'
-
-                            AND q.payment_proof_url IS NOT NULL
-
-                    )
-
-
-                    /*
-                     * Completed jobs are no longer pending.
-                     */
-
-                    AND sr.status != 'completed'
-
-
-                    /*
-                     * Cancelled jobs are no longer pending.
-                     */
-
-                    AND sr.status != 'cancelled'
-
-
-                    /*
-                     * If a report exists,
-                     * it must NOT be approved.
-                     *
-                     * No report:
-                     *     still pending
-                     *
-                     * Submitted:
-                     *     still pending
-                     *
-                     * Rejected:
-                     *     still pending
-                     *
-                     * Approved:
-                     *     disappears
-                     */
-
-                    AND NOT EXISTS (
-
-                        SELECT 1
-
-                        FROM service_reports approved_report
-
-                        WHERE
-                            approved_report.request_id =
-                                sr.id
-
-                            AND approved_report.status =
-                                'approved'
-
-                    )
-
-
-                ORDER BY
-
-                    payment_proof_uploaded_at DESC,
-
-                    sr.created_at DESC
-                `
-            );
+            ORDER BY
+                q.payment_proof_uploaded_at DESC,
+                sr.created_at DESC
+        `);
 
 
         return res.json({
 
             success: true,
 
-            data:
-                requests.map(
-                    request => ({
+            data: requests.map(request => ({
 
-                        id:
-                            request.id,
+                id:
+                    request.id,
 
-                        request_code:
-                            request.request_code,
+                request_code:
+                    request.request_code,
 
+                customer: {
 
-                        customer: {
+                    name:
+                        request.customer_name,
+
+                    phone:
+                        request.customer_phone,
+
+                    email:
+                        request.customer_email
+
+                },
+
+                service: {
+
+                    name:
+                        request.service_name_en ||
+                        request.service_name_ms ||
+                        "Service"
+
+                },
+
+                status:
+                    request.status,
+
+                technician:
+                    request.technician_id
+                        ? {
+                            id:
+                                request.technician_id,
 
                             name:
-                                request.customer_name,
+                                request.technician_name
+                        }
+                        : null,
 
-                            phone:
-                                request.customer_phone,
+                scheduled_date:
+                    request.scheduled_date,
 
-                            email:
-                                request.customer_email
+                scheduled_time:
+                    request.scheduled_time,
 
-                        },
+                payment_proof_uploaded_at:
+                    request.payment_proof_uploaded_at,
 
+                created_at:
+                    request.created_at
 
-                        service: {
-
-                            name:
-                                request.service_name_en ||
-                                request.service_name_ms ||
-                                "Service"
-
-                        },
-
-
-                        status:
-                            request.status,
-
-
-                        technician:
-                            request.technician_id
-                                ? {
-
-                                    id:
-                                        request.technician_id,
-
-                                    name:
-                                        request.technician_name
-
-                                }
-                                : null,
-
-
-                        scheduled_date:
-                            request.scheduled_date,
-
-                        scheduled_time:
-                            request.scheduled_time,
-
-
-                        payment_proof_uploaded_at:
-                            request.payment_proof_uploaded_at,
-
-
-                        latest_report_status:
-                            request.latest_report_status,
-
-
-                        latest_report_submitted_at:
-                            request.latest_report_submitted_at,
-
-
-                        created_at:
-                            request.created_at
-
-                    })
-                )
+            }))
 
         });
-
 
     } catch (error) {
 
@@ -538,7 +392,6 @@ async function getJobPendingRequests(req, res) {
             "Get job pending requests error:",
             error
         );
-
 
         return res.status(500).json({
 
