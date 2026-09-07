@@ -1312,3 +1312,78 @@ textarea:focus-visible {
         grid-template-columns: 1fr;
     }
 }
+
+/* =========================================================
+   SCHEDULE / TECHNICIAN INPUT
+========================================================= */
+
+.technician-input {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    border: 1px solid #d7dce5;
+    border-radius: 10px;
+    background: #fff;
+    color: #111827;
+    font-size: 14px;
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+.technician-input:focus {
+    border-color: #111827;
+    box-shadow:
+        0 0 0 3px rgba(17, 24, 39, 0.08);
+}
+
+.required {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.technician-assignment {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(240px, 0.8fr);
+    gap: 24px;
+    margin-top: 8px;
+}
+
+.form-help {
+    display: block;
+    margin-top: 7px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.technician-current {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100px;
+    padding: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.technician-current .field-label {
+    margin-bottom: 7px;
+}
+
+.technician-current strong {
+    color: #111827;
+    font-size: 15px;
+}
+
+@media (max-width: 700px) {
+
+    .technician-assignment {
+        grid-template-columns: 1fr;
+    }
+
+}

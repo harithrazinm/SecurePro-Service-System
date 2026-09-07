@@ -923,13 +923,30 @@ function updateTechnicianDisplay() {
 ========================================================= */
 
 function renderAssignment(data) {
-    const select =
-        document.querySelector("#technicianSelect");
+
+    const technicianSelect =
+        document.querySelector(
+            "#technicianSelect"
+        );
+
+    const scheduledDate =
+        document.querySelector(
+            "#scheduledDate"
+        );
+
+    const scheduledTime =
+        document.querySelector(
+            "#scheduledTime"
+        );
 
     const currentName =
-        document.querySelector("#currentTechnicianName");
+        document.querySelector(
+            "#currentTechnicianName"
+        );
 
-    if (!select) return;
+    if (!technicianSelect) {
+        return;
+    }
 
     const technician =
         data?.technician || null;
@@ -939,13 +956,44 @@ function renderAssignment(data) {
         data?.technician_id ||
         "";
 
-    select.value = technicianId;
+    /*
+     * Technician
+     */
+    technicianSelect.value =
+        technicianId;
 
+    /*
+     * Current technician display
+     */
     if (currentName) {
+
         currentName.textContent =
             technician?.name ||
             technician?.email ||
             "No technician assigned";
+
+    }
+
+    /*
+     * Scheduled date
+     */
+    if (scheduledDate) {
+
+        scheduledDate.value =
+            data?.scheduled_date ||
+            "";
+
+    }
+
+    /*
+     * Scheduled time
+     */
+    if (scheduledTime) {
+
+        scheduledTime.value =
+            data?.scheduled_time ||
+            "";
+
     }
 
     updateTechnicianDisplay();
@@ -957,6 +1005,7 @@ function renderAssignment(data) {
 ========================================================= */
 
 async function saveTechnicianAssignment() {
+
     if (!requestData) {
         alert(
             "Request information has not loaded yet."
@@ -978,8 +1027,14 @@ async function saveTechnicianAssignment() {
         return;
     }
 
-    const select =
+    const technicianSelect =
         document.querySelector("#technicianSelect");
+
+    const scheduledDate =
+        document.querySelector("#scheduledDate");
+
+    const scheduledTime =
+        document.querySelector("#scheduledTime");
 
     const button =
         document.querySelector("#saveTechnicianButton");
@@ -989,30 +1044,60 @@ async function saveTechnicianAssignment() {
             "#technicianAssignmentMessage"
         );
 
-    if (!select) return;
+    if (!technicianSelect) {
+        return;
+    }
 
     const technicianId =
-        select.value || null;
+        technicianSelect.value || null;
+
+    /*
+     * A technician assignment requires a scheduled date.
+     */
+    if (technicianId && !scheduledDate?.value) {
+
+        alert(
+            "Scheduled date is required when assigning a technician."
+        );
+
+        scheduledDate?.focus();
+
+        return;
+    }
 
     const technicianName =
         technicianId
             ? (
-                select.selectedOptions?.[0]?.textContent ||
+                technicianSelect
+                    .selectedOptions?.[0]
+                    ?.textContent ||
                 "Selected technician"
             )
             : "No technician assigned";
 
-    const confirmed = window.confirm(
-        "Confirm technician assignment?\n\n" +
-        `Technician: ${technicianName}`
-    );
+    const dateValue =
+        scheduledDate?.value || "";
 
-    if (!confirmed) return;
+    const timeValue =
+        scheduledTime?.value || "";
+
+    const confirmed =
+        window.confirm(
+            "Confirm technician assignment?\n\n" +
+            `Technician: ${technicianName}\n` +
+            `Scheduled Date: ${dateValue || "Not scheduled"}\n` +
+            `Scheduled Time: ${timeValue || "Not specified"}`
+        );
+
+    if (!confirmed) {
+        return;
+    }
 
     try {
+
         if (button) {
             button.disabled = true;
-            button.textContent = "Assigning...";
+            button.textContent = "Saving...";
         }
 
         if (message) {
@@ -1023,86 +1108,107 @@ async function saveTechnicianAssignment() {
                 "Saving technician assignment...";
         }
 
-        const response = await fetch(
-            `${API_BASE}/admin/requests/${encodeURIComponent(requestId)}`,
-            {
-                method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    technician_id: technicianId
-                })
-            }
-        );
+        const response =
+            await fetch(
+                `${API_BASE}/admin/requests/${encodeURIComponent(requestId)}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`,
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        technician_id:
+                            technicianId,
+
+                        scheduled_date:
+                            dateValue || null,
+
+                        scheduled_time:
+                            timeValue || null,
+
+                        /*
+                         * When a technician is selected,
+                         * make sure the request is assigned.
+                         */
+                        status:
+                            technicianId
+                                ? "assigned"
+                                : requestData.status
+                    })
+                }
+            );
 
         const result =
             await parseResponse(response);
 
         /*
-         * Update local request data.
+         * Update local data.
          */
         if (result.data) {
+
             requestData = {
                 ...requestData,
                 ...result.data
             };
+
         }
 
         /*
-         * Keep technician ID in local data.
-         */
-        requestData.technician_id =
-            technicianId;
-
-        /*
-         * If technician was removed.
-         */
-        if (!technicianId) {
-            requestData.technician = null;
-        }
-
-        /*
-         * Reload request from database.
-         * This confirms the assignment was actually saved.
+         * Reload from database.
          */
         await loadRequest();
 
         if (message) {
+
             message.hidden = false;
+
             message.className =
                 "assignment-message success";
 
             message.textContent =
                 technicianId
-                    ? "Technician assigned successfully."
+                    ? "Technician assigned and schedule saved successfully."
                     : "Technician assignment removed.";
+
         }
 
         if (button) {
+
             button.textContent =
                 technicianId
                     ? "Technician Assigned ✓"
                     : "Assignment Removed ✓";
+
         }
 
     } catch (error) {
+
         console.error(
             "Save technician assignment error:",
             error
         );
 
-        if (handleAuthError(error)) return;
+        if (handleAuthError(error)) {
+            return;
+        }
 
         if (message) {
+
             message.hidden = false;
+
             message.className =
                 "assignment-message error";
 
             message.textContent =
                 error.message ||
                 "Unable to save technician assignment.";
+
         }
 
         alert(
@@ -1111,17 +1217,22 @@ async function saveTechnicianAssignment() {
         );
 
     } finally {
+
         if (button) {
+
             button.disabled = false;
 
             setTimeout(() => {
+
                 button.textContent =
                     "Assign Technician";
+
             }, 1500);
+
         }
+
     }
 }
-
 
 /* =========================================================
    ASSIGNMENT DISPLAY

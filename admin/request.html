@@ -290,7 +290,7 @@
             </section>
 
 
-            <!-- 07 TECHNICIAN ASSIGNMENT -->
+<!-- 07 TECHNICIAN ASSIGNMENT -->
 <section class="detail-card">
     <div class="section-header">
         <div>
@@ -298,33 +298,80 @@
             <div>
                 <h2 class="section-title">Technician Assignment</h2>
                 <p class="section-description">
-                    Select a technician to assign this job.
+                    Assign a technician and schedule the service appointment.
                 </p>
             </div>
         </div>
     </div>
 
     <div class="technician-assignment">
+
+        <!-- TECHNICIAN -->
         <div class="technician-select-wrapper">
             <label for="technicianSelect" class="form-label">
                 Assign Technician
             </label>
 
-            <select id="technicianSelect" class="technician-select">
-                <option value="">No technician assigned</option>
+            <select
+                id="technicianSelect"
+                class="technician-select"
+            >
+                <option value="">
+                    No technician assigned
+                </option>
             </select>
 
             <small class="form-help">
-                Only active technicians are available for assignment.
+                Select the technician responsible for this job.
             </small>
         </div>
 
-        <div class="technician-current" id="technicianCurrent">
-            <span class="field-label">Current Technician</span>
+        <!-- CURRENT TECHNICIAN -->
+        <div class="technician-current">
+            <span class="field-label">
+                Current Technician
+            </span>
+
             <strong id="currentTechnicianName">
                 No technician assigned
             </strong>
         </div>
+
+        <!-- SCHEDULE DATE -->
+        <div class="technician-select-wrapper">
+            <label for="scheduledDate" class="form-label">
+                Scheduled Date <span class="required">*</span>
+            </label>
+
+            <input
+                type="date"
+                id="scheduledDate"
+                class="technician-input"
+                required
+            >
+
+            <small class="form-help">
+                Required when assigning a technician.
+            </small>
+        </div>
+
+        <!-- SCHEDULE TIME -->
+        <div class="technician-select-wrapper">
+            <label for="scheduledTime" class="form-label">
+                Scheduled Time
+            </label>
+
+            <input
+                type="time"
+                id="scheduledTime"
+                class="technician-input"
+            >
+
+            <small class="form-help">
+                Optional appointment time.
+            </small>
+        </div>
+
     </div>
 
     <div class="save-area">
