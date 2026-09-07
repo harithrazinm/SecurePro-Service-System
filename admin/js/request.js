@@ -803,35 +803,322 @@ function setupStatusSelect() {
    LOAD TECHNICIANS
 ========================================================= */
 
-async function loadTechnicians(data) {
+/* =========================================================
+   LOAD TECHNICIANS
+========================================================= */
+
+async function loadTechnicians(data = requestData) {
     const select = document.querySelector("#technicianSelect");
+
     if (!select) return;
 
     try {
-        const response = await fetch(`${API_BASE}/admin/technicians`, {
-            method: "GET",
-            headers: { "Authorization": `Bearer ${getToken()}` }
-        });
+        select.disabled = true;
+        select.innerHTML = `
+            <option value="">Loading technicians...</option>
+        `;
+
+        const response = await fetch(
+            `${API_BASE}/admin/technicians`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${getToken()}`
+                }
+            }
+        );
 
         const result = await parseResponse(response);
-        const technicians = Array.isArray(result.data) ? result.data : [];
-        const currentTechnicianId = data?.technician?.id || data?.technician_id || "";
 
-        select.innerHTML = `<option value="">No technician assigned</option>`;
+        const technicians =
+            Array.isArray(result.data)
+                ? result.data
+                : [];
+
+        const currentTechnicianId =
+            data?.technician?.id ||
+            data?.technician_id ||
+            "";
+
+        select.innerHTML = `
+            <option value="">
+                No technician assigned
+            </option>
+        `;
 
         technicians.forEach(technician => {
             const option = document.createElement("option");
+
             option.value = technician.id;
-            option.textContent = `${technician.name} — ${technician.email}`;
+
+            option.textContent =
+                technician.name
+                    ? `${technician.name}${technician.email ? ` — ${technician.email}` : ""}`
+                    : technician.email || "Technician";
+
             select.appendChild(option);
         });
 
-        select.value = currentTechnicianId || "";
+        if (currentTechnicianId) {
+            select.value = currentTechnicianId;
+        } else {
+            select.value = "";
+        }
+
+        select.disabled = false;
+
+        updateTechnicianDisplay();
 
     } catch (error) {
-        console.error("Unable to load technicians:", error);
+        console.error(
+            "Unable to load technicians:",
+            error
+        );
+
         if (handleAuthError(error)) return;
-        select.innerHTML = `<option value="">No technician assigned</option>`;
+
+        select.innerHTML = `
+            <option value="">
+                Unable to load technicians
+            </option>
+        `;
+
+        select.disabled = false;
+    }
+}
+
+
+/* =========================================================
+   TECHNICIAN DISPLAY
+========================================================= */
+
+function updateTechnicianDisplay() {
+    const select =
+        document.querySelector("#technicianSelect");
+
+    const currentName =
+        document.querySelector("#currentTechnicianName");
+
+    if (!select || !currentName) return;
+
+    const selectedOption =
+        select.options[select.selectedIndex];
+
+    if (
+        !select.value ||
+        !selectedOption
+    ) {
+        currentName.textContent =
+            "No technician assigned";
+        return;
+    }
+
+    currentName.textContent =
+        selectedOption.textContent;
+}
+
+
+/* =========================================================
+   ASSIGNMENT DISPLAY
+========================================================= */
+
+function renderAssignment(data) {
+    const select =
+        document.querySelector("#technicianSelect");
+
+    const currentName =
+        document.querySelector("#currentTechnicianName");
+
+    if (!select) return;
+
+    const technician =
+        data?.technician || null;
+
+    const technicianId =
+        technician?.id ||
+        data?.technician_id ||
+        "";
+
+    select.value = technicianId;
+
+    if (currentName) {
+        currentName.textContent =
+            technician?.name ||
+            technician?.email ||
+            "No technician assigned";
+    }
+
+    updateTechnicianDisplay();
+}
+
+
+/* =========================================================
+   SAVE TECHNICIAN ASSIGNMENT
+========================================================= */
+
+async function saveTechnicianAssignment() {
+    if (!requestData) {
+        alert(
+            "Request information has not loaded yet."
+        );
+        return;
+    }
+
+    const requestId = getRequestId();
+
+    if (!requestId) {
+        alert("Request ID is missing.");
+        return;
+    }
+
+    const token = getToken();
+
+    if (!token) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    const select =
+        document.querySelector("#technicianSelect");
+
+    const button =
+        document.querySelector("#saveTechnicianButton");
+
+    const message =
+        document.querySelector(
+            "#technicianAssignmentMessage"
+        );
+
+    if (!select) return;
+
+    const technicianId =
+        select.value || null;
+
+    const technicianName =
+        technicianId
+            ? (
+                select.selectedOptions?.[0]?.textContent ||
+                "Selected technician"
+            )
+            : "No technician assigned";
+
+    const confirmed = window.confirm(
+        "Confirm technician assignment?\n\n" +
+        `Technician: ${technicianName}`
+    );
+
+    if (!confirmed) return;
+
+    try {
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Assigning...";
+        }
+
+        if (message) {
+            message.hidden = false;
+            message.className =
+                "assignment-message";
+            message.textContent =
+                "Saving technician assignment...";
+        }
+
+        const response = await fetch(
+            `${API_BASE}/admin/requests/${encodeURIComponent(requestId)}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    technician_id: technicianId
+                })
+            }
+        );
+
+        const result =
+            await parseResponse(response);
+
+        /*
+         * Update local request data.
+         */
+        if (result.data) {
+            requestData = {
+                ...requestData,
+                ...result.data
+            };
+        }
+
+        /*
+         * Keep technician ID in local data.
+         */
+        requestData.technician_id =
+            technicianId;
+
+        /*
+         * If technician was removed.
+         */
+        if (!technicianId) {
+            requestData.technician = null;
+        }
+
+        /*
+         * Reload request from database.
+         * This confirms the assignment was actually saved.
+         */
+        await loadRequest();
+
+        if (message) {
+            message.hidden = false;
+            message.className =
+                "assignment-message success";
+
+            message.textContent =
+                technicianId
+                    ? "Technician assigned successfully."
+                    : "Technician assignment removed.";
+        }
+
+        if (button) {
+            button.textContent =
+                technicianId
+                    ? "Technician Assigned ✓"
+                    : "Assignment Removed ✓";
+        }
+
+    } catch (error) {
+        console.error(
+            "Save technician assignment error:",
+            error
+        );
+
+        if (handleAuthError(error)) return;
+
+        if (message) {
+            message.hidden = false;
+            message.className =
+                "assignment-message error";
+
+            message.textContent =
+                error.message ||
+                "Unable to save technician assignment.";
+        }
+
+        alert(
+            error.message ||
+            "Unable to save technician assignment."
+        );
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+
+            setTimeout(() => {
+                button.textContent =
+                    "Assign Technician";
+            }, 1500);
+        }
     }
 }
 
@@ -1219,6 +1506,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const uploadButton = document.querySelector("#uploadFinalQuotationButton");
     if (uploadButton) uploadButton.addEventListener("click", uploadFinalQuotation);
+
+    const saveTechnicianButton =
+    document.querySelector("#saveTechnicianButton");
+
+if (saveTechnicianButton) {
+    saveTechnicianButton.addEventListener(
+        "click",
+        saveTechnicianAssignment
+    );
+}
+
+const technicianSelect =
+    document.querySelector("#technicianSelect");
+
+if (technicianSelect) {
+    technicianSelect.addEventListener(
+        "change",
+        updateTechnicianDisplay
+    );
+}
 
     loadRequest();
 });

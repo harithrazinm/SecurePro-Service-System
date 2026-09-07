@@ -291,26 +291,58 @@
 
 
             <!-- 07 TECHNICIAN ASSIGNMENT -->
-            <section class="detail-card">
-                <div class="section-header">
-                    <div>
-                        <span class="section-number">07</span>
-                        <div>
-                            <h2 class="section-title">Technician Assignment</h2>
-                            <p class="section-description">Technician assignment for this job.</p>
-                        </div>
-                    </div>
-                </div>
+<section class="detail-card">
+    <div class="section-header">
+        <div>
+            <span class="section-number">07</span>
+            <div>
+                <h2 class="section-title">Technician Assignment</h2>
+                <p class="section-description">
+                    Select a technician to assign this job.
+                </p>
+            </div>
+        </div>
+    </div>
 
-                <div class="technician-assignment">
-                    <div class="technician-select-wrapper">
-                        <label for="technicianSelect" class="form-label">Assign Technician</label>
-                        <select id="technicianSelect">
-                            <option value="">No technician assigned</option>
-                        </select>
-                    </div>
-                </div>
-            </section>
+    <div class="technician-assignment">
+        <div class="technician-select-wrapper">
+            <label for="technicianSelect" class="form-label">
+                Assign Technician
+            </label>
+
+            <select id="technicianSelect" class="technician-select">
+                <option value="">No technician assigned</option>
+            </select>
+
+            <small class="form-help">
+                Only active technicians are available for assignment.
+            </small>
+        </div>
+
+        <div class="technician-current" id="technicianCurrent">
+            <span class="field-label">Current Technician</span>
+            <strong id="currentTechnicianName">
+                No technician assigned
+            </strong>
+        </div>
+    </div>
+
+    <div class="save-area">
+        <button
+            type="button"
+            id="saveTechnicianButton"
+            class="primary-button save-button"
+        >
+            Assign Technician
+        </button>
+    </div>
+
+    <div
+        id="technicianAssignmentMessage"
+        class="assignment-message"
+        hidden
+    ></div>
+</section>
 
 
             <!-- 08 QUOTATION HISTORY -->
