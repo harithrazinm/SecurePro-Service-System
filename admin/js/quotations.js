@@ -189,7 +189,7 @@ async function submitQuotation(event) {
             request_id: requestSelect.value,
             notes: $("#notes").value.trim()
         });
-        const result = await apiRequest(`/admin/quotations?${query}`, { method: "POST", body });
+        const result = await apiRequest(`/quotations?${query}`, { method: "POST", body });
         if (result) { closeModal(); await loadQuotations(); alert(result.message); }
     } catch (error) {
         showError(error.message, $("#formError"));
@@ -202,7 +202,7 @@ async function submitQuotation(event) {
 async function markSent(id) {
     if (!confirm("Mark this quotation as sent? The first sent date and time will be saved.")) return;
     try {
-        const result = await apiRequest(`/admin/quotations/${encodeURIComponent(id)}/send`, { method: "POST" });
+        const result = await apiRequest(`/quotations/${encodeURIComponent(id)}/send`, { method: "POST" });
         if (result) { await loadQuotations(); alert(result.message); }
     } catch (error) { showError(error.message); }
 }
@@ -212,7 +212,7 @@ async function sendEmail(id) {
     if (!quotation?.customer_email) return showError("This customer does not have an email address.");
     if (!confirm(`Email ${quotation.quotation_number} to ${quotation.customer_email}?`)) return;
     try {
-        const result = await apiRequest(`/admin/quotations/${encodeURIComponent(id)}/email`, { method: "POST" });
+        const result = await apiRequest(`/quotations/${encodeURIComponent(id)}/email`, { method: "POST" });
         if (result) { await loadQuotations(); alert(result.message); }
     } catch (error) { showError(error.message); }
 }
@@ -221,7 +221,7 @@ async function sendWhatsApp(id) {
     const quotation = quotations.find(item => item.id === id);
     if (!quotation?.customer_phone) return showError("This customer does not have a WhatsApp phone number.");
     try {
-        const result = await apiRequest(`/admin/quotations/${encodeURIComponent(id)}/send`, { method: "POST" });
+        const result = await apiRequest(`/quotations/${encodeURIComponent(id)}/send`, { method: "POST" });
         if (!result) return;
         let phone = String(quotation.customer_phone).replace(/\D/g, "");
         if (phone.startsWith("0")) phone = `60${phone.slice(1)}`;
@@ -237,7 +237,7 @@ async function sendFollowUp(id, number) {
     if (!quotation?.customer_phone) return showError("This customer does not have a WhatsApp phone number.");
     const popup = window.open("", "_blank");
     try {
-        const result = await apiRequest(`/admin/quotations/${encodeURIComponent(id)}/follow-up/${number}`, { method: "POST" });
+        const result = await apiRequest(`/quotations/${encodeURIComponent(id)}/follow-up/${number}`, { method: "POST" });
         if (!result) return;
         let phone = String(quotation.customer_phone).replace(/\D/g, "");
         if (phone.startsWith("0")) phone = `60${phone.slice(1)}`;
@@ -274,7 +274,7 @@ async function uploadPaymentProof() {
     const body = new FormData();
     body.append("payment_proof", file);
     try {
-        const result = await apiRequest(`/admin/quotations/${encodeURIComponent(proofQuotationId)}/payment-proof`, { method: "POST", body });
+        const result = await apiRequest(`/quotations/${encodeURIComponent(proofQuotationId)}/payment-proof`, { method: "POST", body });
         if (result) { await loadQuotations(); alert(result.message); }
     } catch (error) { showError(error.message); }
     finally { proofQuotationId = null; }
