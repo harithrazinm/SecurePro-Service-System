@@ -219,11 +219,12 @@ async function uploadPaymentProof(req, res) {
          * not overwrite an assignment if a proof is re-uploaded later.
          */
         await connection.query(
-            `UPDATE service_requests
-             SET status = 'pending'
-             WHERE id = ? AND technician_id IS NULL AND status = 'pending'`,
-            [quotationRows[0].request_id]
-        );
+    `UPDATE service_requests
+     SET status = 'pending'
+     WHERE id = ?
+       AND technician_id IS NULL`,
+    [quotationRows[0].request_id]
+);
 
         await connection.commit();
         return res.json({
@@ -243,45 +244,293 @@ async function uploadPaymentProof(req, res) {
 async function recordFollowUp(req, res) {
     try {
         const followUpNumber = Number(req.params.number);
+
         if (![1, 2].includes(followUpNumber)) {
-            return res.status(400).json({ success: false, message: "Invalid follow-up number." });
-        }
-
-        const [rows] = await pool.query(
-            `SELECT id, sent_at, follow_up_1_sent_at, follow_up_2_sent_at
-             FROM quotations WHERE id = ? LIMIT 1`,
-            [req.params.id]
-        );
-        if (!rows.length) {
-            return res.status(404).json({ success: false, message: "Quotation not found." });
-        }
-
-        const quotation = rows[0];
-        if (!quotation.sent_at) {
-            return res.status(400).json({ success: false, message: "Mark the quotation as sent before sending a follow-up." });
-        }
-
-        const field = followUpNumber === 1 ? "follow_up_1_sent_at" : "follow_up_2_sent_at";
-        if (quotation[field]) {
-            return res.status(400).json({ success: false, message: `Follow-up ${followUpNumber} has already been recorded.` });
-        }
-
-        const dueAt = new Date(quotation.sent_at);
-        dueAt.setDate(dueAt.getDate() + (followUpNumber === 1 ? 2 : 5));
-        if (new Date() < dueAt) {
             return res.status(400).json({
                 success: false,
-                message: `Follow-up ${followUpNumber} is available on ${dueAt.toLocaleDateString("en-MY")}.`
+                message: "Invalid follow-up number."
             });
         }
 
-        await pool.query(`UPDATE quotations SET ${field} = CURRENT_TIMESTAMP WHERE id = ?`, [quotation.id]);
-        return res.json({ success: true, message: `Follow-up ${followUpNumber} recorded.` });
+        const [rows] = await pool.query(
+            `SELECT 
+                id,
+                sent_at,
+                follow_up_1_sent_at,
+                follow_up_2_sent_at
+             FROM quotations
+             WHERE id = ?
+             LIMIT 1`,
+            [req.params.id]
+        );
+
+        if (!rows.length) {
+            return res.status(404).json({
+                success: false,
+                message: "Quotation not found."
+            });
+        }
+
+        const quotation = rows[0];
+
+        // Quotation must be sent first
+        if (!quotation.sent_at) {
+            return res.status(400).json({
+                success: false,
+                message: "Mark the quotation as sent before sending a follow-up."
+            });
+        }
+
+        // Prevent duplicate follow-up
+        const field =
+            followUpNumber === 1
+                ? "follow_up_1_sent_at"
+                : "follow_up_2_sent_at";
+
+        if (quotation[field]) {
+            return res.status(400).json({
+                success: false,
+                message: `Follow-up ${followUpNumber} has already been recorded.`
+            });
+        }
+
+        let dueAt;
+
+        if (followUpNumber === 1) {
+
+            /*
+             * FOLLOW-UP 1
+             * Available 12 hours after quotation was sent.
+             */
+            dueAt = new Date(
+                new Date(quotation.sent_at).getTime()
+                + (12 * 60 * 60 * 1000)
+            );
+
+        } else {
+
+            /*
+             * FOLLOW-UP 2
+             * FU1 must already have been sent.
+             */
+            if (!quotation.follow_up_1_sent_at) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Follow-up 1 must be sent before Follow-up 2."
+                });
+            }
+
+            /*
+             * Available 48 hours after FU1 was sent.
+             */
+            dueAt = new Date(
+                new Date(quotation.follow_up_1_sent_at).getTime()
+                + (48 * 60 * 60 * 1000)
+            );
+        }
+
+        const now = new Date();
+
+        if (now < dueAt) {
+            const remainingMs = dueAt.getTime() - now.getTime();
+
+            const remainingHours = Math.floor(
+                remainingMs / (1000 * 60 * 60)
+            );
+
+            const remainingMinutes = Math.floor(
+                (remainingMs % (1000 * 60 * 60))
+                / (1000 * 60)
+            );
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    `Follow-up ${followUpNumber} is not available yet. ` +
+                    `It will be available on ${dueAt.toLocaleString("en-MY")}. ` +
+                    `Time remaining: ${remainingHours} hour(s) ${remainingMinutes} minute(s).`,
+                data: {
+                    due_at: dueAt.toISOString(),
+                    remaining_hours: remainingHours,
+                    remaining_minutes: remainingMinutes
+                }
+            });
+        }
+
+        await pool.query(
+            `UPDATE quotations
+             SET ${field} = CURRENT_TIMESTAMP
+             WHERE id = ?`,
+            [quotation.id]
+        );
+
+        return res.json({
+            success: true,
+            message: `Follow-up ${followUpNumber} recorded.`,
+            data: {
+                follow_up: followUpNumber,
+                sent_at: new Date().toISOString()
+            }
+        });
+
     } catch (error) {
         console.error("Record follow-up error:", error);
-        return res.status(500).json({ success: false, message: "Unable to record follow-up." });
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to record follow-up."
+        });
     }
 }
+
+async function uploadFinalQuotation(req, res) {
+    const connection = await pool.getConnection();
+
+    try {
+        const requestId = req.params.requestId;
+
+        if (!requestId) {
+            return res.status(400).json({
+                success: false,
+                message: "Service request is required."
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Upload the final quotation PDF."
+            });
+        }
+
+        // --------------------------------------------------
+        // CHECK JOB
+        // --------------------------------------------------
+
+        const [requests] = await connection.query(
+            `
+            SELECT
+                id,
+                request_code,
+                status
+            FROM service_requests
+            WHERE id = ?
+            LIMIT 1
+            `,
+            [requestId]
+        );
+
+        if (!requests.length) {
+            return res.status(404).json({
+                success: false,
+                message: "Service request not found."
+            });
+        }
+
+        const request = requests[0];
+
+        if (request.status !== "completed") {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Final quotation can only be uploaded after the job is completed."
+            });
+        }
+
+        const file = uploadDetails(req.file);
+
+        await connection.beginTransaction();
+
+        // --------------------------------------------------
+        // REMOVE PREVIOUS FINAL QUOTATION
+        // --------------------------------------------------
+
+        await connection.query(
+            `
+            DELETE FROM quotations
+            WHERE request_id = ?
+              AND quotation_type = 'final'
+            `,
+            [requestId]
+        );
+
+        // --------------------------------------------------
+        // CREATE FINAL QUOTATION
+        // --------------------------------------------------
+
+        const id = crypto.randomUUID();
+
+        const quotationNumber =
+            await generateQuotationNumber(connection);
+
+        await connection.query(
+            `
+            INSERT INTO quotations (
+                id,
+                quotation_number,
+                quotation_type,
+                request_id,
+                status,
+                created_by,
+                quotation_file_url,
+                quotation_file_name
+            )
+            VALUES (
+                ?,
+                ?,
+                'final',
+                ?,
+                'sent',
+                ?,
+                ?,
+                ?
+            )
+            `,
+            [
+                id,
+                quotationNumber,
+                requestId,
+                req.user.id,
+                file.url,
+                file.name
+            ]
+        );
+
+        await connection.commit();
+
+        return res.status(201).json({
+            success: true,
+            message: "Final quotation uploaded successfully.",
+            data: {
+                id,
+                quotation_number: quotationNumber,
+                quotation_type: "final",
+                quotation_file_url: file.url,
+                quotation_file_name: file.name
+            }
+        });
+
+    } catch (error) {
+
+        await connection.rollback();
+
+        console.error(
+            "Upload final quotation error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to upload final quotation."
+        });
+
+    } finally {
+
+        connection.release();
+
+    }
+}
+
 
 module.exports = {
     createQuotation,
@@ -290,5 +539,6 @@ module.exports = {
     sendQuotation,
     sendQuotationByEmail,
     uploadPaymentProof,
-    recordFollowUp
+    recordFollowUp,
+    uploadFinalQuotation
 };

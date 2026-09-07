@@ -1,30 +1,50 @@
+/* =========================================================
+   API CONFIGURATION
+========================================================= */
+
 const API_BASE =
-    "https://securepro-service-system.onrender.com/api";
+    ["localhost", "127.0.0.1"].includes(window.location.hostname)
+        ? "http://localhost:5001/api"
+        : "https://securepro-service-system.onrender.com/api";
+
 const BACKEND_BASE =
-    "https://securepro-service-system.onrender.com";
+    ["localhost", "127.0.0.1"].includes(window.location.hostname)
+        ? "http://localhost:5001"
+        : "https://securepro-service-system.onrender.com";
+
+
+/* =========================================================
+   GLOBAL DATA
+========================================================= */
 
 let requestData = null;
 let selectedStatus = null;
 
-const token = localStorage.getItem("securepro_admin_token");
 
-/* ========================================
-   HELPERS
-======================================== */
+/* =========================================================
+   TOKEN
+========================================================= */
+
+function getToken() {
+    return localStorage.getItem("securepro_admin_token");
+}
+
+
+/* =========================================================
+   REQUEST ID
+========================================================= */
 
 function getRequestId() {
-
-    const params =
-        new URLSearchParams(
-            window.location.search
-        );
-
+    const params = new URLSearchParams(window.location.search);
     return params.get("id");
 }
 
 
-function escapeHtml(value) {
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
 
+function escapeHtml(value) {
     return String(value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
@@ -34,2822 +54,1171 @@ function escapeHtml(value) {
 }
 
 
+/* =========================================================
+   DATE FORMAT
+========================================================= */
+
 function formatDate(value) {
-
-    if (!value) {
-        return "—";
-    }
-
+    if (!value) return "—";
     const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return "—";
-    }
-
-    return date.toLocaleString(
-        "en-MY",
-        {
-            dateStyle: "medium",
-            timeStyle: "short"
-        }
-    );
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleString("en-MY", { dateStyle: "medium", timeStyle: "short" });
 }
 
 
+/* =========================================================
+   STATUS FORMAT
+========================================================= */
+
 function formatStatus(status) {
-
     const labels = {
-
-        pending:
-            "Pending",
-
-        assigned:
-            "Assigned",
-
-        in_progress:
-            "In Progress",
-
-        waiting_parts:
-            "Waiting Parts",
-
-        completed:
-            "Completed",
-
-        cancelled:
-            "Cancelled"
-
+        pending: "Pending",
+        assigned: "Assigned",
+        in_progress: "In Progress",
+        waiting_parts: "Waiting Parts",
+        completed: "Completed",
+        cancelled: "Cancelled"
     };
-
     return labels[status] || status || "Unknown";
 }
 
 
-/* ========================================
-   ERROR
-======================================== */
+/* =========================================================
+   STATUS CSS CLASS
+   NOTE: request.css defines rules like `.status-badge.pending`
+   (no "status-" prefix), so the class we hand back here must
+   NOT be prefixed — that mismatch was why badges never picked
+   up their color before.
+========================================================= */
 
-function showError(message) {
-
-    const error =
-        document.querySelector(
-            "#requestError"
-        );
-
-    error.textContent =
-        message || "Unable to load request.";
-
-    error.hidden = false;
+function statusClass(status) {
+    const allowed = [
+        "pending", "assigned", "in_progress",
+        "waiting_parts", "completed", "cancelled"
+    ];
+    return allowed.includes(status) ? status : "pending";
 }
 
 
-function hideError() {
+/* =========================================================
+   REPORT STATUS
+========================================================= */
 
-    const error =
-        document.querySelector(
-            "#requestError"
-        );
-
-    error.hidden = true;
-
-    error.textContent = "";
+function formatReportStatus(status) {
+    const labels = {
+        draft: "Draft",
+        submitted: "Submitted",
+        approved: "Approved",
+        rejected: "Rejected"
+    };
+    return labels[status] || status || "Unknown";
 }
 
 
-/* ========================================
-   AUTH
-======================================== */
+/* =========================================================
+   RESPONSE PARSER
+========================================================= */
 
-function requireToken() {
-
-    if (!token) {
-
-        window.location.href =
-            "login.html";
-
-        return false;
+async function parseResponse(response) {
+    let result = null;
+    try {
+        result = await response.json();
+    } catch {
+        result = null;
     }
 
+    if (!response.ok || !result || !result.success) {
+        let message = result?.message || `Request failed with HTTP ${response.status}.`;
+
+        if (response.status === 401) {
+            message = "Authentication expired. Please login again.";
+        }
+        if (response.status === 403) {
+            message = result?.message || "You do not have permission to perform this action.";
+        }
+        if (response.status === 404) {
+            message = result?.message || "API endpoint or request was not found.";
+        }
+
+        throw new Error(message);
+    }
+
+    return result;
+}
+
+
+/* =========================================================
+   ERROR DISPLAY
+========================================================= */
+
+function showError(message) {
+    const element = document.querySelector("#requestError");
+    if (!element) {
+        console.error(message);
+        return;
+    }
+    element.textContent = message || "Unable to load request.";
+    element.hidden = false;
+}
+
+function hideError() {
+    const element = document.querySelector("#requestError");
+    if (!element) return;
+    element.textContent = "";
+    element.hidden = true;
+}
+
+
+/* =========================================================
+   AUTH CHECK
+========================================================= */
+
+function requireToken() {
+    const token = getToken();
+    if (!token) {
+        window.location.href = "login.html";
+        return false;
+    }
     return true;
 }
 
+function handleAuthError(error) {
+    const message = String(error?.message || "").toLowerCase();
 
-/* ========================================
+    if (
+        message.includes("authentication") ||
+        message.includes("401") ||
+        message.includes("token")
+    ) {
+        localStorage.removeItem("securepro_admin_token");
+        localStorage.removeItem("securepro_admin_user");
+        window.location.href = "login.html";
+        return true;
+    }
+
+    return false;
+}
+
+
+/* =========================================================
    LOAD REQUEST
-======================================== */
+========================================================= */
 
 async function loadRequest() {
-
     hideError();
 
-    const requestId =
-        getRequestId();
-
+    const requestId = getRequestId();
     if (!requestId) {
-
-        showError(
-            "No request ID was provided."
-        );
-
+        showError("No request ID was provided.");
         return;
     }
 
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/admin/requests/${encodeURIComponent(requestId)}`,
-                {
-                    method: "GET",
-
-                    headers: {
-                        "Authorization":
-                            `Bearer ${token}`
-                    }
-                }
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !result.success
-        ) {
-
-            throw new Error(
-                result.message ||
-                "Unable to load request."
-            );
-        }
-
-
-        requestData =
-            result.data;
-
-
-        renderRequest(
-            requestData
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Request details error:",
-            error
-        );
-
-        showError(
-            error.message ||
-            "Unable to load request."
-        );
-
+    const token = getToken();
+    if (!token) {
+        window.location.href = "login.html";
+        return;
     }
 
+    const loading = document.querySelector("#requestLoading");
+    const details = document.querySelector("#requestDetails");
+
+    if (loading) loading.hidden = false;
+    if (details) details.hidden = true;
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/admin/requests/${encodeURIComponent(requestId)}`,
+            { method: "GET", headers: { "Authorization": `Bearer ${token}` } }
+        );
+
+        const result = await parseResponse(response);
+        requestData = result.data;
+        renderRequest(requestData);
+
+    } catch (error) {
+        console.error("Request details error:", error);
+        if (handleAuthError(error)) return;
+        showError(error.message || "Unable to load request.");
+
+    } finally {
+        if (loading) loading.hidden = true;
+        if (details && requestData) details.hidden = false;
+    }
 }
-/* ========================================
+
+
+/* =========================================================
    RENDER REQUEST
-======================================== */
+========================================================= */
 
 function renderRequest(data) {
-
     requestData = data;
 
     renderHeader(data);
-
     renderCustomer(data);
-
+    renderService(data);
     renderAnswers(data);
-
     renderNotes(data);
-
     renderPhotos(data);
-
     renderTechnicianReport(data);
-
     renderStatus(data);
+    renderAssignment(data);
+    renderMeta(data);
+    renderQuotationHistory(data);
 
-    renderTechnician(data);
+    const loading = document.querySelector("#requestLoading");
+    const details = document.querySelector("#requestDetails");
 
-renderAssignment(data);
-
-renderMeta(data);
-
-    /* ========================================
-       SHOW REQUEST DETAILS
-    ======================================== */
-
-    const loading =
-        document.querySelector(
-            "#requestLoading"
-        );
-
-    const details =
-        document.querySelector(
-            "#requestDetails"
-        );
-
-    if (loading) {
-        loading.hidden = true;
-    }
-
-    if (details) {
-        details.hidden = false;
-    }
-
-    /* ========================================
-       LOAD TECHNICIANS
-    ======================================== */
+    if (loading) loading.hidden = true;
+    if (details) details.hidden = false;
 
     loadTechnicians(data);
 }
 
-/* ========================================
-   RENDER REQUEST
-======================================== */
 
-function renderPhotos(data) {
-
-    const photos =
-        Array.isArray(data.photos)
-            ? data.photos
-            : [];
-
-    const container =
-        document.querySelector("#photosGrid");
-
-    const count =
-        document.querySelector("#photoCount");
-
-    if (!container) {
-        return;
-    }
-
-    if (count) {
-        count.textContent =
-            `${photos.length} ${
-                photos.length === 1
-                    ? "photo"
-                    : "photos"
-            }`;
-    }
-
-    if (!photos.length) {
-
-        container.innerHTML = `
-            <div class="no-photos">
-                <div class="no-photos-icon">○</div>
-                <strong>No customer photos</strong>
-                <span>
-                    No photos were uploaded with this request.
-                </span>
-            </div>
-        `;
-
-        return;
-    }
-
-    container.innerHTML =
-        photos.map(
-            (photo, index) => {
-
-                const rawPath =
-                    String(
-                        photo.file_path || ""
-                    ).trim();
-
-                const photoUrl =
-                    rawPath.startsWith("http://") ||
-                    rawPath.startsWith("https://")
-                        ? rawPath
-                        : `${BACKEND_BASE}${rawPath.startsWith("/") ? "" : "/"}${rawPath}`;
-
-                const fileName =
-                    photo.file_name ||
-                    `Customer Photo ${index + 1}`;
-
-                return `
-                    <article class="photo-card">
-
-                        <a
-                            class="photo-preview"
-                            href="${escapeHtml(photoUrl)}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Open full image"
-                        >
-
-                            <img
-                                src="${escapeHtml(photoUrl)}"
-                                alt="${escapeHtml(fileName)}"
-                                loading="lazy"
-                                onerror="this.parentElement.classList.add('image-error'); this.style.display='none';"
-                            >
-
-                            <span class="photo-open">
-                                ↗
-                            </span>
-
-                            <span class="photo-error">
-                                Image unavailable
-                            </span>
-
-                        </a>
-
-                        <div class="photo-info">
-
-                            <strong
-                                title="${escapeHtml(fileName)}"
-                            >
-                                ${escapeHtml(fileName)}
-                            </strong>
-
-                            <span>
-                                ${formatDate(
-                                    photo.uploaded_at
-                                )}
-                            </span>
-
-                        </div>
-
-                    </article>
-                `;
-
-            }
-        ).join("");
-}
-
-/* ========================================
-   TECHNICIAN REPORT
-======================================== */
-
-function renderTechnicianReport(data) {
-
-    const card =
-        document.querySelector(
-            "#technicianReportCard"
-        );
-
-    if (!card) {
-        return;
-    }
-
-
-    const report =
-        data.report || null;
-
-
-    /*
-     * No report
-     */
-
-    if (!report) {
-
-        card.hidden = false;
-
-
-        document.querySelector(
-            "#technicianReportStatus"
-        ).textContent =
-            "No report submitted";
-
-
-        document.querySelector(
-            "#reportWorkPerformed"
-        ).textContent =
-            "The technician has not submitted a work report yet.";
-
-
-        document.querySelector(
-            "#reportFindings"
-        ).textContent =
-            "—";
-
-
-        document.querySelector(
-            "#reportMaterialsUsed"
-        ).textContent =
-            "—";
-
-
-        document.querySelector(
-            "#reportTechnicianNotes"
-        ).textContent =
-            "—";
-
-
-        renderCompletionMedia([]);
-
-
-        hideReportReview();
-
-
-        return;
-    }
-
-
-    /*
-     * Show report
-     */
-
-    card.hidden = false;
-
-
-    document.querySelector(
-        "#technicianReportStatus"
-    ).textContent =
-        formatReportStatus(
-            report.status
-        );
-
-
-    document.querySelector(
-        "#reportWorkPerformed"
-    ).textContent =
-        report.work_performed ||
-        "—";
-
-
-    document.querySelector(
-        "#reportFindings"
-    ).textContent =
-        report.findings ||
-        "—";
-
-
-    document.querySelector(
-        "#reportMaterialsUsed"
-    ).textContent =
-        report.materials_used ||
-        "—";
-
-
-    document.querySelector(
-        "#reportTechnicianNotes"
-    ).textContent =
-        report.technician_notes ||
-        "—";
-
-
-    /*
-     * Review remarks
-     */
-
-    const remarksCard =
-        document.querySelector(
-            "#reportReviewRemarks"
-        );
-
-    const remarksText =
-        document.querySelector(
-            "#reportReviewRemarksText"
-        );
-
-
-    if (
-        report.review_remarks &&
-        String(
-            report.review_remarks
-        ).trim()
-    ) {
-
-        remarksCard.hidden = false;
-
-        remarksText.textContent =
-            report.review_remarks;
-
-    } else {
-
-        remarksCard.hidden = true;
-
-        remarksText.textContent =
-            "";
-
-    }
-
-
-    /*
-     * Completion media
-     */
-
-    renderCompletionMedia(
-        data.completion_media ||
-        report.completion_media ||
-        report.media ||
-        []
-    );
-
-
-    /*
-     * Review buttons
-     */
-
-    setupReportReview(
-        report
-    );
-}
-
-/* ========================================
-   REPORT STATUS
-======================================== */
-
-function formatReportStatus(status) {
-
-    const labels = {
-
-        draft:
-            "Draft",
-
-        submitted:
-            "Submitted",
-
-        approved:
-            "Approved",
-
-        rejected:
-            "Rejected"
-
-    };
-
-
-    return labels[status] ||
-        status ||
-        "Unknown";
-}
-
-/* ========================================
-   COMPLETION MEDIA
-======================================== */
-
-function renderCompletionMedia(media) {
-
-    const container =
-        document.querySelector(
-            "#completionMediaGrid"
-        );
-
-    const count =
-        document.querySelector(
-            "#completionMediaCount"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    media =
-        Array.isArray(media)
-            ? media
-            : [];
-
-
-    /* ========================================
-       COUNT
-    ======================================== */
-
-    if (count) {
-
-        count.textContent =
-            `${media.length} ${
-                media.length === 1
-                    ? "file"
-                    : "files"
-            }`;
-
-    }
-
-
-    /* ========================================
-       NO MEDIA
-    ======================================== */
-
-    if (!media.length) {
-
-        container.innerHTML = `
-            <div class="no-completion-media">
-
-                <div class="no-media-icon">
-                    ○
-                </div>
-
-                <strong>
-                    No completion media
-                </strong>
-
-                <span>
-                    The technician did not upload
-                    any photos or videos.
-                </span>
-
-            </div>
-        `;
-
-        return;
-    }
-
-
-    /* ========================================
-       RENDER MEDIA
-    ======================================== */
-
-    container.innerHTML =
-        media.map(
-            (item, index) => {
-
-                const rawPath =
-                    String(
-                        item.file_path ||
-                        ""
-                    ).trim();
-
-
-                const mediaUrl =
-                    rawPath.startsWith("http://") ||
-                    rawPath.startsWith("https://")
-                        ? rawPath
-                        : `${BACKEND_BASE}${
-                            rawPath.startsWith("/")
-                                ? ""
-                                : "/"
-                        }${rawPath}`;
-
-
-                const fileName =
-                    item.file_name ||
-                    `Completion Media ${index + 1}`;
-
-
-                const mediaType =
-                    String(
-                        item.media_type ||
-                        ""
-                    ).toLowerCase();
-
-
-                const mimeType =
-                    String(
-                        item.mime_type ||
-                        ""
-                    ).toLowerCase();
-
-
-                /* ==================================
-                   IMAGE
-                ================================== */
-
-                if (
-                    mediaType === "image" ||
-                    mimeType.startsWith("image/")
-                ) {
-
-                    return `
-
-                        <article
-                            class="completion-media-card"
-                        >
-
-                            <a
-                                href="${escapeHtml(mediaUrl)}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="completion-media-preview"
-                                title="Open full image"
-                            >
-
-                                <img
-                                    src="${escapeHtml(mediaUrl)}"
-                                    alt="${escapeHtml(fileName)}"
-                                    loading="lazy"
-                                >
-
-                                <span class="media-open">
-                                    ↗
-                                </span>
-
-                            </a>
-
-
-                            <div
-                                class="completion-media-info"
-                            >
-
-                                <strong
-                                    title="${escapeHtml(fileName)}"
-                                >
-                                    ${escapeHtml(fileName)}
-                                </strong>
-
-                                <span>
-                                    Technician Photo
-                                </span>
-
-                                <small>
-                                    ${formatDate(
-                                        item.uploaded_at
-                                    )}
-                                </small>
-
-                            </div>
-
-                        </article>
-
-                    `;
-                }
-
-
-                /* ==================================
-                   VIDEO
-                ================================== */
-
-                if (
-                    mediaType === "video" ||
-                    mimeType.startsWith("video/")
-                ) {
-
-                    return `
-
-                        <article
-                            class="completion-media-card"
-                        >
-
-                            <div
-                                class="completion-media-video"
-                            >
-
-                                <video
-                                    controls
-                                    preload="metadata"
-                                >
-
-                                    <source
-                                        src="${escapeHtml(mediaUrl)}"
-                                        type="${escapeHtml(
-                                            item.mime_type ||
-                                            "video/mp4"
-                                        )}"
-                                    >
-
-                                    Your browser does not
-                                    support video playback.
-
-                                </video>
-
-                            </div>
-
-
-                            <div
-                                class="completion-media-info"
-                            >
-
-                                <strong
-                                    title="${escapeHtml(fileName)}"
-                                >
-                                    ${escapeHtml(fileName)}
-                                </strong>
-
-                                <span>
-                                    Technician Video
-                                </span>
-
-                                <small>
-                                    ${formatDate(
-                                        item.uploaded_at
-                                    )}
-                                </small>
-
-                            </div>
-
-                        </article>
-
-                    `;
-                }
-
-
-                /* ==================================
-                   UNKNOWN FILE
-                ================================== */
-
-                return `
-
-                    <article
-                        class="completion-media-card"
-                    >
-
-                        <a
-                            href="${escapeHtml(mediaUrl)}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="unknown-media"
-                        >
-
-                            <span>
-                                📎
-                            </span>
-
-                            Open File
-
-                        </a>
-
-
-                        <div
-                            class="completion-media-info"
-                        >
-
-                            <strong>
-                                ${escapeHtml(fileName)}
-                            </strong>
-
-                            <span>
-                                ${escapeHtml(
-                                    item.mime_type ||
-                                    "File"
-                                )}
-                            </span>
-
-                        </div>
-
-                    </article>
-
-                `;
-
-            }
-        ).join("");
-}
-
-
-/* ========================================
+/* =========================================================
    HEADER
-======================================== */
+========================================================= */
 
 function renderHeader(data) {
+    const requestCode = document.querySelector("#requestCode");
+    const requestService = document.querySelector("#requestService");
+    const statusBadge = document.querySelector("#requestStatusBadge");
 
-    document.querySelector(
-        "#requestCode"
-    ).textContent =
-        data.request_code || "—";
-
-
-    const serviceName =
+    const service =
+        data.service_name ||
+        data.service?.name_en ||
         data.service?.name?.en ||
-        data.service?.code ||
+        data.service_name_en ||
         "—";
 
+    const status = data.status || "pending";
 
-    document.querySelector(
-        "#requestService"
-    ).textContent =
-        serviceName;
+    if (requestCode) requestCode.textContent = data.request_code || "—";
+    if (requestService) requestService.textContent = service;
 
-
-    updateStatusDisplay(
-        data.status
-    );
-
+    if (statusBadge) {
+        statusBadge.textContent = formatStatus(status);
+        statusBadge.className = `status-badge ${statusClass(status)}`;
+    }
 }
 
 
-/* ========================================
+/* =========================================================
+   SERVICE
+========================================================= */
+
+function renderService(data) {
+    const service =
+        data.service_name ||
+        data.service?.name_en ||
+        data.service?.name?.en ||
+        data.service_name_en ||
+        "—";
+
+    const element = document.querySelector("#serviceName");
+    if (element) element.textContent = service;
+}
+
+
+/* =========================================================
    CUSTOMER
-======================================== */
+========================================================= */
 
 function renderCustomer(data) {
+    const container = document.querySelector("#customerGrid");
+    if (!container) return;
 
-    const customer =
-        data.customer || {};
+    const customer = data.customer || {};
 
+    const name = customer.name || data.customer_name || "—";
+    const phone = customer.phone || data.customer_phone || "";
+    const email = customer.email || data.customer_email || "";
+    const address = customer.address || data.customer_address || "—";
 
-    const container =
-        document.querySelector(
-            "#customerGrid"
-        );
+    const phoneHtml = phone
+        ? `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`
+        : "—";
 
-
-    const email =
-        customer.email
-            ? `
-                <a
-                    href="mailto:${escapeHtml(customer.email)}"
-                >
-                    ${escapeHtml(customer.email)}
-                </a>
-            `
-            : "—";
-
-
-    const phone =
-        customer.phone
-            ? `
-                <a
-                    href="tel:${escapeHtml(customer.phone)}"
-                >
-                    ${escapeHtml(customer.phone)}
-                </a>
-            `
-            : "—";
-
+    const emailHtml = email
+        ? `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>`
+        : "—";
 
     container.innerHTML = `
-
-        <div class="info-item">
-
-            <span>
-                Customer Name
-            </span>
-
-            <strong>
-                ${escapeHtml(customer.name || "—")}
-            </strong>
-
+        <div class="customer-field">
+            <span class="field-label">Customer Name</span>
+            <div class="field-value">${escapeHtml(name)}</div>
         </div>
 
-
-        <div class="info-item">
-
-            <span>
-                Phone
-            </span>
-
-            <strong>
-                ${phone}
-            </strong>
-
+        <div class="customer-field">
+            <span class="field-label">Phone</span>
+            <div class="field-value">${phoneHtml}</div>
         </div>
 
-
-        <div class="info-item">
-
-            <span>
-                Email
-            </span>
-
-            <strong>
-                ${email}
-            </strong>
-
+        <div class="customer-field">
+            <span class="field-label">Email</span>
+            <div class="field-value">${emailHtml}</div>
         </div>
 
-
-        <div class="info-item">
-
-            <span>
-                Service
-            </span>
-
-            <strong>
-                ${escapeHtml(
-                    data.service?.name?.en ||
-                    data.service?.code ||
-                    "—"
-                )}
-            </strong>
-
+        <div class="customer-field full-width">
+            <span class="field-label">Installation Address</span>
+            <div class="field-value">${escapeHtml(address)}</div>
         </div>
-
-
-        <div class="info-item full">
-
-            <span>
-                Address
-            </span>
-
-            <p>
-                ${escapeHtml(
-                    customer.address ||
-                    "—"
-                )}
-            </p>
-
-        </div>
-
     `;
 }
 
 
-/* ========================================
-   ANSWERS
-======================================== */
+/* =========================================================
+   CUSTOMER ANSWERS
+========================================================= */
 
 function renderAnswers(data) {
+    const container = document.querySelector("#answersGrid");
+    if (!container) return;
 
-    const container =
-        document.querySelector(
-            "#answersGrid"
-        );
-
-
-    const answers =
-        Array.isArray(data.answers)
-            ? data.answers
-            : [];
-
+    const answers = Array.isArray(data.answers) ? data.answers : [];
 
     if (!answers.length) {
-
         container.innerHTML = `
-
-            <div class="no-photos">
-                No service answers found.
+            <div class="empty-state">
+                No customer requirements found for this request.
             </div>
-
         `;
-
         return;
     }
 
+    container.innerHTML = answers.map((answer) => {
+        let value = answer.answer;
 
-    container.innerHTML =
-        answers.map(
-            answer => {
-
-                const question =
-                    answer.question?.en ||
-                    answer.question_code ||
-                    "Question";
-
-
-                const value =
-                    getAnswerDisplayValue(
-                        answer
-                    );
-
-
-                return `
-
-                    <div class="answer-item">
-
-                        <span class="answer-question">
-                            ${escapeHtml(question)}
-                        </span>
-
-                        <strong class="answer-value">
-                            ${escapeHtml(value)}
-                        </strong>
-
-                        <span class="answer-code">
-                            ${escapeHtml(
-                                answer.question_code || ""
-                            )}
-                        </span>
-
-                    </div>
-
-                `;
-
+        if (value === null || value === undefined || value === "") {
+            if (answer.number_value !== null && answer.number_value !== undefined) {
+                value = answer.number_value;
             }
-        ).join("");
-
-}
-
-
-/* ========================================
-   ANSWER VALUE
-======================================== */
-
-function getAnswerDisplayValue(answer) {
-
-    /*
-     * ======================================
-     * COUNTER
-     * ======================================
-     */
-
-    if (
-        answer.type === "counter" &&
-        answer.text_value
-    ) {
-
-        try {
-
-            const values =
-                typeof answer.text_value === "string"
-                    ? JSON.parse(answer.text_value)
-                    : answer.text_value;
-
-
-            if (
-                values &&
-                typeof values === "object" &&
-                !Array.isArray(values)
-            ) {
-
-                return Object.entries(values)
-                    .map(
-                        ([key, value]) => {
-
-                            return `${formatLabel(key)}: ${formatObjectValue(value)}`;
-
-                        }
-                    )
-                    .join(" • ");
-
-            }
-
-        } catch (error) {
-
-            console.warn(
-                "Unable to parse counter:",
-                error
-            );
-
         }
 
-    }
+        if (value === null || value === undefined || value === "") {
+            value = answer.text_value;
+        }
 
-
-    /*
-     * ======================================
-     * MULTI SELECT
-     * ======================================
-     */
-
-    if (
-        answer.type === "multi" &&
-        Array.isArray(answer.options)
-    ) {
-
-        const unique =
-            removeDuplicateOptions(
-                answer.options
-            );
-
-
-        if (unique.length) {
-
-            return unique
-                .map(
-                    option => {
-
-                        return (
-                            option.option_label_en ||
-                            option.option_label_ms ||
-                            option.option_value ||
-                            formatObjectValue(option)
-                        );
-
-                    }
+        if (
+            (value === null || value === undefined || value === "") &&
+            Array.isArray(answer.options) &&
+            answer.options.length
+        ) {
+            value = answer.options
+                .map(option =>
+                    option.option_label_en ||
+                    option.label?.en ||
+                    option.option_value ||
+                    option.value ||
+                    ""
                 )
+                .filter(Boolean)
                 .join(", ");
-
         }
 
-    }
-
-
-    /*
-     * ======================================
-     * SINGLE SELECT
-     * ======================================
-     */
-
-    if (
-        Array.isArray(answer.options) &&
-        answer.options.length
-    ) {
-
-        const unique =
-            removeDuplicateOptions(
-                answer.options
-            );
-
-
-        if (unique.length) {
-
-            const option =
-                unique[0];
-
-
-            return (
-                option.option_label_en ||
-                option.option_label_ms ||
-                option.option_value ||
-                formatObjectValue(option)
-            );
-
+        if (value === null || value === undefined || value === "") {
+            value = "Not specified";
         }
 
-    }
+        const unit =
+            answer.unit && typeof answer.unit === "object"
+                ? (answer.unit.en || answer.unit.ms || "")
+                : (answer.unit || "");
 
-
-    /*
- * ======================================
- * NUMBER + UNIT
- * ======================================
- */
-
-if (
-    answer.number_value !== null &&
-    answer.number_value !== undefined
-) {
-
-    const rawNumber =
-        Number(answer.number_value);
-
-    const questionCode =
-        String(
-            answer.question_code || ""
-        ).toLowerCase();
-
-    /*
-     * Measurement / size fields
-     * Keep decimal values.
-     */
-    const decimalFields = [
-        "arm_length",
-        "pump_height",
-        "pipe_length",
-        "length",
-        "width",
-        "height",
-        "size",
-        "dimension"
-    ];
-
-    const isDecimalField =
-        decimalFields.includes(
-            questionCode
-        );
-
-    let numberValue;
-
-    if (
-        !Number.isNaN(rawNumber)
-    ) {
-
-        if (isDecimalField) {
-
-            /*
-             * Size / measurement:
-             * show up to 2 decimal places,
-             * but remove unnecessary zeros.
-             *
-             * 5      → 5
-             * 5.5    → 5.5
-             * 5.50   → 5.5
-             * 5.25   → 5.25
-             */
-            numberValue =
-                rawNumber
-                    .toFixed(2)
-                    .replace(/\.?0+$/, "");
-
-        } else {
-
-            /*
-             * Quantity / count:
-             * always whole number.
-             *
-             * 5.000 → 5
-             * 1.000 → 1
-             */
-            numberValue =
-                Math.round(
-                    rawNumber
-                ).toString();
-
+        if (unit && !String(value).includes(unit)) {
+            value = `${value} ${unit}`;
         }
 
-    } else {
+        const question =
+            answer.question?.en ||
+            answer.title_en ||
+            answer.question_en ||
+            answer.question_code ||
+            "Customer Requirement";
 
-        numberValue =
-            formatObjectValue(
-                answer.number_value
-            );
+        const fullWidth = String(value).length > 40 ? " full-width" : "";
 
-    }
-
-
-    const unit =
-        formatUnit(
-            answer.unit
-        );
-
-
-    if (unit) {
-
-        return `${numberValue} ${unit}`;
-
-    }
-
-
-    return numberValue;
+        return `
+            <div class="answer-item${fullWidth}">
+                <div class="answer-label">${escapeHtml(question)}</div>
+                <div class="answer-value">${escapeHtml(value)}</div>
+            </div>
+        `;
+    }).join("");
 }
 
 
-    /*
-     * ======================================
-     * TEXT VALUE
-     * ======================================
-     */
-
-    if (
-        answer.text_value !== null &&
-        answer.text_value !== undefined &&
-        answer.text_value !== ""
-    ) {
-
-        return formatObjectValue(
-            answer.text_value
-        );
-
-    }
-
-
-    return "—";
-}
-
-
-/* ========================================
-   FORMAT UNIT
-======================================== */
-
-function formatUnit(unit) {
-
-    if (
-        unit === null ||
-        unit === undefined ||
-        unit === ""
-    ) {
-
-        return "";
-
-    }
-
-
-    /*
-     * Already a normal string
-     */
-
-    if (
-        typeof unit === "string"
-    ) {
-
-        return unit;
-
-    }
-
-
-    /*
-     * Number
-     */
-
-    if (
-        typeof unit === "number"
-    ) {
-
-        return String(unit);
-
-    }
-
-
-    /*
-     * Array
-     */
-
-    if (
-        Array.isArray(unit)
-    ) {
-
-        return unit
-            .map(
-                item =>
-                    formatObjectValue(item)
-            )
-            .filter(Boolean)
-            .join(", ");
-
-    }
-
-
-    /*
-     * Object
-     */
-
-    if (
-        typeof unit === "object"
-    ) {
-
-        /*
-         * Try common unit structures.
-         */
-
-        const possibleValues = [
-
-            unit.en,
-
-            unit.ms,
-
-            unit.label,
-
-            unit.name,
-
-            unit.value,
-
-            unit.unit,
-
-            unit.symbol,
-
-            unit.text
-
-        ];
-
-
-        for (
-            const value of possibleValues
-        ) {
-
-            if (
-                value !== null &&
-                value !== undefined &&
-                value !== ""
-            ) {
-
-                /*
-                 * Nested object
-                 */
-
-                if (
-                    typeof value === "object"
-                ) {
-
-                    const nested =
-                        formatObjectValue(value);
-
-
-                    if (nested) {
-
-                        return nested;
-
-                    }
-
-                } else {
-
-                    return String(value);
-
-                }
-
-            }
-
-        }
-
-
-        /*
-         * Last resort:
-         * inspect every property.
-         */
-
-        for (
-            const key of Object.keys(unit)
-        ) {
-
-            const value =
-                unit[key];
-
-
-            if (
-                value === null ||
-                value === undefined ||
-                value === ""
-            ) {
-
-                continue;
-
-            }
-
-
-            if (
-                typeof value === "string" ||
-                typeof value === "number"
-            ) {
-
-                return String(value);
-
-            }
-
-
-            if (
-                typeof value === "object"
-            ) {
-
-                const nested =
-                    formatObjectValue(value);
-
-
-                if (nested) {
-
-                    return nested;
-
-                }
-
-            }
-
-        }
-
-    }
-
-
-    return "";
-}
-
-
-/* ========================================
-   FORMAT ANY OBJECT SAFELY
-======================================== */
-
-function formatObjectValue(value) {
-
-    if (
-        value === null ||
-        value === undefined
-    ) {
-
-        return "";
-
-    }
-
-
-    /*
-     * String
-     */
-
-    if (
-        typeof value === "string"
-    ) {
-
-        return value;
-
-    }
-
-
-    /*
-     * Number / Boolean
-     */
-
-    if (
-        typeof value === "number" ||
-        typeof value === "boolean"
-    ) {
-
-        return String(value);
-
-    }
-
-
-    /*
-     * Array
-     */
-
-    if (
-        Array.isArray(value)
-    ) {
-
-        return value
-            .map(
-                item =>
-                    formatObjectValue(item)
-            )
-            .filter(Boolean)
-            .join(", ");
-
-    }
-
-
-    /*
-     * Object
-     */
-
-    if (
-        typeof value === "object"
-    ) {
-
-        /*
-         * Common translated values
-         */
-
-        const possibleValues = [
-
-            value.en,
-
-            value.ms,
-
-            value.label,
-
-            value.name,
-
-            value.value,
-
-            value.text,
-
-            value.symbol
-
-        ];
-
-
-        for (
-            const item of possibleValues
-        ) {
-
-            if (
-                item !== null &&
-                item !== undefined &&
-                item !== ""
-            ) {
-
-                const formatted =
-                    formatObjectValue(item);
-
-
-                if (formatted) {
-
-                    return formatted;
-
-                }
-
-            }
-
-        }
-
-
-        /*
-         * Try every object property
-         */
-
-        for (
-            const key of Object.keys(value)
-        ) {
-
-            const item =
-                value[key];
-
-
-            if (
-                item === null ||
-                item === undefined ||
-                item === ""
-            ) {
-
-                continue;
-
-            }
-
-
-            const formatted =
-                formatObjectValue(item);
-
-
-            if (formatted) {
-
-                return formatted;
-
-            }
-
-        }
-
-    }
-
-
-    return "";
-}
-
-/* ========================================
-   DUPLICATE OPTIONS
-======================================== */
-
-function removeDuplicateOptions(options) {
-
-    const seen =
-        new Set();
-
-
-    return options.filter(
-        option => {
-
-            const key =
-                `${option.option_value}|${option.option_id}`;
-
-
-            if (seen.has(key)) {
-                return false;
-            }
-
-
-            seen.add(key);
-
-            return true;
-
-        }
-    );
-
-}
-
-
-/* ========================================
-   LABEL FORMAT
-======================================== */
-
-function formatLabel(value) {
-
-    return String(value)
-        .replaceAll("_", " ")
-        .replace(
-            /\b\w/g,
-            letter =>
-                letter.toUpperCase()
-        );
-}
-
-
-/* ========================================
+/* =========================================================
    NOTES
-======================================== */
+========================================================= */
 
 function renderNotes(data) {
+    const container = document.querySelector("#customerNotes");
+    if (!container) return;
 
-    const card =
-        document.querySelector(
-            "#notesCard"
-        );
+    const notes = data.customer_notes || data.customer?.notes || "";
 
-
-    const container =
-        document.querySelector(
-            "#customerNotes"
-        );
-
-
-    const notes =
-        data.customer?.notes ||
-        "";
-
-
-    if (!notes.trim()) {
-
-        card.hidden = true;
-
+    if (!String(notes).trim()) {
+        container.innerHTML = `
+            <div class="empty-state">
+                The customer did not provide additional notes.
+            </div>
+        `;
         return;
     }
 
+    container.innerHTML = `<p class="notes-text">${escapeHtml(notes)}</p>`;
+}
 
+
+/* =========================================================
+   CUSTOMER PHOTOS
+========================================================= */
+
+function renderPhotos(data) {
+    const container = document.querySelector("#photosGrid");
+    const count = document.querySelector("#photoCount");
+    if (!container) return;
+
+    const photos = Array.isArray(data.photos) ? data.photos : [];
+
+    if (count) {
+        count.textContent = `${photos.length} ${photos.length === 1 ? "photo" : "photos"}`;
+    }
+
+    if (!photos.length) {
+        container.innerHTML = `
+            <div class="empty-state">
+                No photos were uploaded with this request.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = photos.map((photo, index) => {
+        const rawPath = String(photo.file_path || "").trim();
+
+        const photoUrl =
+            rawPath.startsWith("http://") || rawPath.startsWith("https://")
+                ? rawPath
+                : `${BACKEND_BASE}${rawPath.startsWith("/") ? "" : "/"}${rawPath}`;
+
+        const fileName = photo.file_name || `Customer Photo ${index + 1}`;
+
+        return `
+            <a class="photo-card" href="${escapeHtml(photoUrl)}" target="_blank" rel="noopener noreferrer">
+                <img
+                    src="${escapeHtml(photoUrl)}"
+                    alt="${escapeHtml(fileName)}"
+                    loading="lazy"
+                    onerror="this.style.display='none';"
+                >
+                <span class="photo-name">${escapeHtml(fileName)}</span>
+            </a>
+        `;
+    }).join("");
+}
+
+
+/* =========================================================
+   TECHNICIAN REPORT
+========================================================= */
+
+function renderTechnicianReport(data) {
+    const card = document.querySelector("#technicianReportCard");
+    if (!card) return;
+
+    const report = data.report || null;
     card.hidden = false;
 
-    container.textContent =
-        notes;
+    const status = document.querySelector("#technicianReportStatus");
+    const work = document.querySelector("#reportWorkPerformed");
+    const findings = document.querySelector("#reportFindings");
+    const materials = document.querySelector("#reportMaterialsUsed");
+    const notes = document.querySelector("#reportTechnicianNotes");
 
-}
+    if (!report) {
+        if (status) status.textContent = "No report submitted";
+        if (work) work.textContent = "The technician has not submitted a work report yet.";
+        if (findings) findings.textContent = "—";
+        if (materials) materials.textContent = "—";
+        if (notes) notes.textContent = "—";
 
-
-
-
-/* ========================================
-   STATUS
-======================================== */
-
-function renderStatus(data) {
-
-    selectedStatus =
-        data.status;
-
-
-    updateStatusDisplay(
-        data.status
-    );
-
-
-    document.querySelectorAll(
-        ".status-option"
-    ).forEach(
-        button => {
-
-            button.classList.toggle(
-                "selected",
-                button.dataset.status ===
-                    data.status
-            );
-
-        }
-    );
-
-}
-
-
-/* ========================================
-   STATUS DISPLAY
-======================================== */
-
-function updateStatusDisplay(status) {
-
-    const label =
-        formatStatus(status);
-
-
-    document.querySelector(
-        "#requestStatus"
-    ).textContent =
-        label;
-
-
-    document.querySelector(
-        "#currentStatusText"
-    ).textContent =
-        label;
-
-
-    const statusElement =
-        document.querySelector(
-            "#requestStatus"
-        );
-
-
-    statusElement.className =
-        "status-badge";
-
-
-    statusElement.classList.add(
-        `status-${status}`
-    );
-
-}
-
-
-/* ========================================
-   META
-======================================== */
-
-function renderMeta(data) {
-
-    document.querySelector(
-        "#createdAt"
-    ).textContent =
-        formatDate(
-            data.created_at
-        );
-
-
-    document.querySelector(
-        "#updatedAt"
-    ).textContent =
-        formatDate(
-            data.updated_at
-        );
-
-
-    document.querySelector(
-        "#completedAt"
-    ).textContent =
-        formatDate(
-            data.completed_at
-        );
-
-}
-
-/* ========================================
-   TECHNICIAN
-======================================== */
-
-function renderTechnician(data) {
-
-    const select =
-        document.querySelector(
-            "#technicianSelect"
-        );
-
-    if (!select) {
+        renderCompletionMedia([]);
+        hideReportReview();
         return;
     }
 
-    /*
-     * Keep the current assignment
-     * until the technician list loads.
-     */
+    if (status) status.textContent = formatReportStatus(report.status);
+    if (work) work.textContent = report.work_performed || "—";
+    if (findings) findings.textContent = report.findings || "—";
+    if (materials) materials.textContent = report.materials_used || "—";
+    if (notes) notes.textContent = report.technician_notes || "—";
 
-    if (data?.technician?.id) {
+    const remarksCard = document.querySelector("#reportReviewRemarks");
+    const remarksText = document.querySelector("#reportReviewRemarksText");
 
-        select.value =
-            data.technician.id;
-
-    } else {
-
-        select.value = "";
-
+    if (remarksCard && remarksText) {
+        if (report.review_remarks && String(report.review_remarks).trim()) {
+            remarksCard.hidden = false;
+            remarksText.textContent = report.review_remarks;
+        } else {
+            remarksCard.hidden = true;
+            remarksText.textContent = "";
+        }
     }
 
-}
-/* ========================================
-   TECHNICIANS
-======================================== */
-
-async function loadTechnicians(data) {
-
-    const select =
-        document.querySelector(
-            "#technicianSelect"
-        );
-
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/admin/technicians`,
-                {
-                    headers: {
-                        "Authorization":
-                            `Bearer ${token}`
-                    }
-                }
-            );
-
-
-        if (!response.ok) {
-            return;
-        }
-
-
-        const result =
-            await response.json();
-
-
-        if (!result.success) {
-            return;
-        }
-
-
-        const technicians =
-            Array.isArray(result.data)
-                ? result.data
-                : [];
-
-
-        technicians.forEach(
-            technician => {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    technician.id;
-
-
-                option.textContent =
-                    `${technician.name} — ${technician.email}`;
-
-
-                select.appendChild(
-                    option
-                );
-
-            }
-        );
-
-
-        if (data.technician?.id) {
-
-            select.value =
-                data.technician.id;
-
-        }
-
-    } catch (error) {
-
-        console.warn(
-            "Unable to load technicians:",
-            error
-        );
-
-    }
-
-}
-
-
-/* ========================================
-   STATUS CLICK
-======================================== */
-
-function setupStatusButtons() {
-
-    document.querySelectorAll(
-        ".status-option"
-    ).forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    selectedStatus =
-                        button.dataset.status;
-
-
-                    document.querySelectorAll(
-                        ".status-option"
-                    ).forEach(
-                        item => {
-
-                            item.classList.toggle(
-                                "selected",
-                                item === button
-                            );
-
-                        }
-                    );
-
-                }
-            );
-
-        }
+    renderCompletionMedia(
+        data.completion_media || report.completion_media || report.media || []
     );
 
-}
-
-/* ========================================
-   SCHEDULED DATE / TIME
-======================================== */
-
-function formatDateForInput(value) {
-
-    if (!value) {
-        return "";
-    }
-
-    return String(value)
-        .slice(0, 10);
+    setupReportReview(report);
 }
 
 
-function formatTimeForInput(value) {
+/* =========================================================
+   COMPLETION MEDIA
+========================================================= */
 
-    if (!value) {
-        return "";
+function renderCompletionMedia(media) {
+    const grid = document.querySelector("#completionMediaGrid");
+    const count = document.querySelector("#completionMediaCount");
+    if (!grid) return;
+
+    const items = Array.isArray(media) ? media : [];
+
+    if (count) {
+        count.textContent = `${items.length} ${items.length === 1 ? "file" : "files"}`;
     }
 
-    return String(value)
-        .slice(0, 5);
-}
-
-
-/* ========================================
-   RENDER ASSIGNMENT
-======================================== */
-
-function renderAssignment(data) {
-
-    const technicianSelect =
-        document.querySelector(
-            "#technicianSelect"
-        );
-
-    const scheduledDate =
-        document.querySelector(
-            "#scheduledDate"
-        );
-
-    const scheduledTime =
-        document.querySelector(
-            "#scheduledTime"
-        );
-
-    const adminNotes =
-        document.querySelector(
-            "#adminNotes"
-        );
-
-
-    if (
-        technicianSelect &&
-        data.technician?.id
-    ) {
-
-        technicianSelect.value =
-            data.technician.id;
-
-    }
-
-
-    if (scheduledDate) {
-
-        scheduledDate.value =
-            formatDateForInput(
-                data.scheduled_date
-            );
-
-    }
-
-
-    if (scheduledTime) {
-
-        scheduledTime.value =
-            formatTimeForInput(
-                data.scheduled_time
-            );
-
-    }
-
-
-    if (adminNotes) {
-
-        adminNotes.value =
-            data.admin_notes || "";
-
-    }
-
-}
-/* ========================================
-   SAVE CHANGES / ASSIGN TECHNICIAN
-======================================== */
-
-async function saveChanges() {
-
-    if (!requestData) {
+    if (!items.length) {
+        grid.innerHTML = `
+            <div class="empty-state">
+                No completion photos or videos were uploaded.
+            </div>
+        `;
         return;
     }
 
+    grid.innerHTML = items.map((item, index) => {
+        const rawPath = String(item.file_path || "").trim();
 
-    const button =
-        document.querySelector(
-            "#saveButton"
-        );
+        const url =
+            rawPath.startsWith("http://") || rawPath.startsWith("https://")
+                ? rawPath
+                : `${BACKEND_BASE}${rawPath.startsWith("/") ? "" : "/"}${rawPath}`;
 
+        const type = item.media_type || (item.mime_type?.startsWith("video/") ? "video" : "image");
+        const fileName = item.file_name || `Completion Media ${index + 1}`;
 
-    const technicianSelect =
-        document.querySelector(
-            "#technicianSelect"
-        );
-
-
-    const scheduledDate =
-        document.querySelector(
-            "#scheduledDate"
-        );
-
-
-    const scheduledTime =
-        document.querySelector(
-            "#scheduledTime"
-        );
-
-
-    const adminNotes =
-        document.querySelector(
-            "#adminNotes"
-        );
-
-
-    const technicianId =
-        technicianSelect?.value || null;
-
-
-    const date =
-        scheduledDate?.value || null;
-
-
-    const time =
-        scheduledTime?.value || null;
-
-
-    const notes =
-        adminNotes?.value.trim() || null;
-
-
-    /*
-     * Validation:
-     * When assigning a technician,
-     * require a scheduled date.
-     */
-
-    if (
-        technicianId &&
-        !date
-    ) {
-
-        alert(
-            "Please select a scheduled date for the technician."
-        );
-
-        return;
-
-    }
-
-
-    /*
-     * Prevent selecting a past date.
-     */
-
-    if (date) {
-
-        const today =
-            new Date();
-
-        today.setHours(
-            0,
-            0,
-            0,
-            0
-        );
-
-
-        const selectedDate =
-            new Date(
-                `${date}T00:00:00`
-            );
-
-
-        if (
-            selectedDate < today
-        ) {
-
-            alert(
-                "The scheduled date cannot be in the past."
-            );
-
-            return;
-
+        if (type === "video") {
+            return `
+                <div class="photo-card">
+                    <video src="${escapeHtml(url)}" controls preload="metadata"></video>
+                    <span class="photo-name">${escapeHtml(fileName)}</span>
+                </div>
+            `;
         }
 
-    }
-
-
-    button.disabled = true;
-
-    button.textContent =
-        "Saving...";
-
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/admin/requests/${encodeURIComponent(requestData.id)}`,
-                {
-                    method: "PUT",
-
-                    headers: {
-
-                        "Authorization":
-                            `Bearer ${token}`,
-
-                        "Content-Type":
-                            "application/json"
-
-                    },
-
-                    body: JSON.stringify({
-
-                        status:
-                            selectedStatus,
-
-                        technician_id:
-                            technicianId,
-
-                        scheduled_date:
-                            date,
-
-                        scheduled_time:
-                            time,
-
-                        admin_notes:
-                            notes
-
-                    })
-
-                }
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !result.success
-        ) {
-
-            throw new Error(
-                result.message ||
-                "Unable to save changes."
-            );
-
-        }
-
-
-        /*
-         * Reload from backend.
-         *
-         * This ensures the admin sees the
-         * latest technician, schedule,
-         * notes and status.
-         */
-
-        await loadRequest();
-
-
-        button.textContent =
-            "Saved ✓";
-
-
-        setTimeout(
-            () => {
-
-                button.textContent =
-                    "Save Changes";
-
-                button.disabled =
-                    false;
-
-            },
-            1500
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Save request error:",
-            error
-        );
-
-
-        alert(
-            error.message ||
-            "Unable to save changes."
-        );
-
-
-        button.textContent =
-            "Save Changes";
-
-        button.disabled =
-            false;
-
-    }
-
-}
-/* ========================================
-   TECHNICIAN REPORT REVIEW
-======================================== */
-
-function hideReportReview() {
-
-    const section =
-        document.querySelector(
-            "#reportReviewSection"
-        );
-
-    if (section) {
-        section.hidden = true;
-    }
-
+        return `
+            <a class="photo-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+                <img src="${escapeHtml(url)}" alt="${escapeHtml(fileName)}" loading="lazy">
+                <span class="photo-name">${escapeHtml(fileName)}</span>
+            </a>
+        `;
+    }).join("");
 }
 
+
+/* =========================================================
+   REPORT REVIEW
+========================================================= */
 
 function setupReportReview(report) {
+    const section = document.querySelector("#reportReviewSection");
+    const approveButton = document.querySelector("#approveReportButton");
+    const rejectButton = document.querySelector("#rejectReportButton");
+    const rejectForm = document.querySelector("#rejectForm");
+    const cancelRejectButton = document.querySelector("#cancelRejectButton");
+    const confirmRejectButton = document.querySelector("#confirmRejectButton");
 
-    const section =
-        document.querySelector(
-            "#reportReviewSection"
-        );
+    if (!section || !approveButton || !rejectButton) return;
 
-    const approveButton =
-        document.querySelector(
-            "#approveReportButton"
-        );
-
-    const rejectButton =
-        document.querySelector(
-            "#rejectReportButton"
-        );
-
-    const rejectForm =
-        document.querySelector(
-            "#rejectForm"
-        );
-
-    const cancelRejectButton =
-        document.querySelector(
-            "#cancelRejectButton"
-        );
-
-    const confirmRejectButton =
-        document.querySelector(
-            "#confirmRejectButton"
-        );
-
-
-    if (
-        !section ||
-        !approveButton ||
-        !rejectButton
-    ) {
-        return;
-    }
-
-
-    /*
-     * Only submitted reports can be reviewed.
-     */
-
-    if (
-        report.status !==
-        "submitted"
-    ) {
-
+    // Only submitted reports can be reviewed.
+    if (!report || report.status !== "submitted") {
         section.hidden = true;
-
         return;
-
     }
-
 
     section.hidden = false;
 
+    if (rejectForm) rejectForm.hidden = true;
 
-    /*
-     * APPROVE
-     */
+    approveButton.onclick = async () => {
+        const confirmed = window.confirm(
+            "Are you sure you want to approve this technician report?\n\nThe service request will be marked as completed."
+        );
+        if (!confirmed) return;
+        await reviewTechnicianReport("approve");
+    };
 
-    approveButton.onclick =
-        async () => {
+    rejectButton.onclick = () => {
+        if (rejectForm) rejectForm.hidden = false;
+        const reason = document.querySelector("#rejectReason");
+        if (reason) reason.focus();
+    };
 
-            const confirmed =
-                window.confirm(
-                    "Are you sure you want to approve this technician report?\n\nThe service request will be marked as completed."
-                );
+    if (cancelRejectButton) {
+        cancelRejectButton.onclick = () => {
+            if (rejectForm) rejectForm.hidden = true;
+            const reason = document.querySelector("#rejectReason");
+            if (reason) reason.value = "";
+        };
+    }
 
+    if (confirmRejectButton) {
+        confirmRejectButton.onclick = async () => {
+            const reasonElement = document.querySelector("#rejectReason");
+            const reason = reasonElement?.value.trim() || "";
 
-            if (!confirmed) {
+            if (!reason) {
+                alert("Please enter a rejection reason.");
                 return;
             }
 
-
-            await reviewTechnicianReport(
-                "approve"
-            );
-
+            await reviewTechnicianReport("reject", reason);
         };
-
-
-    /*
-     * SHOW REJECT FORM
-     */
-
-    rejectButton.onclick =
-        () => {
-
-            rejectForm.hidden =
-                false;
-
-            document.querySelector(
-                "#rejectReason"
-            ).focus();
-
-        };
-
-
-    /*
-     * CANCEL REJECTION
-     */
-
-    if (cancelRejectButton) {
-
-        cancelRejectButton.onclick =
-            () => {
-
-                rejectForm.hidden =
-                    true;
-
-                document.querySelector(
-                    "#rejectReason"
-                ).value =
-                    "";
-
-            };
-
     }
-
-
-    /*
-     * CONFIRM REJECTION
-     */
-
-    if (confirmRejectButton) {
-
-        confirmRejectButton.onclick =
-            async () => {
-
-                const reason =
-                    document.querySelector(
-                        "#rejectReason"
-                    ).value.trim();
-
-
-                if (!reason) {
-
-                    alert(
-                        "Please enter a rejection reason."
-                    );
-
-                    return;
-
-                }
-
-
-                await reviewTechnicianReport(
-                    "reject",
-                    reason
-                );
-
-            };
-
-    }
-
 }
 
 
-/* ========================================
+/* =========================================================
    REVIEW REPORT API
-======================================== */
+========================================================= */
 
-async function reviewTechnicianReport(
-    action,
-    reason = ""
-) {
+async function reviewTechnicianReport(action, reason = "") {
+    if (!requestData) return;
 
+    const approveButton = document.querySelector("#approveReportButton");
+    const rejectButton = document.querySelector("#rejectReportButton");
+    const confirmRejectButton = document.querySelector("#confirmRejectButton");
+
+    if (approveButton) approveButton.disabled = true;
+    if (rejectButton) rejectButton.disabled = true;
+    if (confirmRejectButton) confirmRejectButton.disabled = true;
+
+    if (action === "approve") {
+        if (approveButton) approveButton.textContent = "Approving...";
+    } else {
+        if (confirmRejectButton) confirmRejectButton.textContent = "Rejecting...";
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/admin/requests/${encodeURIComponent(requestData.id)}/report/review`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${getToken()}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ action, reason })
+            }
+        );
+
+        const result = await parseResponse(response);
+        await loadRequest();
+        alert(result.message || "Report review completed.");
+
+    } catch (error) {
+        console.error("Review technician report error:", error);
+        if (handleAuthError(error)) return;
+        alert(error.message || "Unable to review technician report.");
+
+    } finally {
+        if (approveButton) {
+            approveButton.disabled = false;
+            approveButton.textContent = "✓ Approve Report";
+        }
+        if (rejectButton) {
+            rejectButton.disabled = false;
+            rejectButton.textContent = "✕ Reject Report";
+        }
+        if (confirmRejectButton) {
+            confirmRejectButton.disabled = false;
+            confirmRejectButton.textContent = "Reject Report";
+        }
+    }
+}
+
+function hideReportReview() {
+    const section = document.querySelector("#reportReviewSection");
+    if (section) section.hidden = true;
+}
+
+
+/* =========================================================
+   STATUS
+   NOTE: #requestStatus is a real <select> in the HTML now.
+   We must never overwrite its innerHTML/textContent — that
+   was destroying its <option> list on every render before.
+   The current-status display lives in its own element,
+   #currentStatusBadge.
+========================================================= */
+
+function renderStatus(data) {
+    const status = data.status || "pending";
+    selectedStatus = status;
+
+    const currentBadge = document.querySelector("#currentStatusBadge");
+    if (currentBadge) {
+        currentBadge.textContent = formatStatus(status);
+        currentBadge.className = `status-current-value status-badge ${statusClass(status)}`;
+    }
+
+    const select = document.querySelector("#requestStatus");
+    if (select) {
+        select.value = status;
+    }
+}
+
+function setupStatusSelect() {
+    const select = document.querySelector("#requestStatus");
+    if (!select) return;
+
+    select.addEventListener("change", () => {
+        selectedStatus = select.value;
+
+        const currentBadge = document.querySelector("#currentStatusBadge");
+        if (currentBadge) {
+            currentBadge.textContent = formatStatus(selectedStatus);
+            currentBadge.className = `status-current-value status-badge ${statusClass(selectedStatus)}`;
+        }
+    });
+}
+
+
+/* =========================================================
+   LOAD TECHNICIANS
+========================================================= */
+
+async function loadTechnicians(data) {
+    const select = document.querySelector("#technicianSelect");
+    if (!select) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/technicians`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${getToken()}` }
+        });
+
+        const result = await parseResponse(response);
+        const technicians = Array.isArray(result.data) ? result.data : [];
+        const currentTechnicianId = data?.technician?.id || data?.technician_id || "";
+
+        select.innerHTML = `<option value="">No technician assigned</option>`;
+
+        technicians.forEach(technician => {
+            const option = document.createElement("option");
+            option.value = technician.id;
+            option.textContent = `${technician.name} — ${technician.email}`;
+            select.appendChild(option);
+        });
+
+        select.value = currentTechnicianId || "";
+
+    } catch (error) {
+        console.error("Unable to load technicians:", error);
+        if (handleAuthError(error)) return;
+        select.innerHTML = `<option value="">No technician assigned</option>`;
+    }
+}
+
+
+/* =========================================================
+   ASSIGNMENT DISPLAY
+========================================================= */
+
+function renderAssignment(data) {
+    const technicianSelect = document.querySelector("#technicianSelect");
+    if (!technicianSelect) return;
+
+    const technician = data.technician || null;
+    if (technician?.id) {
+        technicianSelect.dataset.currentTechnician = technician.id;
+    }
+}
+
+
+/* =========================================================
+   SAVE CHANGES
+========================================================= */
+
+async function saveChanges() {
     if (!requestData) {
+        alert("Request information has not loaded yet.");
         return;
     }
 
-
-    const approveButton =
-        document.querySelector(
-            "#approveReportButton"
-        );
-
-    const rejectButton =
-        document.querySelector(
-            "#rejectReportButton"
-        );
-
-    const confirmRejectButton =
-        document.querySelector(
-            "#confirmRejectButton"
-        );
-
-
-    approveButton.disabled =
-        true;
-
-    rejectButton.disabled =
-        true;
-
-
-    if (confirmRejectButton) {
-
-        confirmRejectButton.disabled =
-            true;
-
+    const requestId = getRequestId();
+    if (!requestId) {
+        alert("Request ID is missing.");
+        return;
     }
 
-
-    if (action === "approve") {
-
-        approveButton.textContent =
-            "Approving...";
-
-    } else {
-
-        if (confirmRejectButton) {
-
-            confirmRejectButton.textContent =
-                "Rejecting...";
-
-        }
-
+    const token = getToken();
+    if (!token) {
+        window.location.href = "login.html";
+        return;
     }
 
+    const status = selectedStatus || requestData.status || "pending";
+
+    const technicianSelect = document.querySelector("#technicianSelect");
+    const technicianId = technicianSelect && technicianSelect.value ? technicianSelect.value : null;
+
+    const button = document.querySelector("#saveButton");
+
+    const technicianText = technicianId
+        ? (technicianSelect.selectedOptions?.[0]?.textContent || "Assigned")
+        : "No technician assigned";
+
+    const confirmed = window.confirm(
+        "Save these changes?\n\n" +
+        `Status: ${formatStatus(status)}\n` +
+        `Technician: ${technicianText}`
+    );
+
+    if (!confirmed) return;
 
     try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/admin/requests/${encodeURIComponent(requestData.id)}/report/review`,
-                {
-                    method: "POST",
-
-                    headers: {
-
-                        "Authorization":
-                            `Bearer ${token}`,
-
-                        "Content-Type":
-                            "application/json"
-
-                    },
-
-                    body: JSON.stringify({
-
-                        action:
-                            action,
-
-                        reason:
-                            reason
-
-                    })
-
-                }
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !result.success
-        ) {
-
-            throw new Error(
-                result.message ||
-                "Unable to review technician report."
-            );
-
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Saving...";
         }
 
+        const response = await fetch(
+            `${API_BASE}/admin/requests/${encodeURIComponent(requestId)}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ status, technician_id: technicianId })
+            }
+        );
 
-        /*
-         * Reload request so all
-         * statuses and timestamps
-         * are updated.
-         */
+        const result = await parseResponse(response);
 
+        if (result.data) {
+            requestData = { ...requestData, ...result.data };
+        }
+
+        requestData.status = result.data?.status || status;
+        selectedStatus = requestData.status;
+
+        renderStatus(requestData);
+
+        if (technicianSelect) {
+            technicianSelect.value = technicianId || "";
+        }
+
+        if (button) button.textContent = "Saved ✓";
+
+        // Reload from the database to confirm the change persisted.
         await loadRequest();
 
-
-        alert(
-            result.message ||
-            "Report review completed."
-        );
-
+        alert(result.message || "Changes saved successfully.");
 
     } catch (error) {
+        console.error("Save request error:", error);
+        if (handleAuthError(error)) return;
+        alert(error.message || "Unable to save changes.");
 
-        console.error(
-            "Review technician report error:",
-            error
-        );
-
-
-        alert(
-            error.message ||
-            "Unable to review technician report."
-        );
-
-
-        approveButton.disabled =
-            false;
-
-        rejectButton.disabled =
-            false;
-
-
-        if (confirmRejectButton) {
-
-            confirmRejectButton.disabled =
-                false;
-
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Save Changes";
         }
+    }
+}
 
 
-        approveButton.textContent =
-            "✓ Approve Report";
+/* =========================================================
+   META
+========================================================= */
+
+function renderMeta(data) {
+    const created = document.querySelector("#createdAt");
+    const updated = document.querySelector("#updatedAt");
+    const completed = document.querySelector("#completedAt");
+
+    if (created) created.textContent = formatDate(data.created_at);
+    if (updated) updated.textContent = formatDate(data.updated_at);
+    if (completed) completed.textContent = formatDate(data.completed_at);
+}
 
 
-        rejectButton.textContent =
-            "✕ Reject Report";
+/* =========================================================
+   QUOTATION HISTORY
+========================================================= */
+
+function quotationMetaItem(label, value) {
+    return `
+        <div class="quotation-meta-item">
+            <div class="label">${escapeHtml(label)}</div>
+            <div class="value">${escapeHtml(value)}</div>
+        </div>
+    `;
+}
+
+function renderQuotationHistory(data) {
+    const container = document.querySelector("#quotationHistory");
+    const uploadSection = document.querySelector("#finalQuotationUpload");
+    if (!container) return;
+
+    const quotations = data.quotations || {};
+    const original = quotations.original || null;
+    const finalQuotation = quotations.final || null;
+
+    let html = "";
+
+    /* ORIGINAL QUOTATION */
+    html += `
+        <div class="quotation-history-item">
+            <div class="quotation-history-item-header">
+                <h3>${original ? escapeHtml(original.quotation_number || "Quotation") : "Original quotation — not created"}</h3>
+                ${original ? `<small>${escapeHtml(original.status || "draft")}</small>` : ""}
+            </div>
+            ${
+                original
+                    ? `
+                        <div class="quotation-meta">
+                            ${quotationMetaItem("Created", formatDate(original.created_at))}
+                            ${quotationMetaItem("Status", original.status || "—")}
+                            ${quotationMetaItem("Total", `RM ${Number(original.total || 0).toFixed(2)}`)}
+                        </div>
+                        ${
+                            original.quotation_file_url
+                                ? `<a class="quotation-button" href="${escapeHtml(original.quotation_file_url)}" target="_blank" rel="noopener noreferrer">View Original Quotation PDF</a>`
+                                : ""
+                        }
+                    `
+                    : `<div class="empty-state">No original quotation found.</div>`
+            }
+        </div>
+    `;
+
+    /* PAYMENT PROOF */
+    html += `
+        <div class="quotation-history-item">
+            <div class="quotation-history-item-header">
+                <h3>${original?.payment_proof_name ? escapeHtml(original.payment_proof_name) : "Payment proof — not uploaded"}</h3>
+                ${original?.payment_status ? `<small>${escapeHtml(original.payment_status)}</small>` : ""}
+            </div>
+            ${
+                original?.payment_proof_url
+                    ? `
+                        <div class="quotation-meta">
+                            ${quotationMetaItem("Status", original.payment_status || "proof_uploaded")}
+                            ${quotationMetaItem("Uploaded", formatDate(original.payment_proof_uploaded_at))}
+                        </div>
+                        <a class="payment-proof-button" href="${escapeHtml(original.payment_proof_url)}" target="_blank" rel="noopener noreferrer">View Payment Proof</a>
+                    `
+                    : `<div class="empty-state">No payment proof has been uploaded.</div>`
+            }
+        </div>
+    `;
+
+    /* FINAL QUOTATION */
+    html += `
+        <div class="quotation-history-item">
+            <div class="quotation-history-item-header">
+                <h3>${finalQuotation ? escapeHtml(finalQuotation.quotation_number || "Final Quotation") : "Final quotation — not uploaded"}</h3>
+                ${finalQuotation ? `<small>Final</small>` : ""}
+            </div>
+            ${
+                finalQuotation
+                    ? `
+                        <div class="quotation-meta">
+                            ${quotationMetaItem("Uploaded", formatDate(finalQuotation.created_at))}
+                            ${quotationMetaItem("Status", finalQuotation.status || "sent")}
+                        </div>
+                        ${
+                            finalQuotation.quotation_file_url
+                                ? `<a class="view-quotation-button" href="${escapeHtml(finalQuotation.quotation_file_url)}" target="_blank" rel="noopener noreferrer">View Final Quotation PDF</a>`
+                                : ""
+                        }
+                    `
+                    : `<div class="empty-state">No final quotation has been uploaded yet.</div>`
+            }
+        </div>
+    `;
+
+    container.innerHTML = html;
+
+    // Final quotation upload is only available once the job is completed.
+    if (uploadSection) {
+        uploadSection.hidden = data.status !== "completed";
+    }
+}
 
 
-        if (confirmRejectButton) {
+/* =========================================================
+   FINAL QUOTATION MESSAGE
+========================================================= */
 
-            confirmRejectButton.textContent =
-                "Reject Report";
+function showFinalQuotationMessage(message, isError = false) {
+    const element = document.querySelector("#finalQuotationMessage");
+    if (!element) return;
 
-        }
+    element.textContent = message;
+    element.className = `quotation-upload-message ${isError ? "error" : "success"}`;
+    element.hidden = false;
+}
 
+
+/* =========================================================
+   UPLOAD FINAL QUOTATION
+========================================================= */
+
+async function uploadFinalQuotation() {
+    const requestId = getRequestId();
+    const fileInput = document.querySelector("#finalQuotationFile");
+    const button = document.querySelector("#uploadFinalQuotationButton");
+
+    if (!requestId) {
+        showFinalQuotationMessage("Request ID is missing.", true);
+        return;
     }
 
-}
+    if (!fileInput || !fileInput.files.length) {
+        showFinalQuotationMessage("Please select a PDF file.", true);
+        return;
+    }
 
-/* ========================================
-   LOGOUT
-======================================== */
+    const file = fileInput.files[0];
 
-function logout() {
+    const isPdf =
+        file.type === "application/pdf" ||
+        file.name.toLowerCase().endsWith(".pdf");
 
-    localStorage.removeItem(
-        "securepro_admin_token"
+    if (!isPdf) {
+        showFinalQuotationMessage("Final quotation must be a PDF file.", true);
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        showFinalQuotationMessage("File is too large. Maximum size is 10 MB.", true);
+        return;
+    }
+
+    const existingFinal = Boolean(requestData?.quotations?.final);
+
+    const confirmed = window.confirm(
+        existingFinal
+            ? "A final quotation already exists. Uploading this file will replace the existing final quotation. Continue?"
+            : "Upload this final quotation?"
     );
 
+    if (!confirmed) return;
 
-    localStorage.removeItem(
-        "securepro_admin_user"
-    );
-
-
-    window.location.href =
-        "login.html";
-}
-
-
-/* ========================================
-   ADMIN INFO
-======================================== */
-
-function loadAdminInfo() {
+    const formData = new FormData();
+    formData.append("quotation_file", file);
 
     try {
-
-        const raw =
-            localStorage.getItem(
-                "securepro_admin_user"
-            );
-
-
-        if (!raw) {
-            return;
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Uploading...";
         }
 
+        showFinalQuotationMessage("Uploading final quotation...", false);
 
-        const user =
-            JSON.parse(raw);
+        const response = await fetch(
+            `${API_BASE}/quotations/${encodeURIComponent(requestId)}/final-quotation`,
+            {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${getToken()}` },
+                body: formData
+            }
+        );
 
+        const result = await parseResponse(response);
 
-        const name =
-            user.name ||
-            "Admin";
+        fileInput.value = "";
+        await loadRequest();
 
+        showFinalQuotationMessage(result.message || "Final quotation uploaded successfully.", false);
 
-        document.querySelector(
-            "#sidebarAdminName"
-        ).textContent =
-            name;
+    } catch (error) {
+        console.error("Upload final quotation error:", error);
+        if (handleAuthError(error)) return;
+        showFinalQuotationMessage(error.message || "Unable to upload final quotation.", true);
 
-
-        document.querySelector(
-            "#topbarAdminName"
-        ).textContent =
-            name;
-
-    } catch {
-
-        // Ignore invalid local storage.
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Upload Final Quotation";
+        }
     }
-
 }
 
 
-/* ========================================
-   INIT
-======================================== */
+/* =========================================================
+   LOGOUT
+========================================================= */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        if (!requireToken()) {
-            return;
-        }
+function logout() {
+    localStorage.removeItem("securepro_admin_token");
+    localStorage.removeItem("securepro_admin_user");
+    window.location.href = "login.html";
+}
 
 
-        loadAdminInfo();
+/* =========================================================
+   ADMIN INFORMATION
+========================================================= */
 
+function loadAdminInfo() {
+    try {
+        const raw = localStorage.getItem("securepro_admin_user");
+        if (!raw) return;
 
-        setupStatusButtons();
+        const user = JSON.parse(raw);
+        const name = user.name || "Admin";
 
+        const sidebar = document.querySelector("#sidebarAdminName");
+        const topbar = document.querySelector("#topbarAdminName");
 
-        document.querySelector(
-            "#saveButton"
-        ).addEventListener(
-            "click",
-            saveChanges
-        );
+        if (sidebar) sidebar.textContent = name;
+        if (topbar) topbar.textContent = name;
 
-
-        document.querySelector(
-            "#logoutButton"
-        ).addEventListener(
-            "click",
-            logout
-        );
-
-
-        loadRequest();
-
+    } catch (error) {
+        console.warn("Unable to load admin information:", error);
     }
-);
+}
+
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (!requireToken()) return;
+
+    loadAdminInfo();
+    setupStatusSelect();
+
+    const saveButton = document.querySelector("#saveButton");
+    if (saveButton) saveButton.addEventListener("click", saveChanges);
+
+    const logoutButton = document.querySelector("#logoutButton");
+    if (logoutButton) logoutButton.addEventListener("click", logout);
+
+    const uploadButton = document.querySelector("#uploadFinalQuotationButton");
+    if (uploadButton) uploadButton.addEventListener("click", uploadFinalQuotation);
+
+    loadRequest();
+});

@@ -201,7 +201,7 @@ app.use(
 // ======================================================
 
 app.use(
-    "/api/admin/quotations",
+    "/api/quotations",
     quotationRoutes
 );
 

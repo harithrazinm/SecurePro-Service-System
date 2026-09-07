@@ -1,5 +1,5 @@
 const API_BASE = ["localhost", "127.0.0.1"].includes(window.location.hostname)
-    ? "http://localhost:5000/api"
+    ? "http://localhost:5001/api"
     : "https://securepro-service-system.onrender.com/api";
 
 const token = localStorage.getItem("securepro_admin_token");
@@ -57,14 +57,63 @@ function formatStatus(value) {
 }
 
 function followUpInfo(quotation, number) {
-    const sentAt = quotation.sent_at ? new Date(quotation.sent_at) : null;
+    const sentAt = quotation.sent_at
+        ? new Date(quotation.sent_at)
+        : null;
+
     const completedAt = quotation[`follow_up_${number}_sent_at`];
-    if (completedAt) return { label: `FU${number} sent ${formatDate(completedAt)}`, enabled: false, complete: true };
-    if (!sentAt || Number.isNaN(sentAt.getTime())) return { label: `FU${number}: send quotation first`, enabled: false };
-    const dueAt = new Date(sentAt);
-    dueAt.setDate(dueAt.getDate() + (number === 1 ? 2 : 5));
+
+    if (completedAt) {
+        return {
+            label: `FU${number} sent ${formatDate(completedAt)}`,
+            enabled: false,
+            complete: true
+        };
+    }
+
+    if (!sentAt || Number.isNaN(sentAt.getTime())) {
+        return {
+            label: `FU${number}: send quotation first`,
+            enabled: false
+        };
+    }
+
+    let dueAt;
+
+    if (number === 1) {
+
+        // FU1 = 12 hours after quotation was sent
+        dueAt = new Date(
+            sentAt.getTime() + (12 * 60 * 60 * 1000)
+        );
+
+    } else {
+
+        // FU2 = 48 hours after FU1 was sent
+        const followUp1SentAt = quotation.follow_up_1_sent_at
+            ? new Date(quotation.follow_up_1_sent_at)
+            : null;
+
+        if (!followUp1SentAt || Number.isNaN(followUp1SentAt.getTime())) {
+            return {
+                label: "FU2: send FU1 first",
+                enabled: false
+            };
+        }
+
+        dueAt = new Date(
+            followUp1SentAt.getTime() + (48 * 60 * 60 * 1000)
+        );
+    }
+
     const enabled = new Date() >= dueAt;
-    return { label: enabled ? `FU${number} ready` : `FU${number} due ${formatDate(dueAt)}`, enabled };
+
+    return {
+        label: enabled
+            ? `FU${number} ready`
+            : `FU${number} due ${formatDate(dueAt)}`,
+        enabled
+    };
 }
 
 function renderQuotations() {
@@ -99,7 +148,7 @@ async function loadQuotations() {
     try {
         hideError();
         tableBody.innerHTML = '<tr><td colspan="8" class="table-loading">Loading quotations...</td></tr>';
-        const result = await apiRequest("/admin/quotations");
+        const result = await apiRequest("/quotations");
         if (result) { quotations = result.data || []; renderQuotations(); }
     } catch (error) {
         showError(error.message);

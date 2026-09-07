@@ -424,6 +424,10 @@ async function getRequestById(req, res) {
         } = req.params;
 
 
+        // ==================================================
+        // REQUEST
+        // ==================================================
+
         const [requests] =
             await pool.query(
                 `
@@ -447,9 +451,7 @@ async function getRequestById(req, res) {
             );
 
 
-        if (
-            requests.length === 0
-        ) {
+        if (requests.length === 0) {
 
             return res.status(404).json({
 
@@ -467,6 +469,10 @@ async function getRequestById(req, res) {
             requests[0];
 
 
+        // ==================================================
+        // ANSWERS
+        // ==================================================
+
         const [answers] =
             await pool.query(
                 `
@@ -474,7 +480,7 @@ async function getRequestById(req, res) {
 
                     ra.id,
                     ra.question_id,
-                    ra.question_type,
+
                     ra.text_value,
                     ra.number_value,
                     ra.unit,
@@ -482,8 +488,11 @@ async function getRequestById(req, res) {
                     sq.question_code,
                     sq.title_en,
                     sq.title_ms,
+
                     sq.description_en,
-                    sq.description_ms
+                    sq.description_ms,
+
+                    sq.question_type
 
                 FROM request_answers ra
 
@@ -492,82 +501,63 @@ async function getRequestById(req, res) {
 
                 WHERE ra.request_id = ?
 
-                ORDER BY
-                    sq.display_order ASC
+                ORDER BY ra.id ASC
                 `,
                 [id]
             );
 
 
-        const answerIds =
-            answers.map(
-                answer =>
-                    answer.id
-            );
-
-
-        let selectedOptions = [];
-
-
-        if (
-            answerIds.length > 0
-        ) {
-
-            const placeholders =
-                answerIds
-                    .map(
-                        () => "?"
-                    )
-                    .join(",");
-
-
-            const [options] =
-                await pool.query(
-                    `
-                    SELECT
-
-                        answer_id,
-                        option_id,
-                        option_value,
-                        option_label_en,
-                        option_label_ms
-
-                    FROM request_answer_options
-
-                    WHERE answer_id IN
-                    (${placeholders})
-
-                    ORDER BY id ASC
-                    `,
-                    answerIds
-                );
-
-
-            selectedOptions =
-                options;
-
-        }
-
-
-        const [photos] =
+        const [selectedOptions] =
             await pool.query(
                 `
                 SELECT
 
-                    id,
-                    file_name,
-                    file_path,
-                    uploaded_at
+                    sao.answer_id,
+                    sao.option_id,
 
-                FROM customer_photos
+                    qo.option_value,
+                    qo.label_en,
+                    qo.label_ms
 
-                WHERE request_id = ?
+                FROM request_answer_options sao
 
-                ORDER BY uploaded_at ASC
+                INNER JOIN question_options qo
+                    ON sao.option_id = qo.id
+
+                INNER JOIN request_answers ra
+                    ON sao.answer_id = ra.id
+
+                WHERE ra.request_id = ?
+
+                ORDER BY sao.answer_id ASC
                 `,
                 [id]
             );
 
+
+        // ==================================================
+        // CUSTOMER PHOTOS
+        // ==================================================
+
+        const [photos] = await pool.query(
+    `
+    SELECT
+        id,
+        request_id,
+        file_name,
+        file_path,
+        uploaded_at
+    FROM customer_photos
+    WHERE request_id = ?
+    ORDER BY uploaded_at ASC
+    `,
+    [id]
+);
+
+
+        // ==================================================
+        // TECHNICIAN REPORT
+        // ==================================================
 
         const [reports] =
             await pool.query(
@@ -614,6 +604,10 @@ async function getRequestById(req, res) {
                 ? reports[0]
                 : null;
 
+
+        // ==================================================
+        // COMPLETION MEDIA
+        // ==================================================
 
         let completionMedia = [];
 
@@ -663,6 +657,10 @@ async function getRequestById(req, res) {
         }
 
 
+        // ==================================================
+        // TECHNICIAN
+        // ==================================================
+
         let technician = null;
 
 
@@ -706,6 +704,78 @@ async function getRequestById(req, res) {
 
         }
 
+
+        // ==================================================
+        // QUOTATIONS
+        // ==================================================
+
+        const [quotations] =
+            await pool.query(
+                `
+                SELECT
+
+                    id,
+                    quotation_number,
+                    quotation_type,
+
+                    subtotal,
+                    discount,
+                    tax,
+                    delivery_charge,
+                    total,
+
+                    validity_days,
+
+                    notes,
+                    terms,
+
+                    quotation_file_url,
+                    quotation_file_name,
+
+                    payment_status,
+                    payment_proof_url,
+                    payment_proof_name,
+                    payment_proof_uploaded_at,
+
+                    status,
+                    sent_at,
+
+                    follow_up_1_sent_at,
+                    follow_up_2_sent_at,
+
+                    created_at,
+                    updated_at
+
+                FROM quotations
+
+                WHERE request_id = ?
+
+                ORDER BY
+                    created_at DESC
+                `,
+                [id]
+            );
+
+
+        // Find original quotation
+        const originalQuotation =
+            quotations.find(
+                quotation =>
+                    quotation.quotation_type === "original"
+            ) || null;
+
+
+        // Find latest final quotation
+        const finalQuotation =
+            quotations.find(
+                quotation =>
+                    quotation.quotation_type === "final"
+            ) || null;
+
+
+        // ==================================================
+        // RESPONSE
+        // ==================================================
 
         return res.json({
 
@@ -792,6 +862,25 @@ async function getRequestById(req, res) {
                     request.admin_notes_updated_at,
 
 
+                // ==================================================
+                // QUOTATIONS
+                // ==================================================
+
+                quotations: {
+
+                    original:
+                        originalQuotation,
+
+                    final:
+                        finalQuotation
+
+                },
+
+
+                // ==================================================
+                // ANSWERS
+                // ==================================================
+
                 answers:
                     answers.map(
                         answer => ({
@@ -848,13 +937,25 @@ async function getRequestById(req, res) {
                     ),
 
 
+                // ==================================================
+                // PHOTOS
+                // ==================================================
+
                 photos:
                     photos,
 
 
+                // ==================================================
+                // REPORT
+                // ==================================================
+
                 report:
                     report,
 
+
+                // ==================================================
+                // COMPLETION MEDIA
+                // ==================================================
 
                 completion_media:
                     completionMedia,
@@ -893,7 +994,6 @@ async function getRequestById(req, res) {
     }
 
 }
-
 
 /*
  * ======================================================
@@ -1235,13 +1335,7 @@ async function updateRequest(req, res) {
          * Job Pending. The request remains pending until the
          * Admin approves the technician report.
          */
-        if (
-            finalTechnician &&
-            finalStatus !== "completed" &&
-            finalStatus !== "cancelled"
-        ) {
-            finalStatus = "pending";
-        }
+     
 
 
         const finalScheduledDate =

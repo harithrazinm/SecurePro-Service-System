@@ -8,37 +8,59 @@
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/quotations.css">
     <link rel="stylesheet" href="css/admin-theme.css">
+    <link rel="stylesheet" href="css/request.css">
 </head>
 
 <body>
-    <div class="admin-layout">
-        <aside class="admin-sidebar">
-            <div class="sidebar-brand">
-                <div class="sidebar-mark">S</div>
-                <div><strong>SECUREPRO</strong><span>System Solutions</span></div>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="dashboard.html" class="nav-item"><span class="nav-icon">⌂</span>Dashboard</a>
-                <a href="requests.html" class="nav-item"><span class="nav-icon">▤</span>Service Requests</a>
-                <a href="job-pending.html" class="nav-item"><span class="nav-icon">◷</span>Job Pending</a>
-                <a href="quotations.html" class="nav-item active"><span class="nav-icon">▣</span>Quotations</a>
-            </nav>
-            <div class="sidebar-bottom">
-                <div class="admin-profile">
-                    <div class="admin-avatar">A</div>
-                    <div class="admin-profile-info"><strong
-                            id="sidebarAdminName">Admin</strong><span>Administrator</span></div>
-                </div><button id="logoutButton" class="logout-button" type="button">⎋ <span
-                        class="logout-label">Logout</span></button>
-            </div>
-        </aside>
-        <main class="admin-main">
-            <header class="admin-topbar">
-                <div><span class="topbar-label">SECUREPRO ADMINISTRATION</span>
-                    <h1>Quotations</h1>
-                </div>
-                <div class="topbar-user"><span class="online-dot"></span><span id="topbarAdminName">Admin</span></div>
-            </header>
+<div class="app-shell">
+
+<header class="topbar-card">
+    <div class="brand">
+        <div class="brand-mark">S</div>
+        <div class="brand-text">
+            <strong>SECUREPRO</strong>
+            <span>System Solutions</span>
+        </div>
+    </div>
+    <nav class="top-nav">
+        <a href="dashboard.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+            Dashboard
+        </a>
+        <a href="requests.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z"/><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 12h6M9 16h6"/></svg>
+            Service Requests
+        </a>
+        <a href="job-pending.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            Job Pending
+        </a>
+        <a href="quotations.html" class="active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 12h6M9 16h4"/></svg>
+            Quotations
+        </a>
+    </nav>
+</header>
+
+<button type="button" id="logoutButton" class="logout-bar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+    Logout
+</button>
+
+<main>
+    <div class="eyebrow-row">
+        <span class="eyebrow">SECUREPRO ADMINISTRATION</span>
+        <span class="admin-pill">
+            <span class="dot"></span>
+            <span id="topbarAdminName">Admin</span>
+        </span>
+    </div>
+    <span id="sidebarAdminName" class="admin-name">Admin</span>
+
+    <header class="request-header">
+        <h1 class="page-title">Quotations</h1>
+    </header>
+
             <div class="quotation-content">
                 <section class="quotation-intro quotation-hero">
                     <div><span class="eyebrow">SALES &amp; QUOTATIONS</span>

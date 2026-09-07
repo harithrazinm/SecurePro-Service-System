@@ -1,7 +1,12 @@
-const API_BASE = "https://securepro-service-system.onrender.com/api";
+const API_BASE =
+    ["localhost", "127.0.0.1"].includes(window.location.hostname)
+        ? "http://localhost:5001/api"
+        : "https://securepro-service-system.onrender.com/api";
+
+        
 const token = localStorage.getItem("securepro_admin_token");
 let adminUser = null;
-try { adminUser = JSON.parse(localStorage.getItem("securepro_admin_user") || "null"); } catch (_) {}
+try { adminUser = JSON.parse(localStorage.getItem("securepro_admin_user") || "null"); } catch (_) { }
 if (!token || !adminUser || adminUser.role !== "admin") window.location.href = "login.html";
 
 const tableBody = document.querySelector("#requestsTableBody");
