@@ -7,59 +7,106 @@
 
 async function startAssignedRequest(req, res) {
     try {
+
         const [requests] = await pool.query(
-            `SELECT id, status, technician_id, technician_started_at
+            `SELECT
+                id,
+                status,
+                technician_id,
+                updated_at
              FROM service_requests
-             WHERE id = ? AND technician_id = ?
+             WHERE id = ?
+               AND technician_id = ?
              LIMIT 1`,
-            [req.params.id, req.user.id]
+            [
+                req.params.id,
+                req.user.id
+            ]
         );
 
         if (!requests.length) {
             return res.status(404).json({
                 success: false,
-                message: "Request not found or is not assigned to you."
+                message:
+                    "Request not found or is not assigned to you."
             });
         }
 
         const request = requests[0];
 
-        if (request.status === "completed" || request.status === "cancelled") {
+        if (
+            request.status === "completed" ||
+            request.status === "cancelled"
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "This job can no longer be started."
+                message:
+                    "This job can no longer be started."
             });
         }
 
+        /*
+         * Starting the job changes the request status
+         * from assigned/pending to in_progress.
+         *
+         * updated_at acts as the latest workflow timestamp.
+         */
         await pool.query(
             `UPDATE service_requests
-             SET technician_started_at = COALESCE(technician_started_at, NOW()),
+             SET
+                 status = 'in_progress',
                  updated_at = NOW()
-             WHERE id = ? AND technician_id = ?`,
-            [req.params.id, req.user.id]
+             WHERE id = ?
+               AND technician_id = ?`,
+            [
+                req.params.id,
+                req.user.id
+            ]
         );
 
+        /*
+         * Get the updated request.
+         */
         const [rows] = await pool.query(
-            `SELECT technician_started_at
+            `SELECT
+                id,
+                status,
+                updated_at
              FROM service_requests
              WHERE id = ?
              LIMIT 1`,
-            [req.params.id]
+            [
+                req.params.id
+            ]
         );
 
         return res.json({
             success: true,
-            message: "Job started successfully.",
+            message:
+                "Job started successfully.",
             data: {
-                request_id: req.params.id,
-                technician_started_at: rows[0]?.technician_started_at || null
+                request_id:
+                    req.params.id,
+
+                status:
+                    rows[0]?.status || "in_progress",
+
+                technician_started_at:
+                    rows[0]?.updated_at || null
             }
         });
+
     } catch (error) {
-        console.error("Start assigned request error:", error);
+
+        console.error(
+            "Start assigned request error:",
+            error
+        );
+
         return res.status(500).json({
             success: false,
-            message: "Unable to start the job."
+            message:
+                "Unable to start the job."
         });
     }
 }
@@ -754,26 +801,18 @@ async function submitWorkReport(req, res) {
 
 
             await connection.query(
-                `
-                UPDATE service_requests
-
-                SET
-
-                    technician_started_at =
-                        COALESCE(
-                            technician_started_at,
-                            NOW()
-                        ),
-
-                    updated_at =
-                        NOW()
-
-                WHERE id = ?
-                `,
-                [
-                    requestId
-                ]
-            );
+    `
+    UPDATE service_requests
+    SET
+        updated_at = NOW()
+    WHERE id = ?
+      AND technician_id = ?
+    `,
+    [
+        requestId,
+        technicianId
+    ]
+);
 
 
             await connection.commit();
@@ -953,31 +992,24 @@ async function submitWorkReport(req, res) {
         }
 
 
-        /* ======================================================
-           UPDATE REQUEST STATUS
-        ====================================================== */
+      /* ======================================================
+   UPDATE REQUEST STATUS
+====================================================== */
 
-        await connection.query(
-            `
-            UPDATE service_requests
-
-            SET
-
-                technician_started_at =
-                    COALESCE(
-                        technician_started_at,
-                        NOW()
-                    ),
-
-                updated_at =
-                    NOW()
-
-            WHERE id = ?
-            `,
-            [
-                requestId
-            ]
-        );
+await connection.query(
+    `
+    UPDATE service_requests
+    SET
+        status = 'in_progress',
+        updated_at = NOW()
+    WHERE id = ?
+      AND technician_id = ?
+    `,
+    [
+        requestId,
+        technicianId
+    ]
+);
 
 
         await connection.commit();
