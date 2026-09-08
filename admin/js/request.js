@@ -260,6 +260,7 @@ function renderRequest(data) {
     renderAnswers(data);
     renderNotes(data);
     renderPhotos(data);
+    renderProgressReports(data);
     renderTechnicianReport(data);
     renderStatus(data);
     renderAssignment(data);
@@ -517,6 +518,118 @@ function renderPhotos(data) {
             </a>
         `;
     }).join("");
+}
+
+
+/* =========================================================
+   SERVICE PROGRESS
+========================================================= */
+
+function renderProgressReports(data) {
+    const timeline = document.querySelector("#progressTimeline");
+    const empty = document.querySelector("#progressReportsEmpty");
+    if (!timeline) return;
+
+    const reports = Array.isArray(data.progress_reports)
+        ? data.progress_reports.filter(report => report.report_type === "progress")
+        : [];
+
+    if (!reports.length) {
+        timeline.innerHTML = "";
+        if (empty) empty.hidden = false;
+        return;
+    }
+
+    if (empty) empty.hidden = true;
+
+    timeline.innerHTML = reports.map((report, index) => {
+        const number = report.progress_number || index + 1;
+        const title = report.report_title || `Progress Update ${number}`;
+        const media = Array.isArray(report.media) ? report.media : [];
+
+        return `
+            <article class="progress-item">
+                <div class="progress-marker">${escapeHtml(number)}</div>
+                <div class="progress-card">
+                    <div class="progress-card-header">
+                        <div>
+                            <div class="progress-kicker">Progress Update ${escapeHtml(number)}</div>
+                            <h3 class="progress-title">${escapeHtml(title)}</h3>
+                        </div>
+                        <div class="progress-meta">
+                            <span class="progress-status ${escapeHtml(report.status || "approved")}">
+                                ${escapeHtml(formatReportStatus(report.status || "approved"))}
+                            </span>
+                            <span class="progress-date">${escapeHtml(formatDate(report.submitted_at || report.created_at))}</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-grid">
+                        <div class="progress-field progress-field-full">
+                            <div class="report-label">Work Performed</div>
+                            <div class="report-value">${escapeHtml(report.work_performed || "—")}</div>
+                        </div>
+                        <div class="progress-field progress-field-full">
+                            <div class="report-label">Findings</div>
+                            <div class="report-value">${escapeHtml(report.findings || "—")}</div>
+                        </div>
+                        <div class="progress-field">
+                            <div class="report-label">Materials Used</div>
+                            <div class="report-value">${escapeHtml(report.materials_used || "—")}</div>
+                        </div>
+                        <div class="progress-field">
+                            <div class="report-label">Technician Notes</div>
+                            <div class="report-value">${escapeHtml(report.technician_notes || "—")}</div>
+                        </div>
+                    </div>
+
+                    ${media.length ? `
+                        <div class="progress-media-section">
+                            <div class="progress-media-heading">
+                                <span>Progress Media</span>
+                                <span>${media.length} ${media.length === 1 ? "file" : "files"}</span>
+                            </div>
+                            <div class="progress-media-grid">
+                                ${media.map((item, mediaIndex) => renderProgressMedia(item, mediaIndex)).join("")}
+                            </div>
+                        </div>
+                    ` : ""}
+
+                    ${report.review_remarks ? `
+                        <div class="progress-review-remarks">
+                            <div class="report-label">Admin Remarks</div>
+                            <div class="report-value">${escapeHtml(report.review_remarks)}</div>
+                        </div>
+                    ` : ""}
+                </div>
+            </article>
+        `;
+    }).join("");
+}
+
+function renderProgressMedia(item, index) {
+    const rawPath = String(item.file_path || "").trim();
+    const url = rawPath.startsWith("http://") || rawPath.startsWith("https://")
+        ? rawPath
+        : `${BACKEND_BASE}${rawPath.startsWith("/") ? "" : "/"}${rawPath}`;
+    const type = item.media_type || (item.mime_type?.startsWith("video/") ? "video" : "image");
+    const fileName = item.file_name || `Progress Media ${index + 1}`;
+
+    if (type === "video") {
+        return `
+            <div class="progress-media-card">
+                <video src="${escapeHtml(url)}" controls preload="metadata"></video>
+                <span>${escapeHtml(fileName)}</span>
+            </div>
+        `;
+    }
+
+    return `
+        <a class="progress-media-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+            <img src="${escapeHtml(url)}" alt="${escapeHtml(fileName)}" loading="lazy">
+            <span>${escapeHtml(fileName)}</span>
+        </a>
+    `;
 }
 
 
