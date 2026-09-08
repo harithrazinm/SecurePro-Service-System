@@ -135,6 +135,31 @@
         </section>
 
 
+        <!-- =================================================
+             JOB ACTION
+        ================================================== -->
+
+        <section class="detail-card job-action-card">
+
+            <div class="job-action-content">
+                <div>
+                    <strong id="jobActionTitle">Job status</strong>
+                    <p id="jobActionDescription">Review the request before starting work.</p>
+                </div>
+
+                <button
+                    type="button"
+                    id="startJobButton"
+                    class="primary-button"
+                >
+                    Start Job
+                </button>
+            </div>
+
+            <div id="jobActionMessage" class="job-action-message" hidden></div>
+
+        </section>
+
 
         <!-- =================================================
              CUSTOMER INFORMATION
@@ -342,11 +367,11 @@
                 <div>
 
                     <h2>
-                        Work Report
+                        Add Service Update
                     </h2>
 
                     <p>
-                        Submit the work you completed to the admin.
+                        Add a progress update during the job or submit the final report when the work is complete.
                     </p>
 
                 </div>
@@ -359,6 +384,25 @@
                 class="report-form"
             >
 
+
+                <!-- REPORT TYPE -->
+
+                <div class="report-type-grid">
+
+                    <div class="form-group">
+                        <label for="reportType">Update Type <span>*</span></label>
+                        <select id="reportType" name="report_type" required>
+                            <option value="progress">Progress Update</option>
+                            <option value="final">Final Report</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reportTitle">Update Title</label>
+                        <input id="reportTitle" name="report_title" type="text" maxlength="150" placeholder="e.g. Initial Inspection, Diagnosis, Repair" >
+                    </div>
+
+                </div>
 
                 <!-- WORK PERFORMED -->
 
@@ -509,12 +553,12 @@
 
                     <div>
 
-                        <strong>
-                            Ready to submit?
+                        <strong id="reportSubmitTitle">
+                            Add a progress update
                         </strong>
 
-                        <p>
-                            Your report will be sent to the admin for review.
+                        <p id="reportSubmitDescription">
+                            Progress updates are added to the service timeline. A final report will be sent to the admin for review.
                         </p>
 
                     </div>
@@ -524,7 +568,7 @@
                         id="submitReportButton"
                         type="submit"
                     >
-                        Submit Work Report
+                        Submit Update
                     </button>
 
                 </div>

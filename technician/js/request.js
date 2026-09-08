@@ -27,6 +27,58 @@ let selectedCompletionMedia = [];
    HELPERS
 ========================================================= */
 
+async function parseResponse(response) {
+
+    let payload = null;
+
+    try {
+        payload = await response.json();
+    } catch (error) {
+        payload = null;
+    }
+
+    if (!response.ok) {
+        const message =
+            payload?.message ||
+            payload?.error ||
+            `Request failed with status ${response.status}.`;
+
+        const error = new Error(message);
+        error.status = response.status;
+        error.data = payload;
+        throw error;
+    }
+
+    return payload || {};
+}
+
+
+function handleAuthError(error) {
+
+    if (error?.status !== 401 && error?.status !== 403) {
+        return false;
+    }
+
+    try {
+        localStorage.removeItem("token");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("accessToken");
+    } catch (storageError) {
+        console.warn("Unable to clear stored authentication token.", storageError);
+    }
+
+    const message =
+        error?.message ||
+        "Your session has expired. Please log in again.";
+
+    window.alert(message);
+
+    window.location.href = "../technician/login.html";
+
+    return true;
+}
+
+
 function getRequestId() {
 
     const params =
@@ -315,7 +367,9 @@ function renderRequest(data) {
 
     renderPhotos(data);
 
-    renderExistingReport(data);
+    renderExistingReports(data);
+
+    renderJobAction(data);
 
     renderMeta(data);
 
@@ -1281,165 +1335,215 @@ function renderPhotos(data) {
    EXISTING REPORT
 ========================================================= */
 
-function renderExistingReport(data) {
+function renderExistingReports(data) {
 
-    const card =
-        document.querySelector(
-            "#existingReportCard"
-        );
+    const card = document.querySelector("#existingReportCard");
+    const container = document.querySelector("#existingReport");
 
+    if (!card || !container) return;
 
-    const container =
-        document.querySelector(
-            "#existingReport"
-        );
+    const reports = Array.isArray(data.reports)
+        ? data.reports
+        : (data.report ? [data.report] : []);
 
-
-    if (
-        !card ||
-        !container
-    ) {
-
+    if (!reports.length) {
+        card.hidden = true;
+        container.innerHTML = "";
         return;
-
     }
 
+    card.hidden = false;
 
-    const report =
-        data.report;
+    const ordered = [...reports].sort((a, b) =>
+        new Date(a.created_at || a.submitted_at || 0) -
+        new Date(b.created_at || b.submitted_at || 0)
+    );
 
+    const latestFinal = [...reports]
+        .filter(report => report.report_type === "final")
+        .sort((a, b) => new Date(b.created_at || b.submitted_at || 0) - new Date(a.created_at || a.submitted_at || 0))[0] || null;
 
-    if (!report) {
-
-        card.hidden =
-            true;
-
-        return;
-
+    const workReportCard = document.querySelector("#workReportCard");
+    if (workReportCard && latestFinal && latestFinal.status !== "rejected") {
+        workReportCard.hidden = true;
+    } else if (workReportCard && requestData?.status === "in_progress") {
+        workReportCard.hidden = false;
     }
-
-
-    card.hidden =
-        false;
-
 
     container.innerHTML = `
+        <div class="progress-timeline">
+            ${ordered.map((report, index) => {
+                const isFinal = report.report_type === "final";
+                const title = report.report_title ||
+                    (isFinal ? "Final Work Report" : `Progress Update ${report.progress_number || index + 1}`);
+                const status = report.status || "submitted";
+                const media = Array.isArray(report.media) ? report.media : [];
 
-        <div class="report-status">
+                return `
+                    <article class="progress-item ${isFinal ? "progress-item-final" : ""}">
+                        <div class="progress-marker">
+                            ${isFinal ? "✓" : (report.progress_number || index + 1)}
+                        </div>
+                        <div class="progress-content">
+                            <div class="progress-header">
+                                <div>
+                                    <div class="progress-kicker">${isFinal ? "FINAL REPORT" : `PROGRESS ${report.progress_number || index + 1}`}</div>
+                                    <h3>${escapeHtml(title)}</h3>
+                                </div>
+                                <div class="progress-header-right">
+                                    <span class="progress-status progress-status-${escapeHtml(status)}">${escapeHtml(formatReportStatus(status, isFinal))}</span>
+                                    <time>${escapeHtml(formatDate(report.submitted_at || report.created_at))}</time>
+                                </div>
+                            </div>
 
-            <span>
-                Report Status
-            </span>
+                            <div class="progress-detail-grid">
+                                <div class="progress-detail">
+                                    <span>Work Performed</span>
+                                    <p>${escapeHtml(report.work_performed || "—")}</p>
+                                </div>
+                                <div class="progress-detail">
+                                    <span>Findings</span>
+                                    <p>${escapeHtml(report.findings || "—")}</p>
+                                </div>
+                                <div class="progress-detail">
+                                    <span>Materials Used</span>
+                                    <p>${escapeHtml(report.materials_used || "—")}</p>
+                                </div>
+                                <div class="progress-detail">
+                                    <span>Technician Notes</span>
+                                    <p>${escapeHtml(report.technician_notes || "—")}</p>
+                                </div>
+                            </div>
 
-            <strong>
-                ${escapeHtml(
-                    formatStatus(
-                        report.status
-                    )
-                )}
-            </strong>
+                            ${media.length ? `
+                                <div class="progress-media">
+                                    <div class="progress-media-label">Attached Media · ${media.length}</div>
+                                    <div class="progress-media-grid">
+                                        ${media.map(file => {
+                                            const isImage = file.media_type === "image";
+                                            return isImage
+                                                ? `<a href="${escapeHtml(file.file_path)}" target="_blank" rel="noopener"><img src="${escapeHtml(file.file_path)}" alt="${escapeHtml(file.file_name || "Report photo")}"></a>`
+                                                : `<a class="progress-video" href="${escapeHtml(file.file_path)}" target="_blank" rel="noopener">▶ View Video</a>`;
+                                        }).join("")}
+                                    </div>
+                                </div>
+                            ` : ""}
 
+                            ${report.review_remarks ? `
+                                <div class="progress-review-remarks">
+                                    <strong>Admin Feedback</strong>
+                                    <p>${escapeHtml(report.review_remarks)}</p>
+                                </div>
+                            ` : ""}
+                        </div>
+                    </article>
+                `;
+            }).join("")}
         </div>
-
-
-        <div class="report-detail">
-
-            <span>
-                Work Performed
-            </span>
-
-            <p>
-                ${escapeHtml(
-                    report.work_performed ||
-                    "—"
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="report-detail">
-
-            <span>
-                Findings
-            </span>
-
-            <p>
-                ${escapeHtml(
-                    report.findings ||
-                    "—"
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="report-detail">
-
-            <span>
-                Materials Used
-            </span>
-
-            <p>
-                ${escapeHtml(
-                    report.materials_used ||
-                    "—"
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="report-detail">
-
-            <span>
-                Technician Notes
-            </span>
-
-            <p>
-                ${escapeHtml(
-                    report.technician_notes ||
-                    "—"
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="report-submitted">
-
-            Submitted:
-            ${escapeHtml(
-                formatDate(
-                    report.submitted_at
-                )
-            )}
-
-        </div>
-
     `;
+}
+
+function formatReportStatus(status, isFinal) {
+    if (!isFinal && status === "approved") return "Recorded";
+    return formatStatus(status);
+}
 
 
-    if (
-        report.status === "submitted" ||
-        report.status === "approved"
-    ) {
+/* =========================================================
+   JOB ACTION
+========================================================= */
 
-        const workReportCard =
-            document.querySelector(
-                "#workReportCard"
-            );
+function renderJobAction(data) {
 
+    const button = document.querySelector("#startJobButton");
+    const title = document.querySelector("#jobActionTitle");
+    const description = document.querySelector("#jobActionDescription");
 
-        if (workReportCard) {
+    if (!button) return;
 
-            workReportCard.hidden =
-                true;
+    const status = data.status || "pending";
 
-        }
+    if (status === "assigned") {
+        const workReportCard = document.querySelector("#workReportCard");
+        if (workReportCard) workReportCard.hidden = true;
 
+        button.hidden = false;
+        button.disabled = false;
+        button.textContent = "Start Job";
+        if (title) title.textContent = "Ready to start";
+        if (description) description.textContent = "Confirm the job details, then start the assigned work.";
+        return;
     }
 
+    button.hidden = true;
+
+    if (status === "in_progress") {
+        if (title) title.textContent = "Job in progress";
+        if (description) description.textContent = "You can now complete the work and submit your report.";
+    } else if (status === "completed") {
+        const workReportCard = document.querySelector("#workReportCard");
+        if (workReportCard) workReportCard.hidden = true;
+        if (title) title.textContent = "Job completed";
+        if (description) description.textContent = "This service request has been completed.";
+    } else if (status === "cancelled") {
+        if (title) title.textContent = "Job cancelled";
+        if (description) description.textContent = "This service request is no longer active.";
+    } else {
+        if (title) title.textContent = "Job status";
+        if (description) description.textContent = `Current status: ${formatStatus(status)}.`;
+    }
+}
+
+async function startJob() {
+
+    const requestId = getRequestId();
+    const token = getToken();
+    const button = document.querySelector("#startJobButton");
+    const message = document.querySelector("#jobActionMessage");
+
+    if (!requestId || !token || !button) return;
+
+    const confirmed = window.confirm("Start this assigned job now?");
+    if (!confirmed) return;
+
+    try {
+        button.disabled = true;
+        button.textContent = "Starting...";
+
+        const response = await fetch(
+            `${API_BASE}/technician/requests/${encodeURIComponent(requestId)}/start`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const result = await parseResponse(response);
+
+        if (result.data) {
+            requestData = { ...requestData, ...result.data };
+        }
+
+        requestData.status = result.data?.status || "in_progress";
+        renderRequest(requestData);
+
+        if (message) {
+            message.hidden = false;
+            message.textContent = result.message || "Job started successfully.";
+        }
+
+    } catch (error) {
+        console.error("Start job error:", error);
+        if (handleAuthError(error)) return;
+        if (message) {
+            message.hidden = false;
+            message.textContent = error.message || "Unable to start the job.";
+        }
+        button.disabled = false;
+        button.textContent = "Start Job";
+    }
 }
 
 
@@ -2164,6 +2268,12 @@ async function submitReport(event) {
             ""
         ).trim();
 
+    const reportType =
+        document.querySelector("#reportType")?.value || "progress";
+
+    const reportTitle =
+        String(document.querySelector("#reportTitle")?.value || "").trim();
+
 
     /*
      * Work performed is required
@@ -2207,6 +2317,9 @@ async function submitReport(event) {
         "technician_notes",
         technicianNotes
     );
+
+    formData.append("report_type", reportType);
+    formData.append("report_title", reportTitle);
 
 
     /*
@@ -2357,7 +2470,9 @@ async function submitReport(event) {
 
 
         button.textContent =
-            "Submit Work Report";
+            document.querySelector("#reportType")?.value === "final"
+                ? "Submit Final Report"
+                : "Submit Progress Update";
 
     }
 
@@ -2487,6 +2602,35 @@ document.addEventListener(
 
         }
 
+        const startButton = document.querySelector("#startJobButton");
+
+        if (startButton) {
+            startButton.addEventListener("click", startJob);
+        }
+
+
+        const reportTypeInput = document.querySelector("#reportType");
+        const reportTitleInput = document.querySelector("#reportTitle");
+        const submitTitle = document.querySelector("#reportSubmitTitle");
+        const submitDescription = document.querySelector("#reportSubmitDescription");
+        const submitButton = document.querySelector("#submitReportButton");
+
+        const updateReportTypeUI = () => {
+            const isFinal = reportTypeInput?.value === "final";
+            if (submitTitle) submitTitle.textContent = isFinal ? "Ready to submit final report?" : "Add a progress update";
+            if (submitDescription) submitDescription.textContent = isFinal
+                ? "The final report will be sent to the admin for review."
+                : "This update will be recorded in the service progress timeline.";
+            if (submitButton) submitButton.textContent = isFinal ? "Submit Final Report" : "Submit Progress Update";
+            if (reportTitleInput && !reportTitleInput.value) {
+                reportTitleInput.placeholder = isFinal ? "e.g. Final Repair Completed" : "e.g. Initial Inspection, Diagnosis, Repair";
+            }
+        };
+
+        if (reportTypeInput) {
+            reportTypeInput.addEventListener("change", updateReportTypeUI);
+            updateReportTypeUI();
+        }
 
         /*
          * Completion media input

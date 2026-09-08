@@ -34,14 +34,13 @@ async function startAssignedRequest(req, res) {
 
         const request = requests[0];
 
-        if (
-            request.status === "completed" ||
-            request.status === "cancelled"
-        ) {
+        if (request.status !== "assigned") {
             return res.status(400).json({
                 success: false,
                 message:
-                    "This job can no longer be started."
+                    request.status === "in_progress"
+                        ? "This job has already been started."
+                        : "Only assigned jobs can be started."
             });
         }
 
@@ -459,6 +458,70 @@ sq.title_ms AS question_ms
 
 
         /* ==================================================
+           GET TECHNICIAN REPORT TIMELINE
+        ================================================== */
+
+        const [reports] =
+            await pool.query(
+                `
+                SELECT
+                    id,
+                    request_id,
+                    technician_id,
+                    report_type,
+                    progress_number,
+                    report_title,
+                    work_performed,
+                    findings,
+                    materials_used,
+                    technician_notes,
+                    status,
+                    submitted_at,
+                    reviewed_at,
+                    review_remarks,
+                    created_at,
+                    updated_at
+                FROM service_reports
+                WHERE request_id = ?
+                  AND technician_id = ?
+                ORDER BY created_at DESC
+                `,
+                [requestId, technicianId]
+            );
+
+        const reportIds = reports.map(report => report.id);
+        let reportMedia = [];
+
+        if (reportIds.length) {
+            const placeholders = reportIds.map(() => '?').join(',');
+            const [media] = await pool.query(
+                `
+                SELECT
+                    id, report_id, request_id, technician_id,
+                    media_type, file_name, file_path, mime_type,
+                    file_size, uploaded_at
+                FROM service_report_media
+                WHERE report_id IN (${placeholders})
+                ORDER BY uploaded_at ASC
+                `,
+                reportIds
+            );
+            reportMedia = media;
+        }
+
+        const reportMap = new Map();
+        reports.forEach(report => {
+            report.media = [];
+            reportMap.set(report.id, report);
+        });
+        reportMedia.forEach(media => {
+            const report = reportMap.get(media.report_id);
+            if (report) report.media.push(media);
+        });
+
+        const latestReport = reports[0] || null;
+
+        /* ==================================================
            RETURN COMPLETE REQUEST
         ================================================== */
 
@@ -472,7 +535,9 @@ sq.title_ms AS question_ms
 
                 photos,
 
-                answers
+                answers,
+                reports,
+                report: latestReport
 
             }
 
@@ -551,6 +616,14 @@ async function submitWorkReport(req, res) {
             String(
                 req.body.technician_notes || ""
             ).trim();
+
+        const reportType =
+            req.body.report_type === "progress"
+                ? "progress"
+                : "final";
+
+        const reportTitle =
+            String(req.body.report_title || "").trim();
 
 
         /* ======================================================
@@ -664,6 +737,7 @@ async function submitWorkReport(req, res) {
                 WHERE
                     request_id = ?
                     AND technician_id = ?
+                    AND report_type = 'final'
 
                 ORDER BY
                     created_at DESC
@@ -678,7 +752,86 @@ async function submitWorkReport(req, res) {
 
 
         /* ======================================================
-           RESUBMIT REJECTED REPORT
+           PROGRESS UPDATE
+        ====================================================== */
+
+        if (reportType === "progress") {
+
+            const [countRows] = await connection.query(
+                `
+                SELECT COUNT(*) AS total
+                FROM service_reports
+                WHERE request_id = ?
+                  AND technician_id = ?
+                  AND report_type = 'progress'
+                `,
+                [requestId, technicianId]
+            );
+
+            const progressNumber =
+                Number(countRows[0]?.total || 0) + 1;
+
+            const progressReportId = uuid();
+
+            await connection.query(
+                `
+                INSERT INTO service_reports (
+                    id, request_id, technician_id,
+                    report_type, progress_number, report_title,
+                    work_performed, findings, materials_used,
+                    technician_notes, status, submitted_at
+                )
+                VALUES (?, ?, ?, 'progress', ?, ?, ?, ?, ?, ?, 'approved', NOW())
+                `,
+                [
+                    progressReportId, requestId, technicianId,
+                    progressNumber, reportTitle || `Progress Update ${progressNumber}`,
+                    workPerformed, findings, materialsUsed, technicianNotes
+                ]
+            );
+
+            const uploadedMedia = Array.isArray(req.files) ? req.files : [];
+
+            for (const file of uploadedMedia) {
+                const mediaType = file.mimetype.startsWith("image/") ? "image" : "video";
+                await connection.query(
+                    `
+                    INSERT INTO service_report_media (
+                        id, report_id, request_id, technician_id,
+                        media_type, file_name, file_path, mime_type, file_size
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `,
+                    [uuid(), progressReportId, requestId, technicianId, mediaType,
+                     file.originalname, file.path, file.mimetype, file.size]
+                );
+            }
+
+            await connection.query(
+                `
+                UPDATE service_requests
+                SET status = 'in_progress', updated_at = NOW()
+                WHERE id = ? AND technician_id = ?
+                `,
+                [requestId, technicianId]
+            );
+
+            await connection.commit();
+
+            return res.status(201).json({
+                success: true,
+                message: `Progress update ${progressNumber} submitted successfully.`,
+                data: {
+                    id: progressReportId,
+                    request_id: requestId,
+                    report_type: "progress",
+                    progress_number: progressNumber,
+                    status: "approved"
+                }
+            });
+        }
+
+        /* ======================================================
+           RESUBMIT REJECTED FINAL REPORT
         ====================================================== */
 
         if (
@@ -705,6 +858,12 @@ async function submitWorkReport(req, res) {
 
                     technician_notes = ?,
 
+                    report_type = 'final',
+
+                    progress_number = NULL,
+
+                    report_title = ?,
+
                     status = 'submitted',
 
                     submitted_at = NOW(),
@@ -727,6 +886,8 @@ async function submitWorkReport(req, res) {
                     materialsUsed,
 
                     technicianNotes,
+
+                    reportTitle || "Final Work Report",
 
                     reportId
 
@@ -843,6 +1004,19 @@ async function submitWorkReport(req, res) {
         }
 
 
+        if (request.status !== "in_progress") {
+
+            await connection.rollback();
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Start the assigned job before submitting a work report."
+            });
+
+        }
+
+
         /* ======================================================
            PREVENT DUPLICATE REPORT
         ====================================================== */
@@ -879,6 +1053,9 @@ async function submitWorkReport(req, res) {
                 id,
                 request_id,
                 technician_id,
+                report_type,
+                progress_number,
+                report_title,
                 work_performed,
                 findings,
                 materials_used,
@@ -890,6 +1067,9 @@ async function submitWorkReport(req, res) {
 
             VALUES (
 
+                ?,
+                ?,
+                ?,
                 ?,
                 ?,
                 ?,
@@ -909,6 +1089,12 @@ async function submitWorkReport(req, res) {
                 requestId,
 
                 technicianId,
+
+                "final",
+
+                null,
+
+                reportTitle || "Final Work Report",
 
                 workPerformed,
 

@@ -413,40 +413,114 @@ tbody tr:hover { background: #f7faff; }
 
 .action-group {
     display: flex;
-
-    gap: 5px;
-
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
     flex-wrap: wrap;
+    min-width: 250px;
 }
 
 .action-button {
     border: 1px solid var(--border);
-
-    background: white;
-
+    background: #fff;
     color: var(--text-primary);
-
-    border-radius: 6px;
-
-    padding: 6px 8px;
-
+    border-radius: 7px;
+    min-height: 32px;
+    padding: 6px 9px;
     font-size: 10px;
-
-    font-weight: 700;
-
+    font-weight: 750;
     cursor: pointer;
-
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
 }
 
 .action-button:hover {
-    background: #f9fafb;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 7px rgba(15, 23, 42, .08);
+}
+
+.action-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.action-button svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex: 0 0 auto;
+}
+
+.action-button.icon-action {
+    width: 32px;
+    padding: 0;
+}
+
+.action-button.view {
+    color: #475569;
+}
+
+.action-button.edit {
+    color: #2563eb;
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.action-button.danger {
+    color: #dc2626;
+    border-color: #fecaca;
+    background: #fff7f7;
+}
+
+.action-button.danger:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
 }
 
 .action-button.send {
-    border-color: var(--accent);
-
     color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 30%, white);
+    background: color-mix(in srgb, var(--accent) 5%, white);
+}
+
+.action-button.whatsapp {
+    color: #15803d;
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.action-button.proof {
+    color: #7c3aed;
+    border-color: #ddd6fe;
+    background: #faf5ff;
+}
+
+.action-button.send:hover,
+.action-button.whatsapp:hover,
+.action-button.proof:hover {
+    filter: brightness(.98);
+}
+
+@media (max-width: 1100px) {
+    .action-group {
+        min-width: 190px;
+    }
+
+    .action-button.action-text {
+        font-size: 0;
+        width: 32px;
+        padding: 0;
+    }
 }
 
 

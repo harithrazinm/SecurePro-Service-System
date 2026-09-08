@@ -731,54 +731,57 @@ function renderQuotations() {
                                 <div class="action-group">
 
                                     <button
-                                        class="action-button"
+                                        class="action-button icon-action view"
                                         data-open-quotation="${quotation.id}"
+                                        title="View quotation PDF"
+                                        aria-label="View quotation PDF"
                                     >
-                                        View PDF
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
                                     </button>
 
-
                                     <button
-                                        class="action-button"
+                                        class="action-button icon-action edit"
                                         data-edit="${quotation.id}"
+                                        title="Edit quotation"
+                                        aria-label="Edit quotation"
                                     >
-                                        Edit
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.8 4.3 4.3-.8L18.8 8.7a2.1 2.1 0 0 0-3-3L4 16.5Z"/><path d="m14.5 7.5 2 2"/></svg>
                                     </button>
 
-
                                     <button
-                                        class="action-button danger"
+                                        class="action-button icon-action danger"
                                         data-delete="${quotation.id}"
+                                        title="Delete quotation"
+                                        aria-label="Delete quotation"
                                     >
-                                        Delete
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>
                                     </button>
 
-
                                     <button
-                                        class="action-button send"
+                                        class="action-button action-text send"
                                         data-email="${quotation.id}"
+                                        title="Send quotation by email"
                                     >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
                                         Email
                                     </button>
 
-
                                     <button
-                                        class="action-button send"
+                                        class="action-button action-text whatsapp"
                                         data-whatsapp="${quotation.id}"
+                                        title="Send quotation via WhatsApp"
                                     >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.9 7L4 20l1.5-4A8 8 0 1 1 20 11.5Z"/><path d="M9 9.2c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.6 1.4c.1.2.1.4-.1.6l-.5.6c.7 1.1 1.4 1.7 2.5 2.2l.6-.6c.2-.2.4-.2.6-.1l1.3.6c.2.1.3.3.3.5 0 .8-.4 1.3-1 1.5-1.1.3-2.8-.6-4.1-1.7-1.3-1.1-2.4-2.7-2.6-3.8-.1-.5 0-.9.2-1.1Z"/></svg>
                                         WhatsApp
                                     </button>
 
-
                                     <button
-                                        class="action-button"
+                                        class="action-button action-text proof"
                                         data-upload-proof="${quotation.id}"
+                                        title="${quotation.payment_proof_url ? "Replace payment proof" : "Add payment proof"}"
                                     >
-                                        ${
-                                            quotation.payment_proof_url
-                                                ? "Replace proof"
-                                                : "Add proof"
-                                        }
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4M5 14v5h14v-5"/></svg>
+                                        ${quotation.payment_proof_url ? "Replace" : "Proof"}
                                     </button>
 
                                 </div>

@@ -10,6 +10,7 @@ const cloudinary =
 
 
 const {
+    startAssignedRequest,
     getAssignedRequests,
     getAssignedRequestById,
     submitWorkReport
@@ -209,6 +210,19 @@ router.get(
     "/requests/:id",
 
     getAssignedRequestById
+
+);
+
+
+// ======================================================
+// START ASSIGNED JOB
+// ======================================================
+
+router.post(
+
+    "/requests/:id/start",
+
+    startAssignedRequest
 
 );
 

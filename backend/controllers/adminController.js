@@ -589,6 +589,7 @@ async function getRequestById(req, res) {
                 FROM service_reports sr
 
                 WHERE sr.request_id = ?
+                  AND sr.report_type = 'final'
 
                 ORDER BY
                     sr.created_at DESC
@@ -656,6 +657,54 @@ async function getRequestById(req, res) {
 
         }
 
+
+        // ==================================================
+        // SERVICE PROGRESS TIMELINE
+        // ==================================================
+
+        const [progressReports] = await pool.query(
+            `
+            SELECT
+                sr.id, sr.request_id, sr.technician_id,
+                sr.report_type, sr.progress_number, sr.report_title,
+                sr.work_performed, sr.findings, sr.materials_used,
+                sr.technician_notes, sr.status, sr.submitted_at,
+                sr.reviewed_at, sr.reviewed_by, sr.review_remarks,
+                sr.created_at, sr.updated_at
+            FROM service_reports sr
+            WHERE sr.request_id = ?
+            ORDER BY sr.created_at ASC
+            `,
+            [id]
+        );
+
+        const progressReportIds = progressReports.map(report => report.id);
+        let progressMedia = [];
+
+        if (progressReportIds.length) {
+            const placeholders = progressReportIds.map(() => '?').join(',');
+            const [mediaRows] = await pool.query(
+                `
+                SELECT id, report_id, request_id, technician_id, media_type,
+                       file_name, file_path, mime_type, file_size, uploaded_at
+                FROM service_report_media
+                WHERE report_id IN (${placeholders})
+                ORDER BY uploaded_at ASC
+                `,
+                progressReportIds
+            );
+            progressMedia = mediaRows;
+        }
+
+        const progressMediaMap = new Map();
+        progressReports.forEach(report => progressMediaMap.set(report.id, []));
+        progressMedia.forEach(media => {
+            const items = progressMediaMap.get(media.report_id);
+            if (items) items.push(media);
+        });
+        progressReports.forEach(report => {
+            report.media = progressMediaMap.get(report.id) || [];
+        });
 
         // ==================================================
         // TECHNICIAN
@@ -951,6 +1000,9 @@ async function getRequestById(req, res) {
 
                 report:
                     report,
+
+                progress_reports:
+                    progressReports,
 
 
                 // ==================================================
