@@ -1587,3 +1587,7 @@ textarea:focus-visible {
     }
 
 }
+
+.answer-value { display:flex; flex-wrap:wrap; gap:8px; }
+.answer-tag { display:inline-flex; align-items:center; padding:6px 10px; border:1px solid #dbe5f3; border-radius:999px; background:#eef5ff; color:#2563eb; font-size:12px; font-weight:700; line-height:1; }
+.report-writer-display { font-weight:700; }

@@ -2180,3 +2180,14 @@ textarea {
         align-items: flex-start;
     }
 }
+
+
+.report-writer-group { margin-top: 4px; }
+.report-writer-options { display:flex; flex-wrap:wrap; gap:10px; }
+.report-writer-option { position:relative; display:inline-flex; align-items:center; gap:9px; min-width:130px; padding:12px 16px; border:1px solid var(--border); border-radius:10px; background:#fff; color:#111827; font-size:13px; font-weight:600; cursor:pointer; }
+.report-writer-option input { position:absolute; opacity:0; pointer-events:none; }
+.report-writer-radio { width:16px; height:16px; border:2px solid #cbd5e1; border-radius:50%; position:relative; }
+.report-writer-option input:checked + .report-writer-radio { border-color:#2563eb; }
+.report-writer-option input:checked + .report-writer-radio::after { content:""; width:8px; height:8px; border-radius:50%; background:#2563eb; position:absolute; top:2px; left:2px; }
+.report-writer-option:has(input:checked) { border-color:#93c5fd; background:#eff6ff; }
+.report-writer-display { font-weight:700; }

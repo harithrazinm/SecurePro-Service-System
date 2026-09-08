@@ -372,78 +372,6 @@ function renderCustomer(data) {
    CUSTOMER ANSWERS
 ========================================================= */
 
-function formatAnswerLabel(value) {
-    if (value === null || value === undefined) return "";
-
-    const text = String(value)
-        .trim()
-        .replace(/[_-]+/g, " ")
-        .replace(/\\s+/g, " ");
-
-    if (!text) return "";
-
-    return text
-        .split(" ")
-        .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1) : "")
-        .join(" ");
-}
-
-function normalizeAnswerArray(value) {
-    if (Array.isArray(value)) return value;
-
-    if (typeof value === "string") {
-        const trimmed = value.trim();
-
-        // Some answers are stored as JSON strings, e.g. ["card","pin"].
-        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-            try {
-                const parsed = JSON.parse(trimmed);
-                if (Array.isArray(parsed)) return parsed;
-            } catch (error) {
-                // Keep the original value if it is not valid JSON.
-            }
-        }
-    }
-
-    return null;
-}
-
-function renderAnswerValue(value) {
-    const items = normalizeAnswerArray(value);
-
-    if (items && items.length) {
-        const badges = items
-            .map(item => {
-                let label = item;
-
-                if (item && typeof item === "object") {
-                    label =
-                        item.option_label_en ||
-                        item.label?.en ||
-                        item.option_value ||
-                        item.value ||
-                        item.name ||
-                        "";
-                }
-
-                return formatAnswerLabel(label);
-            })
-            .filter(Boolean);
-
-        if (badges.length) {
-            return `
-                <div class="answer-badges">
-                    ${badges
-                        .map(label => `<span class="answer-badge">${escapeHtml(label)}</span>`)
-                        .join("")}
-                </div>
-            `;
-        }
-    }
-
-    return escapeHtml(value);
-}
-
 function renderAnswers(data) {
     const container = document.querySelector("#answersGrid");
     if (!container) return;
@@ -485,7 +413,8 @@ function renderAnswers(data) {
                     option.value ||
                     ""
                 )
-                .filter(Boolean);
+                .filter(Boolean)
+                .join(", ");
         }
 
         if (value === null || value === undefined || value === "") {
@@ -497,8 +426,7 @@ function renderAnswers(data) {
                 ? (answer.unit.en || answer.unit.ms || "")
                 : (answer.unit || "");
 
-        const arrayValue = normalizeAnswerArray(value);
-        if (unit && !arrayValue && !String(value).includes(unit)) {
+        if (unit && !String(value).includes(unit)) {
             value = `${value} ${unit}`;
         }
 
@@ -509,16 +437,12 @@ function renderAnswers(data) {
             answer.question_code ||
             "Customer Requirement";
 
-        const valueForLength = arrayValue
-            ? arrayValue.map(item => String(item)).join(", ")
-            : String(value);
-
-        const fullWidth = valueForLength.length > 40 ? " full-width" : "";
+        const fullWidth = String(value).length > 40 ? " full-width" : "";
 
         return `
             <div class="answer-item${fullWidth}">
                 <div class="answer-label">${escapeHtml(question)}</div>
-                <div class="answer-value">${renderAnswerValue(value)}</div>
+                <div class="answer-value">${escapeHtml(value)}</div>
             </div>
         `;
     }).join("");
@@ -657,6 +581,10 @@ function renderProgressReports(data) {
                             <div class="report-label">Technician Notes</div>
                             <div class="report-value">${escapeHtml(report.technician_notes || "—")}</div>
                         </div>
+                        <div class="progress-field">
+                            <div class="report-label">Reported By</div>
+                            <div class="report-value report-writer-display">${escapeHtml(report.reported_by || "—")}</div>
+                        </div>
                     </div>
 
                     ${media.length ? `
@@ -725,6 +653,7 @@ function renderTechnicianReport(data) {
     const findings = document.querySelector("#reportFindings");
     const materials = document.querySelector("#reportMaterialsUsed");
     const notes = document.querySelector("#reportTechnicianNotes");
+    const reportedBy = document.querySelector("#reportReportedBy");
 
     if (!report) {
         if (status) status.textContent = "No report submitted";
@@ -732,6 +661,7 @@ function renderTechnicianReport(data) {
         if (findings) findings.textContent = "—";
         if (materials) materials.textContent = "—";
         if (notes) notes.textContent = "—";
+        if (reportedBy) reportedBy.textContent = "—";
 
         renderCompletionMedia([]);
         hideReportReview();
@@ -743,6 +673,7 @@ function renderTechnicianReport(data) {
     if (findings) findings.textContent = report.findings || "—";
     if (materials) materials.textContent = report.materials_used || "—";
     if (notes) notes.textContent = report.technician_notes || "—";
+    if (reportedBy) reportedBy.textContent = report.reported_by || "—";
 
     const remarksCard = document.querySelector("#reportReviewRemarks");
     const remarksText = document.querySelector("#reportReviewRemarksText");

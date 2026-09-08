@@ -468,6 +468,7 @@ sq.title_ms AS question_ms
                     id,
                     request_id,
                     technician_id,
+                    reported_by,
                     report_type,
                     progress_number,
                     report_title,
@@ -625,6 +626,12 @@ async function submitWorkReport(req, res) {
         const reportTitle =
             String(req.body.report_title || "").trim();
 
+        const reportedBy = String(req.body.reported_by || "").trim();
+        if (!reportedBy || !["Man", "Izz"].includes(reportedBy)) {
+            await connection.rollback();
+            return res.status(400).json({ success: false, message: "Please select who wrote this report." });
+        }
+
 
         /* ======================================================
            VALIDATION
@@ -776,15 +783,15 @@ async function submitWorkReport(req, res) {
             await connection.query(
                 `
                 INSERT INTO service_reports (
-                    id, request_id, technician_id,
+                    id, request_id, technician_id, reported_by,
                     report_type, progress_number, report_title,
                     work_performed, findings, materials_used,
                     technician_notes, status, submitted_at
                 )
-                VALUES (?, ?, ?, 'progress', ?, ?, ?, ?, ?, ?, 'approved', NOW())
+                VALUES (?, ?, ?, ?, 'progress', ?, ?, ?, ?, ?, ?, 'approved', NOW())
                 `,
                 [
-                    progressReportId, requestId, technicianId,
+                    progressReportId, requestId, technicianId, reportedBy,
                     progressNumber, reportTitle || `Progress Update ${progressNumber}`,
                     workPerformed, findings, materialsUsed, technicianNotes
                 ]
@@ -864,6 +871,8 @@ async function submitWorkReport(req, res) {
 
                     report_title = ?,
 
+                    reported_by = ?,
+
                     status = 'submitted',
 
                     submitted_at = NOW(),
@@ -888,6 +897,8 @@ async function submitWorkReport(req, res) {
                     technicianNotes,
 
                     reportTitle || "Final Work Report",
+
+                    reportedBy,
 
                     reportId
 
@@ -1053,6 +1064,7 @@ async function submitWorkReport(req, res) {
                 id,
                 request_id,
                 technician_id,
+                reported_by,
                 report_type,
                 progress_number,
                 report_title,
@@ -1077,6 +1089,7 @@ async function submitWorkReport(req, res) {
                 ?,
                 ?,
                 ?,
+                ?,
                 'submitted',
                 NOW()
 
@@ -1089,6 +1102,8 @@ async function submitWorkReport(req, res) {
                 requestId,
 
                 technicianId,
+
+                reportedBy,
 
                 "final",
 

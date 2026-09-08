@@ -665,7 +665,7 @@ async function getRequestById(req, res) {
         const [progressReports] = await pool.query(
             `
             SELECT
-                sr.id, sr.request_id, sr.technician_id,
+                sr.id, sr.request_id, sr.technician_id, sr.reported_by,
                 sr.report_type, sr.progress_number, sr.report_title,
                 sr.work_performed, sr.findings, sr.materials_used,
                 sr.technician_notes, sr.status, sr.submitted_at,

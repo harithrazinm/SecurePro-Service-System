@@ -1413,6 +1413,10 @@ function renderExistingReports(data) {
                                     <span>Technician Notes</span>
                                     <p>${escapeHtml(report.technician_notes || "—")}</p>
                                 </div>
+                                <div class="progress-detail">
+                                    <span>Reported By</span>
+                                    <p class="report-writer-display">${escapeHtml(report.reported_by || "—")}</p>
+                                </div>
                             </div>
 
                             ${media.length ? `
@@ -2320,6 +2324,15 @@ async function submitReport(event) {
 
     formData.append("report_type", reportType);
     formData.append("report_title", reportTitle);
+
+    const reportedBy = document.querySelector('input[name="reported_by"]:checked')?.value || "";
+    if (!reportedBy) {
+        showReportMessage("Please select who wrote this report.", "error");
+        button.disabled = false;
+        button.textContent = reportType === "final" ? "Submit Final Report" : "Submit Progress Update";
+        return;
+    }
+    formData.append("reported_by", reportedBy);
 
 
     /*

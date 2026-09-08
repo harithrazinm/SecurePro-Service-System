@@ -1577,6 +1577,30 @@ async function sendWhatsApp(
         "noopener,noreferrer"
     );
 
+    // WhatsApp is opened externally, so the system cannot receive
+    // a delivery confirmation. Mark the quotation as sent when
+    // the admin triggers the WhatsApp send action.
+    try {
+        const result = await apiRequest(
+            `/quotations/${encodeURIComponent(id)}/send`,
+            {
+                method: "POST"
+            }
+        );
+
+        if (result) {
+            await loadQuotations();
+        }
+    } catch (error) {
+        console.error(
+            "WhatsApp quotation status update error:",
+            error
+        );
+        showError(
+            `WhatsApp opened, but the quotation status could not be updated: ${error.message}`
+        );
+    }
+
 }
 
 
