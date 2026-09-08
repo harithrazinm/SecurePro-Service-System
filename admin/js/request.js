@@ -372,6 +372,78 @@ function renderCustomer(data) {
    CUSTOMER ANSWERS
 ========================================================= */
 
+function formatAnswerLabel(value) {
+    if (value === null || value === undefined) return "";
+
+    const text = String(value)
+        .trim()
+        .replace(/[_-]+/g, " ")
+        .replace(/\\s+/g, " ");
+
+    if (!text) return "";
+
+    return text
+        .split(" ")
+        .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1) : "")
+        .join(" ");
+}
+
+function normalizeAnswerArray(value) {
+    if (Array.isArray(value)) return value;
+
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+
+        // Some answers are stored as JSON strings, e.g. ["card","pin"].
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) return parsed;
+            } catch (error) {
+                // Keep the original value if it is not valid JSON.
+            }
+        }
+    }
+
+    return null;
+}
+
+function renderAnswerValue(value) {
+    const items = normalizeAnswerArray(value);
+
+    if (items && items.length) {
+        const badges = items
+            .map(item => {
+                let label = item;
+
+                if (item && typeof item === "object") {
+                    label =
+                        item.option_label_en ||
+                        item.label?.en ||
+                        item.option_value ||
+                        item.value ||
+                        item.name ||
+                        "";
+                }
+
+                return formatAnswerLabel(label);
+            })
+            .filter(Boolean);
+
+        if (badges.length) {
+            return `
+                <div class="answer-badges">
+                    ${badges
+                        .map(label => `<span class="answer-badge">${escapeHtml(label)}</span>`)
+                        .join("")}
+                </div>
+            `;
+        }
+    }
+
+    return escapeHtml(value);
+}
+
 function renderAnswers(data) {
     const container = document.querySelector("#answersGrid");
     if (!container) return;
@@ -413,8 +485,7 @@ function renderAnswers(data) {
                     option.value ||
                     ""
                 )
-                .filter(Boolean)
-                .join(", ");
+                .filter(Boolean);
         }
 
         if (value === null || value === undefined || value === "") {
@@ -426,7 +497,8 @@ function renderAnswers(data) {
                 ? (answer.unit.en || answer.unit.ms || "")
                 : (answer.unit || "");
 
-        if (unit && !String(value).includes(unit)) {
+        const arrayValue = normalizeAnswerArray(value);
+        if (unit && !arrayValue && !String(value).includes(unit)) {
             value = `${value} ${unit}`;
         }
 
@@ -437,12 +509,16 @@ function renderAnswers(data) {
             answer.question_code ||
             "Customer Requirement";
 
-        const fullWidth = String(value).length > 40 ? " full-width" : "";
+        const valueForLength = arrayValue
+            ? arrayValue.map(item => String(item)).join(", ")
+            : String(value);
+
+        const fullWidth = valueForLength.length > 40 ? " full-width" : "";
 
         return `
             <div class="answer-item${fullWidth}">
                 <div class="answer-label">${escapeHtml(question)}</div>
-                <div class="answer-value">${escapeHtml(value)}</div>
+                <div class="answer-value">${renderAnswerValue(value)}</div>
             </div>
         `;
     }).join("");
