@@ -264,7 +264,6 @@ function renderRequest(data) {
     renderStatus(data);
     renderAssignment(data);
     renderMeta(data);
-    renderQuotationHistory(data);
 
     const loading = document.querySelector("#requestLoading");
     const details = document.querySelector("#requestDetails");

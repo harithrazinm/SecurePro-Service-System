@@ -1,14 +1,23 @@
 const express = require("express");
 const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const {
+    CloudinaryStorage
+} = require("multer-storage-cloudinary");
 
-const cloudinary = require("../config/cloudinary");
-const authMiddleware = require("../middleware/authMiddleware");
+const cloudinary =
+    require("../config/cloudinary");
+
+const authMiddleware =
+    require("../middleware/authMiddleware");
+
 
 const {
     getQuotations,
     getQuotationById,
+    getQuotationsByRequest,
     createQuotation,
+    updateQuotation,
+    deleteQuotation,
     sendQuotation,
     sendQuotationByEmail,
     uploadPaymentProof,
@@ -16,98 +25,141 @@ const {
     uploadFinalQuotation
 } = require("../controllers/quotationController");
 
-const router = express.Router();
+
+const router =
+    express.Router();
 
 
-// ======================================================
-// CLOUDINARY STORAGE
-// ======================================================
+/* =========================================================
+   CLOUDINARY STORAGE
+========================================================= */
 
-const storage = new CloudinaryStorage({
+const storage =
+    new CloudinaryStorage({
 
-    cloudinary,
+        cloudinary,
 
-    params: async (req, file) => ({
+        params:
+            async (
+                req,
+                file
+            ) => ({
 
-        folder:
-            file.fieldname === "payment_proof"
-                ? "securepro/payment-proofs"
-                : "securepro/quotations",
+                folder:
+                    file.fieldname ===
+                    "payment_proof"
 
-        /*
-         * Quotation PDFs are stored as RAW files.
-         * Payment proof can be PDF/image.
-         */
-        resource_type:
-            file.fieldname === "quotation_file"
-                ? "raw"
-                : "auto",
+                        ? "securepro/payment-proofs"
 
-        format:
-            file.fieldname === "quotation_file"
-                ? "pdf"
-                : undefined,
+                        : "securepro/quotations",
 
-        use_filename: true,
+                resource_type:
+                    file.fieldname ===
+                    "quotation_file"
 
-        unique_filename: true
+                        ? "raw"
 
-    })
+                        : "auto",
 
-});
+                format:
+                    file.fieldname ===
+                    "quotation_file"
+
+                        ? "pdf"
+
+                        : undefined,
+
+                use_filename:
+                    true,
+
+                unique_filename:
+                    true
+
+            })
+
+    });
 
 
-// ======================================================
-// MULTER UPLOAD
-// ======================================================
+/* =========================================================
+   MULTER
+========================================================= */
 
-const upload = multer({
+const upload =
+    multer({
 
-    storage,
+        storage,
 
-    limits: {
-        fileSize: 10 * 1024 * 1024
-    },
+        limits: {
 
-    fileFilter: (req, file, callback) => {
+            fileSize:
+                10 *
+                1024 *
+                1024
 
-        const allowed = [
-            "application/pdf",
-            "image/jpeg",
-            "image/png",
-            "image/webp"
-        ];
+        },
 
-        const isQuotation =
-            file.fieldname === "quotation_file";
+        fileFilter:
+            (
+                req,
+                file,
+                callback
+            ) => {
 
-        const isAllowed =
-            isQuotation
-                ? file.mimetype === "application/pdf"
-                : allowed.includes(file.mimetype);
+                const allowed = [
 
-        callback(
+                    "application/pdf",
 
-            isAllowed
-                ? null
-                : new Error(
+                    "image/jpeg",
+
+                    "image/png",
+
+                    "image/webp"
+
+                ];
+
+
+                const isQuotation =
+                    file.fieldname ===
+                    "quotation_file";
+
+
+                const isAllowed =
                     isQuotation
-                        ? "Quotation upload must be a PDF file."
-                        : "Payment proof must be a PDF, JPG, PNG, or WEBP file."
-                ),
 
-            isAllowed
+                        ? file.mimetype ===
+                            "application/pdf"
 
-        );
-
-    }
-
-});
+                        : allowed.includes(
+                            file.mimetype
+                        );
 
 
-// ======================================================
-// ADMIN AUTHENTICATION
-// ======================================================
+                callback(
+
+                    isAllowed
+                        ? null
+                        : new Error(
+
+                            isQuotation
+
+                                ? "Quotation upload must be a PDF file."
+
+                                : "Payment proof must be a PDF, JPG, PNG, or WEBP file."
+
+                        ),
+
+                    isAllowed
+
+                );
+
+            }
+
+    });
+
+
+/* =========================================================
+   ADMIN AUTHENTICATION
+========================================================= */
 
 router.use(
     authMiddleware,
@@ -115,9 +167,9 @@ router.use(
 );
 
 
-// ======================================================
-// QUOTATIONS
-// ======================================================
+/* =========================================================
+   GET ALL QUOTATIONS
+========================================================= */
 
 router.get(
     "/",
@@ -125,15 +177,31 @@ router.get(
 );
 
 
+/* =========================================================
+   GET QUOTATIONS FOR REQUEST
+ *
+ * /api/quotations/request/:requestId
+========================================================= */
+
+router.get(
+    "/request/:requestId",
+    getQuotationsByRequest
+);
+
+
+/* =========================================================
+   GET ONE QUOTATION
+========================================================= */
+
 router.get(
     "/:id",
     getQuotationById
 );
 
 
-// ======================================================
-// CREATE ORIGINAL QUOTATION
-// ======================================================
+/* =========================================================
+   CREATE ONE ORIGINAL QUOTATION
+========================================================= */
 
 router.post(
     "/",
@@ -142,9 +210,30 @@ router.post(
 );
 
 
-// ======================================================
-// SEND QUOTATION
-// ======================================================
+/* =========================================================
+   UPDATE / REPLACE QUOTATION
+========================================================= */
+
+router.put(
+    "/:id",
+    upload.single("quotation_file"),
+    updateQuotation
+);
+
+
+/* =========================================================
+   DELETE QUOTATION
+========================================================= */
+
+router.delete(
+    "/:id",
+    deleteQuotation
+);
+
+
+/* =========================================================
+   MARK AS SENT
+========================================================= */
 
 router.post(
     "/:id/send",
@@ -152,9 +241,9 @@ router.post(
 );
 
 
-// ======================================================
-// EMAIL QUOTATION
-// ======================================================
+/* =========================================================
+   EMAIL
+========================================================= */
 
 router.post(
     "/:id/email",
@@ -162,9 +251,9 @@ router.post(
 );
 
 
-// ======================================================
-// PAYMENT PROOF
-// ======================================================
+/* =========================================================
+   PAYMENT PROOF
+========================================================= */
 
 router.post(
     "/:id/payment-proof",
@@ -173,9 +262,9 @@ router.post(
 );
 
 
-// ======================================================
-// FOLLOW-UP
-// ======================================================
+/* =========================================================
+   FOLLOW-UP
+========================================================= */
 
 router.post(
     "/:id/follow-up/:number",
@@ -183,19 +272,12 @@ router.post(
 );
 
 
-// ======================================================
-// FINAL QUOTATION
-//
-// Uploaded after the job has been completed.
-// Uses the same quotation PDF Cloudinary storage.
-// ======================================================
-router.post("/test-final", (req, res) => {
-    res.json({
-        success: true,
-        message: "Quotation route is working"
-    });
-});
+/* =========================================================
+   FINAL QUOTATION
 
+   IMPORTANT: this route must appear before /:id routes are
+   interpreted, and it uses a request ID rather than quotation ID.
+========================================================= */
 
 router.post(
     "/:requestId/final-quotation",
@@ -204,56 +286,68 @@ router.post(
 );
 
 
-// ======================================================
-// UPLOAD ERROR HANDLER
-// ======================================================
+/* =========================================================
+   UPLOAD ERROR HANDLER
+========================================================= */
 
-router.use((error, req, res, next) => {
+router.use(
+    (
+        error,
+        req,
+        res,
+        next
+    ) => {
 
-    if (
-        error instanceof multer.MulterError &&
-        error.code === "LIMIT_FILE_SIZE"
-    ) {
+        if (
+            error instanceof
+            multer.MulterError
+        ) {
 
-        return res.status(400).json({
+            if (
+                error.code ===
+                "LIMIT_FILE_SIZE"
+            ) {
 
-            success: false,
+                return res.status(400).json({
 
-            message:
-                "File is too large. Maximum size is 10 MB."
+                    success: false,
 
-        });
+                    message:
+                        "File is too large. Maximum size is 10 MB."
+
+                });
+
+            }
+
+        }
+
+
+        if (error) {
+
+            console.error(
+                "Quotation upload error:",
+                error
+            );
+
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    error.message ||
+                    "Invalid quotation file."
+
+            });
+
+        }
+
+
+        return next(error);
 
     }
+);
 
 
-    if (error) {
-
-        console.error(
-            "Quotation upload error:",
-            error
-        );
-
-        return res.status(400).json({
-
-            success: false,
-
-            message:
-                error.message ||
-                "Only PDF, JPG, PNG, and WEBP files are allowed."
-
-        });
-
-    }
-
-
-    return next(error);
-
-});
-
-
-// ======================================================
-// EXPORT
-// ======================================================
-
-module.exports = router;
+module.exports =
+    router;

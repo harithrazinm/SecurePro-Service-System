@@ -114,40 +114,181 @@
         </main>
     </div>
 
-    <div id="quotationModal" class="modal-overlay" hidden>
-        <div class="quotation-modal">
-            <div class="modal-header">
-                <div><span class="eyebrow">NEW QUOTATION</span>
-                    <h2>Upload quotation</h2>
-                </div><button id="closeModalButton" class="close-button" type="button">×</button>
+    <div
+    id="quotationModal"
+    class="modal-overlay"
+    hidden
+>
+
+    <div class="quotation-modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span
+                    id="modalEyebrow"
+                    class="eyebrow"
+                >
+                    NEW QUOTATION
+                </span>
+
+                <h2 id="modalTitle">
+                    Create quotation
+                </h2>
+
             </div>
-            <form id="quotationForm">
-                <div class="form-section">
-                    <div class="form-section-title">Customer request</div><label for="requestId">Service
-                        Request</label><select id="requestId" required>
-                        <option value="">Loading requests...</option>
-                    </select><small>Choose the customer this quotation belongs to.</small>
-                </div>
-                <div class="form-section">
-                    <div class="form-section-title">Quotation document</div><label for="quotationFile">Quotation
-                        PDF</label><input id="quotationFile" type="file" accept="application/pdf,.pdf"
-                        required><small>PDF only, up to 10 MB. The document is stored securely in Cloudinary.</small>
-                </div>
-                <div class="form-section">
-                    <div class="form-section-title">Optional note</div><label for="notes">Internal
-                        notes</label><textarea id="notes" rows="3" placeholder="Optional internal note..."></textarea>
-                </div>
-                <div id="formError" class="form-error" hidden></div>
-                <div class="modal-actions"><button id="cancelButton" type="button"
-                        class="secondary-button">Cancel</button><button id="saveButton" type="submit"
-                        class="primary-button">Upload quotation</button></div>
-            </form>
+
+
+            <button
+                id="closeModalButton"
+                class="close-button"
+                type="button"
+            >
+                ×
+            </button>
+
         </div>
+
+
+        <form
+            id="quotationForm"
+        >
+
+            <!-- REQUEST -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    Customer request
+                </div>
+
+
+                <label for="requestId">
+                    Service Request
+                </label>
+
+
+                <select
+                    id="requestId"
+                    required
+                >
+
+                    <option value="">
+                        Loading requests...
+                    </option>
+
+                </select>
+
+
+                <small>
+                    Each service request can have
+                    only one quotation.
+                </small>
+
+            </div>
+
+
+            <!-- PDF -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    Quotation document
+                </div>
+
+
+                <label for="quotationFile">
+                    Quotation PDF
+                </label>
+
+
+                <input
+                    id="quotationFile"
+                    type="file"
+                    accept="application/pdf,.pdf"
+                >
+
+
+                <small>
+                    PDF only, maximum 10 MB.
+                    When editing, leave empty to
+                    keep the existing PDF.
+                </small>
+
+            </div>
+
+
+            <!-- NOTES -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    Internal note
+                </div>
+
+
+                <label for="notes">
+                    Notes
+                </label>
+
+
+                <textarea
+                    id="notes"
+                    rows="4"
+                    placeholder="Optional internal note..."
+                ></textarea>
+
+            </div>
+
+
+            <!-- ERROR -->
+
+            <div
+                id="formError"
+                class="form-error"
+                hidden
+            ></div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="modal-actions">
+
+                <button
+                    id="cancelButton"
+                    type="button"
+                    class="secondary-button"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    id="saveButton"
+                    type="submit"
+                    class="primary-button"
+                >
+                    Create quotation
+                </button>
+
+            </div>
+
+        </form>
+
     </div>
 
-    <input id="paymentProofFile" type="file"
-        accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" hidden>
-    <script src="js/quotations.js"></script>
-</body>
+</div>
 
+
+<input
+    id="paymentProofFile"
+    type="file"
+    accept="image/*,.pdf"
+    hidden
+>
+
+<script src="js/quotations.js"></script>
+
+</body>
 </html>
