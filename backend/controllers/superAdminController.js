@@ -510,10 +510,6 @@ async function getProjectById(req, res) {
                 rpt.id,
                 rpt.request_id,
                 rpt.technician_id,
-                rpt.report_type,
-                rpt.progress_number,
-                rpt.report_title,
-                rpt.reported_by,
 
                 t.name AS technician_name,
 
@@ -671,8 +667,6 @@ async function getProjectById(req, res) {
  * - quotation_uploaded
  * - quotation_sent
  * - payment_proof
- * - report_submitted
- * - report_approved
  * - completed
  * - all
  */
@@ -685,8 +679,6 @@ async function getDashboardCategoryFiles(req, res) {
             "quotation_uploaded",
             "quotation_sent",
             "payment_proof",
-            "report_submitted",
-            "report_approved",
             "completed"
         ]);
 
@@ -699,8 +691,39 @@ async function getDashboardCategoryFiles(req, res) {
 
         const files = [];
 
+        // Total Projects and Completed show projects only (not individual files).
+        if (category === "all" || category === "completed") {
+            const [projects] = await pool.query(`
+                SELECT
+                    sr.id AS request_id,
+                    sr.request_code,
+                    sr.customer_name,
+                    s.name_en AS service_name,
+                    sr.status,
+                    sr.created_at,
+                    sr.updated_at
+                FROM service_requests sr
+                INNER JOIN services s ON s.id = sr.service_id
+                WHERE sr.status ${category === "completed" ? "= 'completed'" : "<> 'cancelled'"}
+                ORDER BY sr.updated_at DESC
+            `);
+
+            projects.forEach(p => files.push({
+                id: `project-${p.request_id}`,
+                category: category === "completed" ? "Completed" : "All Projects",
+                type: "project",
+                request_id: p.request_id,
+                request_code: p.request_code,
+                customer_name: p.customer_name,
+                service_name: p.service_name,
+                status: p.status,
+                created_at: p.created_at,
+                updated_at: p.updated_at
+            }));
+        }
+
         // Latest quotation for each request, matching the dashboard/project view.
-        if (category === "all" || category === "quotation_uploaded" || category === "quotation_sent") {
+        if (category === "quotation_uploaded" || category === "quotation_sent") {
             const [quotations] = await pool.query(`
                 SELECT
                     q.id,
@@ -731,7 +754,6 @@ async function getDashboardCategoryFiles(req, res) {
 
             quotations.forEach(q => files.push({
                 id: `quotation-${q.id}`,
-                request_id: q.request_id,
                 category: category === "quotation_sent" ? "Quotation Sent" : "Quotation Uploaded",
                 file_name: q.file_name || `Quotation ${q.quotation_number || "PDF"}`,
                 file_path: q.file_path,
@@ -747,7 +769,7 @@ async function getDashboardCategoryFiles(req, res) {
         }
 
         // Payment proof is uploaded by the customer, but is included because it is a dashboard file category.
-        if (category === "all" || category === "payment_proof") {
+        if (category === "payment_proof") {
             const [payments] = await pool.query(`
                 SELECT
                     q.id,
@@ -775,7 +797,6 @@ async function getDashboardCategoryFiles(req, res) {
 
             payments.forEach(q => files.push({
                 id: `payment-${q.id}`,
-                request_id: q.request_id,
                 category: "Payment Proof",
                 file_name: q.file_name || "Payment Proof",
                 file_path: q.file_path,
@@ -786,161 +807,6 @@ async function getDashboardCategoryFiles(req, res) {
                 uploaded_at: q.uploaded_at,
                 source: "Customer Payment Proof"
             }));
-        }
-
-        // Technician reports may contain a report document and multiple photos/videos.
-        if (category === "all" || category === "report_submitted" || category === "report_approved" || category === "completed") {
-            const reportStatus = category === "report_submitted" ? "submitted" : category === "report_approved" ? "approved" : null;
-
-            if (category !== "completed") {
-                const [reports] = await pool.query(`
-                    SELECT
-                        rpt.id,
-                        rpt.request_id,
-                        sr.request_code,
-                        sr.customer_name,
-                        s.name_en AS service_name,
-                        rpt.report_file_path,
-                        rpt.status,
-                        rpt.submitted_at,
-                        rpt.reviewed_at,
-                        t.name AS technician_name
-                    FROM service_reports rpt
-                    INNER JOIN service_requests sr ON sr.id = rpt.request_id
-                    INNER JOIN services s ON s.id = sr.service_id
-                    LEFT JOIN users t ON t.id = rpt.technician_id
-                    WHERE sr.status <> 'cancelled'
-                      AND rpt.status ${category === "all" ? "IN ('submitted', 'approved')" : "= '" + reportStatus + "'"}
-                    ORDER BY rpt.submitted_at DESC
-                `);
-
-                reports.forEach(r => {
-                    if (r.report_file_path) {
-                        files.push({
-                            id: `report-${r.id}`,
-                            request_id: r.request_id,
-                            category: r.status === "approved" ? "Report Approved" : "Report Submitted",
-                            file_name: "Technician Report",
-                            file_path: r.report_file_path,
-                            file_type: "Report",
-                            request_code: r.request_code,
-                            customer_name: r.customer_name,
-                            service_name: r.service_name,
-                            technician_name: r.technician_name,
-                            uploaded_at: r.submitted_at,
-                            reviewed_at: r.reviewed_at,
-                            source: "Technician Report"
-                        });
-                    }
-                });
-
-                const reportIds = reports.map(r => r.id);
-                if (reportIds.length) {
-                    const [media] = await pool.query(`
-                        SELECT
-                            m.id,
-                            m.report_id,
-                            m.file_name,
-                            m.file_path,
-                            m.mime_type,
-                            m.uploaded_at,
-                            sr.request_code,
-                            sr.customer_name,
-                            s.name_en AS service_name,
-                            rpt.status,
-                            t.name AS technician_name
-                        FROM service_report_media m
-                        INNER JOIN service_reports rpt ON rpt.id = m.report_id
-                        INNER JOIN service_requests sr ON sr.id = m.request_id
-                        INNER JOIN services s ON s.id = sr.service_id
-                        LEFT JOIN users t ON t.id = m.technician_id
-                        WHERE m.report_id IN (${reportIds.map(() => "?").join(",")})
-                        ORDER BY m.uploaded_at DESC
-                    `, reportIds);
-
-                    media.forEach(m => files.push({
-                        id: `media-${m.id}`,
-                        request_id: m.request_id,
-                        category: m.status === "approved" ? "Report Approved" : "Report Submitted",
-                        file_name: m.file_name || "Report Media",
-                        file_path: m.file_path,
-                        file_type: m.mime_type || "Media",
-                        request_code: m.request_code,
-                        customer_name: m.customer_name,
-                        service_name: m.service_name,
-                        technician_name: m.technician_name,
-                        uploaded_at: m.uploaded_at,
-                        source: "Technician Report Media"
-                    }));
-                }
-            }
-
-            if (category === "all" || category === "completed") {
-                const [media] = await pool.query(`
-                    SELECT
-                        m.id,
-                        m.file_name,
-                        m.file_path,
-                        m.mime_type,
-                        m.uploaded_at,
-                        sr.request_code,
-                        sr.customer_name,
-                        s.name_en AS service_name,
-                        t.name AS technician_name
-                    FROM service_report_media m
-                    INNER JOIN service_requests sr ON sr.id = m.request_id
-                    INNER JOIN services s ON s.id = sr.service_id
-                    LEFT JOIN users t ON t.id = m.technician_id
-                    WHERE sr.status = 'completed'
-                    ORDER BY m.uploaded_at DESC
-                `);
-
-                media.forEach(m => files.push({
-                    id: `completion-media-${m.id}`,
-                    request_id: m.request_id,
-                    category: "Completed",
-                    file_name: m.file_name || "Completion Media",
-                    file_path: m.file_path,
-                    file_type: m.mime_type || "Media",
-                    request_code: m.request_code,
-                    customer_name: m.customer_name,
-                    service_name: m.service_name,
-                    technician_name: m.technician_name,
-                    uploaded_at: m.uploaded_at,
-                    source: "Service Completion Media"
-                }));
-
-                const [photos] = await pool.query(`
-                    SELECT
-                        cp.id,
-                        cp.request_id,
-                        cp.file_name,
-                        cp.file_path,
-                        cp.uploaded_at,
-                        sr.request_code,
-                        sr.customer_name,
-                        s.name_en AS service_name
-                    FROM customer_photos cp
-                    INNER JOIN service_requests sr ON sr.id = cp.request_id
-                    INNER JOIN services s ON s.id = sr.service_id
-                    WHERE sr.status = 'completed'
-                    ORDER BY cp.uploaded_at DESC
-                `);
-
-                photos.forEach(p => files.push({
-                    id: `completion-photo-${p.id}`,
-                    request_id: p.request_id,
-                    category: "Completed",
-                    file_name: p.file_name || "Project Photo",
-                    file_path: p.file_path,
-                    file_type: "Photo",
-                    request_code: p.request_code,
-                    customer_name: p.customer_name,
-                    service_name: p.service_name,
-                    uploaded_at: p.uploaded_at,
-                    source: "Customer Project Photo"
-                }));
-            }
         }
 
         files.sort((a, b) => new Date(b.uploaded_at || 0) - new Date(a.uploaded_at || 0));
