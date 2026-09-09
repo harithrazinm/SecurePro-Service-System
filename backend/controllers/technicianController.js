@@ -13,6 +13,7 @@ async function startAssignedRequest(req, res) {
                 id,
                 status,
                 technician_id,
+                technician_started_at,
                 updated_at
              FROM service_requests
              WHERE id = ?
@@ -54,6 +55,7 @@ async function startAssignedRequest(req, res) {
             `UPDATE service_requests
              SET
                  status = 'in_progress',
+                 technician_started_at = COALESCE(technician_started_at, NOW()),
                  updated_at = NOW()
              WHERE id = ?
                AND technician_id = ?`,
@@ -70,6 +72,7 @@ async function startAssignedRequest(req, res) {
             `SELECT
                 id,
                 status,
+                technician_started_at,
                 updated_at
              FROM service_requests
              WHERE id = ?
@@ -91,7 +94,7 @@ async function startAssignedRequest(req, res) {
                     rows[0]?.status || "in_progress",
 
                 technician_started_at:
-                    rows[0]?.updated_at || null
+                    rows[0]?.technician_started_at || null
             }
         });
 
@@ -468,7 +471,6 @@ sq.title_ms AS question_ms
                     id,
                     request_id,
                     technician_id,
-                    reported_by,
                     report_type,
                     progress_number,
                     report_title,
@@ -626,12 +628,6 @@ async function submitWorkReport(req, res) {
         const reportTitle =
             String(req.body.report_title || "").trim();
 
-        const reportedBy = String(req.body.reported_by || "").trim();
-        if (!reportedBy || !["Man", "Izz"].includes(reportedBy)) {
-            await connection.rollback();
-            return res.status(400).json({ success: false, message: "Please select who wrote this report." });
-        }
-
 
         /* ======================================================
            VALIDATION
@@ -783,15 +779,15 @@ async function submitWorkReport(req, res) {
             await connection.query(
                 `
                 INSERT INTO service_reports (
-                    id, request_id, technician_id, reported_by,
+                    id, request_id, technician_id,
                     report_type, progress_number, report_title,
                     work_performed, findings, materials_used,
                     technician_notes, status, submitted_at
                 )
-                VALUES (?, ?, ?, ?, 'progress', ?, ?, ?, ?, ?, ?, 'approved', NOW())
+                VALUES (?, ?, ?, 'progress', ?, ?, ?, ?, ?, ?, 'approved', NOW())
                 `,
                 [
-                    progressReportId, requestId, technicianId, reportedBy,
+                    progressReportId, requestId, technicianId,
                     progressNumber, reportTitle || `Progress Update ${progressNumber}`,
                     workPerformed, findings, materialsUsed, technicianNotes
                 ]
@@ -871,8 +867,6 @@ async function submitWorkReport(req, res) {
 
                     report_title = ?,
 
-                    reported_by = ?,
-
                     status = 'submitted',
 
                     submitted_at = NOW(),
@@ -897,8 +891,6 @@ async function submitWorkReport(req, res) {
                     technicianNotes,
 
                     reportTitle || "Final Work Report",
-
-                    reportedBy,
 
                     reportId
 
@@ -1064,7 +1056,6 @@ async function submitWorkReport(req, res) {
                 id,
                 request_id,
                 technician_id,
-                reported_by,
                 report_type,
                 progress_number,
                 report_title,
@@ -1089,7 +1080,6 @@ async function submitWorkReport(req, res) {
                 ?,
                 ?,
                 ?,
-                ?,
                 'submitted',
                 NOW()
 
@@ -1102,8 +1092,6 @@ async function submitWorkReport(req, res) {
                 requestId,
 
                 technicianId,
-
-                reportedBy,
 
                 "final",
 

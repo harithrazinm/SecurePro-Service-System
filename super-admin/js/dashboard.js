@@ -96,7 +96,6 @@ function closeFileModal(event) {
         document.activeElement.blur();
     }
 
-    modal.inert = true;
     modal.hidden = true;
     document.body.classList.remove("modal-open");
 
@@ -115,8 +114,7 @@ function openFileModal(category, opener = null) {
     document.querySelector("#fileModalTitle").textContent = CATEGORY_TITLES[category] || "Uploaded Files";
     document.querySelector("#fileModalSubtitle").textContent = "All files available for this category.";
     body.innerHTML = '<div class="loading">Loading files...</div>';
-    modal.hidden = false;
-    modal.inert = false;
+   modal.hidden = false;
     document.body.classList.add("modal-open");
     requestAnimationFrame(() => document.querySelector("#fileModalClose")?.focus());
     loadCategoryFiles(category);
@@ -166,18 +164,70 @@ async function loadCategoryFiles(category) {
     }
 }
 function setupFileCards() {
-    document.querySelectorAll(".stat-card[data-file-category]").forEach(card => {
-        const open = () => openFileModal(card.dataset.fileCategory || "all", card);
-        card.addEventListener("click", open);
-        card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+
+    // Use event delegation so cards remain clickable
+    // even after other UI interactions.
+    document.addEventListener("click", function (e) {
+
+        const card = e.target.closest(".stat-card[data-file-category]");
+
+        if (card) {
+            e.preventDefault();
+
+            openFileModal(
+                card.dataset.fileCategory || "all",
+                card
+            );
+
+            return;
+        }
+
+        // Close button
+        if (e.target.closest("#fileModalClose")) {
+            closeFileModal(e);
+            return;
+        }
+
+        // Backdrop
+        if (e.target.closest("[data-close-file-modal]")) {
+            closeFileModal(e);
+            return;
+        }
+
     });
 
-    document.querySelector("#fileModalClose")?.addEventListener("click", closeFileModal);
-    document.querySelector("[data-close-file-modal]")?.addEventListener("click", closeFileModal);
+    // Keyboard accessibility
+    document.addEventListener("keydown", function (e) {
 
-    document.addEventListener("keydown", e => {
+        const card = e.target.closest(
+            ".stat-card[data-file-category]"
+        );
+
+        if (
+            card &&
+            (e.key === "Enter" || e.key === " ")
+        ) {
+            e.preventDefault();
+
+            openFileModal(
+                card.dataset.fileCategory || "all",
+                card
+            );
+
+            return;
+        }
+
+        // Escape closes modal
         const modal = document.getElementById("fileModal");
-        if (e.key === "Escape" && modal && !modal.hidden) closeFileModal(e);
+
+        if (
+            e.key === "Escape" &&
+            modal &&
+            !modal.hidden
+        ) {
+            closeFileModal(e);
+        }
+
     });
 }
 
