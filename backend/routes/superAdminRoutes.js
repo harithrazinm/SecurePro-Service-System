@@ -3,7 +3,8 @@ const authMiddleware = require("../middleware/authMiddleware");
 const {
     getDashboard,
     getProjects,
-    getProjectById
+    getProjectById,
+    getDashboardCategoryFiles
 } = require("../controllers/superAdminController");
 
 const router = express.Router();
@@ -14,5 +15,6 @@ router.use(authMiddleware, authMiddleware.requireSuperAdmin);
 router.get("/dashboard", getDashboard);
 router.get("/projects", getProjects);
 router.get("/projects/:id", getProjectById);
+router.get("/dashboard/files", getDashboardCategoryFiles);
 
 module.exports = router;
