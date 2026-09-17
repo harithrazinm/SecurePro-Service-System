@@ -404,23 +404,38 @@
 
                 </div>
 
-                <!-- REPORT WRITTEN BY -->
-                <div class="form-group report-writer-group">
-                    <label>Report Written By <span>*</span></label>
-                    <div class="report-writer-options">
-                        <label class="report-writer-option">
-                            <input type="radio" name="reported_by" value="Head Technician" required>
-                            <span class="report-writer-radio"></span>
-                            <span>Head Technician</span>
-                        </label>
-                        <label class="report-writer-option">
-                            <input type="radio" name="reported_by" value="Technician 1" required>
-                            <span class="report-writer-radio"></span>
-                            <span>Technician 1</span>
-                        </label>
-                    </div>
-                </div>
+                <!-- REPORT WRITER -->
+<div class="form-group report-writer-group">
+    <label>Report Written By <span>*</span></label>
 
+    <div class="report-writer-options">
+
+        <label class="report-writer-option" for="reportedByHead">
+            <input
+                type="radio"
+                id="reportedByHead"
+                name="reported_by"
+                value="Head Technician"
+                required
+            >
+            <span class="report-writer-radio"></span>
+            <span>Head Technician</span>
+        </label>
+
+        <label class="report-writer-option" for="reportedByTechnician">
+            <input
+                type="radio"
+                id="reportedByTechnician"
+                name="reported_by"
+                value="Technician 1"
+                required
+            >
+            <span class="report-writer-radio"></span>
+            <span>Technician 1</span>
+        </label>
+
+    </div>
+</div>
                 <!-- WORK PERFORMED -->
 
                 <div class="form-group">

@@ -2618,14 +2618,50 @@ async function submitReport(event) {
     formData.append("report_type", reportType);
     formData.append("report_title", reportTitle);
 
-    const reportedBy = document.querySelector('input[name="reported_by"]:checked')?.value || "";
-    if (!reportedBy) {
-        showReportMessage("Please select who wrote this report.", "error");
-        button.disabled = false;
-        button.textContent = reportType === "final" ? "Submit Final Report" : "Submit Progress Update";
-        return;
-    }
-    formData.append("reported_by", reportedBy);
+ let reportedBy = "";
+
+const headTechnician = document.getElementById("reportedByHead");
+const technicianOne = document.getElementById("reportedByTechnician");
+
+if (headTechnician && headTechnician.checked) {
+    reportedBy = headTechnician.value;
+} else if (technicianOne && technicianOne.checked) {
+    reportedBy = technicianOne.value;
+}
+
+console.log("====================================");
+console.log("REPORT WRITTEN BY:", reportedBy);
+console.log("HEAD TECHNICIAN CHECKED:", headTechnician?.checked);
+console.log("TECHNICIAN 1 CHECKED:", technicianOne?.checked);
+console.log("====================================");
+console.log("===== REPORT DEBUG =====");
+console.log("reportedBy:", JSON.stringify(reportedBy));
+console.log("head exists:", !!headTechnician);
+console.log("head checked:", headTechnician?.checked);
+console.log("head value:", headTechnician?.value);
+console.log("technician exists:", !!technicianOne);
+console.log("technician checked:", technicianOne?.checked);
+console.log("technician value:", technicianOne?.value);
+console.log("========================");
+
+
+if (!reportedBy) {
+    showReportMessage(
+        "Please select who wrote this report.",
+        "error"
+    );
+
+    button.disabled = false;
+
+    button.textContent =
+        reportType === "final"
+            ? "Submit Final Report"
+            : "Submit Progress Update";
+
+    return;
+}
+
+formData.append("reported_by", reportedBy);
 
 
     /*
