@@ -76,6 +76,7 @@ function formatStatus(status) {
         assigned: "Assigned",
         in_progress: "In Progress",
         waiting_parts: "Waiting Parts",
+        awaiting_payment: "Awaiting Payment",
         completed: "Completed",
         cancelled: "Cancelled"
     };
@@ -94,7 +95,7 @@ function formatStatus(status) {
 function statusClass(status) {
     const allowed = [
         "pending", "assigned", "in_progress",
-        "waiting_parts", "completed", "cancelled"
+        "waiting_parts", "awaiting_payment", "completed", "cancelled"
     ];
     return allowed.includes(status) ? status : "pending";
 }
@@ -262,6 +263,7 @@ function renderRequest(data) {
     renderPhotos(data);
     renderProgressReports(data);
     renderTechnicianReport(data);
+    renderInvoiceSection(data);
     renderStatus(data);
     renderAssignment(data);
     renderMeta(data);
@@ -776,8 +778,10 @@ function setupReportReview(report) {
 
     approveButton.onclick = async () => {
         const confirmed = window.confirm(
-            "Are you sure you want to approve this technician report?\n\nThe service request will be marked as completed."
-        );
+    "Are you sure you want to approve this technician report?\n\n" +
+    "The service request will be moved to Awaiting Payment. " +
+    "It will only become Completed after the final payment is verified."
+);
         if (!confirmed) return;
         await reviewTechnicianReport("approve");
     };
@@ -891,14 +895,78 @@ function renderStatus(data) {
     selectedStatus = status;
 
     const currentBadge = document.querySelector("#currentStatusBadge");
+
     if (currentBadge) {
         currentBadge.textContent = formatStatus(status);
-        currentBadge.className = `status-current-value status-badge ${statusClass(status)}`;
+        currentBadge.className =
+            `status-current-value status-badge ${statusClass(status)}`;
     }
 
     const select = document.querySelector("#requestStatus");
-    if (select) {
-        select.value = status;
+
+    if (!select) return;
+
+    select.value = status;
+
+    const hasPaidInvoice =
+        Array.isArray(data.invoices) &&
+        data.invoices.some(invoice => invoice.status === "paid");
+
+    const hasInvoice =
+        Array.isArray(data.invoices) &&
+        data.invoices.length > 0;
+
+    const completedOption =
+        select.querySelector('option[value="completed"]');
+
+    const awaitingPaymentOption =
+        select.querySelector('option[value="awaiting_payment"]');
+
+    if (completedOption) {
+        completedOption.disabled =
+            !hasPaidInvoice && status !== "completed";
+
+        completedOption.title =
+            completedOption.disabled
+                ? "Complete the service request only after the final invoice payment has been verified."
+                : "";
+    }
+
+    /*
+     * Awaiting Payment should normally happen after
+     * the technician report has been approved.
+     */
+    if (awaitingPaymentOption) {
+        awaitingPaymentOption.disabled =
+            status === "completed" ||
+            status === "cancelled";
+    }
+
+    /*
+     * If the request is already completed,
+     * prevent moving it backwards manually.
+     */
+    if (status === "completed") {
+        Array.from(select.options).forEach(option => {
+            if (option.value !== "completed") {
+                option.disabled = true;
+            }
+        });
+    }
+
+    /*
+     * If payment has already been verified,
+     * keep the request completed.
+     */
+    if (hasPaidInvoice) {
+        select.value = "completed";
+        selectedStatus = "completed";
+
+        if (currentBadge) {
+            currentBadge.textContent = "Completed";
+            currentBadge.className =
+                "status-current-value status-badge completed";
+        }
     }
 }
 
@@ -1353,20 +1421,6 @@ async function saveTechnicianAssignment() {
     }
 }
 
-/* =========================================================
-   ASSIGNMENT DISPLAY
-========================================================= */
-
-function renderAssignment(data) {
-    const technicianSelect = document.querySelector("#technicianSelect");
-    if (!technicianSelect) return;
-
-    const technician = data.technician || null;
-    if (technician?.id) {
-        technicianSelect.dataset.currentTechnician = technician.id;
-    }
-}
-
 
 /* =========================================================
    SAVE CHANGES
@@ -1391,6 +1445,16 @@ async function saveChanges() {
     }
 
     const status = selectedStatus || requestData.status || "pending";
+    const hasPaidInvoice =
+    Array.isArray(requestData.invoices) &&
+    requestData.invoices.some(invoice => invoice.status === "paid");
+
+if (status === "completed" && !hasPaidInvoice) {
+    alert(
+        "This service request cannot be marked as Completed until the final invoice payment has been verified."
+    );
+    return;
+}
 
     const technicianSelect = document.querySelector("#technicianSelect");
     const technicianId = technicianSelect && technicianSelect.value ? technicianSelect.value : null;
@@ -1584,6 +1648,239 @@ function renderQuotationHistory(data) {
 
 
 /* =========================================================
+   FINAL INVOICE & PAYMENT
+========================================================= */
+
+function moneyValue(value) {
+    const number = Number(value || 0);
+    return Number.isFinite(number) ? number : 0;
+}
+
+function moneyText(value) {
+    return `RM ${moneyValue(value).toFixed(2)}`;
+}
+
+function renderInvoiceSection(data) {
+    const container = document.querySelector("#invoiceHistory");
+    const verificationPanel = document.querySelector("#paymentVerificationPanel");
+    if (!container) return;
+
+    const invoices = Array.isArray(data.invoices) ? data.invoices : [];
+    const latest = invoices[0] || null;
+
+    if (!invoices.length) {
+        container.innerHTML = `<div class="empty-state">No final invoice has been uploaded yet.</div>`;
+    } else {
+        container.innerHTML = invoices.map(invoice => {
+            const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
+            const paymentHtml = payments.length
+                ? payments.map(payment => `
+                    <div class="payment-row">
+                        <strong>${moneyText(payment.amount)}</strong>
+                        <span class="payment-${escapeHtml(payment.status)}">${escapeHtml(formatPaymentStatus(payment.status))}</span>
+                        <div class="invoice-meta-grid" style="margin-top:10px;">
+                            ${quotationMetaItem("Method", payment.payment_method || "—")}
+                            ${quotationMetaItem("Submitted", formatDate(payment.submitted_at))}
+                            ${quotationMetaItem("Verified", formatDate(payment.verified_at))}
+                            ${quotationMetaItem("Remarks", payment.remarks || "—")}
+                        </div>
+                        ${payment.payment_proof_url ? `<div class="invoice-actions"><a class="invoice-link" href="${escapeHtml(payment.payment_proof_url)}" target="_blank" rel="noopener noreferrer">View Payment Proof</a></div>` : ""}
+                        ${payment.status === "pending" ? `
+                            <div class="invoice-verify-actions">
+                                <button type="button" class="approve-button" data-verify-payment="${escapeHtml(payment.id)}">✓ Confirm Payment</button>
+                                <button type="button" class="reject-button" data-reject-payment="${escapeHtml(payment.id)}">✕ Reject Payment</button>
+                            </div>
+                        ` : ""}
+                    </div>
+                `).join("")
+                : `<div class="empty-state">No payment proof has been uploaded for this invoice.</div>`;
+
+            return `
+                <div class="invoice-card">
+                    <div class="invoice-card-header">
+                        <div>
+                            <h3>${escapeHtml(invoice.invoice_number || "Final Invoice")}</h3>
+                            <small>Uploaded ${escapeHtml(formatDate(invoice.created_at))}</small>
+                        </div>
+                        <span class="invoice-status">${escapeHtml(formatInvoiceStatus(invoice.status))}</span>
+                    </div>
+                    <div class="invoice-meta-grid">
+                        ${quotationMetaItem("Total", moneyText(invoice.total_amount))}
+                        ${quotationMetaItem("Already Paid", moneyText(invoice.amount_paid))}
+                        ${quotationMetaItem("Balance Due", moneyText(invoice.balance_due))}
+                        ${quotationMetaItem("Created By", invoice.created_by_name || "—")}
+                    </div>
+                    ${invoice.invoice_file_url ? `<div class="invoice-actions"><a class="invoice-link" href="${escapeHtml(invoice.invoice_file_url)}" target="_blank" rel="noopener noreferrer">View Final Invoice PDF</a></div>` : ""}
+                    <div class="payment-list"><strong>Payment Proof</strong>${paymentHtml}</div>
+                </div>
+            `;
+        }).join("");
+    }
+
+    if (verificationPanel) {
+        verificationPanel.hidden = !latest || latest.status === "paid";
+        verificationPanel.innerHTML = latest && latest.status !== "paid"
+            ? `<div class="invoice-panel-title">Payment Verification</div><p class="invoice-help">Confirming a payment updates the invoice balance. The service request becomes <strong>Completed</strong> only when the balance reaches RM 0.00.</p>`
+            : "";
+    }
+
+    bindInvoicePaymentActions();
+    updateInvoiceFormState(data);
+}
+
+function formatInvoiceStatus(status) {
+    const labels = {
+        draft: "Draft",
+        sent: "Sent",
+        payment_submitted: "Payment Submitted",
+        paid: "Paid",
+        cancelled: "Cancelled"
+    };
+    return labels[status] || status || "Unknown";
+}
+
+function formatPaymentStatus(status) {
+    const labels = { pending: "Pending Verification", verified: "Verified", rejected: "Rejected" };
+    return labels[status] || status || "Unknown";
+}
+
+function updateInvoiceFormState(data) {
+    const invoices = Array.isArray(data.invoices) ? data.invoices : [];
+    const latest = invoices[0] || null;
+    const paymentPanel = document.querySelector(".payment-panel");
+    const uploadPaymentButton = document.querySelector("#uploadPaymentProofButton");
+    if (paymentPanel) paymentPanel.hidden = !latest || latest.status === "paid";
+    if (uploadPaymentButton) uploadPaymentButton.disabled = !latest || latest.status === "paid";
+
+    const subtotal = document.querySelector("#invoiceSubtotal");
+    if (subtotal && !subtotal.value && data.quotations?.original?.total) {
+        subtotal.value = Number(data.quotations.original.total).toFixed(2);
+    }
+
+    updateInvoiceBalancePreview();
+}
+
+function updateInvoiceBalancePreview() {
+    const total = moneyValue(document.querySelector("#invoiceTotal")?.value);
+    const paid = moneyValue(document.querySelector("#invoiceAmountPaid")?.value);
+    const balance = Math.max(0, total - paid);
+    const element = document.querySelector("#invoiceBalancePreview");
+    if (element) element.textContent = moneyText(balance);
+}
+
+function showInvoiceMessage(id, message, error = false) {
+    const element = document.querySelector(`#${id}`);
+    if (!element) return;
+    element.textContent = message;
+    element.className = `invoice-message ${error ? "error" : "success"}`;
+    element.hidden = false;
+}
+
+async function uploadInvoice() {
+    const requestId = getRequestId();
+    const file = document.querySelector("#invoiceFile")?.files?.[0];
+    const total = moneyValue(document.querySelector("#invoiceTotal")?.value);
+    const paid = moneyValue(document.querySelector("#invoiceAmountPaid")?.value);
+    const button = document.querySelector("#uploadInvoiceButton");
+
+    if (!file) return showInvoiceMessage("invoiceUploadMessage", "Please select the final invoice PDF.", true);
+    if (!file.name.toLowerCase().endsWith(".pdf")) return showInvoiceMessage("invoiceUploadMessage", "Invoice must be a PDF file.", true);
+    if (file.size > 10 * 1024 * 1024) return showInvoiceMessage("invoiceUploadMessage", "File is too large. Maximum size is 10 MB.", true);
+    if (total <= 0) return showInvoiceMessage("invoiceUploadMessage", "Please enter the total invoice amount.", true);
+    if (paid > total) return showInvoiceMessage("invoiceUploadMessage", "Amount already paid cannot exceed the total.", true);
+
+    const form = new FormData();
+    form.append("invoice_file", file);
+    form.append("subtotal", document.querySelector("#invoiceSubtotal")?.value || "0");
+    form.append("discount", document.querySelector("#invoiceDiscount")?.value || "0");
+    form.append("tax", document.querySelector("#invoiceTax")?.value || "0");
+    form.append("additional_charge", document.querySelector("#invoiceAdditionalCharge")?.value || "0");
+    form.append("total_amount", total.toFixed(2));
+    form.append("amount_paid", paid.toFixed(2));
+
+    try {
+        if (button) { button.disabled = true; button.textContent = "Uploading..."; }
+        const response = await fetch(`${API_BASE}/invoices/request/${encodeURIComponent(requestId)}`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${getToken()}` },
+            body: form
+        });
+        const result = await parseResponse(response);
+        document.querySelector("#invoiceFile").value = "";
+        await loadRequest();
+        showInvoiceMessage("invoiceUploadMessage", result.message || "Final invoice uploaded successfully.");
+    } catch (error) {
+        if (handleAuthError(error)) return;
+        showInvoiceMessage("invoiceUploadMessage", error.message || "Unable to upload invoice.", true);
+    } finally {
+        if (button) { button.disabled = false; button.textContent = "Upload Final Invoice"; }
+    }
+}
+
+async function uploadInvoicePaymentProof() {
+    const invoice = (requestData?.invoices || [])[0];
+    const file = document.querySelector("#paymentProofFile")?.files?.[0];
+    const amount = moneyValue(document.querySelector("#paymentAmount")?.value);
+    const button = document.querySelector("#uploadPaymentProofButton");
+    if (!invoice) return showInvoiceMessage("paymentUploadMessage", "Upload a final invoice first.", true);
+    if (!file) return showInvoiceMessage("paymentUploadMessage", "Please select the customer's payment proof.", true);
+    if (amount <= 0) return showInvoiceMessage("paymentUploadMessage", "Please enter the payment amount.", true);
+    if (file.size > 10 * 1024 * 1024) return showInvoiceMessage("paymentUploadMessage", "File is too large. Maximum size is 10 MB.", true);
+
+    const form = new FormData();
+    form.append("payment_proof", file);
+    form.append("amount", amount.toFixed(2));
+    form.append("payment_method", document.querySelector("#paymentMethod")?.value || "");
+    try {
+        if (button) { button.disabled = true; button.textContent = "Uploading..."; }
+        const response = await fetch(`${API_BASE}/invoices/${encodeURIComponent(invoice.id)}/payment-proof`, {
+            method: "POST", headers: { Authorization: `Bearer ${getToken()}` }, body: form
+        });
+        const result = await parseResponse(response);
+        document.querySelector("#paymentProofFile").value = "";
+        document.querySelector("#paymentAmount").value = "";
+        await loadRequest();
+        showInvoiceMessage("paymentUploadMessage", result.message || "Payment proof uploaded successfully.");
+    } catch (error) {
+        if (handleAuthError(error)) return;
+        showInvoiceMessage("paymentUploadMessage", error.message || "Unable to upload payment proof.", true);
+    } finally {
+        if (button) { button.disabled = false; button.textContent = "Upload Payment Proof"; }
+    }
+}
+
+function bindInvoicePaymentActions() {
+    document.querySelectorAll("[data-verify-payment]").forEach(button => {
+        button.addEventListener("click", () => verifyInvoicePayment(button.dataset.verifyPayment, "approve"));
+    });
+    document.querySelectorAll("[data-reject-payment]").forEach(button => {
+        button.addEventListener("click", () => verifyInvoicePayment(button.dataset.rejectPayment, "reject"));
+    });
+}
+
+async function verifyInvoicePayment(paymentId, action) {
+    const remarks = action === "reject"
+        ? window.prompt("Enter the reason for rejecting this payment proof:")
+        : window.prompt("Optional verification remark:", "Payment verified.");
+    if (action === "reject" && !remarks) return;
+    if (!window.confirm(action === "approve" ? "Confirm this payment proof?" : "Reject this payment proof?")) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/invoices/payments/${encodeURIComponent(paymentId)}/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+            body: JSON.stringify({ action, remarks: remarks || null })
+        });
+        const result = await parseResponse(response);
+        await loadRequest();
+        alert(result.message || "Payment updated successfully.");
+    } catch (error) {
+        if (handleAuthError(error)) return;
+        alert(error.message || "Unable to update payment.");
+    }
+}
+
+/* =========================================================
    FINAL QUOTATION MESSAGE
 ========================================================= */
 
@@ -1736,6 +2033,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const uploadButton = document.querySelector("#uploadFinalQuotationButton");
     if (uploadButton) uploadButton.addEventListener("click", uploadFinalQuotation);
+
+    const uploadInvoiceButton = document.querySelector("#uploadInvoiceButton");
+    if (uploadInvoiceButton) uploadInvoiceButton.addEventListener("click", uploadInvoice);
+
+    const uploadPaymentProofButton = document.querySelector("#uploadPaymentProofButton");
+    if (uploadPaymentProofButton) uploadPaymentProofButton.addEventListener("click", uploadInvoicePaymentProof);
+
+    ["#invoiceTotal", "#invoiceAmountPaid"].forEach(selector => {
+        const input = document.querySelector(selector);
+        if (input) input.addEventListener("input", updateInvoiceBalancePreview);
+    });
 
     const saveTechnicianButton =
     document.querySelector("#saveTechnicianButton");

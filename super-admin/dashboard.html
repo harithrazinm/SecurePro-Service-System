@@ -2,112 +2,571 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow, noarchive">
-    <title>SecurePro | Super Admin Dashboard</title>
-    <link rel="stylesheet" href="css/super-admin.css">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="robots"
+        content="noindex, nofollow, noarchive"
+    >
+
+    <title>
+        SecurePro | Super Admin Dashboard
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="css/super-admin.css"
+    >
+
 </head>
 
+
 <body>
+
     <div class="layout">
+
+
+        <!-- =========================================
+             SIDEBAR
+        ========================================== -->
+
         <aside class="sidebar">
+
             <div class="brand">
-                <div class="mark">S</div>
-                <div><strong>SECUREPRO</strong><span>System Solutions</span></div>
+
+                <div class="mark">
+                    S
+                </div>
+
+                <div>
+
+                    <strong>
+                        SECUREPRO
+                    </strong>
+
+                    <span>
+                        System Solutions
+                    </span>
+
+                </div>
+
             </div>
+
+
             <nav>
-                <a class="active" href="dashboard.html">⌂ <span>Dashboard</span></a>
-                <a href="projects.html">▤ <span>Projects</span></a>
+
+                <a
+                    class="active"
+                    href="dashboard.html"
+                >
+                    ⌂
+                    <span>
+                        Dashboard
+                    </span>
+                </a>
+
+
+                <a href="projects.html">
+
+                    ▤
+
+                    <span>
+                        Projects
+                    </span>
+
+                </a>
+
+
+                <a href="quotation-approval.html">
+
+                    ✓
+
+                    <span>
+                        Quotation Approval
+                    </span>
+
+                </a>
+
+
+                <a href="work-calendar.html">
+
+                    🗓
+
+                    <span>
+                        Work Calendar
+                    </span>
+
+                </a>
+
             </nav>
+
+
             <div class="profile">
-                <div class="avatar">S</div>
-                <div><strong id="adminName">Super Admin</strong><span>Monitoring Only</span></div>
-                <button id="logoutButton">⎋</button>
+
+                <div class="avatar">
+                    S
+                </div>
+
+                <div>
+
+                    <strong id="adminName">
+                        Super Admin
+                    </strong>
+
+                    <span>
+                        Monitoring Only
+                    </span>
+
+                </div>
+
+                <button
+                    id="logoutButton"
+                    type="button"
+                    aria-label="Logout"
+                >
+                    ⎋
+                </button>
+
             </div>
+
         </aside>
+
+
+
+        <!-- =========================================
+             MAIN
+        ========================================== -->
+
         <main class="main">
+
+
+            <!-- TOP BAR -->
+
             <header class="topbar">
-                <div><small>SECUREPRO SUPER ADMINISTRATION</small>
-                    <h1>Monitoring Dashboard</h1>
+
+                <div>
+
+                    <small>
+                        SECUREPRO SUPER ADMINISTRATION
+                    </small>
+
+                    <h1>
+                        Monitoring Dashboard
+                    </h1>
+
                 </div>
-                <div class="online">● <span id="topName">Super Admin</span></div>
+
+
+                <div class="online">
+
+                    ●
+
+                    <span id="topName">
+                        Super Admin
+                    </span>
+
+                </div>
+
             </header>
+
+
+
+            <!-- CONTENT -->
+
             <section class="content">
+
+
+                <!-- INTRO -->
+
                 <div class="intro">
-                    <div><span class="eyebrow">OVERVIEW</span>
-                        <h2>Project monitoring</h2>
-                        <p>Monitor quotations, payment proofs, technician progress, reports and completed projects.</p>
+
+                    <div>
+
+                        <span class="eyebrow">
+                            OVERVIEW
+                        </span>
+
+                        <h2>
+                            Project monitoring
+                        </h2>
+
+                        <p>
+                            Monitor quotations, invoices,
+                            payment proofs, technician
+                            progress, reports and completed
+                            projects.
+                        </p>
+
                     </div>
-                    <button id="refreshButton" class="refresh">↻ Refresh</button>
+
+
+                    <button
+                        id="refreshButton"
+                        class="refresh"
+                        type="button"
+                    >
+                        ↻ Refresh
+                    </button>
+
                 </div>
+
+
+
+                <!-- =====================================
+                     STAT CARDS
+                ====================================== -->
 
                 <section class="stats">
-                    <article class="stat-card" data-file-category="all" tabindex="0" role="button"><span>Total
-                            Projects</span><strong id="totalProjects">—</strong><small>All active records</small>
+
+
+                    <!-- TOTAL PROJECTS -->
+
+                    <article
+                        class="stat-card"
+                        data-file-category="all"
+                        tabindex="0"
+                        role="button"
+                    >
+
+                        <span>
+                            Total Projects
+                        </span>
+
+                        <strong id="totalProjects">
+                            —
+                        </strong>
+
+                        <small>
+                            All active records
+                        </small>
+
                     </article>
-                    <article class="stat-card" data-file-category="quotation_uploaded" tabindex="0" role="button">
-                        <span>Quotation Uploaded</span><strong id="quotationsUploaded">—</strong><small>PDF
-                            uploaded</small>
+
+
+
+                    <!-- QUOTATION UPLOADED -->
+
+                    <article
+                        class="stat-card"
+                        data-file-category="quotation_uploaded"
+                        tabindex="0"
+                        role="button"
+                    >
+
+                        <span>
+                            Quotation Uploaded
+                        </span>
+
+                        <strong id="quotationsUploaded">
+                            —
+                        </strong>
+
+                        <small>
+                            PDF uploaded
+                        </small>
+
                     </article>
-                    <article class="stat-card" data-file-category="quotation_sent" tabindex="0" role="button">
-                        <span>Quotation Sent</span><strong id="quotationsSent">—</strong><small>Sent to customer</small>
+
+
+
+                    <!-- QUOTATION SENT -->
+
+                    <article
+                        class="stat-card"
+                        data-file-category="quotation_sent"
+                        tabindex="0"
+                        role="button"
+                    >
+
+                        <span>
+                            Quotation Sent
+                        </span>
+
+                        <strong id="quotationsSent">
+                            —
+                        </strong>
+
+                        <small>
+                            Sent to customer
+                        </small>
+
                     </article>
-                    <article class="stat-card" data-file-category="payment_proof" tabindex="0" role="button">
-                        <span>Payment Proof</span><strong id="paymentProofs">—</strong><small>Proof uploaded</small>
+
+
+
+                    <!-- FINAL INVOICE -->
+
+                    <article
+                        class="stat-card"
+                        data-file-category="invoice_uploaded"
+                        tabindex="0"
+                        role="button"
+                    >
+
+                        <span>
+                            Final Invoice
+                        </span>
+
+                        <strong id="invoicesUploaded">
+                            —
+                        </strong>
+
+                        <small>
+                            Invoice PDF uploaded
+                        </small>
+
                     </article>
-<article class="stat-card" data-file-category="completed" tabindex="0" role="button">
-                        <span>Completed</span><strong id="projectsCompleted">—</strong><small>Projects completed</small>
+
+
+
+                    <!-- PAYMENT PROOF -->
+
+                    <article
+                        class="stat-card"
+                        data-file-category="payment_proof"
+                        tabindex="0"
+                        role="button"
+                    >
+
+                        <span>
+                            Payment Proof
+                        </span>
+
+                        <strong id="paymentProofs">
+                            —
+                        </strong>
+
+                        <small>
+                            Proof uploaded
+                        </small>
+
                     </article>
+
+
+
+                    <!-- COMPLETED -->
+
+                    <article
+                        class="stat-card"
+                        data-file-category="completed"
+                        tabindex="0"
+                        role="button"
+                    >
+
+                        <span>
+                            Completed
+                        </span>
+
+                        <strong id="projectsCompleted">
+                            —
+                        </strong>
+
+                        <small>
+                            Projects completed
+                        </small>
+
+                    </article>
+
+
                 </section>
 
+
+
+                <!-- =====================================
+                     RECENT PROJECTS
+                ====================================== -->
+
                 <section class="panel">
+
                     <div class="panel-head">
-                        <div><span class="eyebrow">LIVE OVERVIEW</span>
-                            <h2>Recent Projects</h2>
-                        </div><a href="projects.html">View all →</a>
+
+                        <div>
+
+                            <span class="eyebrow">
+                                LIVE OVERVIEW
+                            </span>
+
+                            <h2>
+                                Recent Projects
+                            </h2>
+
+                        </div>
+
+
+                        <a href="projects.html">
+                            View all →
+                        </a>
+
                     </div>
+
+
+
                     <div class="table-wrap">
+
                         <table>
+
                             <thead>
+
                                 <tr>
-                                    <th>Project</th>
-                                    <th>Customer</th>
-                                    <th>Quotation</th>
-                                    <th>Payment</th>
-                                    <th>Technician</th>
-                                    <th>Report</th>
-                                    <th>Status</th>
-                                    <th></th>
+
+                                    <th>
+                                        Project
+                                    </th>
+
+                                    <th>
+                                        Customer
+                                    </th>
+
+                                    <th>
+                                        Quotation
+                                    </th>
+
+                                    <th>
+                                        Payment
+                                    </th>
+
+                                    <th>
+                                        Technician
+                                    </th>
+
+                                    <th>
+                                        Report
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                    </th>
+
                                 </tr>
+
                             </thead>
+
+
                             <tbody id="projectTable">
+
                                 <tr>
-                                    <td colspan="8" class="empty">Loading...</td>
+
+                                    <td
+                                        colspan="8"
+                                        class="empty"
+                                    >
+                                        Loading...
+                                    </td>
+
                                 </tr>
+
                             </tbody>
+
                         </table>
+
                     </div>
+
                 </section>
+
+
             </section>
+
+
         </main>
+
     </div>
-    <div id="fileModal" class="file-modal" hidden>
-        <div class="file-modal-backdrop" data-close-file-modal></div>
-        <section class="file-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="fileModalTitle">
+
+
+
+    <!-- =============================================
+         FILE MODAL
+    ============================================== -->
+
+    <div
+        id="fileModal"
+        class="file-modal"
+        hidden
+    >
+
+        <div
+            class="file-modal-backdrop"
+            data-close-file-modal
+        ></div>
+
+
+        <section
+            class="file-modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="fileModalTitle"
+        >
+
+
+            <!-- MODAL HEADER -->
+
             <div class="file-modal-head">
-                <div><span class="eyebrow">DOCUMENTS</span>
-                    <h2 id="fileModalTitle">Uploaded Files</h2>
-                    <p id="fileModalSubtitle">All files for this category.</p>
+
+                <div>
+
+                    <span class="eyebrow">
+                        DOCUMENTS
+                    </span>
+
+                    <h2 id="fileModalTitle">
+                        Uploaded Files
+                    </h2>
+
+                    <p id="fileModalSubtitle">
+                        All files for this category.
+                    </p>
+
                 </div>
-                <button type="button" class="file-modal-close" id="fileModalClose" aria-label="Close">×</button>
+
+
+                <button
+                    type="button"
+                    class="file-modal-close"
+                    id="fileModalClose"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
             </div>
-            <div id="fileModalBody" class="file-modal-body">
-                <div class="loading">Loading files...</div>
+
+
+
+            <!-- MODAL BODY -->
+
+            <div
+                id="fileModalBody"
+                class="file-modal-body"
+            >
+
+                <div class="loading">
+                    Loading files...
+                </div>
+
             </div>
+
+
         </section>
+
     </div>
-    <script src="js/dashboard.js?v=20260909-6"></script>
+
+
+
+    <!-- =============================================
+         JAVASCRIPT
+    ============================================== -->
+
+    <script src="js/dashboard.js?v=20260915-1"></script>
+<script src="js/session-timeout.js"></script>
+
 </body>
 
 </html>

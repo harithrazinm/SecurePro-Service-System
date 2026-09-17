@@ -244,30 +244,14 @@ async function getRequests(req, res) {
  * ======================================================
  * GET JOB PENDING REQUESTS
  *
- * JOB PENDING means:
+ * Job Pending contains requests that still require
+ * administrative / technician workflow.
  *
- * - Payment proof uploaded
- * - Job is not completed
- * - Job is not cancelled
- * - Technician report is NOT approved
+ * IMPORTANT:
  *
- * Therefore:
- *
- * NEW JOB
- * ASSIGNED JOB
- * IN PROGRESS
- * WAITING PARTS
- * REPORT SUBMITTED
- * REPORT REJECTED
- *
- * all remain in Job Pending.
- *
- * Once admin approves the technician report:
- *
- * service_report.status = approved
- * service_request.status = completed
- *
- * and the job disappears from Job Pending.
+ * A request moves out of this workflow only after
+ * final payment has been verified and the request
+ * becomes completed.
  * ======================================================
  */
 
@@ -275,114 +259,120 @@ async function getJobPendingRequests(req, res) {
 
     try {
 
-        const [requests] = await pool.query(`
-            SELECT
+        const [requests] =
+            await pool.query(`
+                SELECT
 
-                sr.id,
-                sr.request_code,
-                sr.customer_name,
-                sr.customer_phone,
-                sr.customer_email,
-                sr.status,
-                sr.technician_id,
-                sr.created_at,
-                sr.scheduled_date,
-                sr.scheduled_time,
+                    sr.id,
+                    sr.request_code,
+                    sr.customer_name,
+                    sr.customer_phone,
+                    sr.customer_email,
+                    sr.status,
+                    sr.technician_id,
+                    sr.created_at,
+                    sr.scheduled_date,
+                    sr.scheduled_time,
 
-                u.name AS technician_name,
+                    u.name AS technician_name,
 
-                s.name_en AS service_name_en,
-                s.name_ms AS service_name_ms,
+                    s.name_en AS service_name_en,
+                    s.name_ms AS service_name_ms,
 
-                q.payment_proof_uploaded_at
+                    q.payment_proof_uploaded_at
 
-            FROM service_requests sr
+                FROM service_requests sr
 
-            INNER JOIN services s
-                ON s.id = sr.service_id
+                INNER JOIN services s
+                    ON s.id = sr.service_id
 
-            LEFT JOIN users u
-                ON u.id = sr.technician_id
+                LEFT JOIN users u
+                    ON u.id = sr.technician_id
 
-            INNER JOIN quotations q
-                ON q.request_id = sr.id
+                INNER JOIN quotations q
+                    ON q.request_id = sr.id
 
-            WHERE
-                sr.status = 'pending'
+                WHERE
+                    sr.status = 'pending'
 
-                AND sr.technician_id IS NULL
+                    AND sr.technician_id IS NULL
 
-                AND q.payment_status = 'proof_uploaded'
+                    AND q.payment_status = 'proof_uploaded'
 
-                AND q.payment_proof_url IS NOT NULL
+                    AND q.payment_proof_url IS NOT NULL
 
-            ORDER BY
-                q.payment_proof_uploaded_at DESC,
-                sr.created_at DESC
-        `);
+                ORDER BY
+                    q.payment_proof_uploaded_at DESC,
+                    sr.created_at DESC
+            `);
 
 
         return res.json({
 
             success: true,
 
-            data: requests.map(request => ({
+            data:
+                requests.map(
+                    request => ({
 
-                id:
-                    request.id,
+                        id:
+                            request.id,
 
-                request_code:
-                    request.request_code,
+                        request_code:
+                            request.request_code,
 
-                customer: {
-
-                    name:
-                        request.customer_name,
-
-                    phone:
-                        request.customer_phone,
-
-                    email:
-                        request.customer_email
-
-                },
-
-                service: {
-
-                    name:
-                        request.service_name_en ||
-                        request.service_name_ms ||
-                        "Service"
-
-                },
-
-                status:
-                    request.status,
-
-                technician:
-                    request.technician_id
-                        ? {
-                            id:
-                                request.technician_id,
+                        customer: {
 
                             name:
-                                request.technician_name
-                        }
-                        : null,
+                                request.customer_name,
 
-                scheduled_date:
-                    request.scheduled_date,
+                            phone:
+                                request.customer_phone,
 
-                scheduled_time:
-                    request.scheduled_time,
+                            email:
+                                request.customer_email
 
-                payment_proof_uploaded_at:
-                    request.payment_proof_uploaded_at,
+                        },
 
-                created_at:
-                    request.created_at
+                        service: {
 
-            }))
+                            name:
+                                request.service_name_en ||
+                                request.service_name_ms ||
+                                "Service"
+
+                        },
+
+                        status:
+                            request.status,
+
+                        technician:
+                            request.technician_id
+                                ? {
+
+                                    id:
+                                        request.technician_id,
+
+                                    name:
+                                        request.technician_name
+
+                                }
+                                : null,
+
+                        scheduled_date:
+                            request.scheduled_date,
+
+                        scheduled_time:
+                            request.scheduled_time,
+
+                        payment_proof_uploaded_at:
+                            request.payment_proof_uploaded_at,
+
+                        created_at:
+                            request.created_at
+
+                    })
+                )
 
         });
 
@@ -424,9 +414,9 @@ async function getRequestById(req, res) {
         } = req.params;
 
 
-        // ==================================================
-        // REQUEST
-        // ==================================================
+        /* ==================================================
+           REQUEST
+        ================================================== */
 
         const [requests] =
             await pool.query(
@@ -469,9 +459,9 @@ async function getRequestById(req, res) {
             requests[0];
 
 
-        // ==================================================
-        // ANSWERS
-        // ==================================================
+        /* ==================================================
+           ANSWERS
+        ================================================== */
 
         const [answers] =
             await pool.query(
@@ -535,29 +525,34 @@ async function getRequestById(req, res) {
             );
 
 
-        // ==================================================
-        // CUSTOMER PHOTOS
-        // ==================================================
+        /* ==================================================
+           CUSTOMER PHOTOS
+        ================================================== */
 
-        const [photos] = await pool.query(
-    `
-    SELECT
-        id,
-        request_id,
-        file_name,
-        file_path,
-        uploaded_at
-    FROM customer_photos
-    WHERE request_id = ?
-    ORDER BY uploaded_at ASC
-    `,
-    [id]
-);
+        const [photos] =
+            await pool.query(
+                `
+                SELECT
+
+                    id,
+                    request_id,
+                    file_name,
+                    file_path,
+                    uploaded_at
+
+                FROM customer_photos
+
+                WHERE request_id = ?
+
+                ORDER BY uploaded_at ASC
+                `,
+                [id]
+            );
 
 
-        // ==================================================
-        // TECHNICIAN REPORT
-        // ==================================================
+        /* ==================================================
+           LATEST FINAL TECHNICIAN REPORT
+        ================================================== */
 
         const [reports] =
             await pool.query(
@@ -568,10 +563,16 @@ async function getRequestById(req, res) {
                     sr.request_id,
                     sr.technician_id,
 
+                    sr.report_type,
+                    sr.progress_number,
+                    sr.report_title,
+
                     sr.work_performed,
                     sr.findings,
                     sr.materials_used,
                     sr.technician_notes,
+
+                    sr.reported_by,
 
                     sr.report_file_path,
 
@@ -589,6 +590,7 @@ async function getRequestById(req, res) {
                 FROM service_reports sr
 
                 WHERE sr.request_id = ?
+
                   AND sr.report_type = 'final'
 
                 ORDER BY
@@ -606,9 +608,9 @@ async function getRequestById(req, res) {
                 : null;
 
 
-        // ==================================================
-        // COMPLETION MEDIA
-        // ==================================================
+        /* ==================================================
+           COMPLETION MEDIA
+        ================================================== */
 
         let completionMedia = [];
 
@@ -637,13 +639,11 @@ async function getRequestById(req, res) {
 
                     FROM service_report_media
 
-                    WHERE
-                        report_id = ?
+                    WHERE report_id = ?
 
-                        AND request_id = ?
+                      AND request_id = ?
 
-                    ORDER BY
-                        uploaded_at ASC
+                    ORDER BY uploaded_at ASC
                     `,
                     [
                         report.id,
@@ -658,57 +658,158 @@ async function getRequestById(req, res) {
         }
 
 
-        // ==================================================
-        // SERVICE PROGRESS TIMELINE
-        // ==================================================
+        /* ==================================================
+           SERVICE REPORT TIMELINE
+        ================================================== */
 
-        const [progressReports] = await pool.query(
-            `
-            SELECT
-                sr.id, sr.request_id, sr.technician_id, sr.reported_by,
-                sr.report_type, sr.progress_number, sr.report_title,
-                sr.work_performed, sr.findings, sr.materials_used,
-                sr.technician_notes, sr.status, sr.submitted_at,
-                sr.reviewed_at, sr.reviewed_by, sr.review_remarks,
-                sr.created_at, sr.updated_at
-            FROM service_reports sr
-            WHERE sr.request_id = ?
-            ORDER BY sr.created_at ASC
-            `,
-            [id]
-        );
+        const [progressReports] =
+            await pool.query(
+                `
+                SELECT
 
-        const progressReportIds = progressReports.map(report => report.id);
+                    sr.id,
+                    sr.request_id,
+                    sr.technician_id,
+
+                    sr.reported_by,
+
+                    sr.report_type,
+                    sr.progress_number,
+                    sr.report_title,
+
+                    sr.work_performed,
+                    sr.findings,
+                    sr.materials_used,
+                    sr.technician_notes,
+
+                    sr.status,
+
+                    sr.submitted_at,
+                    sr.reviewed_at,
+                    sr.reviewed_by,
+                    sr.review_remarks,
+
+                    sr.created_at,
+                    sr.updated_at
+
+                FROM service_reports sr
+
+                WHERE sr.request_id = ?
+
+                ORDER BY
+                    sr.created_at ASC
+                `,
+                [id]
+            );
+
+
+        const progressReportIds =
+            progressReports.map(
+                report => report.id
+            );
+
+
         let progressMedia = [];
 
-        if (progressReportIds.length) {
-            const placeholders = progressReportIds.map(() => '?').join(',');
-            const [mediaRows] = await pool.query(
-                `
-                SELECT id, report_id, request_id, technician_id, media_type,
-                       file_name, file_path, mime_type, file_size, uploaded_at
-                FROM service_report_media
-                WHERE report_id IN (${placeholders})
-                ORDER BY uploaded_at ASC
-                `,
+
+        if (
+            progressReportIds.length
+        ) {
+
+            const placeholders =
                 progressReportIds
-            );
-            progressMedia = mediaRows;
+                    .map(() => "?")
+                    .join(",");
+
+
+            const [mediaRows] =
+                await pool.query(
+                    `
+                    SELECT
+
+                        id,
+                        report_id,
+                        request_id,
+                        technician_id,
+
+                        media_type,
+
+                        file_name,
+                        file_path,
+
+                        mime_type,
+                        file_size,
+
+                        uploaded_at
+
+                    FROM service_report_media
+
+                    WHERE report_id IN (${placeholders})
+
+                    ORDER BY uploaded_at ASC
+                    `,
+                    progressReportIds
+                );
+
+
+            progressMedia =
+                mediaRows;
+
         }
 
-        const progressMediaMap = new Map();
-        progressReports.forEach(report => progressMediaMap.set(report.id, []));
-        progressMedia.forEach(media => {
-            const items = progressMediaMap.get(media.report_id);
-            if (items) items.push(media);
-        });
-        progressReports.forEach(report => {
-            report.media = progressMediaMap.get(report.id) || [];
-        });
 
-        // ==================================================
-        // TECHNICIAN
-        // ==================================================
+        const progressMediaMap =
+            new Map();
+
+
+        progressReports.forEach(
+            report => {
+
+                progressMediaMap.set(
+                    report.id,
+                    []
+                );
+
+            }
+        );
+
+
+        progressMedia.forEach(
+            media => {
+
+                const items =
+                    progressMediaMap.get(
+                        media.report_id
+                    );
+
+
+                if (items) {
+
+                    items.push(
+                        media
+                    );
+
+                }
+
+            }
+        );
+
+
+        progressReports.forEach(
+            report => {
+
+                report.media =
+                    progressMediaMap.get(
+                        report.id
+                    ) || [];
+
+            }
+        );
+
+
+        /* ==================================================
+           TECHNICIAN
+        ================================================== */
 
         let technician = null;
 
@@ -729,10 +830,9 @@ async function getRequestById(req, res) {
 
                     FROM users
 
-                    WHERE
-                        id = ?
+                    WHERE id = ?
 
-                        AND role = 'technician'
+                      AND role = 'technician'
 
                     LIMIT 1
                     `,
@@ -754,9 +854,9 @@ async function getRequestById(req, res) {
         }
 
 
-        // ==================================================
-        // QUOTATIONS
-        // ==================================================
+        /* ==================================================
+           QUOTATIONS
+        ================================================== */
 
         const [quotations] =
             await pool.query(
@@ -806,25 +906,86 @@ async function getRequestById(req, res) {
             );
 
 
-        // Find original quotation
         const originalQuotation =
             quotations.find(
                 quotation =>
-                    quotation.quotation_type === "original"
+                    quotation.quotation_type ===
+                    "original"
             ) || null;
 
 
-        // Find latest final quotation
         const finalQuotation =
             quotations.find(
                 quotation =>
-                    quotation.quotation_type === "final"
+                    quotation.quotation_type ===
+                    "final"
             ) || null;
 
 
-        // ==================================================
-        // RESPONSE
-        // ==================================================
+        /* ==================================================
+           FINAL INVOICES + PAYMENT PROOFS
+        ================================================== */
+
+        const [invoices] =
+            await pool.query(
+                `
+                SELECT
+
+                    i.*,
+
+                    u.name AS created_by_name
+
+                FROM invoices i
+
+                LEFT JOIN users u
+                    ON u.id = i.created_by
+
+                WHERE i.request_id = ?
+
+                ORDER BY
+                    i.created_at DESC
+                `,
+                [id]
+            );
+
+
+        for (
+            const invoice of invoices
+        ) {
+
+            const [payments] =
+                await pool.query(
+                    `
+                    SELECT
+
+                        ip.*,
+
+                        u.name AS verified_by_name
+
+                    FROM invoice_payments ip
+
+                    LEFT JOIN users u
+                        ON u.id = ip.verified_by
+
+                    WHERE ip.invoice_id = ?
+
+                    ORDER BY ip.submitted_at DESC
+                    `,
+                    [
+                        invoice.id
+                    ]
+                );
+
+
+            invoice.payments =
+                payments;
+
+        }
+
+
+        /* ==================================================
+           RESPONSE
+        ================================================== */
 
         return res.json({
 
@@ -911,10 +1072,6 @@ async function getRequestById(req, res) {
                     request.admin_notes_updated_at,
 
 
-                // ==================================================
-                // QUOTATIONS
-                // ==================================================
-
                 quotations: {
 
                     original:
@@ -926,9 +1083,9 @@ async function getRequestById(req, res) {
                 },
 
 
-                // ==================================================
-                // ANSWERS
-                // ==================================================
+                invoices:
+                    invoices,
+
 
                 answers:
                     answers.map(
@@ -986,28 +1143,17 @@ async function getRequestById(req, res) {
                     ),
 
 
-                // ==================================================
-                // PHOTOS
-                // ==================================================
-
                 photos:
                     photos,
 
 
-                // ==================================================
-                // REPORT
-                // ==================================================
-
                 report:
                     report,
+
 
                 progress_reports:
                     progressReports,
 
-
-                // ==================================================
-                // COMPLETION MEDIA
-                // ==================================================
 
                 completion_media:
                     completionMedia,
@@ -1047,6 +1193,7 @@ async function getRequestById(req, res) {
 
 }
 
+
 /*
  * ======================================================
  * GET DASHBOARD SUMMARY
@@ -1079,6 +1226,10 @@ async function getDashboardSummary(req, res) {
                     SUM(
                         status = 'waiting_parts'
                     ) AS waiting_parts,
+
+                    SUM(
+                        status = 'awaiting_payment'
+                    ) AS awaiting_payment,
 
                     SUM(
                         status = 'completed'
@@ -1196,11 +1347,7 @@ async function getTechnicians(req, res) {
  *
  * IMPORTANT:
  *
- * Assigning a technician does NOT automatically
- * complete or remove the job from Job Pending.
- *
- * The job remains visible until the technician
- * report is approved.
+ * completed is ONLY allowed after payment verification.
  * ======================================================
  */
 
@@ -1279,6 +1426,8 @@ async function updateRequest(req, res) {
 
             "waiting_parts",
 
+            "awaiting_payment",
+
             "completed",
 
             "cancelled"
@@ -1316,12 +1465,11 @@ async function updateRequest(req, res) {
 
                     FROM users
 
-                    WHERE
-                        id = ?
+                    WHERE id = ?
 
-                        AND role = 'technician'
+                      AND role = 'technician'
 
-                        AND status = 'active'
+                      AND status = 'active'
 
                     LIMIT 1
                     `,
@@ -1349,22 +1497,6 @@ async function updateRequest(req, res) {
         }
 
 
-        /*
-         * Keep the supplied status if one was
-         * explicitly sent.
-         *
-         * Otherwise keep the current status.
-         *
-         * IMPORTANT:
-         *
-         * The admin frontend currently sends
-         * selectedStatus.
-         *
-         * Therefore, when assigning a technician,
-         * the frontend should keep selectedStatus
-         * as "pending".
-         */
-
         let finalStatus =
             status !== undefined &&
             status !== null &&
@@ -1382,12 +1514,50 @@ async function updateRequest(req, res) {
                 : request.technician_id;
 
 
-        /*
-         * A technician assignment does not move the job out of
-         * Job Pending. The request remains pending until the
-         * Admin approves the technician report.
-         */
-     
+        /* ==================================================
+           COMPLETED PROTECTION
+        ================================================== */
+
+        if (
+            finalStatus === "completed"
+        ) {
+
+            const [paidInvoices] =
+                await connection.query(
+                    `
+                    SELECT
+                        id
+
+                    FROM invoices
+
+                    WHERE request_id = ?
+
+                      AND status = 'paid'
+
+                    LIMIT 1
+                    `,
+                    [
+                        requestId
+                    ]
+                );
+
+
+            if (
+                !paidInvoices.length
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "This service request cannot be marked completed until the final invoice payment is verified."
+
+                });
+
+            }
+
+        }
 
 
         const finalScheduledDate =
@@ -1486,9 +1656,7 @@ async function updateRequest(req, res) {
                     CASE
 
                         WHEN ? IS NOT NULL
-
-                        THEN
-                            ?
+                        THEN ?
 
                         ELSE
                             admin_notes_updated_by
@@ -1545,6 +1713,7 @@ async function updateRequest(req, res) {
                     changed_by,
                     remarks
                 )
+
                 VALUES (?, ?, ?, ?, ?, ?)
                 `,
                 [
@@ -1698,19 +1867,21 @@ async function updateRequest(req, res) {
 
 /*
  * ======================================================
- * REVIEW TECHNICIAN WORK REPORT
+ * REVIEW TECHNICIAN FINAL WORK REPORT
+ *
+ * POST /api/admin/requests/:id/review-report
  *
  * APPROVE:
  *
  * report = approved
- * request = completed
+ * request = awaiting_payment
  *
  * REJECT:
  *
  * report = rejected
- * request = pending
+ * request = in_progress
  *
- * Therefore rejected jobs remain in Job Pending.
+ * This allows technician to revise and resubmit.
  * ======================================================
  */
 
@@ -1747,9 +1918,9 @@ async function reviewTechnicianReport(req, res) {
             .trim();
 
 
-        /*
-         * VALIDATE ACTION
-         */
+        /* ==================================================
+           VALIDATE ACTION
+        ================================================== */
 
         if (
             action !== "approve" &&
@@ -1768,9 +1939,9 @@ async function reviewTechnicianReport(req, res) {
         }
 
 
-        /*
-         * REJECTION REASON REQUIRED
-         */
+        /* ==================================================
+           REJECTION REASON REQUIRED
+        ================================================== */
 
         if (
             action === "reject" &&
@@ -1789,9 +1960,9 @@ async function reviewTechnicianReport(req, res) {
         }
 
 
-        /*
-         * FIND REQUEST
-         */
+        /* ==================================================
+           GET REQUEST
+        ================================================== */
 
         const [requests] =
             await connection.query(
@@ -1834,9 +2005,9 @@ async function reviewTechnicianReport(req, res) {
             requests[0];
 
 
-        /*
-         * REQUEST MUST HAVE TECHNICIAN
-         */
+        /* ==================================================
+           REQUEST MUST HAVE TECHNICIAN
+        ================================================== */
 
         if (
             !request.technician_id
@@ -1854,9 +2025,9 @@ async function reviewTechnicianReport(req, res) {
         }
 
 
-        /*
-         * FIND LATEST REPORT
-         */
+        /* ==================================================
+           GET LATEST FINAL REPORT ONLY
+        ================================================== */
 
         const [reports] =
             await connection.query(
@@ -1864,20 +2035,34 @@ async function reviewTechnicianReport(req, res) {
                 SELECT
 
                     id,
+
                     request_id,
+
                     technician_id,
+
+                    report_type,
+
                     status,
+
                     work_performed,
+
                     findings,
+
                     materials_used,
-                    technician_notes
+
+                    technician_notes,
+
+                    reported_by,
+
+                    submitted_at
 
                 FROM service_reports
 
-                WHERE
-                    request_id = ?
+                WHERE request_id = ?
 
-                    AND technician_id = ?
+                  AND technician_id = ?
+
+                  AND report_type = 'final'
 
                 ORDER BY
                     created_at DESC
@@ -1900,7 +2085,7 @@ async function reviewTechnicianReport(req, res) {
                 success: false,
 
                 message:
-                    "No technician work report was found."
+                    "No final technician work report was found."
 
             });
 
@@ -1911,9 +2096,9 @@ async function reviewTechnicianReport(req, res) {
             reports[0];
 
 
-        /*
-         * ONLY SUBMITTED REPORTS CAN BE REVIEWED
-         */
+        /* ==================================================
+           ONLY SUBMITTED REPORTS CAN BE REVIEWED
+        ================================================== */
 
         if (
             report.status !==
@@ -1925,29 +2110,31 @@ async function reviewTechnicianReport(req, res) {
                 success: false,
 
                 message:
-                    `This technician report cannot be reviewed because its current status is "${report.status}".`
+                    `This final technician report cannot be reviewed because its current status is "${report.status}".`
 
             });
 
         }
 
 
-        /*
-         * START TRANSACTION
-         */
+        /* ==================================================
+           START TRANSACTION
+        ================================================== */
 
         await connection.beginTransaction();
 
 
-        /*
-         * ==========================================
-         * APPROVE
-         * ==========================================
-         */
+        /* ==================================================
+           APPROVE FINAL REPORT
+        ================================================== */
 
         if (
             action === "approve"
         ) {
+
+            /* ----------------------------------------------
+               APPROVE REPORT
+            ---------------------------------------------- */
 
             await connection.query(
                 `
@@ -1968,13 +2155,24 @@ async function reviewTechnicianReport(req, res) {
                         NULL
 
                 WHERE id = ?
+
+                  AND request_id = ?
+
+                  AND report_type = 'final'
                 `,
                 [
                     adminId,
-                    report.id
+
+                    report.id,
+
+                    requestId
                 ]
             );
 
+
+            /* ----------------------------------------------
+               MOVE REQUEST TO AWAITING PAYMENT
+            ---------------------------------------------- */
 
             await connection.query(
                 `
@@ -1983,10 +2181,10 @@ async function reviewTechnicianReport(req, res) {
                 SET
 
                     status =
-                        'completed',
+                        'awaiting_payment',
 
                     completed_at =
-                        NOW(),
+                        NULL,
 
                     updated_at =
                         NOW()
@@ -1999,6 +2197,42 @@ async function reviewTechnicianReport(req, res) {
             );
 
 
+            /* ----------------------------------------------
+               STATUS HISTORY
+            ---------------------------------------------- */
+
+            await connection.query(
+                `
+                INSERT INTO request_status_history
+                (
+                    id,
+                    request_id,
+                    old_status,
+                    new_status,
+                    changed_by,
+                    remarks
+                )
+
+                VALUES (?, ?, ?, ?, ?, ?)
+                `,
+                [
+
+                    crypto.randomUUID(),
+
+                    requestId,
+
+                    request.status,
+
+                    "awaiting_payment",
+
+                    adminId,
+
+                    "Technician final report approved. Awaiting final payment."
+
+                ]
+            );
+
+
             await connection.commit();
 
 
@@ -2007,7 +2241,7 @@ async function reviewTechnicianReport(req, res) {
                 success: true,
 
                 message:
-                    "Technician work report approved successfully. The job is now completed.",
+                    "Technician final report approved successfully. The service request is now awaiting payment.",
 
                 data: {
 
@@ -2021,7 +2255,7 @@ async function reviewTechnicianReport(req, res) {
                         "approved",
 
                     request_status:
-                        "completed"
+                        "awaiting_payment"
 
                 }
 
@@ -2030,11 +2264,9 @@ async function reviewTechnicianReport(req, res) {
         }
 
 
-        /*
-         * ==========================================
-         * REJECT
-         * ==========================================
-         */
+        /* ==================================================
+           REJECT FINAL REPORT
+        ================================================== */
 
         await connection.query(
             `
@@ -2055,25 +2287,33 @@ async function reviewTechnicianReport(req, res) {
                     ?
 
             WHERE id = ?
+
+              AND request_id = ?
+
+              AND report_type = 'final'
             `,
             [
                 adminId,
+
                 reason,
-                report.id
+
+                report.id,
+
+                requestId
             ]
         );
 
 
-        /*
-         * IMPORTANT:
-         *
-         * Rejected report returns the request
-         * to pending.
-         *
-         * It remains visible in Job Pending.
-         *
-         * The technician can submit a new report.
-         */
+        /* ==================================================
+           RETURN REQUEST TO IN PROGRESS
+           
+           IMPORTANT:
+           
+           DO NOT USE "pending" HERE.
+           
+           Technician resubmission requires the request
+           to remain in_progress.
+        ================================================== */
 
         await connection.query(
             `
@@ -2082,7 +2322,7 @@ async function reviewTechnicianReport(req, res) {
             SET
 
                 status =
-                    'pending',
+                    'in_progress',
 
                 completed_at =
                     NULL,
@@ -2098,6 +2338,42 @@ async function reviewTechnicianReport(req, res) {
         );
 
 
+        /* ==================================================
+           STATUS HISTORY
+        ================================================== */
+
+        await connection.query(
+            `
+            INSERT INTO request_status_history
+            (
+                id,
+                request_id,
+                old_status,
+                new_status,
+                changed_by,
+                remarks
+            )
+
+            VALUES (?, ?, ?, ?, ?, ?)
+            `,
+            [
+
+                crypto.randomUUID(),
+
+                requestId,
+
+                request.status,
+
+                "in_progress",
+
+                adminId,
+
+                `Technician final report rejected. Reason: ${reason}`
+
+            ]
+        );
+
+
         await connection.commit();
 
 
@@ -2106,7 +2382,7 @@ async function reviewTechnicianReport(req, res) {
             success: true,
 
             message:
-                "Technician work report rejected. The job remains in Job Pending and the technician can resubmit the report.",
+                "Technician final report rejected. The technician can revise and resubmit the report.",
 
             data: {
 
@@ -2120,7 +2396,7 @@ async function reviewTechnicianReport(req, res) {
                     "rejected",
 
                 request_status:
-                    "pending",
+                    "in_progress",
 
                 review_remarks:
                     reason

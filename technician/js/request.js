@@ -156,6 +156,9 @@ function formatStatus(status) {
         waiting_parts:
             "Waiting Parts",
 
+        awaiting_payment:
+            "Awaiting Payment",
+
         completed:
             "Completed",
 
@@ -164,15 +167,12 @@ function formatStatus(status) {
 
     };
 
-
     return (
         labels[status] ||
         status ||
         "Unknown"
     );
-
 }
-
 
 function showError(message) {
 
@@ -479,8 +479,8 @@ function renderCustomer(data) {
 
             <strong>
                 ${escapeHtml(
-                    data.customer_name || "—"
-                )}
+        data.customer_name || "—"
+    )}
             </strong>
 
         </div>
@@ -520,8 +520,8 @@ function renderCustomer(data) {
 
             <strong>
                 ${escapeHtml(
-                    data.service_name || "—"
-                )}
+        data.service_name || "—"
+    )}
             </strong>
 
         </div>
@@ -535,8 +535,8 @@ function renderCustomer(data) {
 
             <p>
                 ${escapeHtml(
-                    data.customer_address || "—"
-                )}
+        data.customer_address || "—"
+    )}
             </p>
 
         </div>
@@ -616,11 +616,11 @@ function renderAnswers(data) {
                             <div class="answer-index">
 
                                 ${String(
-                                    index + 1
-                                ).padStart(
-                                    2,
-                                    "0"
-                                )}
+                        index + 1
+                    ).padStart(
+                        2,
+                        "0"
+                    )}
 
                             </div>
 
@@ -630,53 +630,51 @@ function renderAnswers(data) {
                                 <div class="answer-question">
 
                                     ${escapeHtml(
-                                        question
-                                    )}
+                        question
+                    )}
 
                                 </div>
 
 
-                                ${
-                                    answer.description?.en
-                                        ? `
+                                ${answer.description?.en
+                            ? `
                                             <div
                                                 class="answer-description"
                                             >
 
                                                 ${escapeHtml(
-                                                    answer.description.en
-                                                )}
+                                answer.description.en
+                            )}
 
                                             </div>
                                         `
-                                        : ""
-                                }
+                            : ""
+                        }
 
 
                                 <div class="answer-value">
 
                                     ${escapeHtml(
-                                        value
-                                    )}
+                            value
+                        )}
 
                                 </div>
 
 
-                                ${
-                                    answer.unit
-                                        ? `
+                                ${answer.unit
+                            ? `
                                             <div
                                                 class="answer-unit"
                                             >
 
                                                 ${escapeHtml(
-    formatUnit(answer.unit)
-)}
+                                formatUnit(answer.unit)
+                            )}
 
                                             </div>
                                         `
-                                        : ""
-                                }
+                            : ""
+                        }
 
                             </div>
 
@@ -794,11 +792,11 @@ function getAnswerDisplayValue(answer) {
                     return Object.entries(
                         values
                     )
-                    .map(
-                        ([key, value]) =>
-                            `${formatLabel(key)}: ${value}`
-                    )
-                    .join(" • ");
+                        .map(
+                            ([key, value]) =>
+                                `${formatLabel(key)}: ${value}`
+                        )
+                        .join(" • ");
 
                 }
 
@@ -898,81 +896,81 @@ function getAnswerDisplayValue(answer) {
  * ------------------------------------------------------
  */
 
-if (
-    answer.number_value !== null &&
-    answer.number_value !== undefined
-) {
+    if (
+        answer.number_value !== null &&
+        answer.number_value !== undefined
+    ) {
 
-    const rawNumber =
-        Number(answer.number_value);
+        const rawNumber =
+            Number(answer.number_value);
 
-    const questionCode =
-        String(
-            answer.question_code || ""
-        ).toLowerCase();
+        const questionCode =
+            String(
+                answer.question_code || ""
+            ).toLowerCase();
 
-    /*
-     * Measurement / size fields
-     * can contain decimal values.
-     */
-    const decimalFields = [
-        "arm_length",
-        "pump_height",
-        "pipe_length",
-        "length",
-        "width",
-        "height",
-        "size",
-        "dimension"
-    ];
+        /*
+         * Measurement / size fields
+         * can contain decimal values.
+         */
+        const decimalFields = [
+            "arm_length",
+            "pump_height",
+            "pipe_length",
+            "length",
+            "width",
+            "height",
+            "size",
+            "dimension"
+        ];
 
-    const isDecimalField =
-        decimalFields.includes(
-            questionCode
-        );
+        const isDecimalField =
+            decimalFields.includes(
+                questionCode
+            );
 
-    let numberValue;
+        let numberValue;
 
-    if (!Number.isNaN(rawNumber)) {
+        if (!Number.isNaN(rawNumber)) {
 
-        if (isDecimalField) {
+            if (isDecimalField) {
 
-            numberValue =
-                rawNumber
-                    .toFixed(2)
-                    .replace(/\.?0+$/, "");
+                numberValue =
+                    rawNumber
+                        .toFixed(2)
+                        .replace(/\.?0+$/, "");
+
+            } else {
+
+                numberValue =
+                    Math.round(
+                        rawNumber
+                    ).toString();
+
+            }
 
         } else {
 
             numberValue =
-                Math.round(
-                    rawNumber
-                ).toString();
+                String(
+                    answer.number_value
+                );
 
         }
 
-    } else {
-
-        numberValue =
-            String(
-                answer.number_value
+        const unit =
+            formatUnit(
+                answer.unit
             );
 
+        if (unit) {
+
+            return `${numberValue} ${unit}`;
+
+        }
+
+        return numberValue;
     }
-
-    const unit =
-        formatUnit(
-            answer.unit
-        );
-
-    if (unit) {
-
-        return `${numberValue} ${unit}`;
-
-    }
-
-    return numberValue;
-}
 
 
     /*
@@ -1216,10 +1214,9 @@ function renderPhotos(data) {
     if (count) {
 
         count.textContent =
-            `${photos.length} ${
-                photos.length === 1
-                    ? "photo"
-                    : "photos"
+            `${photos.length} ${photos.length === 1
+                ? "photo"
+                : "photos"
             }`;
 
     }
@@ -1264,15 +1261,14 @@ function renderPhotos(data) {
                         rawPath.startsWith(
                             "http://"
                         ) ||
-                        rawPath.startsWith(
-                            "https://"
-                        )
+                            rawPath.startsWith(
+                                "https://"
+                            )
                             ? rawPath
-                            : `${BACKEND_BASE}${
-                                rawPath.startsWith("/")
-                                    ? ""
-                                    : "/"
-                              }${rawPath}`;
+                            : `${BACKEND_BASE}${rawPath.startsWith("/")
+                                ? ""
+                                : "/"
+                            }${rawPath}`;
 
 
                     return `
@@ -1283,20 +1279,20 @@ function renderPhotos(data) {
 
                             <a
                                 href="${escapeHtml(
-                                    photoUrl
-                                )}"
+                        photoUrl
+                    )}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
 
                                 <img
                                     src="${escapeHtml(
-                                        photoUrl
-                                    )}"
+                        photoUrl
+                    )}"
                                     alt="${escapeHtml(
-                                        photo.file_name ||
-                                        `Customer Photo ${index + 1}`
-                                    )}"
+                        photo.file_name ||
+                        `Customer Photo ${index + 1}`
+                    )}"
                                     loading="lazy"
                                 >
 
@@ -1307,15 +1303,15 @@ function renderPhotos(data) {
 
                                 <strong>
                                     ${escapeHtml(
-                                        photo.file_name ||
-                                        `Customer Photo ${index + 1}`
-                                    )}
+                        photo.file_name ||
+                        `Customer Photo ${index + 1}`
+                    )}
                                 </strong>
 
                                 <span>
                                     ${formatDate(
-                                        photo.uploaded_at
-                                    )}
+                        photo.uploaded_at
+                    )}
                                 </span>
 
                             </div>
@@ -1363,23 +1359,72 @@ function renderExistingReports(data) {
         .filter(report => report.report_type === "final")
         .sort((a, b) => new Date(b.created_at || b.submitted_at || 0) - new Date(a.created_at || a.submitted_at || 0))[0] || null;
 
-    const workReportCard = document.querySelector("#workReportCard");
-    if (workReportCard && latestFinal && latestFinal.status !== "rejected") {
+    const workReportCard =
+    document.querySelector("#workReportCard");
+
+if (workReportCard) {
+
+    /*
+     * Final report submitted or approved
+     * → hide report form
+     */
+    if (
+        latestFinal &&
+        (
+            latestFinal.status === "submitted" ||
+            latestFinal.status === "approved"
+        )
+    ) {
+
         workReportCard.hidden = true;
-    } else if (workReportCard && requestData?.status === "in_progress") {
-        workReportCard.hidden = false;
+
     }
+
+    /*
+     * Final report rejected
+     * → allow technician to submit again
+     */
+    else if (
+        latestFinal &&
+        latestFinal.status === "rejected" &&
+        requestData?.status === "in_progress"
+    ) {
+
+        workReportCard.hidden = false;
+
+    }
+
+    /*
+     * Normal work
+     */
+    else if (
+        requestData?.status === "in_progress"
+    ) {
+
+        workReportCard.hidden = false;
+
+    }
+
+    /*
+     * All other statuses
+     */
+    else {
+
+        workReportCard.hidden = true;
+
+    }
+}
 
     container.innerHTML = `
         <div class="progress-timeline">
             ${ordered.map((report, index) => {
-                const isFinal = report.report_type === "final";
-                const title = report.report_title ||
-                    (isFinal ? "Final Work Report" : `Progress Update ${report.progress_number || index + 1}`);
-                const status = report.status || "submitted";
-                const media = Array.isArray(report.media) ? report.media : [];
+        const isFinal = report.report_type === "final";
+        const title = report.report_title ||
+            (isFinal ? "Final Work Report" : `Progress Update ${report.progress_number || index + 1}`);
+        const status = report.status || "submitted";
+        const media = Array.isArray(report.media) ? report.media : [];
 
-                return `
+        return `
                     <article class="progress-item ${isFinal ? "progress-item-final" : ""}">
                         <div class="progress-marker">
                             ${isFinal ? "✓" : (report.progress_number || index + 1)}
@@ -1424,11 +1469,11 @@ function renderExistingReports(data) {
                                     <div class="progress-media-label">Attached Media · ${media.length}</div>
                                     <div class="progress-media-grid">
                                         ${media.map(file => {
-                                            const isImage = file.media_type === "image";
-                                            return isImage
-                                                ? `<a href="${escapeHtml(file.file_path)}" target="_blank" rel="noopener"><img src="${escapeHtml(file.file_path)}" alt="${escapeHtml(file.file_name || "Report photo")}"></a>`
-                                                : `<a class="progress-video" href="${escapeHtml(file.file_path)}" target="_blank" rel="noopener">▶ View Video</a>`;
-                                        }).join("")}
+            const isImage = file.media_type === "image";
+            return isImage
+                ? `<a href="${escapeHtml(file.file_path)}" target="_blank" rel="noopener"><img src="${escapeHtml(file.file_path)}" alt="${escapeHtml(file.file_name || "Report photo")}"></a>`
+                : `<a class="progress-video" href="${escapeHtml(file.file_path)}" target="_blank" rel="noopener">▶ View Video</a>`;
+        }).join("")}
                                     </div>
                                 </div>
                             ` : ""}
@@ -1442,14 +1487,27 @@ function renderExistingReports(data) {
                         </div>
                     </article>
                 `;
-            }).join("")}
+    }).join("")}
         </div>
     `;
 }
 
 function formatReportStatus(status, isFinal) {
-    if (!isFinal && status === "approved") return "Recorded";
-    return formatStatus(status);
+
+    if (!isFinal && status === "approved") {
+        return "Recorded";
+    }
+
+    const labels = {
+        draft: "Draft",
+        submitted: "Awaiting Admin Review",
+        approved: "Approved",
+        rejected: "Rejected"
+    };
+
+    return labels[status] ||
+        formatStatus(status) ||
+        "Unknown";
 }
 
 
@@ -1459,45 +1517,271 @@ function formatReportStatus(status, isFinal) {
 
 function renderJobAction(data) {
 
-    const button = document.querySelector("#startJobButton");
-    const title = document.querySelector("#jobActionTitle");
-    const description = document.querySelector("#jobActionDescription");
+    const button =
+        document.querySelector("#startJobButton");
+
+    const title =
+        document.querySelector("#jobActionTitle");
+
+    const description =
+        document.querySelector("#jobActionDescription");
+
+    const workReportCard =
+        document.querySelector("#workReportCard");
 
     if (!button) return;
 
-    const status = data.status || "pending";
+    const status =
+        data?.status || "pending";
+
+    const reports =
+        Array.isArray(data?.reports)
+            ? data.reports
+            : (data?.report ? [data.report] : []);
+
+    /*
+     * Find latest final report
+     */
+    const finalReports =
+        reports
+            .filter(report => report.report_type === "final")
+            .sort((a, b) =>
+                new Date(
+                    b.submitted_at ||
+                    b.created_at ||
+                    0
+                ) -
+                new Date(
+                    a.submitted_at ||
+                    a.created_at ||
+                    0
+                )
+            );
+
+    const latestFinal =
+        finalReports[0] || null;
+
+
+    /*
+     * ------------------------------------------------------
+     * ASSIGNED
+     * ------------------------------------------------------
+     */
 
     if (status === "assigned") {
-        const workReportCard = document.querySelector("#workReportCard");
-        if (workReportCard) workReportCard.hidden = true;
+
+        if (workReportCard) {
+            workReportCard.hidden = true;
+        }
 
         button.hidden = false;
         button.disabled = false;
         button.textContent = "Start Job";
-        if (title) title.textContent = "Ready to start";
-        if (description) description.textContent = "Confirm the job details, then start the assigned work.";
+
+        if (title) {
+            title.textContent = "Ready to start";
+        }
+
+        if (description) {
+            description.textContent =
+                "Confirm the job details, then start the assigned work.";
+        }
+
         return;
     }
 
-    button.hidden = true;
+
+    /*
+     * ------------------------------------------------------
+     * IN PROGRESS
+     * ------------------------------------------------------
+     */
 
     if (status === "in_progress") {
-        if (title) title.textContent = "Job in progress";
-        if (description) description.textContent = "You can now complete the work and submit your report.";
-    } else if (status === "completed") {
-        const workReportCard = document.querySelector("#workReportCard");
-        if (workReportCard) workReportCard.hidden = true;
-        if (title) title.textContent = "Job completed";
-        if (description) description.textContent = "This service request has been completed.";
-    } else if (status === "cancelled") {
-        if (title) title.textContent = "Job cancelled";
-        if (description) description.textContent = "This service request is no longer active.";
-    } else {
-        if (title) title.textContent = "Job status";
-        if (description) description.textContent = `Current status: ${formatStatus(status)}.`;
+
+        button.hidden = true;
+
+        /*
+         * Final report submitted
+         * → Wait for Admin review
+         */
+        if (
+            latestFinal &&
+            latestFinal.status === "submitted"
+        ) {
+
+            if (workReportCard) {
+                workReportCard.hidden = true;
+            }
+
+            if (title) {
+                title.textContent =
+                    "Final Report Submitted";
+            }
+
+            if (description) {
+                description.textContent =
+                    "Your final report has been submitted successfully and is now waiting for Admin review.";
+            }
+
+            return;
+        }
+
+
+        /*
+         * Final report rejected
+         * → Technician can submit again
+         */
+        if (
+            latestFinal &&
+            latestFinal.status === "rejected"
+        ) {
+
+            if (workReportCard) {
+                workReportCard.hidden = false;
+            }
+
+            if (title) {
+                title.textContent =
+                    "Final Report Requires Revision";
+            }
+
+            if (description) {
+                description.textContent =
+                    "The Admin has rejected the final report. Please review the feedback and submit the report again.";
+            }
+
+            return;
+        }
+
+
+        /*
+         * Normal work in progress
+         */
+        if (workReportCard) {
+            workReportCard.hidden = false;
+        }
+
+        if (title) {
+            title.textContent =
+                "Job in progress";
+        }
+
+        if (description) {
+            description.textContent =
+                "You can add progress updates or submit the final report when the work is complete.";
+        }
+
+        return;
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * AWAITING PAYMENT
+     * ------------------------------------------------------
+     */
+
+    if (status === "awaiting_payment") {
+
+        button.hidden = true;
+
+        if (workReportCard) {
+            workReportCard.hidden = true;
+        }
+
+        if (title) {
+            title.textContent =
+                "Awaiting Payment";
+        }
+
+        if (description) {
+            description.textContent =
+                "Your final report has been approved. The service request is now waiting for the customer payment to be verified by Admin.";
+        }
+
+        return;
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * COMPLETED
+     * ------------------------------------------------------
+     */
+
+    if (status === "completed") {
+
+        button.hidden = true;
+
+        if (workReportCard) {
+            workReportCard.hidden = true;
+        }
+
+        if (title) {
+            title.textContent =
+                "Job completed";
+        }
+
+        if (description) {
+            description.textContent =
+                "This service request has been completed.";
+        }
+
+        return;
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * CANCELLED
+     * ------------------------------------------------------
+     */
+
+    if (status === "cancelled") {
+
+        button.hidden = true;
+
+        if (workReportCard) {
+            workReportCard.hidden = true;
+        }
+
+        if (title) {
+            title.textContent =
+                "Job cancelled";
+        }
+
+        if (description) {
+            description.textContent =
+                "This service request is no longer active.";
+        }
+
+        return;
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * OTHER STATUS
+     * ------------------------------------------------------
+     */
+
+    button.hidden = true;
+
+    if (workReportCard) {
+        workReportCard.hidden = true;
+    }
+
+    if (title) {
+        title.textContent =
+            "Job status";
+    }
+
+    if (description) {
+        description.textContent =
+            `Current status: ${formatStatus(status)}.`;
     }
 }
-
 async function startJob() {
 
     const requestId = getRequestId();
@@ -1711,35 +1995,33 @@ function renderMediaPreview() {
 
                 <div class="media-preview-image">
 
-                    ${
-                        isImage
-                            ? `
+                    ${isImage
+                    ? `
                                 <img
                                     src="${escapeHtml(
-                                        objectUrl
-                                    )}"
+                        objectUrl
+                    )}"
                                     alt="${escapeHtml(
-                                        file.name
-                                    )}"
+                        file.name
+                    )}"
                                 >
                             `
-                            : ""
-                    }
+                    : ""
+                }
 
 
-                    ${
-                        isVideo
-                            ? `
+                    ${isVideo
+                    ? `
                                 <video
                                     src="${escapeHtml(
-                                        objectUrl
-                                    )}"
+                        objectUrl
+                    )}"
                                     controls
                                     preload="metadata"
                                 ></video>
                             `
-                            : ""
-                    }
+                    : ""
+                }
 
                 </div>
 
@@ -1749,25 +2031,24 @@ function renderMediaPreview() {
                     <strong>
 
                         ${escapeHtml(
-                            file.name
-                        )}
+                    file.name
+                )}
 
                     </strong>
 
 
                     <span>
 
-                        ${
-                            isImage
-                                ? "Photo"
-                                : "Video"
-                        }
+                        ${isImage
+                    ? "Photo"
+                    : "Video"
+                }
 
                         ·
 
                         ${formatFileSize(
-                            file.size
-                        )}
+                    file.size
+                )}
 
                     </span>
 
@@ -1927,10 +2208,10 @@ function addCompletionMedia(files) {
                 existing =>
 
                     existing.name ===
-                        file.name &&
+                    file.name &&
 
                     existing.size ===
-                        file.size
+                    file.size
 
             );
 
@@ -2275,6 +2556,18 @@ async function submitReport(event) {
     const reportType =
         document.querySelector("#reportType")?.value || "progress";
 
+        if (reportType === "final") {
+
+    const confirmed = window.confirm(
+        "Submit this as the FINAL REPORT?\n\n" +
+        "After submission, the report will be sent to Admin for review. " +
+        "You will not be able to submit another update unless Admin rejects the report."
+    );
+
+    if (!confirmed) {
+        return;
+    }
+}
     const reportTitle =
         String(document.querySelector("#reportTitle")?.value || "").trim();
 

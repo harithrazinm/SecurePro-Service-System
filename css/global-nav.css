@@ -1,0 +1,382 @@
+/* =========================================================
+   SECUREPRO GLOBAL NAVIGATION
+   Shared by Admin, Technician and Super Admin
+   Consolidated with :is() so the three near-duplicate
+   layouts share one rule block instead of three.
+   ========================================================= */
+:root {
+    --sp-nav-width: 248px;
+    --sp-nav-width-mobile: 76px;
+
+    /* deep navy shell, unchanged mood, less generic than pure blue */
+    --sp-bg-top: #0d1f3d;
+    --sp-bg-bottom: #081527;
+
+    /* "signal" teal replaces the stock #1d4ed8 blue — reads as
+       live/monitoring rather than generic SaaS */
+    --sp-accent: #2dd4bf;
+    --sp-accent-soft: rgba(45, 212, 191, 0.16);
+    --sp-accent-ring: rgba(45, 212, 191, 0.35);
+
+    --sp-text: #a9bddd;
+    --sp-text-muted: #7c93bc;
+    --sp-text-active: #0d1f3d;
+    --sp-line: rgba(255, 255, 255, 0.08);
+    --sp-shadow: 10px 0 30px rgba(3, 10, 22, 0.35);
+
+    --sp-radius: 10px;
+    --sp-gap: 5px;
+}
+
+.admin-layout,
+.technician-layout,
+.app-shell {
+    min-height: 100vh;
+}
+
+/* -------------------------
+   SHARED SIDEBAR SHELL
+   Admin (.topbar-card), Super Admin (.sidebar),
+   Technician (.technician-sidebar)
+   ------------------------- */
+:is(
+    .admin-layout .topbar-card,
+    .app-shell > .topbar-card,
+    body:has(.sidebar) .sidebar,
+    .technician-layout .technician-sidebar
+) {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1000;
+    width: var(--sp-nav-width);
+    height: 100vh;
+    min-height: 100vh;
+    padding: 24px 14px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    background: linear-gradient(165deg, var(--sp-bg-top), var(--sp-bg-bottom));
+    border: 0;
+    border-radius: 0;
+    box-shadow: var(--sp-shadow);
+    color: #fff;
+}
+
+/* -------------------------
+   BRAND
+   ------------------------- */
+:is(
+    .admin-layout .topbar-card .brand,
+    .app-shell > .topbar-card .brand,
+    body:has(.sidebar) .sidebar .brand,
+    .technician-layout .technician-brand
+) {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 4px 10px 28px;
+    flex-shrink: 0;
+}
+
+:is(
+    .admin-layout .topbar-card .brand-mark,
+    .app-shell > .topbar-card .brand-mark,
+    body:has(.sidebar) .sidebar .brand-mark,
+    .technician-layout .technician-brand-mark,
+    .super-admin .brand-mark
+) {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: #fff;
+    color: var(--sp-bg-top);
+    font-size: 18px;
+    font-weight: 800;
+    box-shadow: 0 0 0 3px var(--sp-accent-ring), 0 7px 18px rgba(0, 0, 0, 0.25);
+}
+
+:is(
+    .admin-layout .topbar-card .brand-text strong,
+    .app-shell > .topbar-card .brand-text strong,
+    .technician-layout .technician-brand strong
+) {
+    color: #fff;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+:is(
+    .admin-layout .topbar-card .brand-text span,
+    .app-shell > .topbar-card .brand-text span,
+    .technician-layout .technician-brand span
+) {
+    color: var(--sp-text-muted);
+    font-size: 11px;
+}
+
+/* -------------------------
+   NAV LIST
+   ------------------------- */
+:is(
+    .admin-layout .top-nav,
+    .app-shell > .topbar-card .top-nav,
+    body:has(.sidebar) .sidebar nav,
+    .technician-layout .technician-nav
+) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-gap);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* nav links — one shared rule instead of three copies */
+:is(
+    .admin-layout .top-nav a,
+    .app-shell > .topbar-card .top-nav a,
+    body:has(.sidebar) .sidebar nav a,
+    .technician-layout .technician-nav-item
+) {
+    position: relative;
+    min-height: 44px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 13px 0 16px;
+    border-radius: var(--sp-radius);
+    border-left: 2px solid transparent;
+    color: var(--sp-text);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color 0.15s ease, color 0.15s ease,
+        border-color 0.15s ease, transform 0.15s ease;
+}
+
+:is(
+    .admin-layout .top-nav a svg,
+    .app-shell > .topbar-card .top-nav a svg
+) {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+}
+
+/* signature hover: nudges right and lights up the accent edge,
+   instead of a generic background-only hover */
+:is(
+    .admin-layout .top-nav a:hover,
+    .app-shell > .topbar-card .top-nav a:hover,
+    body:has(.sidebar) .sidebar nav a:hover,
+    .technician-layout .technician-nav-item:hover
+) {
+    background: rgba(255, 255, 255, 0.06);
+    border-left-color: var(--sp-accent-soft);
+    color: #fff;
+    transform: translateX(2px);
+}
+
+/* signature moment: the active item is a soft accent-tinted panel
+   with a small live pulse dot, reading as "this is what's on screen
+   right now" — fitting for a monitoring product */
+:is(
+    .admin-layout .top-nav a.active,
+    .app-shell > .topbar-card .top-nav a.active,
+    body:has(.sidebar) .sidebar nav a.active,
+    .technician-layout .technician-nav-item.active
+) {
+    background: #fff;
+    color: var(--sp-text-active);
+    border-left-color: var(--sp-accent);
+    box-shadow: 0 7px 18px rgba(0, 0, 0, 0.18);
+    transform: none;
+}
+
+:is(
+    .admin-layout .top-nav a.active,
+    .app-shell > .topbar-card .top-nav a.active,
+    body:has(.sidebar) .sidebar nav a.active,
+    .technician-layout .technician-nav-item.active
+)::after {
+    content: "";
+    margin-left: auto;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--sp-accent);
+    box-shadow: 0 0 0 3px var(--sp-accent-soft);
+    animation: sp-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes sp-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--sp-accent-soft); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :is(
+        .admin-layout .top-nav a.active,
+        .app-shell > .topbar-card .top-nav a.active,
+        body:has(.sidebar) .sidebar nav a.active,
+        .technician-layout .technician-nav-item.active
+    )::after {
+        animation: none;
+    }
+}
+
+/* -------------------------
+   FOOTER: logout / profile
+   ------------------------- */
+:is(.admin-layout > .logout-bar, .app-shell > .logout-bar) {
+    position: fixed;
+    left: 14px;
+    bottom: 18px;
+    z-index: 1001;
+    width: calc(var(--sp-nav-width) - 28px);
+    min-height: 40px;
+    justify-content: center;
+    border: 1px solid var(--sp-line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #dce7f8;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+:is(.admin-layout > .logout-bar, .app-shell > .logout-bar):hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--sp-accent-ring);
+}
+
+.technician-layout .technician-sidebar-footer {
+    margin-top: auto;
+    border-color: var(--sp-line);
+}
+
+.technician-layout .technician-profile {
+    color: #fff;
+}
+
+.technician-layout .technician-profile span {
+    color: var(--sp-text-muted);
+}
+
+body:has(.sidebar) .sidebar .profile {
+    border-color: var(--sp-line);
+}
+
+/* -------------------------
+   MAIN CONTENT OFFSET
+   ------------------------- */
+:is(.admin-layout > main, .app-shell > main) {
+    margin-left: var(--sp-nav-width);
+    width: calc(100% - var(--sp-nav-width));
+    min-width: 0;
+}
+
+:is(.admin-layout > main .eyebrow-row, .app-shell > main .eyebrow-row) {
+    margin-left: 0;
+}
+
+:is(body:has(.sidebar) > .main, body:has(.sidebar) .main) {
+    margin-left: var(--sp-nav-width);
+    width: calc(100% - var(--sp-nav-width));
+}
+
+.technician-layout .technician-main {
+    margin-left: var(--sp-nav-width);
+    width: calc(100% - var(--sp-nav-width));
+    min-width: 0;
+}
+
+/* -------------------------
+   MOBILE — icon-only rail
+   ------------------------- */
+@media (max-width: 900px) {
+    :root { --sp-nav-width: var(--sp-nav-width-mobile); }
+
+    :is(
+        .admin-layout .topbar-card,
+        .app-shell > .topbar-card,
+        body:has(.sidebar) .sidebar,
+        .technician-layout .technician-sidebar
+    ) {
+        padding: 18px 9px;
+    }
+
+    :is(
+        .admin-layout .topbar-card .brand,
+        .app-shell > .topbar-card .brand,
+        body:has(.sidebar) .sidebar .brand,
+        .technician-layout .technician-brand
+    ) {
+        justify-content: center;
+        padding: 4px 0 24px;
+    }
+
+    :is(
+        .admin-layout .topbar-card .brand-text,
+        .app-shell > .topbar-card .brand-text,
+        body:has(.sidebar) .sidebar .brand > div:last-child,
+        .technician-layout .technician-brand > div:last-child,
+        .admin-layout .top-nav a span:not(.nav-icon),
+        .app-shell > .topbar-card .top-nav a span:not(.nav-icon),
+        body:has(.sidebar) .sidebar nav a span,
+        .technician-layout .technician-nav-item > span:not(.nav-icon),
+        body:has(.sidebar) .sidebar .profile > div:last-child,
+        .technician-layout .technician-profile > div:last-child
+    ) {
+        display: none;
+    }
+
+    :is(
+        .admin-layout .top-nav a,
+        .app-shell > .topbar-card .top-nav a,
+        body:has(.sidebar) .sidebar nav a,
+        .technician-layout .technician-nav-item
+    ) {
+        justify-content: center;
+        padding: 0;
+        border-left: none;
+    }
+
+    /* active dot moves to a top accent bar since there's no room
+       beside the (hidden) label on the icon-only rail */
+    :is(
+        .admin-layout .top-nav a.active,
+        .app-shell > .topbar-card .top-nav a.active,
+        body:has(.sidebar) .sidebar nav a.active,
+        .technician-layout .technician-nav-item.active
+    )::after {
+        content: none;
+    }
+
+    :is(
+        .admin-layout .top-nav a.active,
+        .app-shell > .topbar-card .top-nav a.active,
+        body:has(.sidebar) .sidebar nav a.active,
+        .technician-layout .technician-nav-item.active
+    ) {
+        box-shadow: inset 0 2px 0 var(--sp-accent), 0 7px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    :is(.admin-layout > .logout-bar, .app-shell > .logout-bar) {
+        left: 9px;
+        width: calc(var(--sp-nav-width) - 18px);
+        font-size: 0;
+    }
+
+    :is(.admin-layout > .logout-bar svg, .app-shell > .logout-bar svg) {
+        margin: 0;
+    }
+}
+
+@media (max-width: 520px) {
+    :root { --sp-nav-width-mobile: 64px; }
+}

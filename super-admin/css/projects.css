@@ -1,0 +1,759 @@
+/*
+=========================================================
+SECUREPRO SUPER ADMIN — PROJECTS PAGE
+=========================================================
+PAGE-ONLY STYLES
+
+The existing Super Admin navbar/sidebar is intentionally
+NOT styled here. Keep using the existing super-admin.css
+for the sidebar, navigation, brand and admin profile.
+
+This stylesheet is only for the Projects page.
+=========================================================
+*/
+
+/* =========================================================
+   PROJECT VARIABLES
+========================================================= */
+
+.content {
+    --project-primary: #0b5ed7;
+    --project-primary-dark: #084298;
+
+    --project-text: #172033;
+    --project-muted: #64748b;
+
+    --project-border: #e2e8f0;
+    --project-surface: #ffffff;
+    --project-background: #f6f8fc;
+
+    --project-success: #15803d;
+    --project-warning: #c2410c;
+    --project-danger: #b91c1c;
+
+    --project-shadow:
+        0 8px 28px rgba(15, 23, 42, 0.06);
+
+    color: var(--project-text);
+}
+
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+.topbar {
+    min-height: 86px;
+    padding: 18px 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: #ffffff;
+    border-bottom: 1px solid var(--project-border);
+}
+
+.topbar small {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: var(--project-primary);
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.35px;
+}
+
+.topbar h1 {
+    margin: 0;
+
+    color: var(--project-text);
+
+    font-size: 25px;
+    line-height: 1.25;
+    font-weight: 750;
+    letter-spacing: -0.35px;
+}
+
+.online {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    color: #475569;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.online::first-letter {
+    color: #22c55e;
+}
+
+
+/* =========================================================
+   PAGE CONTENT
+========================================================= */
+
+.content {
+    padding: 32px 34px 45px;
+    background: var(--project-background);
+}
+
+
+/* =========================================================
+   INTRO
+========================================================= */
+
+.intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 5px 9px;
+
+    border-radius: 6px;
+
+    background: #eaf2ff;
+    color: var(--project-primary);
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+}
+
+.intro h2 {
+    margin: 9px 0 0;
+
+    color: var(--project-text);
+
+    font-size: 23px;
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.intro p {
+    margin: 4px 0 0;
+
+    color: var(--project-muted);
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   REFRESH BUTTON
+========================================================= */
+
+.refresh {
+    min-height: 42px;
+
+    padding: 0 17px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #334155;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 2px 5px rgba(15, 23, 42, 0.04);
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.refresh:hover {
+    border-color: #93c5fd;
+
+    background: #f8fbff;
+    color: var(--project-primary);
+
+    box-shadow:
+        0 5px 14px rgba(15, 23, 42, 0.07);
+
+    transform: translateY(-1px);
+}
+
+.refresh:active {
+    transform: translateY(0);
+}
+
+.refresh:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+
+/* =========================================================
+   SEARCH + FILTER
+========================================================= */
+
+.toolbar {
+    display: grid;
+
+    grid-template-columns:
+        minmax(250px, 1fr)
+        210px;
+
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+.toolbar input,
+.toolbar select {
+    width: 100%;
+    height: 45px;
+
+    padding: 0 14px;
+
+    border: 1px solid var(--project-border);
+    border-radius: 9px;
+
+    outline: none;
+
+    background: #ffffff;
+    color: var(--project-text);
+
+    font-family: inherit;
+    font-size: 13px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.toolbar input::placeholder {
+    color: #94a3b8;
+}
+
+.toolbar input:hover,
+.toolbar select:hover {
+    border-color: #cbd5e1;
+}
+
+.toolbar input:focus,
+.toolbar select:focus {
+    border-color: #60a5fa;
+
+    box-shadow:
+        0 0 0 3px rgba(59, 130, 246, 0.10);
+}
+
+
+/* =========================================================
+   PROJECT PANEL
+========================================================= */
+
+.panel {
+    overflow: hidden;
+
+    background: var(--project-surface);
+
+    border: 1px solid var(--project-border);
+    border-radius: 13px;
+
+    box-shadow: var(--project-shadow);
+}
+
+.panel-head {
+    min-height: 62px;
+
+    padding: 0 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-bottom: 1px solid var(--project-border);
+
+    background: #ffffff;
+}
+
+.panel-head h2 {
+    margin: 0;
+
+    color: var(--project-text);
+
+    font-size: 15px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.table-wrap {
+    width: 100%;
+
+    overflow-x: auto;
+
+    background: #ffffff;
+}
+
+table {
+    width: 100%;
+    min-width: 1050px;
+
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+thead {
+    background: #f8fafc;
+}
+
+th {
+    padding: 13px 15px;
+
+    border-bottom: 1px solid var(--project-border);
+
+    color: #64748b;
+
+    text-align: left;
+    vertical-align: middle;
+
+    white-space: nowrap;
+
+    font-size: 10px;
+    line-height: 1.3;
+    font-weight: 800;
+
+    letter-spacing: 0.65px;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 15px;
+
+    border-bottom: 1px solid #edf1f5;
+
+    color: #334155;
+
+    font-size: 12px;
+    line-height: 1.45;
+
+    vertical-align: middle;
+}
+
+tbody tr {
+    background: #ffffff;
+
+    transition:
+        background-color 0.15s ease;
+}
+
+tbody tr:hover {
+    background: #f8fbff;
+}
+
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* =========================================================
+   TABLE TEXT
+========================================================= */
+
+td strong {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+td small {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.muted {
+    color: #94a3b8 !important;
+}
+
+
+/* =========================================================
+   REPORT + STATUS BADGES
+========================================================= */
+
+.badge {
+    display: inline-flex !important;
+
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    min-height: 28px;
+
+    padding: 5px 11px;
+
+    border: 1px solid transparent;
+    border-radius: 999px;
+
+    white-space: nowrap;
+
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 750;
+}
+
+/* Small coloured dot */
+
+.badge::before {
+    content: "";
+
+    width: 6px;
+    height: 6px;
+
+    flex: 0 0 6px;
+
+    border-radius: 50%;
+
+    background: currentColor;
+}
+
+
+/* =========================================================
+   REPORT STATUS
+========================================================= */
+
+/* Approved — Green */
+
+.badge-approved {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+/* Submitted — Blue */
+
+.badge-submitted {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+/* Available — Green */
+
+.badge-available {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+
+/* =========================================================
+   PROJECT STATUS
+========================================================= */
+
+/* Pending — Orange */
+
+.badge-pending {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #c2410c;
+}
+
+/* Assigned — Blue */
+
+.badge-assigned {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+/* In Progress — Purple */
+
+.badge-in_progress {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+    color: #6d28d9;
+}
+
+/* Waiting Parts — Yellow */
+
+.badge-waiting_parts {
+    background: #fefce8;
+    border-color: #fde68a;
+    color: #a16207;
+}
+
+/* Completed — Green */
+
+.badge-completed {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+/* Cancelled — Red */
+
+.badge-cancelled {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+/* Rejected — Red */
+
+.badge-rejected {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+/* No report — Grey */
+
+.badge-none,
+.badge-no_report {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+
+
+/* =========================================================
+   REPORT / STATUS CELLS
+========================================================= */
+
+.report-cell,
+.status-cell {
+    vertical-align: middle;
+}
+
+.action-cell {
+    text-align: right;
+}
+
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+table a {
+    color: var(--project-primary);
+
+    text-decoration: none;
+
+    font-weight: 650;
+}
+
+table a:hover {
+    text-decoration: underline;
+}
+
+table a.doc {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    padding: 5px 8px;
+
+    border-radius: 6px;
+
+    background: #eff6ff;
+    color: #1d4ed8;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+table a.doc:hover {
+    background: #dbeafe;
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   VIEW BUTTON
+========================================================= */
+
+.view {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 32px;
+
+    padding: 0 11px;
+
+    border: 1px solid #dbe3ec;
+    border-radius: 7px;
+
+    background: #ffffff;
+    color: #334155;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.view:hover {
+    border-color: #93c5fd;
+
+    background: #eff6ff;
+    color: #1d4ed8;
+
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   EMPTY / ERROR
+========================================================= */
+
+.empty {
+    min-height: 120px;
+
+    padding: 55px 20px !important;
+
+    color: #94a3b8;
+
+    text-align: center;
+
+    font-size: 13px;
+}
+
+.error-text {
+    color: #b91c1c !important;
+}
+
+
+/* =========================================================
+   TABLE SCROLLBAR
+========================================================= */
+
+.table-wrap::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-wrap::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.table-wrap::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+
+    border-radius: 20px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   Content only — navbar remains controlled by
+   super-admin.css.
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .content {
+        padding: 28px 24px 40px;
+    }
+
+    .topbar {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+}
+
+
+@media (max-width: 800px) {
+
+    .content {
+        padding: 24px 18px 35px;
+    }
+
+    .intro {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .refresh {
+        width: 100%;
+    }
+
+    .toolbar {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 520px) {
+
+    .topbar {
+        min-height: 76px;
+
+        padding: 15px;
+    }
+
+    .topbar h1 {
+        font-size: 21px;
+    }
+
+    .online {
+        display: none;
+    }
+
+    .content {
+        padding: 20px 12px 30px;
+    }
+
+    .intro h2 {
+        font-size: 20px;
+    }
+
+    .panel {
+        border-radius: 10px;
+    }
+
+    .panel-head {
+        padding: 0 15px;
+    }
+}

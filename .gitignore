@@ -18,6 +18,9 @@ backend/uploads/technician/reports/*
 # Keep upload folders
 !backend/uploads/customer/.gitkeep
 !backend/uploads/technician/.gitkeep
+backend/.dockerignore
+backend/.env.example
+
 
 # Aiven database files
 database/ca.pem
@@ -25,4 +28,4 @@ database/securepro-data.sql
 
 # Backup files
 *.backup
-*.bak
+*.bak.DS_Store

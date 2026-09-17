@@ -14,6 +14,18 @@ const ssl =
         : undefined;
 
 
+/*
+ * ======================================================
+ * MYSQL CONNECTION POOL
+ * ======================================================
+ *
+ * Keep connections alive so long-lived Node/Render processes
+ * are less likely to reuse a stale Aiven TCP connection.
+ * Idle connections are recycled instead of being kept forever.
+ *
+ * ======================================================
+ */
+
 const pool = mysql.createPool({
 
     host: process.env.DB_HOST,
@@ -26,13 +38,41 @@ const pool = mysql.createPool({
 
     database: process.env.DB_NAME,
 
+    charset: "utf8mb4",
+
     ssl,
 
     waitForConnections: true,
 
     connectionLimit: 10,
 
-    queueLimit: 0
+    maxIdle: 10,
+
+    idleTimeout: 60_000,
+
+    queueLimit: 50,
+
+    connectTimeout: 15_000,
+
+    enableKeepAlive: true,
+
+    keepAliveInitialDelay: 10_000
+});
+
+
+/*
+ * Log pool-level events without exposing credentials.
+ */
+pool.on("connection", () => {
+    console.log("MySQL connection established.");
+});
+
+pool.on("acquire", () => {
+    console.log("MySQL connection acquired from pool.");
+});
+
+pool.on("enqueue", () => {
+    console.warn("MySQL pool is busy; request queued.");
 });
 
 

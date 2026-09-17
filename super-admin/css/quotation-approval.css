@@ -1,0 +1,683 @@
+/* =========================================================
+   SECUREPRO QUOTATION APPROVAL
+   ========================================================= */
+
+.approval-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.approval-stat {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-height: 108px;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #e5eaf0;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+}
+
+.approval-stat-icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    font-weight: 800;
+    font-size: 19px;
+}
+
+.approval-stat-icon.pending {
+    background: #fff6df;
+    color: #b77900;
+}
+
+.approval-stat-icon.revision {
+    background: #fff0ed;
+    color: #c84b32;
+}
+
+.approval-stat-icon.approved {
+    background: #eaf8ef;
+    color: #16834a;
+}
+
+.approval-stat span,
+.approval-stat small {
+    display: block;
+}
+
+.approval-stat span {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.approval-stat strong {
+    display: block;
+    margin: 1px 0;
+    color: #0b2948;
+    font-size: 27px;
+    line-height: 1.15;
+}
+
+.approval-stat small {
+    color: #98a2b3;
+    font-size: 11px;
+}
+
+.approval-panel-head {
+    align-items: flex-end;
+}
+
+.approval-filter {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.filter-button {
+    padding: 8px 13px;
+    border: 1px solid #e5eaf0;
+    border-radius: 9px;
+    background: #fff;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+.filter-button:hover {
+    border-color: #123c69;
+    color: #123c69;
+}
+
+.filter-button.active {
+    border-color: #123c69;
+    background: #123c69;
+    color: #fff;
+}
+
+.approval-search {
+    margin-bottom: 16px;
+}
+
+.approval-search input {
+    width: 100%;
+    max-width: 420px;
+    padding: 11px 14px;
+    border: 1px solid #e5eaf0;
+    border-radius: 10px;
+    background: #fff;
+    color: #17212b;
+    outline: none;
+}
+
+.approval-search input:focus {
+    border-color: #123c69;
+    box-shadow: 0 0 0 3px rgba(18, 60, 105, 0.08);
+}
+
+.approval-table th,
+.approval-table td {
+    vertical-align: middle;
+}
+
+.quotation-number-cell strong,
+.quotation-number-cell span,
+.customer-cell strong,
+.customer-cell span {
+    display: block;
+}
+
+.quotation-number-cell strong,
+.customer-cell strong {
+    color: #17212b;
+    font-size: 13px;
+}
+
+.quotation-number-cell span,
+.customer-cell span {
+    margin-top: 2px;
+    color: #98a2b3;
+    font-size: 11px;
+}
+
+.service-cell {
+    color: #475467;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.revision-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: #f2f4f7;
+    color: #475467;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.approval-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.approval-status.pending_approval {
+    background: #fff6df;
+    color: #9b6700;
+}
+
+.approval-status.revision_required {
+    background: #fff0ed;
+    color: #c84b32;
+}
+
+.approval-status.approved {
+    background: #eaf8ef;
+    color: #16834a;
+}
+
+.review-button {
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 9px;
+    background: #123c69;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    transition: 0.2s ease;
+}
+
+.review-button:hover {
+    background: #0b2948;
+    transform: translateY(-1px);
+}
+
+.review-button.view {
+    background: #eef4fa;
+    color: #123c69;
+}
+
+.page-error,
+.decision-error {
+    margin-bottom: 18px;
+    padding: 11px 13px;
+    border: 1px solid #f0c5bd;
+    border-radius: 10px;
+    background: #fff5f3;
+    color: #b42318;
+    font-size: 12px;
+}
+
+.page-error {
+    margin-bottom: 20px;
+}
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.approval-modal[hidden] {
+    display: none;
+}
+
+.approval-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.approval-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 41, 72, 0.58);
+    backdrop-filter: blur(4px);
+}
+
+.approval-modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(920px, 100%);
+    max-height: 92vh;
+    overflow: auto;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 25px 70px rgba(15, 23, 42, 0.25);
+}
+
+.approval-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 24px 26px;
+    border-bottom: 1px solid #e5eaf0;
+}
+
+.approval-modal-head h2 {
+    margin-top: 3px;
+    color: #0b2948;
+    font-size: 24px;
+}
+
+.approval-modal-head p {
+    margin-top: 5px;
+    color: #667085;
+    font-size: 12px;
+}
+
+.modal-close {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e5eaf0;
+    border-radius: 10px;
+    background: #fff;
+    color: #667085;
+    font-size: 23px;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    background: #f6f8fb;
+    color: #123c69;
+}
+
+.review-loading {
+    padding: 55px 25px;
+    text-align: center;
+    color: #667085;
+    font-size: 13px;
+}
+
+.quotation-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 22px 26px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5eaf0;
+}
+
+.quotation-meta > div {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #e5eaf0;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.quotation-meta span,
+.quotation-meta strong {
+    display: block;
+}
+
+.quotation-meta span {
+    margin-bottom: 4px;
+    color: #98a2b3;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.quotation-meta strong {
+    overflow: hidden;
+    color: #17212b;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.document-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 22px 26px;
+    padding: 15px;
+    border: 1px solid #e5eaf0;
+    border-radius: 13px;
+    background: #f8fafc;
+}
+
+.document-icon {
+    width: 44px;
+    height: 50px;
+    flex: 0 0 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: #fff0ed;
+    color: #c84b32;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.document-details {
+    min-width: 0;
+    flex: 1;
+}
+
+.document-details strong,
+.document-details span {
+    display: block;
+}
+
+.document-details strong {
+    overflow: hidden;
+    color: #17212b;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.document-details span {
+    margin-top: 3px;
+    color: #98a2b3;
+    font-size: 11px;
+}
+
+.open-pdf {
+    flex-shrink: 0;
+    padding: 9px 13px;
+    border: 1px solid #d9e2ec;
+    border-radius: 9px;
+    background: #fff;
+    color: #123c69;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.open-pdf:hover {
+    border-color: #123c69;
+    background: #eef4fa;
+}
+
+.history-section {
+    margin: 0 26px 22px;
+}
+
+.history-heading {
+    margin-bottom: 12px;
+}
+
+.history-heading h3 {
+    margin-top: 3px;
+    color: #0b2948;
+    font-size: 17px;
+}
+
+.review-history {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.history-item {
+    position: relative;
+    padding: 13px 15px;
+    border: 1px solid #e5eaf0;
+    border-left: 3px solid #d0d5dd;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.history-item.approved {
+    border-left-color: #16834a;
+}
+
+.history-item.revision_required {
+    border-left-color: #c84b32;
+}
+
+.history-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.history-decision {
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.history-decision.approved {
+    color: #16834a;
+}
+
+.history-decision.revision_required {
+    color: #c84b32;
+}
+
+.history-date {
+    color: #98a2b3;
+    font-size: 10px;
+}
+
+.history-meta {
+    margin-top: 3px;
+    color: #667085;
+    font-size: 10px;
+}
+
+.history-remarks {
+    margin-top: 9px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #475467;
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.history-empty {
+    padding: 18px;
+    border: 1px dashed #d9e2ec;
+    border-radius: 10px;
+    color: #98a2b3;
+    font-size: 11px;
+    text-align: center;
+}
+
+.decision-section {
+    margin: 0 26px 26px;
+    padding: 19px;
+    border: 1px solid #e5eaf0;
+    border-radius: 14px;
+    background: #f8fafc;
+}
+
+.decision-section > label {
+    display: block;
+    margin-bottom: 4px;
+    color: #17212b;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.decision-section > p {
+    margin-bottom: 11px;
+    color: #667085;
+    font-size: 11px;
+}
+
+.decision-section textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 110px;
+    padding: 12px;
+    border: 1px solid #d9e2ec;
+    border-radius: 10px;
+    background: #fff;
+    color: #17212b;
+    font-size: 12px;
+    line-height: 1.6;
+    outline: none;
+}
+
+.decision-section textarea:focus {
+    border-color: #123c69;
+    box-shadow: 0 0 0 3px rgba(18, 60, 105, 0.08);
+}
+
+.decision-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 13px;
+}
+
+.revision-button,
+.approve-button {
+    padding: 11px 15px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.revision-button {
+    border: 1px solid #e4b8ae;
+    background: #fff;
+    color: #b54732;
+}
+
+.revision-button:hover {
+    background: #fff5f3;
+}
+
+.approve-button {
+    border: 1px solid #123c69;
+    background: #123c69;
+    color: #fff;
+}
+
+.approve-button:hover {
+    background: #0b2948;
+}
+
+.revision-button:disabled,
+.approve-button:disabled,
+.review-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+    .approval-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .quotation-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .approval-panel-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .approval-filter {
+        flex-wrap: wrap;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    .approval-table {
+        min-width: 900px;
+    }
+
+    .approval-modal {
+        padding: 12px;
+    }
+
+    .approval-modal-dialog {
+        max-height: 96vh;
+        border-radius: 16px;
+    }
+
+    .approval-modal-head {
+        padding: 19px;
+    }
+
+    .quotation-meta {
+        grid-template-columns: 1fr;
+        padding: 17px 19px;
+    }
+
+    .document-card {
+        margin: 18px 19px;
+    }
+
+    .history-section,
+    .decision-section {
+        margin-left: 19px;
+        margin-right: 19px;
+    }
+}
+
+@media (max-width: 520px) {
+    .approval-stat {
+        min-height: 94px;
+        padding: 15px;
+    }
+
+    .approval-stat-icon {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+    }
+
+    .document-card {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .document-details {
+        width: calc(100% - 58px);
+    }
+
+    .open-pdf {
+        width: 100%;
+    }
+
+    .decision-actions {
+        flex-direction: column-reverse;
+    }
+
+    .revision-button,
+    .approve-button {
+        width: 100%;
+    }
+}

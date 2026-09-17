@@ -1,8 +1,15 @@
 /* ========================================
    SUCCESS PAGE
-======================================== */
+   ======================================== */
 
 .success-page {
+    /* Fallbacks — only apply if style.css didn't define these */
+    --bg:      #f7f8fa;
+    --surface: #ffffff;
+    --border:  #e5e7eb;
+    --muted:   #6b7280;
+    --text:    #111827;
+
     min-height: calc(100vh - 76px);
 
     padding: 70px 0 90px;
@@ -27,7 +34,7 @@
 
     background: var(--surface);
 
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border, #e5e7eb);
 
     border-radius: 24px;
 
@@ -42,7 +49,7 @@
 
 /* ========================================
    SUCCESS ICON
-======================================== */
+   ======================================== */
 
 .success-icon {
     width: 72px;
@@ -57,6 +64,8 @@
 
     background: #dcfce7;
 
+    border: 1.5px solid #bbf7d0;
+
     color: #15803d;
 
     font-size: 34px;
@@ -67,7 +76,7 @@
 
 /* ========================================
    HEADER
-======================================== */
+   ======================================== */
 
 .success-card .eyebrow {
     margin-bottom: 12px;
@@ -100,14 +109,14 @@
 
 /* ========================================
    REQUEST CODE
-======================================== */
+   ======================================== */
 
 .request-code-box {
     margin: 34px 0;
 
     padding: 24px;
 
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border, #e5e7eb);
 
     border-radius: 16px;
 
@@ -147,7 +156,7 @@
 
 /* ========================================
    DETAILS
-======================================== */
+   ======================================== */
 
 .success-details {
     display: grid;
@@ -164,7 +173,7 @@
 .detail-item {
     padding: 18px;
 
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border, #e5e7eb);
 
     border-radius: 14px;
 
@@ -206,7 +215,7 @@
 
 /* ========================================
    STATUS
-======================================== */
+   ======================================== */
 
 .status-badge {
     display: inline-block !important;
@@ -214,6 +223,8 @@
     width: fit-content;
 
     padding: 5px 9px;
+
+    border: 1px solid #fde68a;
 
     border-radius: 999px;
 
@@ -227,7 +238,7 @@
 
 /* ========================================
    WHATSAPP
-======================================== */
+   ======================================== */
 
 .whatsapp-section {
     padding: 28px;
@@ -238,7 +249,7 @@
 
     background: #f0fdf4;
 
-    border: 1px solid #bbf7d0;
+    border: 1.5px solid #bbf7d0;
 }
 
 
@@ -271,7 +282,7 @@
 
     gap: 10px;
 
-    border: none;
+    border: 1.5px solid #15803d;
 
     padding: 14px 22px;
 
@@ -317,7 +328,7 @@
 
 /* ========================================
    ACTIONS
-======================================== */
+   ======================================== */
 
 .success-actions {
     display: flex;
@@ -335,7 +346,7 @@
 
     padding: 13px 20px;
 
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border, #e5e7eb);
 
     border-radius: 10px;
 
@@ -362,7 +373,7 @@
 
 /* ========================================
    PRIVACY
-======================================== */
+   ======================================== */
 
 .success-card .privacy-note {
     margin-top: 24px;
@@ -375,7 +386,7 @@
 
 /* ========================================
    MOBILE
-======================================== */
+   ======================================== */
 
 @media (max-width: 700px) {
 

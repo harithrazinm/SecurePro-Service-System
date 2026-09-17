@@ -1,12 +1,76 @@
+/* =========================================================
+   CUSTOMER PAGE
+   Fallbacks for --bg, --border, --muted, --accent, --accent-soft
+   are defined inline so the page renders correctly even if
+   style.css hasn't loaded or is missing a variable.
+   ========================================================= */
+
 .customer-page {
+    /* Fallback palette — only used if style.css didn't define these */
+    --bg:          #f7f8fa;
+    --border:      #e5e7eb;
+    --muted:       #6b7280;
+    --accent:      #2563eb;
+    --accent-soft: #eff6ff;
+
     min-height: calc(100vh - 76px);
     padding: 45px 0 80px;
-    background: var(--bg);
+    background:
+        radial-gradient(
+            1200px 500px at 50% -10%,
+            var(--accent-soft),
+            transparent 60%
+        ),
+        var(--bg);
 }
 
 .customer-top {
     margin-bottom: 35px;
 }
+
+/* ---------- Back link (pill button) ---------- */
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 9px 16px 9px 12px;
+
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 999px;
+
+    background: #ffffff;
+    color: var(--muted, #6b7280);
+
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: none;
+    cursor: pointer;
+
+    transition:
+        color .2s ease,
+        border-color .2s ease,
+        background .2s ease,
+        transform .15s ease,
+        box-shadow .2s ease;
+}
+
+.back-link:hover {
+    color: var(--accent, #2563eb);
+    border-color: var(--accent, #2563eb);
+    background: var(--accent-soft, #eff6ff);
+    transform: translateX(-2px);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, .08);
+}
+
+.back-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+
+/* ---------- Header ---------- */
 
 .customer-header {
     max-width: 760px;
@@ -16,25 +80,67 @@
 .customer-header h1 {
     font-size: clamp(36px, 5vw, 56px);
     line-height: 1.05;
-    letter-spacing: -2px;
+    letter-spacing: -0.04em;
     margin-bottom: 14px;
 }
 
 .customer-header p {
-    color: var(--muted);
+    color: var(--muted, #6b7280);
     font-size: 17px;
+    line-height: 1.55;
 }
+
+/* Eyebrow badge */
+.eyebrow {
+    display: inline-block;
+
+    margin-bottom: 16px;
+    padding: 5px 12px;
+
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 999px;
+
+    background: #ffffff;
+    color: var(--accent, #2563eb);
+
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+/* ---------- Form shell ---------- */
 
 .customer-form {
     max-width: 800px;
 }
 
+/* ---------- Form card ---------- */
+
 .form-card {
-    background: white;
-    border: 1px solid var(--border);
+    position: relative;
+
+    background: #ffffff;
+    border: 1.5px solid var(--border, #e5e7eb);
     border-radius: 20px;
+
     padding: 30px;
     margin-bottom: 20px;
+
+    box-shadow:
+        0 1px 2px rgba(17, 24, 39, .04),
+        0 8px 24px -12px rgba(17, 24, 39, .10);
+
+    transition:
+        box-shadow .25s ease,
+        border-color .25s ease;
+}
+
+.form-card:focus-within {
+    border-color: var(--accent, #2563eb);
+    box-shadow:
+        0 1px 2px rgba(17, 24, 39, .04),
+        0 18px 40px -20px rgba(37, 99, 235, .25);
 }
 
 .form-card-header {
@@ -47,7 +153,6 @@
 .form-number {
     width: 38px;
     height: 38px;
-
     flex-shrink: 0;
 
     display: grid;
@@ -55,22 +160,29 @@
 
     border-radius: 10px;
 
-    background: var(--accent-soft);
-    color: var(--accent);
+    background: var(--accent-soft, #eff6ff);
+    color: var(--accent, #2563eb);
 
     font-size: 12px;
     font-weight: 800;
+    letter-spacing: .04em;
+
+    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, .12);
 }
 
 .form-card-header h2 {
     font-size: 22px;
+    letter-spacing: -0.02em;
     margin-bottom: 4px;
 }
 
 .form-card-header p {
-    color: var(--muted);
+    color: var(--muted, #6b7280);
     font-size: 14px;
+    line-height: 1.5;
 }
+
+/* ---------- Fields ---------- */
 
 .form-grid {
     display: grid;
@@ -99,81 +211,128 @@
 
 .required {
     color: #dc2626;
+    font-weight: 700;
 }
 
 .optional {
-    color: var(--muted);
+    color: var(--muted, #6b7280);
     font-size: 11px;
     font-weight: 500;
+    letter-spacing: .02em;
 }
+
+/* ---------- Inputs / textareas (VISIBLE BOX) ---------- */
 
 .form-field input,
 .form-field textarea,
 .large-textarea {
     width: 100%;
 
-    border: 1px solid var(--border);
-
+    border: 1.5px solid var(--border, #d1d5db);
     border-radius: 11px;
 
     padding: 14px 15px;
 
     font: inherit;
+    font-size: 15px;
+    color: inherit;
 
     outline: none;
+    background: #ffffff;
 
-    background: white;
+    box-shadow: 0 1px 2px rgba(17, 24, 39, .04);
 
-    transition: border-color .2s ease,
-                box-shadow .2s ease;
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder,
+.large-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.form-field input:hover,
+.form-field textarea:hover,
+.large-textarea:hover {
+    border-color: var(--accent, #2563eb);
 }
 
 .form-field input:focus,
 .form-field textarea:focus,
 .large-textarea:focus {
-    border-color: var(--accent);
-
+    border-color: var(--accent, #2563eb);
     box-shadow:
-        0 0 0 3px rgba(37, 99, 235, .08);
+        0 1px 2px rgba(17, 24, 39, .04),
+        0 0 0 4px rgba(37, 99, 235, .12);
 }
+
+/* Invalid state — only after user typed */
+.form-field input:not(:placeholder-shown):invalid,
+.form-field textarea:not(:placeholder-shown):invalid {
+    border-color: #fca5a5;
+}
+
+.form-field input:not(:placeholder-shown):invalid:focus,
+.form-field textarea:not(:placeholder-shown):invalid:focus {
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, .10);
+}
+
+/* ---------- Photo dropzone ---------- */
 
 .photo-dropzone {
     position: relative;
 
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
-
     justify-content: center;
-
     gap: 7px;
 
     min-height: 190px;
-
     padding: 30px;
 
-    border: 2px dashed var(--border);
-
+    border: 2px dashed var(--border, #cbd5e1);
     border-radius: 16px;
 
     cursor: pointer;
-
     text-align: center;
 
+    background: #ffffff;
+
     transition:
-        border-color .2s ease,
-        background .2s ease;
+        border-color .25s ease,
+        background .25s ease,
+        box-shadow .25s ease;
 }
 
-.photo-dropzone:hover {
-    border-color: var(--accent);
-    background: var(--accent-soft);
+@media (hover: hover) {
+    .photo-dropzone:hover {
+        border-color: var(--accent, #2563eb);
+        background: var(--accent-soft, #eff6ff);
+        box-shadow: 0 10px 30px -18px rgba(37, 99, 235, .35);
+    }
+
+    .photo-dropzone:hover .upload-icon {
+        transform: translateY(-2px) scale(1.06);
+    }
 }
 
+.photo-dropzone:focus-within {
+    border-color: var(--accent, #2563eb);
+    background: var(--accent-soft, #eff6ff);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+}
+
+/* Visually hidden but focusable */
 .photo-dropzone input {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .upload-icon {
@@ -185,118 +344,304 @@
 
     border-radius: 14px;
 
-    background: var(--accent-soft);
-    color: var(--accent);
+    background: var(--accent-soft, #eff6ff);
+    color: var(--accent, #2563eb);
 
     font-size: 28px;
     font-weight: 400;
+    line-height: 1;
 
     margin-bottom: 5px;
+
+    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, .12);
+
+    transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
 }
 
 .photo-dropzone strong {
     font-size: 16px;
+    letter-spacing: -0.01em;
 }
 
 .photo-dropzone span {
-    color: var(--muted);
+    color: var(--muted, #6b7280);
     font-size: 13px;
+    line-height: 1.5;
+    max-width: 340px;
 }
 
 .photo-dropzone small {
-    color: var(--muted);
+    color: var(--muted, #6b7280);
     font-size: 11px;
+    letter-spacing: .02em;
+    margin-top: 4px;
 }
+
+/* ---------- Photo preview ---------- */
 
 .photo-preview {
     display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
-
     margin-top: 15px;
+}
+
+.photo-preview:empty {
+    display: none;
 }
 
 .photo-item {
     position: relative;
 
     aspect-ratio: 1 / 1;
-
     overflow: hidden;
 
     border-radius: 12px;
-
-    border: 1px solid var(--border);
-
+    border: 1px solid var(--border, #e5e7eb);
     background: #f3f4f6;
+
+    animation: photoIn .3s ease both;
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease,
+        border-color .25s ease;
+}
+
+@keyframes photoIn {
+    from { opacity: 0; transform: scale(.94); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@media (hover: hover) {
+    .photo-item:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent, #2563eb);
+        box-shadow: 0 12px 24px -14px rgba(17, 24, 39, .3);
+    }
 }
 
 .photo-item img {
     width: 100%;
     height: 100%;
-
     object-fit: cover;
+    display: block;
+}
+
+.photo-item::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(17, 24, 39, .28),
+        transparent 45%
+    );
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+}
+
+@media (hover: hover) {
+    .photo-item:hover::after { opacity: 1; }
 }
 
 .photo-remove {
     position: absolute;
-
     top: 7px;
     right: 7px;
+    z-index: 1;
 
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
+
+    display: grid;
+    place-items: center;
 
     border: none;
-
     border-radius: 50%;
 
     background: rgba(17, 24, 39, .8);
-
     color: white;
 
     cursor: pointer;
-
     font-size: 15px;
+    line-height: 1;
+
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+
+    opacity: 0;
+    transform: scale(.85);
+
+    transition:
+        opacity .2s ease,
+        transform .2s ease,
+        background .2s ease;
 }
+
+.photo-item:hover .photo-remove,
+.photo-remove:focus-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.photo-remove:hover {
+    background: #dc2626;
+}
+
+.photo-remove:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 2px;
+}
+
+@media (hover: none) {
+    .photo-remove {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ---------- Notes textarea ---------- */
 
 .large-textarea {
     resize: vertical;
     min-height: 150px;
+    line-height: 1.55;
 }
 
-.form-error {
-    margin-bottom: 20px;
+/* ---------- Error banner ---------- */
 
+.form-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    margin-bottom: 20px;
     padding: 14px 16px;
 
     border-radius: 11px;
 
     background: #fef2f2;
-
     border: 1px solid #fecaca;
-
     color: #991b1b;
 
     font-size: 14px;
+    line-height: 1.5;
+
+    animation: errorIn .25s ease both;
 }
+
+.form-error[hidden] {
+    display: none;
+}
+
+.form-error::before {
+    content: "!";
+    flex-shrink: 0;
+
+    width: 18px;
+    height: 18px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+    background: #991b1b;
+    color: white;
+
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+
+    margin-top: 1px;
+}
+
+@keyframes errorIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Navigation ---------- */
 
 .customer-navigation {
     display: flex;
-
     justify-content: space-between;
-
+    align-items: center;
     gap: 15px;
 
     padding-top: 5px;
 }
 
+/* Button polish — base colors live in style.css */
+.primary-btn,
+.secondary-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    transition:
+        transform .15s ease,
+        box-shadow .2s ease,
+        opacity .2s ease;
+}
+
+.primary-btn:hover:not([disabled]),
+.secondary-btn:hover:not([disabled]) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px -14px rgba(17, 24, 39, .4);
+}
+
+.primary-btn:active:not([disabled]),
+.secondary-btn:active:not([disabled]) {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.primary-btn:focus-visible,
+.secondary-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .18);
+}
+
+.primary-btn[disabled],
+.secondary-btn[disabled] {
+    opacity: .55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.primary-btn.loading::after {
+    content: "";
+    width: 14px;
+    height: 14px;
+
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+
+    animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Responsive ---------- */
+
 @media (max-width: 650px) {
+
+    .customer-page {
+        padding: 30px 0 60px;
+    }
+
+    .customer-header {
+        margin-bottom: 30px;
+    }
 
     .form-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
 
     .form-field.full {
@@ -305,19 +650,54 @@
 
     .form-card {
         padding: 22px;
+        border-radius: 16px;
+    }
+
+    /* Prevent iOS zoom on focus */
+    .form-field input,
+    .form-field textarea,
+    .large-textarea {
+        font-size: 16px;
     }
 
     .photo-preview {
-        grid-template-columns:
-            repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .customer-navigation {
         position: sticky;
         bottom: 0;
+        z-index: 10;
 
-        padding: 14px 0;
+        margin: 0 -20px;
+        padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
 
         background: rgba(247, 248, 250, .95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+
+        border-top: 1px solid var(--border, #e5e7eb);
+    }
+
+    .primary-btn,
+    .secondary-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .back-link,
+    .form-card,
+    .photo-dropzone,
+    .photo-item,
+    .photo-remove,
+    .upload-icon,
+    .primary-btn,
+    .secondary-btn {
+        transition: none !important;
+        animation: none !important;
     }
 }

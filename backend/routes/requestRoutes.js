@@ -9,6 +9,10 @@ const cloudinary =
     require("../config/cloudinary");
 
 const {
+    validateUploadFile
+} = require("../middleware/uploadValidation");
+
+const {
     createRequest
 } = require(
     "../controllers/requestController"
@@ -133,12 +137,35 @@ function fileFilter(
     );
 
 
-    if (
-        file.mimetype &&
-        file.mimetype.startsWith(
-            "image/"
-        )
-    ) {
+    const validation =
+        validateUploadFile(
+            file,
+            {
+                fields: [
+                    "customer_photos"
+                ],
+                byField: {
+                    customer_photos: {
+                        mimes: [
+                            "image/jpeg",
+                            "image/png",
+                            "image/webp"
+                        ],
+                        extensions: [
+                            "jpg",
+                            "jpeg",
+                            "png",
+                            "webp"
+                        ],
+                        message:
+                            "Only JPG, JPEG, PNG and WEBP images are allowed."
+                    }
+                }
+            }
+        );
+
+
+    if (validation.valid) {
 
         return callback(
             null,
@@ -150,7 +177,7 @@ function fileFilter(
 
     return callback(
         new Error(
-            "Only image files are allowed."
+            validation.message
         )
     );
 

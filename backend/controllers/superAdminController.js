@@ -5,19 +5,23 @@ const pool = require("../config/db");
  * SUPER ADMIN MONITORING CONTROLLER
  * ======================================================
  *
- * Super Admin is READ-ONLY.
+ * READ-ONLY
  *
- * Can monitor:
+ * Super Admin can monitor:
+ *
+ * - Projects
  * - Quotations
- * - Quotation sent status
- * - Payment proof
+ * - Quotation payment proofs
+ * - Invoices
+ * - Invoice payment proofs
  * - Technician assignment
- * - Technician started status
+ * - Technician progress
  * - Technician reports
- * - Admin report approval
+ * - Report media
+ * - Customer photos
  * - Project completion
  *
- * No UPDATE / DELETE operations are performed here.
+ * No UPDATE / DELETE operations.
  * ======================================================
  */
 
@@ -26,8 +30,6 @@ const pool = require("../config/db");
  * ======================================================
  * LATEST QUOTATION
  * ======================================================
- *
- * Get the latest quotation belonging to each request.
  */
 
 const latestQuotationJoin = `
@@ -45,8 +47,6 @@ const latestQuotationJoin = `
  * ======================================================
  * LATEST TECHNICIAN REPORT
  * ======================================================
- *
- * Get the latest report belonging to each request.
  */
 
 const latestReportJoin = `
@@ -78,9 +78,13 @@ async function getDashboard(req, res) {
          */
 
         const [rows] = await pool.query(`
+
             SELECT
 
                 COUNT(*) AS total_projects,
+
+
+                /* QUOTATIONS UPLOADED */
 
                 COALESCE(
                     SUM(
@@ -89,6 +93,9 @@ async function getDashboard(req, res) {
                     0
                 ) AS quotations_uploaded,
 
+
+                /* QUOTATIONS SENT */
+
                 COALESCE(
                     SUM(
                         q.sent_at IS NOT NULL
@@ -96,12 +103,125 @@ async function getDashboard(req, res) {
                     0
                 ) AS quotations_sent,
 
+
+                /* FINAL INVOICES */
+
                 COALESCE(
-                    SUM(
-                        q.payment_proof_url IS NOT NULL
+                    (
+                        SELECT COUNT(*)
+
+                        FROM invoices i
+
+                        INNER JOIN service_requests sr2
+                            ON sr2.id = i.request_id
+
+                        WHERE
+                            i.invoice_file_url IS NOT NULL
+                            AND sr2.status <> 'cancelled'
+
+                    ),
+                    0
+                ) AS invoices_uploaded,
+
+
+                /*
+                 * QUOTATION PAYMENT PROOFS
+                 */
+
+                COALESCE(
+                    (
+                        SELECT COUNT(*)
+
+                        FROM quotations q2
+
+                        INNER JOIN service_requests sr3
+                            ON sr3.id = q2.request_id
+
+                        WHERE
+                            q2.payment_proof_url IS NOT NULL
+                            AND sr3.status <> 'cancelled'
+
+                    ),
+                    0
+                ) AS quotation_payment_proofs,
+
+
+                /*
+                 * INVOICE PAYMENT PROOFS
+                 */
+
+                COALESCE(
+                    (
+                        SELECT COUNT(*)
+
+                        FROM invoice_payments ip
+
+                        INNER JOIN invoices i2
+                            ON i2.id = ip.invoice_id
+
+                        INNER JOIN service_requests sr4
+                            ON sr4.id = i2.request_id
+
+                        WHERE
+                            ip.payment_proof_url IS NOT NULL
+                            AND sr4.status <> 'cancelled'
+
+                    ),
+                    0
+                ) AS invoice_payment_proofs,
+
+
+                /*
+                 * TOTAL PAYMENT PROOFS
+                 *
+                 * Keeps compatibility with existing dashboard.
+                 */
+
+                COALESCE(
+                    (
+                        SELECT COUNT(*)
+
+                        FROM (
+
+                            SELECT
+                                q3.id AS proof_id
+
+                            FROM quotations q3
+
+                            INNER JOIN service_requests sr5
+                                ON sr5.id = q3.request_id
+
+                            WHERE
+                                q3.payment_proof_url IS NOT NULL
+                                AND sr5.status <> 'cancelled'
+
+
+                            UNION ALL
+
+
+                            SELECT
+                                ip2.id AS proof_id
+
+                            FROM invoice_payments ip2
+
+                            INNER JOIN invoices i3
+                                ON i3.id = ip2.invoice_id
+
+                            INNER JOIN service_requests sr6
+                                ON sr6.id = i3.request_id
+
+                            WHERE
+                                ip2.payment_proof_url IS NOT NULL
+                                AND sr6.status <> 'cancelled'
+
+                        ) combined_payment_proofs
+
                     ),
                     0
                 ) AS payment_proofs,
+
+
+                /* TECHNICIANS ASSIGNED */
 
                 COALESCE(
                     SUM(
@@ -110,18 +230,18 @@ async function getDashboard(req, res) {
                     0
                 ) AS technicians_assigned,
 
-                /*
-                 * Your current system uses request status.
-                 *
-                 * When a job is in_progress, we treat it
-                 * as technician started.
-                 */
+
+                /* TECHNICIANS STARTED */
+
                 COALESCE(
                     SUM(
                         sr.status = 'in_progress'
                     ),
                     0
                 ) AS technicians_started,
+
+
+                /* REPORTS SUBMITTED */
 
                 COALESCE(
                     SUM(
@@ -130,12 +250,18 @@ async function getDashboard(req, res) {
                     0
                 ) AS reports_submitted,
 
+
+                /* REPORTS APPROVED */
+
                 COALESCE(
                     SUM(
                         rpt.status = 'approved'
                     ),
                     0
                 ) AS reports_approved,
+
+
+                /* COMPLETED PROJECTS */
 
                 COALESCE(
                     SUM(
@@ -144,6 +270,7 @@ async function getDashboard(req, res) {
                     0
                 ) AS projects_completed
 
+
             FROM service_requests sr
 
             ${latestQuotationJoin}
@@ -151,6 +278,7 @@ async function getDashboard(req, res) {
             ${latestReportJoin}
 
             WHERE sr.status <> 'cancelled'
+
         `);
 
 
@@ -161,20 +289,26 @@ async function getDashboard(req, res) {
          */
 
         const [recent] = await pool.query(`
+
             SELECT
 
                 sr.id,
                 sr.request_code,
+
                 sr.customer_name,
                 sr.customer_phone,
+                sr.customer_email,
 
                 sr.status,
 
                 sr.technician_started_at,
-
                 sr.completed_at,
 
                 s.name_en AS service_name,
+                s.name_ms AS service_name_ms,
+
+
+                /* QUOTATION */
 
                 q.id AS quotation_id,
                 q.quotation_number,
@@ -187,17 +321,61 @@ async function getDashboard(req, res) {
                 q.created_at AS quotation_created_at,
                 q.sent_at AS quotation_sent_at,
 
-                q.payment_proof_url,
-                q.payment_proof_name,
-                q.payment_proof_uploaded_at,
+                q.payment_proof_url
+                    AS quotation_payment_proof_url,
 
-                q.payment_status,
+                q.payment_proof_name
+                    AS quotation_payment_proof_name,
+
+                q.payment_proof_uploaded_at
+                    AS quotation_payment_proof_uploaded_at,
+
+                q.payment_status
+                    AS quotation_payment_status,
+
+
+                /* TECHNICIAN */
 
                 t.name AS technician_name,
 
+
+                /* REPORT */
+
                 rpt.status AS report_status,
+
                 rpt.submitted_at AS report_submitted_at,
-                rpt.reviewed_at AS report_reviewed_at
+
+                rpt.reviewed_at AS report_reviewed_at,
+
+
+                /* INVOICE */
+
+                i.id AS invoice_id,
+
+                i.invoice_number,
+
+                i.invoice_file_url,
+                i.invoice_file_name,
+
+                i.status AS invoice_status,
+
+                i.created_at AS invoice_created_at,
+
+
+                /* INVOICE PAYMENT */
+
+                ip.payment_proof_url
+                    AS invoice_payment_proof_url,
+
+                ip.payment_proof_name
+                    AS invoice_payment_proof_name,
+
+                ip.status
+                    AS invoice_payment_status,
+
+                ip.submitted_at
+                    AS invoice_payment_submitted_at
+
 
             FROM service_requests sr
 
@@ -212,11 +390,28 @@ async function getDashboard(req, res) {
                 ON t.id = sr.technician_id
                 AND t.role = 'technician'
 
+            LEFT JOIN invoices i
+                ON i.request_id = sr.id
+
+
+            LEFT JOIN invoice_payments ip
+                ON ip.invoice_id = i.id
+
+                AND ip.submitted_at = (
+                    SELECT MAX(ip2.submitted_at)
+                    FROM invoice_payments ip2
+                    WHERE ip2.invoice_id = i.id
+                )
+
+
             WHERE sr.status <> 'cancelled'
+
 
             ORDER BY sr.updated_at DESC
 
+
             LIMIT 12
+
         `);
 
 
@@ -234,12 +429,14 @@ async function getDashboard(req, res) {
 
         });
 
+
     } catch (error) {
 
         console.error(
             "Super admin dashboard error:",
             error
         );
+
 
         return res.status(500).json({
 
@@ -282,10 +479,6 @@ async function getProjects(req, res) {
 
                 sr.technician_started_at,
 
-                /*
-                 * Use updated_at as assignment monitoring
-                 * information when a technician exists.
-                 */
                 CASE
                     WHEN sr.technician_id IS NOT NULL
                     THEN sr.updated_at
@@ -301,6 +494,9 @@ async function getProjects(req, res) {
 
                 t.name AS technician_name,
 
+
+                /* QUOTATION */
+
                 q.id AS quotation_id,
                 q.quotation_number,
 
@@ -313,12 +509,25 @@ async function getProjects(req, res) {
 
                 q.sent_at AS quotation_sent_at,
 
-                q.payment_status,
 
-                q.payment_proof_url,
-                q.payment_proof_name,
+                /*
+                 * QUOTATION PAYMENT
+                 */
 
-                q.payment_proof_uploaded_at,
+                q.payment_proof_url
+                    AS quotation_payment_proof_url,
+
+                q.payment_proof_name
+                    AS quotation_payment_proof_name,
+
+                q.payment_proof_uploaded_at
+                    AS quotation_payment_proof_uploaded_at,
+
+                q.payment_status
+                    AS quotation_payment_status,
+
+
+                /* REPORT */
 
                 rpt.id AS report_id,
 
@@ -328,7 +537,47 @@ async function getProjects(req, res) {
 
                 rpt.reviewed_at AS report_reviewed_at,
 
-                rpt.review_remarks
+                rpt.review_remarks,
+
+
+                /* INVOICE */
+
+                i.id AS invoice_id,
+
+                i.invoice_number,
+
+                i.invoice_file_url,
+                i.invoice_file_name,
+
+                i.status AS invoice_status,
+
+                i.created_at AS invoice_uploaded_at,
+
+
+                /*
+                 * INVOICE PAYMENT
+                 */
+
+                ip.id AS invoice_payment_id,
+
+                ip.payment_proof_url
+                    AS invoice_payment_proof_url,
+
+                ip.payment_proof_name
+                    AS invoice_payment_proof_name,
+
+                ip.payment_proof_type
+                    AS invoice_payment_proof_type,
+
+                ip.status
+                    AS invoice_payment_status,
+
+                ip.submitted_at
+                    AS invoice_payment_submitted_at,
+
+                ip.verified_at
+                    AS invoice_payment_verified_at
+
 
             FROM service_requests sr
 
@@ -343,7 +592,22 @@ async function getProjects(req, res) {
                 ON t.id = sr.technician_id
                 AND t.role = 'technician'
 
+            LEFT JOIN invoices i
+                ON i.request_id = sr.id
+
+
+            LEFT JOIN invoice_payments ip
+                ON ip.invoice_id = i.id
+
+                AND ip.submitted_at = (
+                    SELECT MAX(ip2.submitted_at)
+                    FROM invoice_payments ip2
+                    WHERE ip2.invoice_id = i.id
+                )
+
+
             WHERE sr.status <> 'cancelled'
+
 
             ORDER BY sr.updated_at DESC
 
@@ -358,12 +622,14 @@ async function getProjects(req, res) {
 
         });
 
+
     } catch (error) {
 
         console.error(
             "Super admin projects error:",
             error
         );
+
 
         return res.status(500).json({
 
@@ -383,6 +649,15 @@ async function getProjects(req, res) {
  * ======================================================
  * GET PROJECT BY ID
  * ======================================================
+ *
+ * Returns ALL files related to the project.
+ *
+ * PAYMENT PROOFS ARE SEPARATED:
+ *
+ * 1. quotation_payment_proofs
+ * 2. invoice_payment_proofs
+ *
+ * ======================================================
  */
 
 async function getProjectById(req, res) {
@@ -391,7 +666,7 @@ async function getProjectById(req, res) {
 
         /*
          * --------------------------------------------------
-         * PROJECT INFORMATION
+         * PROJECT
          * --------------------------------------------------
          */
 
@@ -404,11 +679,20 @@ async function getProjectById(req, res) {
                 s.name_en AS service_name,
                 s.name_ms AS service_name_ms,
 
+
+                /* TECHNICIAN */
+
                 t.id AS technician_user_id,
+
                 t.name AS technician_name,
+
                 t.email AS technician_email,
 
+
+                /* QUOTATION */
+
                 q.id AS quotation_id,
+
                 q.quotation_number,
 
                 q.status AS quotation_status,
@@ -416,6 +700,7 @@ async function getProjectById(req, res) {
                 q.notes AS quotation_notes,
 
                 q.quotation_file_url,
+
                 q.quotation_file_name,
 
                 q.created_at AS quotation_uploaded_at,
@@ -423,14 +708,26 @@ async function getProjectById(req, res) {
                 q.sent_at AS quotation_sent_at,
 
                 q.follow_up_1_sent_at,
+
                 q.follow_up_2_sent_at,
 
-                q.payment_status,
 
-                q.payment_proof_url,
-                q.payment_proof_name,
+                /*
+                 * QUOTATION PAYMENT
+                 */
+
+                q.payment_proof_url
+                    AS quotation_payment_proof_url,
+
+                q.payment_proof_name
+                    AS quotation_payment_proof_name,
 
                 q.payment_proof_uploaded_at
+                    AS quotation_payment_proof_uploaded_at,
+
+                q.payment_status
+                    AS quotation_payment_status
+
 
             FROM service_requests sr
 
@@ -443,7 +740,9 @@ async function getProjectById(req, res) {
 
             ${latestQuotationJoin}
 
+
             WHERE sr.id = ?
+
 
             LIMIT 1
 
@@ -451,12 +750,6 @@ async function getProjectById(req, res) {
             req.params.id
         ]);
 
-
-        /*
-         * --------------------------------------------------
-         * PROJECT NOT FOUND
-         * --------------------------------------------------
-         */
 
         if (!requests.length) {
 
@@ -478,68 +771,242 @@ async function getProjectById(req, res) {
 
         /*
          * --------------------------------------------------
+         * INVOICES
+         * --------------------------------------------------
+         */
+
+        const [invoices] = await pool.query(`
+
+            SELECT
+
+                id,
+                invoice_number,
+                request_id,
+
+                subtotal,
+                discount,
+                tax,
+                additional_charge,
+
+                total_amount,
+
+                amount_paid,
+                balance_due,
+
+                invoice_file_url,
+                invoice_file_name,
+
+                status,
+
+                created_by,
+
+                created_at,
+                updated_at
+
+            FROM invoices
+
+            WHERE request_id = ?
+
+            ORDER BY created_at DESC
+
+        `, [
+            req.params.id
+        ]);
+
+
+        /*
+         * --------------------------------------------------
+         * QUOTATION PAYMENT PROOFS
+         * --------------------------------------------------
+         *
+         * These belong to the quotation stage.
+         *
+         */
+
+        const [quotationPaymentProofs] =
+            await pool.query(`
+
+                SELECT
+
+                    q.id AS quotation_id,
+
+                    q.request_id,
+
+                    q.quotation_number,
+
+                    q.payment_proof_url,
+
+                    q.payment_proof_name,
+
+                    q.payment_proof_uploaded_at,
+
+                    q.payment_status,
+
+                    q.status AS quotation_status
+
+
+                FROM quotations q
+
+
+                WHERE
+
+                    q.request_id = ?
+
+                    AND q.payment_proof_url IS NOT NULL
+
+
+                ORDER BY
+                    q.payment_proof_uploaded_at DESC
+
+            `, [
+                req.params.id
+            ]);
+
+
+        /*
+         * --------------------------------------------------
+         * INVOICE PAYMENT PROOFS
+         * --------------------------------------------------
+         *
+         * These belong to the final invoice.
+         *
+         */
+
+        const [invoicePaymentProofs] =
+            await pool.query(`
+
+                SELECT
+
+                    ip.id,
+
+                    ip.invoice_id,
+
+                    i.invoice_number,
+
+                    i.request_id,
+
+                    ip.amount,
+
+                    ip.payment_method,
+
+                    ip.payment_proof_url,
+
+                    ip.payment_proof_name,
+
+                    ip.payment_proof_type,
+
+                    ip.status,
+
+                    ip.submitted_at,
+
+                    ip.verified_by,
+
+                    ip.verified_at,
+
+                    ip.remarks,
+
+                    verifier.name AS verified_by_name
+
+
+                FROM invoice_payments ip
+
+                INNER JOIN invoices i
+                    ON i.id = ip.invoice_id
+
+                LEFT JOIN users verifier
+                    ON verifier.id = ip.verified_by
+
+
+                WHERE i.request_id = ?
+
+
+                ORDER BY ip.submitted_at DESC
+
+            `, [
+                req.params.id
+            ]);
+
+
+        /*
+         * --------------------------------------------------
          * TECHNICIAN REPORTS
          * --------------------------------------------------
          */
 
-      const [reports] = await pool.query(`
+        const [reports] = await pool.query(`
 
-    SELECT
+            SELECT
 
-        rpt.id,
-        rpt.request_id,
-        rpt.technician_id,
+                rpt.id,
 
-        /*
-         * PROGRESS / FINAL REPORT INFORMATION
-         */
-        rpt.report_type,
-        rpt.progress_number,
-        rpt.report_title,
-        rpt.reported_by,
+                rpt.request_id,
 
-        t.name AS technician_name,
+                rpt.technician_id,
 
-        rpt.work_performed,
-        rpt.findings,
-        rpt.materials_used,
-        rpt.technician_notes,
+                rpt.report_type,
 
-        rpt.report_file_path,
+                rpt.progress_number,
 
-        rpt.status,
+                rpt.report_title,
 
-        rpt.submitted_at,
-        rpt.reviewed_at,
+                rpt.reported_by,
 
-        reviewer.name AS reviewed_by_name,
+                t.name AS technician_name,
 
-        rpt.review_remarks,
+                rpt.work_performed,
 
-        rpt.created_at,
-        rpt.updated_at
+                rpt.findings,
 
-    FROM service_reports rpt
+                rpt.materials_used,
 
-    LEFT JOIN users t
-        ON t.id = rpt.technician_id
+                rpt.technician_notes,
 
-    LEFT JOIN users reviewer
-        ON reviewer.id = rpt.reviewed_by
+                rpt.report_file_path,
 
-    WHERE rpt.request_id = ?
+                rpt.status,
 
-    ORDER BY
-        CASE
-            WHEN rpt.report_type = 'progress'
-            THEN rpt.progress_number
-            ELSE 999999
-        END ASC,
-        rpt.created_at ASC
+                rpt.submitted_at,
 
-`, [
-    req.params.id
-]);
+                rpt.reviewed_at,
+
+                reviewer.name AS reviewed_by_name,
+
+                rpt.review_remarks,
+
+                rpt.created_at,
+
+                rpt.updated_at
+
+
+            FROM service_reports rpt
+
+            LEFT JOIN users t
+                ON t.id = rpt.technician_id
+
+            LEFT JOIN users reviewer
+                ON reviewer.id = rpt.reviewed_by
+
+
+            WHERE rpt.request_id = ?
+
+
+            ORDER BY
+
+                CASE
+
+                    WHEN rpt.report_type = 'progress'
+
+                    THEN rpt.progress_number
+
+                    ELSE 999999
+
+                END ASC,
+
+                rpt.created_at ASC
+
+        `, [
+            req.params.id
+        ]);
 
 
         /*
@@ -553,23 +1020,31 @@ async function getProjectById(req, res) {
             SELECT
 
                 id,
+
                 report_id,
+
                 request_id,
+
                 technician_id,
 
                 media_type,
 
                 file_name,
+
                 file_path,
 
                 mime_type,
+
                 file_size,
 
                 uploaded_at
 
+
             FROM service_report_media
 
+
             WHERE request_id = ?
+
 
             ORDER BY uploaded_at ASC
 
@@ -589,13 +1064,19 @@ async function getProjectById(req, res) {
             SELECT
 
                 id,
+
                 file_name,
+
                 file_path,
+
                 uploaded_at
+
 
             FROM customer_photos
 
+
             WHERE request_id = ?
+
 
             ORDER BY uploaded_at ASC
 
@@ -606,7 +1087,7 @@ async function getProjectById(req, res) {
 
         /*
          * --------------------------------------------------
-         * PROJECT RESPONSE
+         * RESPONSE
          * --------------------------------------------------
          */
 
@@ -617,6 +1098,19 @@ async function getProjectById(req, res) {
             data: {
 
                 project,
+
+                invoices,
+
+                /*
+                 * SEPARATED PAYMENT PROOFS
+                 */
+
+                quotation_payment_proofs:
+                    quotationPaymentProofs,
+
+                invoice_payment_proofs:
+                    invoicePaymentProofs,
+
 
                 reports,
 
@@ -629,12 +1123,14 @@ async function getProjectById(req, res) {
 
         });
 
+
     } catch (error) {
 
         console.error(
             "Super admin project detail error:",
             error
         );
+
 
         return res.status(500).json({
 
@@ -649,26 +1145,24 @@ async function getProjectById(req, res) {
 
 }
 
+
 /*
  * ======================================================
  * DASHBOARD CATEGORY FILES
  * ======================================================
- *
- * READ-ONLY file/project monitoring for Super Admin.
- * ======================================================
  */
-
-
 
 async function getDashboardCategoryFiles(req, res) {
 
     try {
 
-        const category = req.query.category || "all";
+        const category =
+            req.query.category || "all";
+
 
         /*
          * --------------------------------------------------
-         * TOTAL PROJECTS
+         * ALL PROJECTS
          * --------------------------------------------------
          */
 
@@ -679,16 +1173,23 @@ async function getDashboardCategoryFiles(req, res) {
                 SELECT
 
                     sr.id AS request_id,
+
                     sr.request_code,
+
                     sr.customer_name,
+
                     sr.customer_phone,
+
                     sr.status,
+
                     sr.created_at,
+
                     sr.updated_at,
 
                     s.name_en AS service_name,
 
                     t.name AS technician_name
+
 
                 FROM service_requests sr
 
@@ -699,90 +1200,60 @@ async function getDashboardCategoryFiles(req, res) {
                     ON t.id = sr.technician_id
                     AND t.role = 'technician'
 
+
                 WHERE sr.status <> 'cancelled'
+
 
                 ORDER BY sr.updated_at DESC
 
             `);
 
-            return res.json({
-                success: true,
-                data: {
-                    files: projects.map(project => ({
-                        type: "project",
-                        request_id: project.request_id,
-                        request_code: project.request_code,
-                        customer_name: project.customer_name,
-                        customer_phone: project.customer_phone,
-                        service_name: project.service_name,
-                        technician_name: project.technician_name,
-                        status: project.status,
-                        created_at: project.created_at,
-                        updated_at: project.updated_at
-                    }))
-                }
-            });
-
-        }
-
-
-        /*
-         * --------------------------------------------------
-         * COMPLETED PROJECTS
-         * --------------------------------------------------
-         */
-
-        if (category === "completed") {
-
-            const [projects] = await pool.query(`
-
-                SELECT
-
-                    sr.id AS request_id,
-                    sr.request_code,
-                    sr.customer_name,
-                    sr.customer_phone,
-                    sr.status,
-                    sr.completed_at,
-                    sr.updated_at,
-
-                    s.name_en AS service_name,
-
-                    t.name AS technician_name
-
-                FROM service_requests sr
-
-                INNER JOIN services s
-                    ON s.id = sr.service_id
-
-                LEFT JOIN users t
-                    ON t.id = sr.technician_id
-                    AND t.role = 'technician'
-
-                WHERE sr.status = 'completed'
-
-                ORDER BY
-                    sr.completed_at DESC,
-                    sr.updated_at DESC
-
-            `);
 
             return res.json({
+
                 success: true,
+
                 data: {
-                    files: projects.map(project => ({
-                        type: "project",
-                        request_id: project.request_id,
-                        request_code: project.request_code,
-                        customer_name: project.customer_name,
-                        customer_phone: project.customer_phone,
-                        service_name: project.service_name,
-                        technician_name: project.technician_name,
-                        status: project.status,
-                        completed_at: project.completed_at,
-                        updated_at: project.updated_at
-                    }))
+
+                    files:
+                        projects.map(
+                            project => ({
+
+                                type:
+                                    "project",
+
+                                request_id:
+                                    project.request_id,
+
+                                request_code:
+                                    project.request_code,
+
+                                customer_name:
+                                    project.customer_name,
+
+                                customer_phone:
+                                    project.customer_phone,
+
+                                service_name:
+                                    project.service_name,
+
+                                technician_name:
+                                    project.technician_name,
+
+                                status:
+                                    project.status,
+
+                                created_at:
+                                    project.created_at,
+
+                                updated_at:
+                                    project.updated_at
+
+                            })
+                        )
+
                 }
+
             });
 
         }
@@ -794,57 +1265,104 @@ async function getDashboardCategoryFiles(req, res) {
          * --------------------------------------------------
          */
 
-        if (category === "quotation_uploaded") {
+        if (
+            category ===
+            "quotation_uploaded"
+        ) {
 
-            const [files] = await pool.query(`
+            const [files] =
+                await pool.query(`
 
-                SELECT
+                    SELECT
 
-                    q.id,
-                    q.request_id,
-                    q.quotation_number,
-                    q.quotation_file_url,
-                    q.quotation_file_name,
-                    q.created_at,
+                        q.id,
 
-                    sr.request_code,
-                    sr.customer_name,
+                        q.request_id,
 
-                    s.name_en AS service_name
+                        q.quotation_number,
 
-                FROM quotations q
+                        q.quotation_file_url,
 
-                INNER JOIN service_requests sr
-                    ON sr.id = q.request_id
+                        q.quotation_file_name,
 
-                INNER JOIN services s
-                    ON s.id = sr.service_id
+                        q.created_at,
 
-                WHERE
-                    q.quotation_file_url IS NOT NULL
-                    AND sr.status <> 'cancelled'
+                        sr.request_code,
 
-                ORDER BY q.created_at DESC
+                        sr.customer_name,
 
-            `);
+                        s.name_en AS service_name
+
+
+                    FROM quotations q
+
+                    INNER JOIN service_requests sr
+                        ON sr.id = q.request_id
+
+                    INNER JOIN services s
+                        ON s.id = sr.service_id
+
+
+                    WHERE
+
+                        q.quotation_file_url IS NOT NULL
+
+                        AND sr.status <> 'cancelled'
+
+
+                    ORDER BY q.created_at DESC
+
+                `);
+
 
             return res.json({
+
                 success: true,
+
                 data: {
-                    files: files.map(file => ({
-                        type: "quotation",
-                        id: file.id,
-                        request_id: file.request_id,
-                        file_name: file.quotation_file_name,
-                        file_type: "pdf",
-                        file_path: file.quotation_file_url,
-                        source: `Quotation ${file.quotation_number || ""}`.trim(),
-                        uploaded_at: file.created_at,
-                        request_code: file.request_code,
-                        customer_name: file.customer_name,
-                        service_name: file.service_name
-                    }))
+
+                    files:
+                        files.map(
+                            file => ({
+
+                                type:
+                                    "quotation",
+
+                                id:
+                                    file.id,
+
+                                request_id:
+                                    file.request_id,
+
+                                file_name:
+                                    file.quotation_file_name,
+
+                                file_type:
+                                    "pdf",
+
+                                file_path:
+                                    file.quotation_file_url,
+
+                                source:
+                                    `Quotation ${file.quotation_number || ""}`.trim(),
+
+                                uploaded_at:
+                                    file.created_at,
+
+                                request_code:
+                                    file.request_code,
+
+                                customer_name:
+                                    file.customer_name,
+
+                                service_name:
+                                    file.service_name
+
+                            })
+                        )
+
                 }
+
             });
 
         }
@@ -856,58 +1374,223 @@ async function getDashboardCategoryFiles(req, res) {
          * --------------------------------------------------
          */
 
-        if (category === "quotation_sent") {
+        if (
+            category ===
+            "quotation_sent"
+        ) {
 
-            const [files] = await pool.query(`
+            const [files] =
+                await pool.query(`
 
-                SELECT
+                    SELECT
 
-                    q.id,
-                    q.request_id,
-                    q.quotation_number,
-                    q.quotation_file_url,
-                    q.quotation_file_name,
-                    q.sent_at,
-                    q.created_at,
+                        q.id,
 
-                    sr.request_code,
-                    sr.customer_name,
+                        q.request_id,
 
-                    s.name_en AS service_name
+                        q.quotation_number,
 
-                FROM quotations q
+                        q.quotation_file_url,
 
-                INNER JOIN service_requests sr
-                    ON sr.id = q.request_id
+                        q.quotation_file_name,
 
-                INNER JOIN services s
-                    ON s.id = sr.service_id
+                        q.sent_at,
 
-                WHERE
-                    q.sent_at IS NOT NULL
-                    AND sr.status <> 'cancelled'
+                        q.created_at,
 
-                ORDER BY q.sent_at DESC
+                        sr.request_code,
 
-            `);
+                        sr.customer_name,
+
+                        s.name_en AS service_name
+
+
+                    FROM quotations q
+
+                    INNER JOIN service_requests sr
+                        ON sr.id = q.request_id
+
+                    INNER JOIN services s
+                        ON s.id = sr.service_id
+
+
+                    WHERE
+
+                        q.sent_at IS NOT NULL
+
+                        AND sr.status <> 'cancelled'
+
+
+                    ORDER BY q.sent_at DESC
+
+                `);
+
 
             return res.json({
+
                 success: true,
+
                 data: {
-                    files: files.map(file => ({
-                        type: "quotation",
-                        id: file.id,
-                        request_id: file.request_id,
-                        file_name: file.quotation_file_name,
-                        file_type: "pdf",
-                        file_path: file.quotation_file_url,
-                        source: `Quotation ${file.quotation_number || ""}`.trim(),
-                        uploaded_at: file.sent_at || file.created_at,
-                        request_code: file.request_code,
-                        customer_name: file.customer_name,
-                        service_name: file.service_name
-                    }))
+
+                    files:
+                        files.map(
+                            file => ({
+
+                                type:
+                                    "quotation",
+
+                                id:
+                                    file.id,
+
+                                request_id:
+                                    file.request_id,
+
+                                file_name:
+                                    file.quotation_file_name,
+
+                                file_type:
+                                    "pdf",
+
+                                file_path:
+                                    file.quotation_file_url,
+
+                                source:
+                                    `Quotation ${file.quotation_number || ""}`.trim(),
+
+                                uploaded_at:
+                                    file.sent_at ||
+                                    file.created_at,
+
+                                request_code:
+                                    file.request_code,
+
+                                customer_name:
+                                    file.customer_name,
+
+                                service_name:
+                                    file.service_name
+
+                            })
+                        )
+
                 }
+
+            });
+
+        }
+
+
+        /*
+         * --------------------------------------------------
+         * FINAL INVOICE
+         * --------------------------------------------------
+         */
+
+        if (
+            category ===
+            "invoice_uploaded"
+        ) {
+
+            const [files] =
+                await pool.query(`
+
+                    SELECT
+
+                        i.id,
+
+                        i.request_id,
+
+                        i.invoice_number,
+
+                        i.invoice_file_url,
+
+                        i.invoice_file_name,
+
+                        i.status,
+
+                        i.created_at,
+
+                        i.updated_at,
+
+                        sr.request_code,
+
+                        sr.customer_name,
+
+                        s.name_en AS service_name
+
+
+                    FROM invoices i
+
+                    INNER JOIN service_requests sr
+                        ON sr.id = i.request_id
+
+                    INNER JOIN services s
+                        ON s.id = sr.service_id
+
+
+                    WHERE
+
+                        i.invoice_file_url IS NOT NULL
+
+                        AND sr.status <> 'cancelled'
+
+
+                    ORDER BY i.created_at DESC
+
+                `);
+
+
+            return res.json({
+
+                success: true,
+
+                data: {
+
+                    files:
+                        files.map(
+                            file => ({
+
+                                type:
+                                    "invoice",
+
+                                id:
+                                    file.id,
+
+                                request_id:
+                                    file.request_id,
+
+                                file_name:
+                                    file.invoice_file_name,
+
+                                file_type:
+                                    "pdf",
+
+                                file_path:
+                                    file.invoice_file_url,
+
+                                source:
+                                    `Invoice ${file.invoice_number || ""}`.trim(),
+
+                                status:
+                                    file.status,
+
+                                uploaded_at:
+                                    file.created_at,
+
+                                request_code:
+                                    file.request_code,
+
+                                customer_name:
+                                    file.customer_name,
+
+                                service_name:
+                                    file.service_name
+
+                            })
+                        )
+
+                }
+
             });
 
         }
@@ -917,59 +1600,368 @@ async function getDashboardCategoryFiles(req, res) {
          * --------------------------------------------------
          * PAYMENT PROOF
          * --------------------------------------------------
+         *
+         * Includes BOTH:
+         *
+         * - Quotation payment proofs
+         * - Invoice payment proofs
+         *
+         * Each file is labelled with its source.
+         *
          */
 
-        if (category === "payment_proof") {
+        if (
+            category ===
+            "payment_proof"
+        ) {
 
-            const [files] = await pool.query(`
+            const [quotationPayments] =
+                await pool.query(`
 
-                SELECT
+                    SELECT
 
-                    q.id,
-                    q.request_id,
-                    q.payment_proof_url,
-                    q.payment_proof_name,
-                    q.payment_proof_uploaded_at,
+                        q.id,
 
-                    sr.request_code,
-                    sr.customer_name,
+                        q.request_id,
 
-                    s.name_en AS service_name
+                        q.quotation_number,
 
-                FROM quotations q
+                        q.payment_proof_url,
 
-                INNER JOIN service_requests sr
-                    ON sr.id = q.request_id
+                        q.payment_proof_name,
 
-                INNER JOIN services s
-                    ON s.id = sr.service_id
+                        q.payment_status,
 
-                WHERE
-                    q.payment_proof_url IS NOT NULL
-                    AND sr.status <> 'cancelled'
+                        q.payment_proof_uploaded_at,
 
-                ORDER BY
-                    q.payment_proof_uploaded_at DESC
+                        sr.request_code,
 
-            `);
+                        sr.customer_name,
+
+                        s.name_en AS service_name
+
+
+                    FROM quotations q
+
+                    INNER JOIN service_requests sr
+                        ON sr.id = q.request_id
+
+                    INNER JOIN services s
+                        ON s.id = sr.service_id
+
+
+                    WHERE
+
+                        q.payment_proof_url IS NOT NULL
+
+                        AND sr.status <> 'cancelled'
+
+
+                    ORDER BY
+                        q.payment_proof_uploaded_at DESC
+
+                `);
+
+
+            const [invoicePayments] =
+                await pool.query(`
+
+                    SELECT
+
+                        ip.id,
+
+                        ip.invoice_id,
+
+                        i.invoice_number,
+
+                        i.request_id,
+
+                        ip.payment_proof_url,
+
+                        ip.payment_proof_name,
+
+                        ip.payment_proof_type,
+
+                        ip.status AS payment_status,
+
+                        ip.submitted_at,
+
+                        ip.verified_at,
+
+                        ip.remarks,
+
+                        sr.request_code,
+
+                        sr.customer_name,
+
+                        s.name_en AS service_name
+
+
+                    FROM invoice_payments ip
+
+                    INNER JOIN invoices i
+                        ON i.id = ip.invoice_id
+
+                    INNER JOIN service_requests sr
+                        ON sr.id = i.request_id
+
+                    INNER JOIN services s
+                        ON s.id = sr.service_id
+
+
+                    WHERE
+
+                        ip.payment_proof_url IS NOT NULL
+
+                        AND sr.status <> 'cancelled'
+
+
+                    ORDER BY
+                        ip.submitted_at DESC
+
+                `);
+
+
+            const quotationFiles =
+                quotationPayments.map(
+                    file => ({
+
+                        type:
+                            "quotation_payment",
+
+                        id:
+                            file.id,
+
+                        request_id:
+                            file.request_id,
+
+                        quotation_number:
+                            file.quotation_number,
+
+                        file_name:
+                            file.payment_proof_name,
+
+                        file_type:
+                            "payment_proof",
+
+                        file_path:
+                            file.payment_proof_url,
+
+                        source:
+                            "Quotation Payment Proof",
+
+                        status:
+                            file.payment_status,
+
+                        payment_status:
+                            file.payment_status,
+
+                        uploaded_at:
+                            file.payment_proof_uploaded_at,
+
+                        request_code:
+                            file.request_code,
+
+                        customer_name:
+                            file.customer_name,
+
+                        service_name:
+                            file.service_name
+
+                    })
+                );
+
+
+            const invoiceFiles =
+                invoicePayments.map(
+                    file => ({
+
+                        type:
+                            "invoice_payment",
+
+                        id:
+                            file.id,
+
+                        invoice_id:
+                            file.invoice_id,
+
+                        request_id:
+                            file.request_id,
+
+                        invoice_number:
+                            file.invoice_number,
+
+                        file_name:
+                            file.payment_proof_name,
+
+                        file_type:
+                            file.payment_proof_type,
+
+                        file_path:
+                            file.payment_proof_url,
+
+                        source:
+                            "Final Invoice Payment Proof",
+
+                        status:
+                            file.payment_status,
+
+                        payment_status:
+                            file.payment_status,
+
+                        uploaded_at:
+                            file.submitted_at,
+
+                        verified_at:
+                            file.verified_at,
+
+                        remarks:
+                            file.remarks,
+
+                        request_code:
+                            file.request_code,
+
+                        customer_name:
+                            file.customer_name,
+
+                        service_name:
+                            file.service_name
+
+                    })
+                );
+
+
+            const files = [
+                ...quotationFiles,
+                ...invoiceFiles
+            ].sort(
+                (a, b) =>
+                    new Date(
+                        b.uploaded_at || 0
+                    ) -
+                    new Date(
+                        a.uploaded_at || 0
+                    )
+            );
+
 
             return res.json({
+
                 success: true,
+
                 data: {
-                    files: files.map(file => ({
-                        type: "payment",
-                        id: file.id,
-                        request_id: file.request_id,
-                        file_name: file.payment_proof_name,
-                        file_type: "image",
-                        file_path: file.payment_proof_url,
-                        source: "Payment proof",
-                        uploaded_at: file.payment_proof_uploaded_at,
-                        request_code: file.request_code,
-                        customer_name: file.customer_name,
-                        service_name: file.service_name
-                    }))
+
+                    files
+
                 }
+
+            });
+
+        }
+
+
+        /*
+         * --------------------------------------------------
+         * COMPLETED PROJECTS
+         * --------------------------------------------------
+         */
+
+        if (
+            category ===
+            "completed"
+        ) {
+
+            const [projects] =
+                await pool.query(`
+
+                    SELECT
+
+                        sr.id AS request_id,
+
+                        sr.request_code,
+
+                        sr.customer_name,
+
+                        sr.customer_phone,
+
+                        sr.status,
+
+                        sr.completed_at,
+
+                        sr.updated_at,
+
+                        s.name_en AS service_name,
+
+                        t.name AS technician_name
+
+
+                    FROM service_requests sr
+
+                    INNER JOIN services s
+                        ON s.id = sr.service_id
+
+                    LEFT JOIN users t
+                        ON t.id = sr.technician_id
+                        AND t.role = 'technician'
+
+
+                    WHERE sr.status = 'completed'
+
+
+                    ORDER BY
+
+                        sr.completed_at DESC,
+
+                        sr.updated_at DESC
+
+                `);
+
+
+            return res.json({
+
+                success: true,
+
+                data: {
+
+                    files:
+                        projects.map(
+                            project => ({
+
+                                type:
+                                    "project",
+
+                                request_id:
+                                    project.request_id,
+
+                                request_code:
+                                    project.request_code,
+
+                                customer_name:
+                                    project.customer_name,
+
+                                customer_phone:
+                                    project.customer_phone,
+
+                                service_name:
+                                    project.service_name,
+
+                                technician_name:
+                                    project.technician_name,
+
+                                status:
+                                    project.status,
+
+                                completed_at:
+                                    project.completed_at,
+
+                                updated_at:
+                                    project.updated_at
+
+                            })
+                        )
+
+                }
+
             });
 
         }
@@ -982,9 +1974,14 @@ async function getDashboardCategoryFiles(req, res) {
          */
 
         return res.status(400).json({
+
             success: false,
-            message: "Invalid dashboard category."
+
+            message:
+                "Invalid dashboard category."
+
         });
+
 
     } catch (error) {
 
@@ -993,14 +1990,21 @@ async function getDashboardCategoryFiles(req, res) {
             error
         );
 
+
         return res.status(500).json({
+
             success: false,
-            message: "Unable to retrieve dashboard category."
+
+            message:
+                "Unable to retrieve dashboard category."
+
         });
 
     }
 
 }
+
+
 /*
  * ======================================================
  * EXPORTS

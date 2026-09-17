@@ -1,0 +1,212 @@
+/* =========================================================
+   FINAL INVOICE & PAYMENT
+========================================================= */
+.invoice-history {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.invoice-card {
+  border: 1px solid #e6e9ef;
+  border-radius: 14px;
+  padding: 18px;
+  background: #fff;
+}
+
+.invoice-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.invoice-card-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.invoice-status {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.invoice-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.invoice-meta {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 11px;
+}
+
+.invoice-meta span {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.invoice-meta strong {
+  font-size: 14px;
+}
+
+.invoice-admin-panel {
+  border: 1px solid #e6e9ef;
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 16px;
+  background: #fbfcfe;
+}
+
+.invoice-panel-title {
+  font-size: 16px;
+  font-weight: 750;
+  margin-bottom: 14px;
+}
+
+.invoice-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.invoice-form-grid label {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+  margin-bottom: 6px;
+}
+
+.invoice-form-grid input,
+.invoice-form-grid select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #d8dee8;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.invoice-file-field small,
+.invoice-help {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.invoice-balance-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #f1f5f9;
+}
+
+.invoice-balance-preview strong {
+  font-size: 20px;
+}
+
+.invoice-message {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+.invoice-message.success {
+  color: #15803d;
+}
+
+.invoice-message.error {
+  color: #b91c1c;
+}
+
+.invoice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.invoice-link {
+  display: inline-flex;
+  text-decoration: none;
+  padding: 9px 12px;
+  border: 1px solid #d8dee8;
+  border-radius: 9px;
+  color: inherit;
+  background: #fff;
+  font-size: 13px;
+}
+
+.payment-row {
+  border-top: 1px solid #e6e9ef;
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.payment-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.payment-pending {
+  color: #b45309;
+}
+
+.payment-verified {
+  color: #15803d;
+}
+
+.payment-rejected {
+  color: #b91c1c;
+}
+
+.invoice-verify-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.invoice-reject-input {
+  width: 100%;
+  min-height: 70px;
+  margin-top: 10px;
+  box-sizing: border-box;
+  border: 1px solid #d8dee8;
+  border-radius: 9px;
+  padding: 10px;
+}
+
+@media (max-width: 800px) {
+
+  .invoice-meta-grid,
+  .invoice-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+
+  .invoice-meta-grid,
+  .invoice-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-card-header {
+    flex-direction: column;
+  }
+}

@@ -293,92 +293,62 @@ async function createQuotation(req, res) {
         ================================================= */
 
         await connection.query(
-            `
-            INSERT INTO quotations (
-
-                id,
-
-                quotation_number,
-
-                quotation_type,
-
-                request_id,
-
-                notes,
-
-                status,
-
-                created_by,
-
-                quotation_file_url,
-
-                quotation_file_name
-
-            )
-
-            VALUES (
-
-                ?,
-                ?,
-                'original',
-                ?,
-                ?,
-                'draft',
-                ?,
-                ?,
-                ?
-
-            )
-            `,
-            [
-
-                id,
-
-                quotationNumber,
-
-                requestId,
-
-                notes || null,
-
-                req.user.id,
-
-                file.url,
-
-                file.name
-
-            ]
-        );
+    `INSERT INTO quotations (
+        id,
+        quotation_number,
+        request_id,
+        notes,
+        status,
+        approval_status,
+        approval_remarks,
+        approved_by,
+        approved_at,
+        revision_number,
+        revised_at,
+        created_by,
+        quotation_file_url,
+        quotation_file_name
+    )
+    VALUES (
+        ?,
+        ?,
+        ?,
+        ?,
+        'draft',
+        'pending_approval',
+        NULL,
+        NULL,
+        NULL,
+        1,
+        NULL,
+        ?,
+        ?,
+        ?
+    )`,
+    [
+        id,
+        quotationNumber,
+        requestId,
+        notes || null,
+        req.user.id,
+        file.url,
+        file.name
+    ]
+);
 
 
         return res.status(201).json({
-
-            success: true,
-
-            message:
-                "Quotation created successfully.",
-
-            data: {
-
-                id,
-
-                quotation_number:
-                    quotationNumber,
-
-                quotation_type:
-                    "original",
-
-                status:
-                    "draft",
-
-                quotation_file_url:
-                    file.url,
-
-                quotation_file_name:
-                    file.name
-
-            }
-
-        });
+    success: true,
+    message:
+        "Quotation uploaded successfully and submitted for Super Admin approval.",
+    data: {
+        id,
+        quotation_number: quotationNumber,
+        status: "draft",
+        approval_status: "pending_approval",
+        revision_number: 1
+    }
+});
 
     } catch (error) {
 
@@ -538,184 +508,137 @@ async function getQuotations(
  * The quotation number stays the same.
 ========================================================= */
 
-async function updateQuotation(
-    req,
-    res
-) {
 
-    const connection =
-        await pool.getConnection();
+
+async function updateQuotation(req, res) {
+
+    const connection = await pool.getConnection();
 
     try {
 
-        const quotationId =
-            req.params.id;
+        const quotationId = req.params.id;
+        const notes = req.body?.notes ?? null;
 
-
-        const notes =
-            req.body?.notes ??
-            null;
-
-
-        const [rows] =
-            await connection.query(
-                `
-                SELECT
-                    id,
-                    quotation_number,
-                    quotation_type,
-                    quotation_file_url,
-                    quotation_file_name
-                FROM quotations
-                WHERE id = ?
-                LIMIT 1
-                `,
-                [
-                    quotationId
-                ]
-            );
-
+        const [rows] = await connection.query(`
+            SELECT
+                id,
+                quotation_number,
+                quotation_type,
+                quotation_file_url,
+                quotation_file_name,
+                approval_status,
+                revision_number
+            FROM quotations
+            WHERE id = ?
+            LIMIT 1
+        `, [quotationId]);
 
         if (!rows.length) {
-
             return res.status(404).json({
-
                 success: false,
-
-                message:
-                    "Quotation not found."
-
+                message: "Quotation not found."
             });
-
         }
 
-
-        const quotation =
-            rows[0];
-
+        const quotation = rows[0];
 
         if (
             quotation.quotation_type &&
             quotation.quotation_type !== "original"
         ) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Only original quotations can be updated."
-
+                message: "Only original quotations can be updated."
             });
-
         }
 
+        let fileUrl = quotation.quotation_file_url;
+        let fileName = quotation.quotation_file_name;
+        const replacingPdf = Boolean(req.file);
 
-        let fileUrl =
-            quotation.quotation_file_url;
+        let nextRevision =
+            Number(quotation.revision_number || 1);
 
-        let fileName =
-            quotation.quotation_file_name;
+        if (replacingPdf) {
 
+            const file = uploadDetails(req.file);
 
-        if (req.file) {
+            fileUrl = file.url;
+            fileName = file.name;
+            nextRevision += 1;
 
-            const file =
-                uploadDetails(
-                    req.file
-                );
-
-            fileUrl =
-                file.url;
-
-            fileName =
-                file.name;
-
-        }
-
-
-        await connection.query(
-            `
-            UPDATE quotations
-
-            SET
-
-                quotation_file_url = ?,
-
-                quotation_file_name = ?,
-
-                notes = ?,
-
-                updated_at =
-                    CURRENT_TIMESTAMP
-
-            WHERE id = ?
-
-            `,
-            [
-
+            await connection.query(`
+                UPDATE quotations
+                SET
+                    quotation_file_url = ?,
+                    quotation_file_name = ?,
+                    notes = ?,
+                    approval_status = 'pending_approval',
+                    approval_remarks = NULL,
+                    approved_by = NULL,
+                    approved_at = NULL,
+                    revision_number = ?,
+                    revised_at = CURRENT_TIMESTAMP,
+                    status = 'draft',
+                    sent_at = NULL,
+                    follow_up_1_sent_at = NULL,
+                    follow_up_2_sent_at = NULL,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `, [
                 fileUrl,
-
                 fileName,
-
                 notes,
-
+                nextRevision,
                 quotationId
+            ]);
 
-            ]
-        );
+        } else {
 
+            await connection.query(`
+                UPDATE quotations
+                SET
+                    notes = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `, [notes, quotationId]);
+
+        }
 
         return res.json({
-
             success: true,
-
-            message:
-                "Quotation updated successfully.",
-
+            message: replacingPdf
+                ? "Revised quotation uploaded and submitted for Super Admin approval."
+                : "Quotation updated successfully.",
             data: {
-
-                id:
-                    quotationId,
-
-                quotation_number:
-                    quotation.quotation_number,
-
-                quotation_file_url:
-                    fileUrl,
-
-                quotation_file_name:
-                    fileName,
-
-                notes
-
+                id: quotationId,
+                quotation_number: quotation.quotation_number,
+                quotation_file_url: fileUrl,
+                quotation_file_name: fileName,
+                notes,
+                approval_status: replacingPdf
+                    ? "pending_approval"
+                    : quotation.approval_status,
+                revision_number: replacingPdf
+                    ? nextRevision
+                    : quotation.revision_number
             }
-
         });
 
     } catch (error) {
 
-        console.error(
-            "Update quotation error:",
-            error
-        );
+        console.error("Update quotation error:", error);
 
         return res.status(500).json({
-
             success: false,
-
-            message:
-                "Unable to update quotation."
-
+            message: "Unable to update quotation."
         });
 
     } finally {
-
         connection.release();
-
     }
-
 }
+
 
 
 /* =========================================================
@@ -839,10 +762,7 @@ async function deleteQuotation(
    SEND QUOTATION
 ========================================================= */
 
-async function sendQuotation(
-    req,
-    res
-) {
+async function sendQuotation(req, res) {
 
     try {
 
@@ -853,6 +773,7 @@ async function sendQuotation(
                     id,
                     quotation_number,
                     status,
+                    approval_status,
                     quotation_file_url
                 FROM quotations
                 WHERE id = ?
@@ -878,7 +799,11 @@ async function sendQuotation(
         }
 
 
-        if (!rows[0].quotation_file_url) {
+        const quotation =
+            rows[0];
+
+
+        if (!quotation.quotation_file_url) {
 
             return res.status(400).json({
 
@@ -892,19 +817,33 @@ async function sendQuotation(
         }
 
 
+        /*
+         * SUPER ADMIN APPROVAL REQUIRED
+         */
+
+        if (
+            quotation.approval_status !==
+            "approved"
+        ) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                message:
+                    "Quotation must be approved by Super Admin before it can be sent."
+
+            });
+
+        }
+
+
         await pool.query(
             `
             UPDATE quotations
 
             SET
-
-                status =
-                    IF(
-                        status = 'draft',
-                        'sent',
-                        status
-                    ),
-
+                status = 'sent',
                 sent_at =
                     COALESCE(
                         sent_at,
@@ -912,7 +851,6 @@ async function sendQuotation(
                     )
 
             WHERE id = ?
-
             `,
             [
                 req.params.id
@@ -930,10 +868,13 @@ async function sendQuotation(
             data: {
 
                 quotation_number:
-                    rows[0].quotation_number,
+                    quotation.quotation_number,
 
                 status:
-                    "sent"
+                    "sent",
+
+                approval_status:
+                    "approved"
 
             }
 
@@ -951,14 +892,13 @@ async function sendQuotation(
             success: false,
 
             message:
-                "Unable to mark quotation as sent."
+                "Unable to send quotation."
 
         });
 
     }
 
 }
-
 
 /* =========================================================
    SEND QUOTATION BY EMAIL
@@ -1030,6 +970,21 @@ async function sendQuotationByEmail(
             });
 
         }
+if (
+    quotation.approval_status !==
+    "approved"
+) {
+
+    return res.status(403).json({
+
+        success: false,
+
+        message:
+            "Quotation must be approved by Super Admin before it can be sent by email."
+
+    });
+
+}
 
 
         await sendQuotationEmail({

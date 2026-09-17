@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const path = require("path");
 const rateLimit = require("express-rate-limit");
 
 // ======================================================
@@ -17,7 +16,14 @@ dotenv.config();
 const quotationRoutes =
     require("./routes/quotationRoutes");
 
+const invoiceRoutes =
+    require("./routes/invoiceRoutes");
+
 const app = express();
+
+// Render runs behind a reverse proxy. Trust the first proxy so
+// rate limiting uses the real client IP without trusting arbitrary proxies.
+app.set("trust proxy", 1);
 
 // Render automatically provides PORT.
 // Docker/local development uses 5000.
@@ -51,6 +57,9 @@ const technicianRoutes =
 
 const superAdminRoutes =
     require("./routes/superAdminRoutes");
+
+const superAdminQuotationRoutes =
+    require("./routes/superAdminQuotationRoutes");
 
 // ======================================================
 // CORS
@@ -111,16 +120,43 @@ app.use(
     })
 );
 
+
 // ======================================================
 // BODY PARSERS
 // ======================================================
 
-app.use(express.json());
+app.use(
+    express.json({
+        limit: "1mb"
+    })
+);
 
 app.use(
     express.urlencoded({
-        extended: true
+        extended: true,
+        limit: "1mb"
     })
+);
+
+// ======================================================
+// SCHEDULE ROUTES
+// ======================================================
+const scheduleRoutes =
+    require("./routes/scheduleRoutes");
+
+app.use(
+    "/api/schedules",
+    scheduleRoutes
+);
+
+
+// ======================================================
+// SUPER ADMIN QUOTATION ROUTES
+// ======================================================
+
+app.use(
+    "/api/super-admin/quotations",
+    superAdminQuotationRoutes
 );
 
 // ======================================================
@@ -144,17 +180,6 @@ const loginLimiter = rateLimit({
 });
 
 // ======================================================
-// UPLOADS
-// ======================================================
-
-app.use(
-    "/uploads",
-    express.static(
-        path.join(__dirname, "uploads")
-    )
-);
-
-// ======================================================
 // SERVICE ROUTES
 // ======================================================
 
@@ -164,11 +189,25 @@ app.use(
 );
 
 // ======================================================
-// CUSTOMER REQUEST ROUTES
+// PUBLIC SERVICE REQUEST RATE LIMITER
 // ======================================================
+// Customer requests are intentionally public, but they can
+// also trigger database writes and Cloudinary uploads.
+const requestLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message:
+            "Too many service requests from this network. Please try again later."
+    }
+});
 
 app.use(
     "/api/requests",
+    requestLimiter,
     requestRoutes
 );
 
@@ -203,6 +242,11 @@ app.use(
 app.use(
     "/api/quotations",
     quotationRoutes
+);
+
+app.use(
+    "/api/invoices",
+    invoiceRoutes
 );
 
 // ======================================================
@@ -370,6 +414,36 @@ const server =
 
         }
     );
+
+// ======================================================
+// GRACEFUL SHUTDOWN
+// ======================================================
+
+async function shutdown(signal) {
+
+    console.log(`\nReceived ${signal}. Shutting down SecurePro...`);
+
+    server.close(async () => {
+
+        try {
+            await pool.end();
+            console.log("Database pool closed.");
+            process.exit(0);
+        } catch (error) {
+            console.error("Error while closing database pool:", error);
+            process.exit(1);
+        }
+
+    });
+
+    setTimeout(() => {
+        console.error("Forced shutdown after timeout.");
+        process.exit(1);
+    }, 10000).unref();
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 // ======================================================
 // SERVER ERROR

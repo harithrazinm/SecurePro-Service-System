@@ -7,6 +7,10 @@ const {
 const cloudinary =
     require("../config/cloudinary");
 
+const {
+    validateUploadFile
+} = require("../middleware/uploadValidation");
+
 const authMiddleware =
     require("../middleware/authMiddleware");
 
@@ -105,51 +109,54 @@ const upload =
                 callback
             ) => {
 
-                const allowed = [
-
-                    "application/pdf",
-
-                    "image/jpeg",
-
-                    "image/png",
-
-                    "image/webp"
-
-                ];
-
-
-                const isQuotation =
-                    file.fieldname ===
-                    "quotation_file";
-
-
-                const isAllowed =
-                    isQuotation
-
-                        ? file.mimetype ===
-                            "application/pdf"
-
-                        : allowed.includes(
-                            file.mimetype
-                        );
+                const validation =
+                    validateUploadFile(
+                        file,
+                        {
+                            fields: [
+                                "quotation_file",
+                                "payment_proof"
+                            ],
+                            byField: {
+                                quotation_file: {
+                                    mimes: [
+                                        "application/pdf"
+                                    ],
+                                    extensions: [
+                                        "pdf"
+                                    ],
+                                    message:
+                                        "Quotation upload must be a PDF file."
+                                },
+                                payment_proof: {
+                                    mimes: [
+                                        "application/pdf",
+                                        "image/jpeg",
+                                        "image/png",
+                                        "image/webp"
+                                    ],
+                                    extensions: [
+                                        "pdf",
+                                        "jpg",
+                                        "jpeg",
+                                        "png",
+                                        "webp"
+                                    ],
+                                    message:
+                                        "Payment proof must be a PDF, JPG, PNG, or WEBP file."
+                                }
+                            }
+                        }
+                    );
 
 
                 callback(
-
-                    isAllowed
+                    validation.valid
                         ? null
                         : new Error(
-
-                            isQuotation
-
-                                ? "Quotation upload must be a PDF file."
-
-                                : "Payment proof must be a PDF, JPG, PNG, or WEBP file."
-
+                            validation.message
                         ),
-
-                    isAllowed
-
+                    validation.valid
                 );
 
             }

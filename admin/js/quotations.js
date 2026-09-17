@@ -5,9 +5,7 @@
 const API_BASE =
     ["localhost", "127.0.0.1"]
         .includes(window.location.hostname)
-
         ? "http://localhost:5001/api"
-
         : "https://securepro-service-system.onrender.com/api";
 
 
@@ -20,12 +18,8 @@ const token =
         "securepro_admin_token"
     );
 
-
 if (!token) {
-
-    window.location.href =
-        "login.html";
-
+    window.location.href = "login.html";
 }
 
 
@@ -35,10 +29,7 @@ if (!token) {
 
 const $ =
     selector =>
-        document.querySelector(
-            selector
-        );
-
+        document.querySelector(selector);
 
 const tableBody =
     $("#quotationsTableBody");
@@ -82,7 +73,6 @@ function showError(
     message,
     target = errorBox
 ) {
-
     if (!target) return;
 
     target.textContent =
@@ -91,14 +81,12 @@ function showError(
 
     target.hidden =
         false;
-
 }
 
 
 function hideError(
     target = errorBox
 ) {
-
     if (!target) return;
 
     target.textContent =
@@ -106,7 +94,6 @@ function hideError(
 
     target.hidden =
         true;
-
 }
 
 
@@ -118,7 +105,6 @@ async function apiRequest(
     url,
     options = {}
 ) {
-
     const response =
         await fetch(
             `${API_BASE}${url}`,
@@ -126,14 +112,11 @@ async function apiRequest(
                 ...options,
 
                 headers: {
-
                     Authorization:
                         `Bearer ${token}`,
 
                     ...(options.headers || {})
-
                 }
-
             }
         );
 
@@ -142,7 +125,6 @@ async function apiRequest(
         response.status === 401 ||
         response.status === 403
     ) {
-
         localStorage.removeItem(
             "securepro_admin_token"
         );
@@ -155,7 +137,6 @@ async function apiRequest(
             "login.html";
 
         return null;
-
     }
 
 
@@ -174,17 +155,14 @@ async function apiRequest(
         !response.ok ||
         !result.success
     ) {
-
         throw new Error(
             result.message ||
             `Request failed (${response.status}).`
         );
-
     }
 
 
     return result;
-
 }
 
 
@@ -195,7 +173,6 @@ async function apiRequest(
 function escapeHtml(
     value
 ) {
-
     return String(
         value ?? ""
     )
@@ -205,19 +182,22 @@ function escapeHtml(
                 ({
                     "&":
                         "&amp;",
+
                     "<":
                         "&lt;",
+
                     ">":
                         "&gt;",
+
                     "'":
                         "&#039;",
+
                     '"':
                         "&quot;"
                 }[
                     character
                 ])
         );
-
 }
 
 
@@ -228,7 +208,6 @@ function escapeHtml(
 function formatDate(
     value
 ) {
-
     if (!value) return "—";
 
     const date =
@@ -239,9 +218,7 @@ function formatDate(
             date.getTime()
         )
     ) {
-
         return "—";
-
     }
 
     return new Intl.DateTimeFormat(
@@ -261,10 +238,8 @@ function formatDate(
 
             minute:
                 "2-digit"
-
         }
     ).format(date);
-
 }
 
 
@@ -275,7 +250,6 @@ function formatDate(
 function formatStatus(
     value
 ) {
-
     return String(
         value || "draft"
     )
@@ -288,7 +262,133 @@ function formatStatus(
             character =>
                 character.toUpperCase()
         );
+}
 
+
+/* =========================================================
+   APPROVAL STATUS
+========================================================= */
+
+function formatApprovalStatus(
+    value
+) {
+    return {
+        pending_approval:
+            "Pending Approval",
+
+        revision_required:
+            "Revision Required",
+
+        approved:
+            "Approved"
+    }[value] ||
+        "Pending Approval";
+}
+
+
+function quotationCanBeSent(
+    quotation
+) {
+    return (
+        quotation?.approval_status ===
+        "approved"
+    );
+}
+
+
+function approvalBadge(
+    quotation
+) {
+    const state =
+        quotation?.approval_status ||
+        "pending_approval";
+
+    return `
+        <span class="quotation-approval-status approval-${escapeHtml(state)}">
+            ${escapeHtml(
+                formatApprovalStatus(state)
+            )}
+        </span>
+    `;
+}
+
+
+function approvalNotice(
+    quotation
+) {
+    const state =
+        quotation?.approval_status ||
+        "pending_approval";
+
+
+    if (
+        state ===
+        "revision_required"
+    ) {
+        return `
+            <div class="approval-notice revision">
+
+                <strong>
+                    Super Admin requested a revision
+                </strong>
+
+                <p>
+                    ${escapeHtml(
+                        quotation.approval_remarks ||
+                        "Please review and improve the quotation."
+                    )}
+                </p>
+
+                <small>
+                    Upload a revised PDF to submit it again for approval.
+                </small>
+
+            </div>
+        `;
+    }
+
+
+    if (
+        state ===
+        "pending_approval"
+    ) {
+        return `
+            <div class="approval-notice pending">
+
+                <strong>
+                    Waiting for Super Admin approval
+                </strong>
+
+                <p>
+                    This quotation cannot be sent to the customer yet.
+                </p>
+
+            </div>
+        `;
+    }
+
+
+    if (
+        state ===
+        "approved"
+    ) {
+        return `
+            <div class="approval-notice approved">
+
+                <strong>
+                    ✓ Approved by Super Admin
+                </strong>
+
+                <p>
+                    This quotation is ready to be sent to the customer.
+                </p>
+
+            </div>
+        `;
+    }
+
+
+    return "";
 }
 
 
@@ -300,7 +400,6 @@ function followUpInfo(
     quotation,
     number
 ) {
-
     const sentAt =
         quotation.sent_at
             ? new Date(
@@ -316,9 +415,7 @@ function followUpInfo(
 
 
     if (completedAt) {
-
         return {
-
             label:
                 `FU${number} sent ${formatDate(
                     completedAt
@@ -329,9 +426,7 @@ function followUpInfo(
 
             complete:
                 true
-
         };
-
     }
 
 
@@ -341,17 +436,13 @@ function followUpInfo(
             sentAt.getTime()
         )
     ) {
-
         return {
-
             label:
                 `FU${number}: send quotation first`,
 
             enabled:
                 false
-
         };
-
     }
 
 
@@ -361,7 +452,6 @@ function followUpInfo(
     if (
         number === 1
     ) {
-
         dueAt =
             new Date(
                 sentAt.getTime()
@@ -373,7 +463,6 @@ function followUpInfo(
                     1000
                 )
             );
-
     } else {
 
         const fu1 =
@@ -390,17 +479,13 @@ function followUpInfo(
                 fu1.getTime()
             )
         ) {
-
             return {
-
                 label:
                     "FU2: send FU1 first",
 
                 enabled:
                     false
-
             };
-
         }
 
 
@@ -415,7 +500,6 @@ function followUpInfo(
                     1000
                 )
             );
-
     }
 
 
@@ -425,20 +509,15 @@ function followUpInfo(
 
 
     return {
-
         label:
             enabled
-
                 ? `FU${number} ready`
-
                 : `FU${number} due ${formatDate(
                     dueAt
                 )}`,
 
         enabled
-
     };
-
 }
 
 
@@ -488,20 +567,15 @@ function renderQuotations() {
 
 
                 return (
-
                     (!search ||
                         text.includes(
                             search
                         ))
-
                     &&
-
                     (!status ||
                         quotation.status ===
                         status)
-
                 );
-
             }
         );
 
@@ -510,17 +584,18 @@ function renderQuotations() {
 
         tableBody.innerHTML = `
             <tr>
+
                 <td
-                    colspan="8"
+                    colspan="9"
                     class="table-empty"
                 >
                     No quotations found.
                 </td>
+
             </tr>
         `;
 
         return;
-
     }
 
 
@@ -535,6 +610,7 @@ function renderQuotations() {
                             1
                         );
 
+
                     const fu2 =
                         followUpInfo(
                             quotation,
@@ -542,9 +618,24 @@ function renderQuotations() {
                         );
 
 
+                    const isApproved =
+                        quotationCanBeSent(
+                            quotation
+                        );
+
+
+                    const isRevisionRequired =
+                        quotation.approval_status ===
+                        "revision_required";
+
+
                     return `
 
                         <tr>
+
+                            <!-- =========================
+                                 QUOTATION
+                            ========================== -->
 
                             <td>
 
@@ -567,6 +658,10 @@ function renderQuotations() {
 
                             </td>
 
+
+                            <!-- =========================
+                                 CUSTOMER
+                            ========================== -->
 
                             <td>
 
@@ -591,6 +686,10 @@ function renderQuotations() {
                             </td>
 
 
+                            <!-- =========================
+                                 SERVICE
+                            ========================== -->
+
                             <td>
 
                                 <span class="service-name">
@@ -604,6 +703,10 @@ function renderQuotations() {
 
                             </td>
 
+
+                            <!-- =========================
+                                 STATUS
+                            ========================== -->
 
                             <td>
 
@@ -625,6 +728,50 @@ function renderQuotations() {
                             </td>
 
 
+                            <!-- =========================
+                                 APPROVAL
+                            ========================== -->
+
+                            <td>
+
+                                <div class="approval-cell">
+
+                                    ${approvalBadge(
+                                        quotation
+                                    )}
+
+                                    ${
+                                        isRevisionRequired &&
+                                        quotation.approval_remarks
+
+                                            ? `
+                                                <div class="approval-remark">
+
+                                                    <strong>
+                                                        Super Admin Remark:
+                                                    </strong>
+
+                                                    <span>
+                                                        ${escapeHtml(
+                                                            quotation.approval_remarks
+                                                        )}
+                                                    </span>
+
+                                                </div>
+                                              `
+
+                                            : ""
+                                    }
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- =========================
+                                 SENT
+                            ========================== -->
+
                             <td>
 
                                 <span class="date-text">
@@ -637,6 +784,10 @@ function renderQuotations() {
 
                             </td>
 
+
+                            <!-- =========================
+                                 FOLLOW UP
+                            ========================== -->
 
                             <td>
 
@@ -690,6 +841,10 @@ function renderQuotations() {
                             </td>
 
 
+                            <!-- =========================
+                                 PAYMENT PROOF
+                            ========================== -->
+
                             <td>
 
                                 ${
@@ -726,9 +881,15 @@ function renderQuotations() {
                             </td>
 
 
+                            <!-- =========================
+                                 ACTIONS
+                            ========================== -->
+
                             <td>
 
                                 <div class="action-group">
+
+                                    <!-- VIEW -->
 
                                     <button
                                         class="action-button icon-action view"
@@ -736,17 +897,59 @@ function renderQuotations() {
                                         title="View quotation PDF"
                                         aria-label="View quotation PDF"
                                     >
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+
+                                            <path
+                                                d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+                                            />
+
+                                            <circle
+                                                cx="12"
+                                                cy="12"
+                                                r="2.5"
+                                            />
+
+                                        </svg>
+
                                     </button>
+
+
+                                    <!-- EDIT -->
 
                                     <button
                                         class="action-button icon-action edit"
                                         data-edit="${quotation.id}"
-                                        title="Edit quotation"
+                                        title="${
+                                            isRevisionRequired
+                                                ? "Submit revised quotation"
+                                                : "Edit quotation"
+                                        }"
                                         aria-label="Edit quotation"
                                     >
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.8 4.3 4.3-.8L18.8 8.7a2.1 2.1 0 0 0-3-3L4 16.5Z"/><path d="m14.5 7.5 2 2"/></svg>
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+
+                                            <path
+                                                d="m4 16.5-.8 4.3 4.3-.8L18.8 8.7a2.1 2.1 0 0 0-3-3L4 16.5Z"
+                                            />
+
+                                            <path
+                                                d="m14.5 7.5 2 2"
+                                            />
+
+                                        </svg>
+
                                     </button>
+
+
+                                    <!-- DELETE -->
 
                                     <button
                                         class="action-button icon-action danger"
@@ -754,34 +957,136 @@ function renderQuotations() {
                                         title="Delete quotation"
                                         aria-label="Delete quotation"
                                     >
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+
+                                            <path
+                                                d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"
+                                            />
+
+                                        </svg>
+
                                     </button>
 
+
+                                    <!-- EMAIL -->
+
                                     <button
-                                        class="action-button action-text send"
+                                        class="action-button action-text send ${
+                                            isApproved
+                                                ? ""
+                                                : "approval-locked"
+                                        }"
                                         data-email="${quotation.id}"
-                                        title="Send quotation by email"
+                                        title="${
+                                            isApproved
+                                                ? "Send quotation by email"
+                                                : "Quotation must be approved first"
+                                        }"
+                                        ${
+                                            isApproved
+                                                ? ""
+                                                : "disabled"
+                                        }
                                     >
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+
+                                            <rect
+                                                x="3"
+                                                y="5"
+                                                width="18"
+                                                height="14"
+                                                rx="2"
+                                            />
+
+                                            <path
+                                                d="m4 7 8 6 8-6"
+                                            />
+
+                                        </svg>
+
                                         Email
+
                                     </button>
 
+
+                                    <!-- WHATSAPP -->
+
                                     <button
-                                        class="action-button action-text whatsapp"
+                                        class="action-button action-text whatsapp ${
+                                            isApproved
+                                                ? ""
+                                                : "approval-locked"
+                                        }"
                                         data-whatsapp="${quotation.id}"
-                                        title="Send quotation via WhatsApp"
+                                        title="${
+                                            isApproved
+                                                ? "Send quotation via WhatsApp"
+                                                : "Quotation must be approved first"
+                                        }"
+                                        ${
+                                            isApproved
+                                                ? ""
+                                                : "disabled"
+                                        }
                                     >
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.9 7L4 20l1.5-4A8 8 0 1 1 20 11.5Z"/><path d="M9 9.2c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.6 1.4c.1.2.1.4-.1.6l-.5.6c.7 1.1 1.4 1.7 2.5 2.2l.6-.6c.2-.2.4-.2.6-.1l1.3.6c.2.1.3.3.3.5 0 .8-.4 1.3-1 1.5-1.1.3-2.8-.6-4.1-1.7-1.3-1.1-2.4-2.7-2.6-3.8-.1-.5 0-.9.2-1.1Z"/></svg>
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+
+                                            <path
+                                                d="M20 11.5a8 8 0 0 1-11.9 7L4 20l1.5-4A8 8 0 1 1 20 11.5Z"
+                                            />
+
+                                            <path
+                                                d="M9 9.2c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.6 1.4c.1.2.1.4-.1.6l-.5.6c.7 1.1 1.4 1.7 2.5 2.2l.6-.6c.2-.2.4-.2.6-.1l1.3.6c.2.1.3.3.3.5 0 .8-.4 1.3-1 1.5-1.1.3-2.8-.6-4.1-1.7-1.3-1.1-2.4-2.7-2.6-3.8-.1-.5 0-.9.2-1.1Z"
+                                            />
+
+                                        </svg>
+
                                         WhatsApp
+
                                     </button>
+
+
+                                    <!-- PAYMENT PROOF -->
 
                                     <button
                                         class="action-button action-text proof"
                                         data-upload-proof="${quotation.id}"
-                                        title="${quotation.payment_proof_url ? "Replace payment proof" : "Add payment proof"}"
+                                        title="${
+                                            quotation.payment_proof_url
+                                                ? "Replace payment proof"
+                                                : "Add payment proof"
+                                        }"
                                     >
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4M5 14v5h14v-5"/></svg>
-                                        ${quotation.payment_proof_url ? "Replace" : "Proof"}
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+
+                                            <path
+                                                d="M12 16V4M8 8l4-4 4 4M5 14v5h14v-5"
+                                            />
+
+                                        </svg>
+
+                                        ${
+                                            quotation.payment_proof_url
+                                                ? "Replace"
+                                                : "Proof"
+                                        }
+
                                     </button>
 
                                 </div>
@@ -795,7 +1100,6 @@ function renderQuotations() {
                 }
             )
             .join("");
-
 }
 
 
@@ -809,16 +1113,23 @@ async function loadQuotations() {
 
         hideError();
 
-        tableBody.innerHTML = `
-            <tr>
-                <td
-                    colspan="8"
-                    class="table-loading"
-                >
-                    Loading quotations...
-                </td>
-            </tr>
-        `;
+
+        if (tableBody) {
+
+            tableBody.innerHTML = `
+                <tr>
+
+                    <td
+                        colspan="9"
+                        class="table-loading"
+                    >
+                        Loading quotations...
+                    </td>
+
+                </tr>
+            `;
+
+        }
 
 
         const result =
@@ -843,20 +1154,28 @@ async function loadQuotations() {
             error
         );
 
+
         showError(
             error.message
         );
 
-        tableBody.innerHTML = `
-            <tr>
-                <td
-                    colspan="8"
-                    class="table-empty"
-                >
-                    Unable to load quotations.
-                </td>
-            </tr>
-        `;
+
+        if (tableBody) {
+
+            tableBody.innerHTML = `
+                <tr>
+
+                    <td
+                        colspan="9"
+                        class="table-empty"
+                    >
+                        Unable to load quotations.
+                    </td>
+
+                </tr>
+            `;
+
+        }
 
     }
 
@@ -949,6 +1268,7 @@ async function loadRequests() {
             error
         );
 
+
         requestSelect.innerHTML = `
             <option value="">
                 Unable to load requests
@@ -988,6 +1308,18 @@ function openCreateModal() {
 
     $("#saveButton").textContent =
         "Create quotation";
+
+
+    const approvalNoticeElement =
+        $("#quotationApprovalNotice");
+
+
+    if (approvalNoticeElement) {
+
+        approvalNoticeElement.innerHTML =
+            "";
+
+    }
 
 
     requestSelect.disabled =
@@ -1041,15 +1373,24 @@ async function openEditModal(
 
 
         $("#modalTitle").textContent =
-            "Edit quotation";
+            quotation.approval_status ===
+                "revision_required"
+                ? "Submit revised quotation"
+                : "Edit quotation";
 
 
         $("#modalEyebrow").textContent =
-            "UPDATE QUOTATION";
+            quotation.approval_status ===
+                "revision_required"
+                ? "REVISION REQUIRED"
+                : "UPDATE QUOTATION";
 
 
         $("#saveButton").textContent =
-            "Update quotation";
+            quotation.approval_status ===
+                "revision_required"
+                ? "Submit Revised Quotation"
+                : "Update quotation";
 
 
         requestSelect.value =
@@ -1065,10 +1406,30 @@ async function openEditModal(
             "";
 
 
+        const approvalNoticeElement =
+            $("#quotationApprovalNotice");
+
+
+        if (approvalNoticeElement) {
+
+            approvalNoticeElement.innerHTML =
+                approvalNotice(
+                    quotation
+                );
+
+        }
+
+
         modal.hidden =
             false;
 
     } catch (error) {
+
+        console.error(
+            "Open edit modal error:",
+            error
+        );
+
 
         showError(
             error.message
@@ -1088,8 +1449,10 @@ function closeModal() {
     modal.hidden =
         true;
 
+
     editingQuotation =
         null;
+
 
     requestSelect.disabled =
         false;
@@ -1139,6 +1502,23 @@ async function submitQuotation(
 
         showError(
             "Choose the quotation PDF.",
+            $("#formError")
+        );
+
+        return;
+
+    }
+
+
+    if (
+        editingQuotation &&
+        editingQuotation.approval_status ===
+            "revision_required" &&
+        !file
+    ) {
+
+        showError(
+            "Please upload the revised quotation PDF before submitting it for approval.",
             $("#formError")
         );
 
@@ -1237,7 +1617,6 @@ async function submitQuotation(
                             "PUT",
 
                         body
-
                     }
                 );
 
@@ -1257,7 +1636,6 @@ async function submitQuotation(
                             "POST",
 
                         body
-
                     }
                 );
 
@@ -1268,7 +1646,9 @@ async function submitQuotation(
 
             closeModal();
 
+
             await loadQuotations();
+
 
             await loadRequests();
 
@@ -1286,6 +1666,7 @@ async function submitQuotation(
             error
         );
 
+
         showError(
             error.message,
             $("#formError")
@@ -1297,14 +1678,27 @@ async function submitQuotation(
             $("#saveButton");
 
 
-        saveButton.disabled =
-            false;
+        if (saveButton) {
+
+            saveButton.disabled =
+                false;
 
 
-        saveButton.textContent =
-            editingQuotation
-                ? "Update quotation"
-                : "Create quotation";
+            saveButton.textContent =
+                editingQuotation
+
+                    ? (
+                        editingQuotation.approval_status ===
+                            "revision_required"
+
+                            ? "Submit Revised Quotation"
+
+                            : "Update quotation"
+                    )
+
+                    : "Create quotation";
+
+        }
 
     }
 
@@ -1357,7 +1751,9 @@ async function deleteQuotation(
 
             await loadQuotations();
 
+
             await loadRequests();
+
 
             alert(
                 result.message
@@ -1377,12 +1773,34 @@ async function deleteQuotation(
 
 
 /* =========================================================
-   SEND
+   MARK SENT
 ========================================================= */
 
 async function markSent(
     id
 ) {
+
+    const quotation =
+        quotations.find(
+            item =>
+                item.id === id
+        );
+
+
+    if (
+        !quotationCanBeSent(
+            quotation
+        )
+    ) {
+
+        showError(
+            "This quotation must be approved by Super Admin before it can be marked as sent."
+        );
+
+        return;
+
+    }
+
 
     if (
         !confirm(
@@ -1412,6 +1830,7 @@ async function markSent(
         if (result) {
 
             await loadQuotations();
+
 
             alert(
                 result.message
@@ -1443,6 +1862,21 @@ async function sendEmail(
             item =>
                 item.id === id
         );
+
+
+    if (
+        !quotationCanBeSent(
+            quotation
+        )
+    ) {
+
+        showError(
+            "This quotation must be approved by Super Admin before it can be sent."
+        );
+
+        return;
+
+    }
 
 
     if (
@@ -1487,6 +1921,7 @@ async function sendEmail(
 
             await loadQuotations();
 
+
             alert(
                 result.message
             );
@@ -1517,6 +1952,21 @@ async function sendWhatsApp(
             item =>
                 item.id === id
         );
+
+
+    if (
+        !quotationCanBeSent(
+            quotation
+        )
+    ) {
+
+        showError(
+            "This quotation must be approved by Super Admin before it can be sent."
+        );
+
+        return;
+
+    }
 
 
     if (
@@ -1577,28 +2027,39 @@ async function sendWhatsApp(
         "noopener,noreferrer"
     );
 
-    // WhatsApp is opened externally, so the system cannot receive
-    // a delivery confirmation. Mark the quotation as sent when
-    // the admin triggers the WhatsApp send action.
+
     try {
-        const result = await apiRequest(
-            `/quotations/${encodeURIComponent(id)}/send`,
-            {
-                method: "POST"
-            }
-        );
+
+        const result =
+            await apiRequest(
+                `/quotations/${encodeURIComponent(
+                    id
+                )}/send`,
+                {
+                    method:
+                        "POST"
+                }
+            );
+
 
         if (result) {
+
             await loadQuotations();
+
         }
+
     } catch (error) {
+
         console.error(
             "WhatsApp quotation status update error:",
             error
         );
+
+
         showError(
             `WhatsApp opened, but the quotation status could not be updated: ${error.message}`
         );
+
     }
 
 }
@@ -1747,8 +2208,10 @@ function choosePaymentProof(
     proofQuotationId =
         id;
 
+
     proofInput.value =
         "";
+
 
     proofInput.click();
 
@@ -1821,7 +2284,6 @@ async function uploadPaymentProof() {
                         "POST",
 
                     body
-
                 }
             );
 
@@ -1829,6 +2291,7 @@ async function uploadPaymentProof() {
         if (result) {
 
             await loadQuotations();
+
 
             alert(
                 result.message
@@ -1847,6 +2310,7 @@ async function uploadPaymentProof() {
         proofQuotationId =
             null;
 
+
         proofInput.value =
             "";
 
@@ -1859,7 +2323,7 @@ async function uploadPaymentProof() {
    TABLE CLICK
 ========================================================= */
 
-tableBody.addEventListener(
+tableBody?.addEventListener(
     "click",
     event => {
 
@@ -1874,12 +2338,19 @@ tableBody.addEventListener(
 
         const id =
             button.dataset.id ||
+
             button.dataset.openQuotation ||
+
             button.dataset.openProof ||
+
             button.dataset.email ||
+
             button.dataset.whatsapp ||
+
             button.dataset.uploadProof ||
+
             button.dataset.edit ||
+
             button.dataset.delete;
 
 
@@ -2067,9 +2538,11 @@ $("#logoutButton")
                 "securepro_admin_token"
             );
 
+
             localStorage.removeItem(
                 "securepro_admin_user"
             );
+
 
             window.location.href =
                 "login.html";

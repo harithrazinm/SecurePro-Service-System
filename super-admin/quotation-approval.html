@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>SecurePro | Quotation Approval</title>
+
+    <link rel="stylesheet" href="css/super-admin.css">
+    <link rel="stylesheet" href="css/quotation-approval.css">
+    <link rel="stylesheet" href="css/quotation-revision.css">
+</head>
+
+<body>
+<div class="layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="mark">S</div>
+            <div>
+                <strong>SECUREPRO</strong>
+                <span>System Solutions</span>
+            </div>
+        </div>
+
+        <nav>
+            <a href="dashboard.html">⌂ <span>Dashboard</span></a>
+            <a href="projects.html">▤ <span>Projects</span></a>
+            <a class="active" href="quotation-approval.html">
+                ✓ <span>Quotation Approval</span>
+            </a>
+            <a href="work-calendar.html">🗓 <span>Work Calendar</span></a>
+        </nav>
+
+        <div class="profile">
+            <div class="avatar">S</div>
+            <div>
+                <strong id="adminName">Super Admin</strong>
+                <span>Quotation Approval</span>
+            </div>
+            <button id="logoutButton" type="button">⎋</button>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div>
+                <small>SECUREPRO SUPER ADMINISTRATION</small>
+                <h1>Quotation Approval</h1>
+            </div>
+
+            <div class="online">
+                ● <span id="topName">Super Admin</span>
+            </div>
+        </header>
+
+        <section class="content">
+
+            <div class="intro">
+                <div>
+                    <span class="eyebrow">APPROVAL CENTRE</span>
+                    <h2>Review quotations</h2>
+                    <p>
+                        Review quotations uploaded by Admin before they
+                        are sent to customers.
+                    </p>
+                </div>
+
+                <button id="refreshButton" class="refresh" type="button">
+                    ↻ Refresh
+                </button>
+            </div>
+
+            <div id="pageError" class="page-error" hidden></div>
+
+            <section class="approval-stats">
+
+                <article class="approval-stat">
+                    <div class="approval-stat-icon pending">!</div>
+                    <div>
+                        <span>Pending Review</span>
+                        <strong id="pendingCount">0</strong>
+                        <small id="pendingSubtitle">
+                            Waiting for your decision
+                        </small>
+                    </div>
+                </article>
+
+                <article class="approval-stat">
+                    <div class="approval-stat-icon revision">↻</div>
+                    <div>
+                        <span>Revision Required</span>
+                        <strong id="revisionCount">0</strong>
+                        <small id="revisionSubtitle">
+                            Waiting for Admin update
+                        </small>
+                    </div>
+                </article>
+
+                <article class="approval-stat">
+                    <div class="approval-stat-icon approved">✓</div>
+                    <div>
+                        <span>Approved</span>
+                        <strong id="approvedCount">0</strong>
+                        <small>Ready to send</small>
+                    </div>
+                </article>
+
+            </section>
+
+            <!-- NEW REVISION ALERT -->
+            <section id="newRevisionAlert"
+                     class="new-revision-alert"
+                     hidden>
+                <div class="new-revision-alert-icon">!</div>
+
+                <div class="new-revision-alert-content">
+                    <strong id="newRevisionAlertTitle">
+                        New quotation revision submitted
+                    </strong>
+
+                    <span id="newRevisionAlertText">
+                        Admin has uploaded a corrected quotation
+                        for your review.
+                    </span>
+                </div>
+
+                <button
+                    id="viewNewRevisionButton"
+                    type="button"
+                    class="new-revision-alert-button"
+                >
+                    Review Now
+                </button>
+            </section>
+
+            <section class="panel">
+
+                <div class="panel-head approval-panel-head">
+                    <div>
+                        <span class="eyebrow">QUOTATIONS</span>
+                        <h2>Approval queue</h2>
+                    </div>
+
+                    <div class="approval-filter">
+                        <button
+                            type="button"
+                            class="filter-button active"
+                            data-filter="all"
+                        >
+                            All
+                        </button>
+
+                        <button
+                            type="button"
+                            class="filter-button"
+                            data-filter="pending_approval"
+                        >
+                            Pending
+                        </button>
+
+                        <button
+                            type="button"
+                            class="filter-button"
+                            data-filter="revision_required"
+                        >
+                            Revision
+                        </button>
+
+                        <button
+                            type="button"
+                            class="filter-button"
+                            data-filter="approved"
+                        >
+                            Approved
+                        </button>
+                    </div>
+                </div>
+
+                <div class="approval-search">
+                    <input
+                        id="searchInput"
+                        type="search"
+                        placeholder="Search quotation, customer or service..."
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="table-wrap">
+                    <table class="approval-table">
+                        <thead>
+                        <tr>
+                            <th>Quotation</th>
+                            <th>Customer</th>
+                            <th>Service</th>
+                            <th>Revision</th>
+                            <th>Approval</th>
+                            <th>Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+
+                        <tbody id="quotationTableBody">
+                        <tr>
+                            <td colspan="7" class="table-loading">
+                                Loading quotations...
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </section>
+
+        </section>
+    </main>
+</div>
+
+
+<!-- REVIEW MODAL -->
+<div id="reviewModal" class="approval-modal" hidden>
+
+    <div class="approval-modal-backdrop" data-close-modal></div>
+
+    <section
+        class="approval-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reviewModalTitle"
+    >
+
+        <header class="approval-modal-head">
+
+            <div>
+                <span class="eyebrow">QUOTATION REVIEW</span>
+
+                <h2 id="reviewModalTitle">
+                    Review quotation
+                </h2>
+
+                <p id="reviewModalSubtitle">
+                    Check the quotation before approving it.
+                </p>
+            </div>
+
+            <button
+                id="closeReviewButton"
+                class="modal-close"
+                type="button"
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+        </header>
+
+
+        <div id="reviewLoading" class="review-loading">
+            Loading quotation...
+        </div>
+
+
+        <div id="reviewContent" hidden>
+
+            <!-- NEW REVISION BANNER -->
+            <div
+                id="reviewRevisionBanner"
+                class="review-revision-banner"
+                hidden
+            >
+                <div class="review-revision-icon">!</div>
+
+                <div>
+                    <strong>
+                        New Revision Submitted
+                    </strong>
+
+                    <p id="reviewRevisionBannerText">
+                        Admin has uploaded a corrected quotation.
+                    </p>
+                </div>
+            </div>
+
+
+            <div class="quotation-meta">
+
+                <div>
+                    <span>Quotation</span>
+                    <strong id="reviewQuotationNumber">—</strong>
+                </div>
+
+                <div>
+                    <span>Customer</span>
+                    <strong id="reviewCustomer">—</strong>
+                </div>
+
+                <div>
+                    <span>Service</span>
+                    <strong id="reviewService">—</strong>
+                </div>
+
+                <div>
+                    <span>Uploaded By</span>
+                    <strong id="reviewUploadedBy">—</strong>
+                </div>
+
+                <div>
+                    <span>Revision</span>
+                    <strong id="reviewRevision">—</strong>
+                </div>
+
+                <div>
+                    <span>Status</span>
+                    <strong id="reviewStatus">—</strong>
+                </div>
+
+                <div>
+                    <span>Updated</span>
+                    <strong id="reviewUpdatedAt">—</strong>
+                </div>
+
+            </div>
+
+
+            <!-- PREVIOUS REMARK -->
+            <section
+                id="previousRemarkSection"
+                class="previous-remark-section"
+                hidden
+            >
+                <div class="previous-remark-heading">
+                    <span class="eyebrow">PREVIOUS INSTRUCTION</span>
+                    <h3>Super Admin's previous remark</h3>
+                </div>
+
+                <div
+                    id="previousRemark"
+                    class="previous-remark"
+                ></div>
+
+                <p class="previous-remark-help">
+                    Admin has submitted a new revision after this
+                    remark was requested.
+                </p>
+            </section>
+
+
+            <div class="document-card">
+
+                <div class="document-icon">PDF</div>
+
+                <div class="document-details">
+                    <strong id="reviewFileName">
+                        quotation.pdf
+                    </strong>
+
+                    <span id="reviewFileDescription">
+                        Review the uploaded quotation document.
+                    </span>
+                </div>
+
+                <button
+                    id="openPdfButton"
+                    class="open-pdf"
+                    type="button"
+                >
+                    Open PDF ↗
+                </button>
+
+            </div>
+
+
+            <section class="history-section">
+
+                <div class="history-heading">
+                    <div>
+                        <span class="eyebrow">HISTORY</span>
+                        <h3>Review history</h3>
+                    </div>
+                </div>
+
+                <div id="reviewHistory" class="review-history">
+                    <div class="history-empty">
+                        No review history yet.
+                    </div>
+                </div>
+
+            </section>
+
+
+            <section
+                id="decisionSection"
+                class="decision-section"
+            >
+
+                <label for="revisionRemarks">
+                    Remark / enhancement required
+                </label>
+
+                <p>
+                    If changes are required, explain clearly what the
+                    Admin needs to improve in the quotation.
+                </p>
+
+                <textarea
+                    id="revisionRemarks"
+                    rows="5"
+                    maxlength="2000"
+                    placeholder="Example: Please update the camera quantity, add installation charges and include the warranty period."
+                ></textarea>
+
+                <div
+                    id="decisionError"
+                    class="decision-error"
+                    hidden
+                ></div>
+
+                <div class="decision-actions">
+
+                    <button
+                        id="revisionButton"
+                        class="revision-button"
+                        type="button"
+                    >
+                        Request Revision
+                    </button>
+
+                    <button
+                        id="approveButton"
+                        class="approve-button"
+                        type="button"
+                    >
+                        ✓ Approve Quotation
+                    </button>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </section>
+</div>
+
+
+<script src="js/quotation-approval.js?v=20260913-2"></script>
+<script src="js/session-timeout.js"></script>
+
+</body>
+</html>

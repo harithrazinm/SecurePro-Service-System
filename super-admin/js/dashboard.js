@@ -1,249 +1,1309 @@
-const API_BASE = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
-    ? "http://localhost:5001/api"
-    : "https://securepro-service-system.onrender.com/api";
+/*
+ * ======================================================
+ * SECUREPRO SUPER ADMIN
+ * DASHBOARD
+ * ======================================================
+ *
+ * READ-ONLY
+ *
+ * Dashboard:
+ *
+ * - Summary
+ * - Recent projects
+ * - Quotation files
+ * - Invoice files
+ * - Payment proofs
+ * - Completed projects
+ *
+ * ======================================================
+ */
 
-const TOKEN_KEY = "securepro_super_admin_token";
-const USER_KEY = "securepro_super_admin_user";
 
-function token() { return localStorage.getItem(TOKEN_KEY); }
-function esc(v) { return String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
-function date(v) { if (!v) return "—"; const d = new Date(v); return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("en-MY", { dateStyle: "medium", timeStyle: "short" }); }
-function status(v) { return ({ pending: "Pending", assigned: "Assigned", in_progress: "In Progress", waiting_parts: "Waiting Parts", completed: "Completed", cancelled: "Cancelled" })[v] || v || "—"; }
-function badge(v) { return `<span class="badge badge-${esc(v || "none")}">${esc(status(v))}</span>`; }
-function requireLogin() { if (!token()) { location.href = "login.html"; return false; } return true; }
-function setUser() { try { const u = JSON.parse(localStorage.getItem(USER_KEY) || "{}"); document.querySelectorAll("#adminName,#topName").forEach(e => e.textContent = u.name || "Super Admin"); } catch { } }
-function logout() { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); location.href = "login.html"; }
+/* ======================================================
+   API
+====================================================== */
 
-async function api(path) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+const API_BASE =
+    /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+
+        ? "http://localhost:5001/api"
+
+        : "https://securepro-service-system.onrender.com/api";
+
+
+const TOKEN_KEY =
+    "securepro_super_admin_token";
+
+
+const USER_KEY =
+    "securepro_super_admin_user";
+
+
+/* ======================================================
+   HELPERS
+====================================================== */
+
+const $ = selector =>
+    document.querySelector(selector);
+
+
+function esc(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+function date(value) {
+
+    if (!value) {
+        return "—";
+    }
+
+    const d =
+        new Date(value);
+
+    if (Number.isNaN(d.getTime())) {
+        return "—";
+    }
+
+    return d.toLocaleString(
+        "en-MY",
+        {
+            dateStyle: "medium",
+            timeStyle: "short"
+        }
+    );
+
+}
+
+
+function statusLabel(value) {
+
+    const labels = {
+
+        pending:
+            "Pending",
+
+        assigned:
+            "Assigned",
+
+        in_progress:
+            "In Progress",
+
+        waiting_parts:
+            "Waiting Parts",
+
+        awaiting_payment:
+            "Awaiting Payment",
+
+        completed:
+            "Completed",
+
+        cancelled:
+            "Cancelled"
+
+    };
+
+    return (
+        labels[value] ||
+        value ||
+        "Unknown"
+    );
+
+}
+
+
+function paymentLabel(value) {
+
+    const labels = {
+
+        pending:
+            "Pending Verification",
+
+        verified:
+            "Verified",
+
+        rejected:
+            "Rejected"
+
+    };
+
+    return (
+        labels[value] ||
+        value ||
+        "—"
+    );
+
+}
+
+
+/* ======================================================
+   AUTH
+====================================================== */
+
+function token() {
+
+    return localStorage.getItem(
+        TOKEN_KEY
+    );
+
+}
+
+
+function setupProfile() {
+
     try {
-        const url = `${API_BASE}${path}`;
-        console.log("Super Admin API request:", url);
-        const r = await fetch(url, {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token()}` },
-            signal: controller.signal
-        });
-        const text = await r.text();
-        let data;
-        try { data = JSON.parse(text); }
-        catch { throw new Error(`Server returned an invalid response (${r.status}).`); }
-        if (!r.ok || !data.success) throw new Error(data.message || `Request failed (${r.status}).`);
-        return data.data;
-    } catch (error) {
-        if (error.name === "AbortError") {
-            throw new Error("The file request timed out. Please make sure the SecurePro backend is running on port 5001.");
-        }
-        throw error;
-    } finally {
-        clearTimeout(timeout);
-    }
-}
 
-function renderRows(rows) {
-    const body = document.querySelector("#projectTable");
-    if (!rows.length) { body.innerHTML = '<tr><td colspan="8" class="empty">No projects found.</td></tr>'; return; }
-    body.innerHTML = rows.map(p => `
-      <tr>
-        <td><strong>${esc(p.request_code)}</strong><small>${esc(p.service_name || "Service")}</small></td>
-        <td><strong>${esc(p.customer_name)}</strong><small>${esc(p.customer_phone)}</small></td>
-        <td>${p.quotation_number ? `<strong>${esc(p.quotation_number)}</strong><small>${esc(p.quotation_status || "—")}</small>` : "—"}</td>
-        <td>${p.payment_proof_url ? `<a class="doc" target="_blank" rel="noopener" href="${esc(p.payment_proof_url)}">View Proof</a><small>${esc(date(p.payment_proof_uploaded_at))}</small>` : "<span class='muted'>Not uploaded</span>"}</td>
-        <td>${esc(p.technician_name || "Not assigned")}${p.technician_started_at ? `<small>Started ${esc(date(p.technician_started_at))}</small>` : ""}</td>
-        <td>${p.report_status ? badge(p.report_status) : "<span class='muted'>No report</span>"}</td>
-        <td>${badge(p.status)}</td>
-        <td><a class="view" href="project.html?id=${encodeURIComponent(p.id)}">View</a></td>
-      </tr>`).join("");
-}
-
-
-const CATEGORY_TITLES = {
-    all: "All Uploaded Files",
-    quotation_uploaded: "Quotation Uploaded",
-    quotation_sent: "Quotation Sent",
-    payment_proof: "Payment Proof",
-    report_approved: "Report Approved",
-    completed: "Completed Project Files"
-};
-
-const API_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
-function fileUrl(path) {
-    if (!path) return "#";
-    if (/^https?:\/\//i.test(path)) return path;
-    return `${API_ORIGIN}${path.startsWith("/") ? path : `/${path}`}`;
-}
-function fileIcon(type = "") {
-    const t = String(type).toLowerCase();
-    if (t.includes("pdf")) return "📄";
-    if (t.includes("video") || t.startsWith("video/")) return "🎥";
-    if (t.includes("image") || t.includes("photo") || t.startsWith("image/")) return "📷";
-    return "📎";
-}
-let fileModalOpener = null;
-
-function closeFileModal(event) {
-    if (event) event.preventDefault();
-    const modal = document.getElementById("fileModal");
-    if (!modal) return;
-
-    const opener = fileModalOpener && fileModalOpener.isConnected
-        ? fileModalOpener
-        : document.querySelector(".stat-card[data-file-category]");
-
-    // Move focus away from anything inside the modal before hiding it.
-    if (document.activeElement && modal.contains(document.activeElement)) {
-        document.activeElement.blur();
-    }
-
-    modal.hidden = true;
-    document.body.classList.remove("modal-open");
-
-    fileModalOpener = null;
-    if (opener && typeof opener.focus === "function") {
-        setTimeout(() => opener.focus({ preventScroll: true }), 0);
-    }
-}
-window.closeFileModal = closeFileModal;
-
-function openFileModal(category, opener = null) {
-    const modal = document.querySelector("#fileModal");
-    const body = document.querySelector("#fileModalBody");
-    if (!modal || !body) return;
-    fileModalOpener = opener || document.activeElement;
-    document.querySelector("#fileModalTitle").textContent = CATEGORY_TITLES[category] || "Uploaded Files";
-    document.querySelector("#fileModalSubtitle").textContent = "All files available for this category.";
-    body.innerHTML = '<div class="loading">Loading files...</div>';
-   modal.hidden = false;
-    document.body.classList.add("modal-open");
-    requestAnimationFrame(() => document.querySelector("#fileModalClose")?.focus());
-    loadCategoryFiles(category);
-}
-async function loadCategoryFiles(category) {
-    const body = document.querySelector("#fileModalBody");
-    try {
-        const data = await api(`/super-admin/dashboard/files?category=${encodeURIComponent(category)}`);
-        const files = data.files || [];
-        if (!files.length) {
-            body.innerHTML = '<div class="file-empty"><strong>No projects found</strong><span>There are no projects available in this category yet.</span></div>';
-            return;
-        }
-
-        // Total Projects and Completed are project lists, not file lists.
-        if (category === "all" || category === "completed") {
-            body.innerHTML = files.map(p => `
-                <article class="file-row project-row">
-                    <div class="file-icon">📁</div>
-                    <div class="file-main">
-                        <strong>${esc(p.request_code || "Project")}</strong>
-                        <span>${esc(p.customer_name || "Customer")}</span>
-                        <small>${esc(p.service_name || "Service")} · ${esc(status(p.status))} · ${esc(date(p.updated_at || p.created_at))}</small>
-                    </div>
-                    <div class="file-actions">
-                        <a class="file-project" href="project.html?id=${encodeURIComponent(p.request_id || "")}">View Project ↗</a>
-                    </div>
-                </article>`).join("");
-            return;
-        }
-
-        body.innerHTML = files.map(f => `
-            <article class="file-row">
-                <div class="file-icon">${fileIcon(f.file_type)}</div>
-                <div class="file-main">
-                    <strong>${esc(f.file_name || "Uploaded file")}</strong>
-                    <span>${esc(f.request_code || "Project")} · ${esc(f.customer_name || "Customer")}</span>
-                    <small>${esc(f.service_name || "Service")} · ${esc(f.source || "Uploaded file")} · ${esc(date(f.uploaded_at))}</small>
-                </div>
-                <div class="file-actions">
-                    ${f.file_path ? '<a class="doc file-view" href="' + esc(fileUrl(f.file_path)) + '" target="_blank" rel="noopener">View ↗</a>' : '<span class="muted">Unavailable</span>'}
-                    ${f.request_code ? '<a class="file-project" href="project.html?id=' + encodeURIComponent(f.request_id || "") + '">Project</a>' : ''}
-                </div>
-            </article>`).join("");
-    } catch (e) {
-        body.innerHTML = `<div class="file-empty error-text"><strong>Unable to load files</strong><span>${esc(e.message)}</span></div>`;
-    }
-}
-function setupFileCards() {
-
-    // Use event delegation so cards remain clickable
-    // even after other UI interactions.
-    document.addEventListener("click", function (e) {
-
-        const card = e.target.closest(".stat-card[data-file-category]");
-
-        if (card) {
-            e.preventDefault();
-
-            openFileModal(
-                card.dataset.fileCategory || "all",
-                card
+        const user =
+            JSON.parse(
+                localStorage.getItem(
+                    USER_KEY
+                ) || "{}"
             );
 
-            return;
-        }
 
-        // Close button
-        if (e.target.closest("#fileModalClose")) {
-            closeFileModal(e);
-            return;
-        }
+        const name =
+            user.name ||
+            "Super Admin";
 
-        // Backdrop
-        if (e.target.closest("[data-close-file-modal]")) {
-            closeFileModal(e);
-            return;
-        }
 
-    });
+        $("#adminName").textContent =
+            name;
 
-    // Keyboard accessibility
-    document.addEventListener("keydown", function (e) {
+        $("#topName").textContent =
+            name;
 
-        const card = e.target.closest(
-            ".stat-card[data-file-category]"
+    } catch {
+
+        $("#adminName").textContent =
+            "Super Admin";
+
+        $("#topName").textContent =
+            "Super Admin";
+
+    }
+
+
+    $("#logoutButton").onclick = () => {
+
+        localStorage.removeItem(
+            TOKEN_KEY
         );
 
-        if (
-            card &&
-            (e.key === "Enter" || e.key === " ")
-        ) {
-            e.preventDefault();
+        localStorage.removeItem(
+            USER_KEY
+        );
 
-            openFileModal(
-                card.dataset.fileCategory || "all",
-                card
+        window.location.href =
+            "login.html";
+
+    };
+
+}
+
+
+/* ======================================================
+   DASHBOARD SUMMARY
+====================================================== */
+
+async function loadDashboard() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/super-admin/dashboard`,
+                {
+                    headers: {
+
+                        Authorization:
+                            `Bearer ${token()}`
+
+                    }
+
+                }
             );
 
-            return;
-        }
 
-        // Escape closes modal
-        const modal = document.getElementById("fileModal");
+        const result =
+            await response.json();
+
 
         if (
-            e.key === "Escape" &&
-            modal &&
-            !modal.hidden
+            !response.ok ||
+            !result.success
         ) {
-            closeFileModal(e);
+
+            throw new Error(
+                result.message ||
+                "Unable to load dashboard."
+            );
+
         }
 
-    });
+
+        const summary =
+            result.data?.summary ||
+            {};
+
+
+        const recent =
+            result.data?.recent ||
+            [];
+
+
+        /*
+         * --------------------------------------------------
+         * SUMMARY CARDS
+         * --------------------------------------------------
+         */
+
+        setValue(
+            "totalProjects",
+            summary.total_projects
+        );
+
+
+        setValue(
+            "quotationsUploaded",
+            summary.quotations_uploaded
+        );
+
+
+        setValue(
+            "quotationsSent",
+            summary.quotations_sent
+        );
+
+
+        setValue(
+            "invoicesUploaded",
+            summary.invoices_uploaded
+        );
+
+
+        setValue(
+            "paymentProofs",
+            summary.payment_proofs
+        );
+
+
+        setValue(
+            "projectsCompleted",
+            summary.projects_completed
+        );
+
+
+        /*
+         * --------------------------------------------------
+         * RECENT PROJECTS
+         * --------------------------------------------------
+         */
+
+        renderRecentProjects(
+            recent
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Dashboard loading error:",
+            error
+        );
+
+
+        $("#projectTable").innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="8"
+                    class="empty"
+                >
+                    Unable to load dashboard.
+                </td>
+
+            </tr>
+
+        `;
+
+    }
+
 }
 
-async function load() {
-    try {
-        const data = await api("/super-admin/dashboard");
-        const s = data.summary || {};
-        const map = { totalProjects: "total_projects", quotationsUploaded: "quotations_uploaded", quotationsSent: "quotations_sent", paymentProofs: "payment_proofs", projectsCompleted: "projects_completed" };
-        Object.entries(map).forEach(([id, key]) => document.querySelector(`#${id}`).textContent = Number(s[key] || 0));
-        renderRows(data.recent || []);
-    } catch (e) { document.querySelector("#projectTable").innerHTML = `<tr><td colspan="8" class="empty error-text">${esc(e.message)}</td></tr>`; }
+
+/* ======================================================
+   SET VALUE
+====================================================== */
+
+function setValue(
+    id,
+    value
+) {
+
+    const element =
+        document.getElementById(id);
+
+
+    if (!element) {
+        return;
+    }
+
+
+    element.textContent =
+        value ?? 0;
+
 }
-if (requireLogin()) {
-    setUser();
-    document.querySelector("#logoutButton").addEventListener("click", logout);
-    document.querySelector("#refreshButton").addEventListener("click", load);
-    setupFileCards();
-    load();
+
+
+/* ======================================================
+   RECENT PROJECTS
+====================================================== */
+
+function renderRecentProjects(
+    projects
+) {
+
+    const table =
+        $("#projectTable");
+
+
+    if (!projects.length) {
+
+        table.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="8"
+                    class="empty"
+                >
+                    No projects found.
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    table.innerHTML =
+        projects.map(
+            project => `
+
+                <tr>
+
+                    <td>
+
+                        <strong>
+                            ${esc(
+                                project.request_code
+                            )}
+                        </strong>
+
+                        <small>
+                            ${esc(
+                                project.service_name ||
+                                "—"
+                            )}
+                        </small>
+
+                    </td>
+
+
+                    <td>
+
+                        ${esc(
+                            project.customer_name ||
+                            "—"
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        ${
+                            project.quotation_file_url
+
+                                ? `
+                                    <span class="table-status success">
+                                        Uploaded
+                                    </span>
+                                `
+
+                                : `
+                                    <span class="table-status">
+                                        —
+                                    </span>
+                                `
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        ${
+                            project.invoice_status ===
+                            "paid"
+
+                                ? `
+                                    <span class="table-status success">
+                                        Paid
+                                    </span>
+                                `
+
+                                : project.invoice_status
+
+                                    ? `
+                                        <span class="table-status">
+                                            ${esc(
+                                                String(
+                                                    project.invoice_status
+                                                ).replaceAll(
+                                                    "_",
+                                                    " "
+                                                )
+                                            )}
+                                        </span>
+                                    `
+
+                                    : `
+                                        <span class="table-status">
+                                            —
+                                        </span>
+                                    `
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        ${esc(
+                            project.technician_name ||
+                            "Not assigned"
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        ${esc(
+                            formatReportStatus(
+                                project.report_status
+                            )
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="
+                                status-pill
+                                ${esc(
+                                    project.status ||
+                                    ""
+                                )}
+                            "
+                        >
+
+                            ${esc(
+                                statusLabel(
+                                    project.status
+                                )
+                            )}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <a
+                            class="view-link"
+                            href="project.html?id=${encodeURIComponent(
+                                project.id
+                            )}"
+                        >
+
+                            View →
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+            `
+        ).join("");
+
+}
+
+
+/* ======================================================
+   REPORT STATUS
+====================================================== */
+
+function formatReportStatus(
+    value
+) {
+
+    const labels = {
+
+        submitted:
+            "Submitted",
+
+        approved:
+            "Approved",
+
+        rejected:
+            "Rejected"
+
+    };
+
+
+    return (
+        labels[value] ||
+        value ||
+        "—"
+    );
+
+}
+
+
+/* ======================================================
+   CATEGORY TITLES
+====================================================== */
+
+const CATEGORY_TITLES = {
+
+    all:
+        "All Projects",
+
+    quotation_uploaded:
+        "Quotation Uploaded",
+
+    quotation_sent:
+        "Quotation Sent",
+
+    invoice_uploaded:
+        "Final Invoices",
+
+    payment_proof:
+        "Payment Proof",
+
+    completed:
+        "Completed Projects"
+
+};
+
+
+/* ======================================================
+   CATEGORY SUBTITLES
+====================================================== */
+
+const CATEGORY_SUBTITLES = {
+
+    all:
+        "All active projects.",
+
+    quotation_uploaded:
+        "Quotation files uploaded by Admin.",
+
+    quotation_sent:
+        "Quotations sent to customers.",
+
+    invoice_uploaded:
+        "Final invoice PDFs uploaded by Admin.",
+
+    payment_proof:
+        "Payment receipts submitted for invoices.",
+
+    completed:
+        "Projects marked as completed."
+
+};
+
+
+/* ======================================================
+   FILE URL
+====================================================== */
+
+const API_ORIGIN =
+    API_BASE.replace(
+        /\/api\/?$/,
+        ""
+    );
+
+
+function fileUrl(
+    path
+) {
+
+    if (!path) {
+        return "";
+    }
+
+
+    if (
+        /^https?:\/\//i.test(path)
+    ) {
+
+        return path;
+
+    }
+
+
+    return (
+        API_ORIGIN +
+        (
+            path.startsWith("/")
+                ? path
+                : `/${path}`
+        )
+    );
+
+}
+
+
+/* ======================================================
+   FILE ICON
+====================================================== */
+
+function fileIcon(
+    type,
+    name
+) {
+
+    const value =
+        String(
+            type ||
+            name ||
+            ""
+        ).toLowerCase();
+
+
+    if (
+        value.includes("pdf")
+    ) {
+
+        return "📕";
+
+    }
+
+
+    if (
+        value.includes("image") ||
+        value.match(
+            /\.(jpg|jpeg|png|webp|gif)$/i
+        )
+    ) {
+
+        return "📷";
+
+    }
+
+
+    if (
+        value.includes("video") ||
+        value.match(
+            /\.(mp4|mov|avi|webm)$/i
+        )
+    ) {
+
+        return "🎥";
+
+    }
+
+
+    return "📄";
+
+}
+
+
+/* ======================================================
+   OPEN CATEGORY MODAL
+====================================================== */
+
+async function openCategory(
+    category
+) {
+
+    const modal =
+        $("#fileModal");
+
+
+    const body =
+        $("#fileModalBody");
+
+
+    const title =
+        $("#fileModalTitle");
+
+
+    const subtitle =
+        $("#fileModalSubtitle");
+
+
+    title.textContent =
+        CATEGORY_TITLES[
+            category
+        ] ||
+        "Uploaded Files";
+
+
+    subtitle.textContent =
+        CATEGORY_SUBTITLES[
+            category
+        ] ||
+        "Files for this category.";
+
+
+    body.innerHTML = `
+
+        <div class="loading">
+            Loading files...
+        </div>
+
+    `;
+
+
+    modal.hidden = false;
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${API_BASE}/super-admin/dashboard/files?category=${encodeURIComponent(
+                    category
+                )}`,
+
+                {
+
+                    headers: {
+
+                        Authorization:
+                            `Bearer ${token()}`
+
+                    }
+
+                }
+
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            !result.success
+        ) {
+
+            throw new Error(
+                result.message ||
+                "Unable to load files."
+            );
+
+        }
+
+
+        const files =
+            result.data?.files ||
+            [];
+
+
+        renderCategoryFiles(
+            files,
+            category
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Category loading error:",
+            error
+        );
+
+
+        body.innerHTML = `
+
+            <div class="empty">
+
+                Unable to load files.
+
+                <br>
+
+                <small>
+                    ${esc(
+                        error.message
+                    )}
+                </small>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* ======================================================
+   RENDER CATEGORY FILES
+====================================================== */
+
+function renderCategoryFiles(
+    files,
+    category
+) {
+
+    const body =
+        $("#fileModalBody");
+
+
+    if (!files.length) {
+
+        body.innerHTML = `
+
+            <div class="empty">
+
+                No files found for this category.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * PROJECT CATEGORY
+     * --------------------------------------------------
+     */
+
+    if (
+        category === "all" ||
+        category === "completed"
+    ) {
+
+        body.innerHTML =
+            files.map(
+                file => `
+
+                    <article class="file-row">
+
+                        <div class="file-icon">
+                            📁
+                        </div>
+
+
+                        <div class="file-info">
+
+                            <strong>
+                                ${esc(
+                                    file.request_code
+                                )}
+                            </strong>
+
+                            <span>
+                                ${esc(
+                                    file.customer_name ||
+                                    "—"
+                                )}
+                            </span>
+
+                            <small>
+                                ${esc(
+                                    file.service_name ||
+                                    "—"
+                                )}
+                            </small>
+
+                        </div>
+
+
+                        <div class="file-meta">
+
+                            <span>
+                                ${esc(
+                                    statusLabel(
+                                        file.status
+                                    )
+                                )}
+                            </span>
+
+                            <small>
+                                ${esc(
+                                    date(
+                                        file.updated_at ||
+                                        file.completed_at
+                                    )
+                                )}
+                            </small>
+
+                        </div>
+
+
+                        <div class="file-actions">
+
+                            <a
+                                class="view-link"
+                                href="project.html?id=${encodeURIComponent(
+                                    file.request_id
+                                )}"
+                            >
+                                View Project →
+                            </a>
+
+                        </div>
+
+                    </article>
+
+                `
+            ).join("");
+
+        return;
+
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * DOCUMENT FILES
+     * --------------------------------------------------
+     */
+
+    body.innerHTML =
+        files.map(
+            file => `
+
+                <article class="file-row">
+
+
+                    <div class="file-icon">
+
+                        ${fileIcon(
+                            file.file_type,
+                            file.file_name
+                        )}
+
+                    </div>
+
+
+                    <div class="file-info">
+
+                        <strong>
+
+                            ${esc(
+                                file.file_name ||
+                                "Uploaded File"
+                            )}
+
+                        </strong>
+
+
+                        <span>
+
+                            ${esc(
+                                file.request_code ||
+                                "—"
+                            )}
+
+                            ·
+
+                            ${esc(
+                                file.customer_name ||
+                                "—"
+                            )}
+
+                        </span>
+
+
+                        <small>
+
+                            ${esc(
+                                file.service_name ||
+                                file.source ||
+                                "Document"
+                            )}
+
+                        </small>
+
+                    </div>
+
+
+                    <div class="file-meta">
+
+                        ${
+                            file.invoice_number
+                                ? `
+                                    <span>
+                                        ${esc(
+                                            file.invoice_number
+                                        )}
+                                    </span>
+                                `
+                                : ""
+                        }
+
+
+                        ${
+                            file.payment_status
+                                ? `
+                                    <span>
+                                        ${esc(
+                                            paymentLabel(
+                                                file.payment_status
+                                            )
+                                        )}
+                                    </span>
+                                `
+                                : ""
+                        }
+
+
+                        ${
+                            file.status &&
+                            !file.payment_status
+                                ? `
+                                    <span>
+                                        ${esc(
+                                            String(
+                                                file.status
+                                            ).replaceAll(
+                                                "_",
+                                                " "
+                                            )
+                                        )}
+                                    </span>
+                                `
+                                : ""
+                        }
+
+
+                        <small>
+
+                            ${esc(
+                                date(
+                                    file.uploaded_at
+                                )
+                            )}
+
+                        </small>
+
+                    </div>
+
+
+                    <div class="file-actions">
+
+
+                        ${
+                            file.file_path
+
+                                ? `
+                                    <a
+                                        class="view-link"
+                                        href="${esc(
+                                            fileUrl(
+                                                file.file_path
+                                            )
+                                        )}"
+                                        target="_blank"
+                                        rel="noopener"
+                                    >
+                                        View File ↗
+                                    </a>
+                                `
+
+                                : `
+                                    <span class="muted">
+                                        File unavailable
+                                    </span>
+                                `
+                        }
+
+
+                        ${
+                            file.request_id
+
+                                ? `
+                                    <a
+                                        class="view-link secondary"
+                                        href="project.html?id=${encodeURIComponent(
+                                            file.request_id
+                                        )}"
+                                    >
+                                        Project →
+                                    </a>
+                                `
+
+                                : ""
+                        }
+
+
+                    </div>
+
+
+                </article>
+
+            `
+        ).join("");
+
+}
+
+
+/* ======================================================
+   CLOSE MODAL
+====================================================== */
+
+function closeModal() {
+
+    $("#fileModal").hidden =
+        true;
+
+}
+
+
+function setupModal() {
+
+    $("#fileModalClose").onclick =
+        closeModal;
+
+
+    document
+        .querySelector(
+            "[data-close-file-modal]"
+        )
+        ?.addEventListener(
+            "click",
+            closeModal
+        );
+
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Escape" &&
+                !$("#fileModal").hidden
+            ) {
+
+                closeModal();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ======================================================
+   STAT CARD EVENTS
+====================================================== */
+
+function setupStatCards() {
+
+    document
+        .querySelectorAll(
+            ".stat-card[data-file-category]"
+        )
+        .forEach(card => {
+
+            const category =
+                card.dataset.fileCategory;
+
+
+            card.addEventListener(
+                "click",
+                () =>
+                    openCategory(
+                        category
+                    )
+            );
+
+
+            card.addEventListener(
+                "keydown",
+                event => {
+
+                    if (
+                        event.key === "Enter" ||
+                        event.key === " "
+                    ) {
+
+                        event.preventDefault();
+
+                        openCategory(
+                            category
+                        );
+
+                    }
+
+                }
+            );
+
+        });
+
+}
+
+
+/* ======================================================
+   REFRESH
+====================================================== */
+
+function setupRefresh() {
+
+    $("#refreshButton").onclick =
+        loadDashboard;
+
+}
+
+
+/* ======================================================
+   START
+====================================================== */
+
+if (!token()) {
+
+    window.location.href =
+        "login.html";
+
+} else {
+
+    setupProfile();
+
+    setupModal();
+
+    setupStatCards();
+
+    setupRefresh();
+
+    loadDashboard();
+
 }

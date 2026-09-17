@@ -8,6 +8,10 @@ const {
 const cloudinary =
     require("../config/cloudinary");
 
+const {
+    validateUploadFile
+} = require("../middleware/uploadValidation");
+
 
 const {
     startAssignedRequest,
@@ -150,11 +154,34 @@ const upload =
                 callback
             ) => {
 
-                if (
-                    allowedTypes.includes(
-                        file.mimetype
-                    )
-                ) {
+                const validation =
+                    validateUploadFile(
+                        file,
+                        {
+                            fields: [
+                                "completion_media"
+                            ],
+                            byField: {
+                                completion_media: {
+                                    mimes: allowedTypes,
+                                    extensions: [
+                                        "jpg",
+                                        "jpeg",
+                                        "png",
+                                        "webp",
+                                        "mp4",
+                                        "webm",
+                                        "mov"
+                                    ],
+                                    message:
+                                        "Only JPG, PNG, WebP, MP4, WebM and MOV files are allowed."
+                                }
+                            }
+                        }
+                    );
+
+
+                if (validation.valid) {
 
                     return callback(
                         null,
@@ -166,7 +193,7 @@ const upload =
 
                 return callback(
                     new Error(
-                        "Only JPG, PNG, WebP, MP4, WebM and MOV files are allowed."
+                        validation.message
                     )
                 );
 

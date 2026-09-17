@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Work Monitoring | SecurePro Super Admin</title>
+
+    <!-- Super Admin Main Theme -->
+    <link
+        rel="stylesheet"
+        href="css/super-admin.css"
+    >
+
+    <!-- Work Calendar -->
+    <link
+        rel="stylesheet"
+        href="css/work-calendar.css"
+    >
+
+    <!-- FullCalendar -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.css"
+    >
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js">
+    </script>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- ==================================================
+         SIDEBAR
+         ================================================== -->
+
+    <aside class="sidebar">
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <div class="mark">
+                S
+            </div>
+
+            <div>
+                <strong>
+                    SECUREPRO
+                </strong>
+
+                <span>
+                    System Solutions
+                </span>
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav>
+
+            <a href="dashboard.html">
+                ⌂
+                <span>
+                    Dashboard
+                </span>
+            </a>
+
+
+            <a href="projects.html">
+                ▤
+                <span>
+                    Projects
+                </span>
+            </a>
+
+
+            <a href="quotation-approval.html">
+                ✓
+                <span>
+                    Quotation Approval
+                </span>
+            </a>
+
+
+            <a
+                class="active"
+                href="work-calendar.html"
+            >
+                🗓
+                <span>
+                    Work Calendar
+                </span>
+            </a>
+
+        </nav>
+
+
+        <!-- PROFILE -->
+
+        <div class="profile">
+
+            <div class="avatar">
+                S
+            </div>
+
+            <div>
+
+                <strong id="adminName">
+                    Super Admin
+                </strong>
+
+                <span>
+                    Monitoring Only
+                </span>
+
+            </div>
+
+
+            <button
+                id="logoutButton"
+                type="button"
+                aria-label="Logout"
+            >
+                ⎋
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ==================================================
+         MAIN
+         ================================================== -->
+
+    <main class="main">
+
+
+        <!-- ==================================================
+             TOP BAR
+             ================================================== -->
+
+        <header class="topbar">
+
+            <div>
+
+                <small>
+                    SECUREPRO SUPER ADMINISTRATION
+                </small>
+
+                <h1>
+                    Work Monitoring
+                </h1>
+
+            </div>
+
+
+            <div class="online">
+
+                ●
+
+                <span id="topName">
+                    Super Admin
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- ==================================================
+             CONTENT
+             ================================================== -->
+
+        <section class="content">
+
+
+            <div class="calendar-page">
+
+
+                <!-- ==================================================
+                     INTRO
+                     ================================================== -->
+
+                <div class="intro">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            READ-ONLY
+                        </span>
+
+                        <h2>
+                            Technician Schedule
+                        </h2>
+
+                        <p>
+                            Monitor technician schedules and service progress.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==================================================
+                     SUMMARY
+                     ================================================== -->
+
+                <section class="summary-grid">
+
+
+                    <div class="summary-card">
+
+                        <span>
+                            Scheduled
+                        </span>
+
+                        <strong id="scheduledCount">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-card">
+
+                        <span>
+                            In Progress
+                        </span>
+
+                        <strong id="progressCount">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-card">
+
+                        <span>
+                            Completed
+                        </span>
+
+                        <strong id="completedCount">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-card">
+
+                        <span>
+                            Overdue
+                        </span>
+
+                        <strong id="overdueCount">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                </section>
+
+
+                <!-- ==================================================
+                     CALENDAR
+                     ================================================== -->
+
+                <section class="calendar-card">
+
+
+                    <!-- TOOLBAR -->
+
+                    <div class="calendar-toolbar">
+
+
+                        <div class="calendar-title">
+
+                            <h2>
+                                Work Schedule
+                            </h2>
+
+                            <p>
+                                Read-only monitoring view for Super Admin.
+                            </p>
+
+                        </div>
+
+
+                        <div class="calendar-tools">
+
+
+                            <button
+                                id="refreshCalendar"
+                                class="calendar-tool-button"
+                                type="button"
+                            >
+                                ↻ Refresh
+                            </button>
+
+
+                            <select
+                                id="technicianFilter"
+                                aria-label="Filter by technician"
+                            >
+
+                                <option value="">
+                                    All Technicians
+                                </option>
+
+                            </select>
+
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ==================================================
+                         STATUS LEGEND
+                         ================================================== -->
+
+                    <div
+                        class="calendar-legend"
+                        aria-label="Schedule status legend"
+                    >
+
+
+                        <span class="legend-item">
+
+                            <span
+                                class="legend-dot legend-assigned">
+                            </span>
+
+                            Assigned
+
+                        </span>
+
+
+                        <span class="legend-item">
+
+                            <span
+                                class="legend-dot legend-in-progress">
+                            </span>
+
+                            In Progress
+
+                        </span>
+
+
+                        <span class="legend-item">
+
+                            <span
+                                class="legend-dot legend-waiting-parts">
+                            </span>
+
+                            Waiting Parts
+
+                        </span>
+
+
+                        <span class="legend-item">
+
+                            <span
+                                class="legend-dot legend-completed">
+                            </span>
+
+                            Completed
+
+                        </span>
+
+
+                    </div>
+
+
+                    <!-- CALENDAR -->
+
+                    <div
+                        id="calendar"
+                        class="calendar-container"
+                    ></div>
+
+
+                </section>
+
+
+            </div>
+
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- ======================================================
+     JOB DETAILS MODAL
+     ====================================================== -->
+
+<div
+    id="jobModal"
+    class="modal-backdrop"
+    hidden
+>
+
+
+    <div class="modal">
+
+
+        <!-- CLOSE -->
+
+        <button
+            id="closeModal"
+            class="modal-close"
+            type="button"
+            aria-label="Close"
+        >
+            ×
+        </button>
+
+
+        <!-- LABEL -->
+
+        <span class="modal-label">
+            SERVICE JOB
+        </span>
+
+
+        <!-- JOB CODE -->
+
+        <h2 id="modalTitle">
+            —
+        </h2>
+
+
+        <!-- ==================================================
+             JOB INFORMATION
+             ================================================== -->
+
+        <div class="job-info">
+
+
+            <div>
+
+                <span>
+                    Customer
+                </span>
+
+                <strong id="modalCustomer">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Service
+                </span>
+
+                <strong id="modalService">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Technician
+                </span>
+
+                <strong id="modalTechnician">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Status
+                </span>
+
+                <strong id="modalStatus">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Scheduled Date
+                </span>
+
+                <strong id="modalDate">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Scheduled Time
+                </span>
+
+                <strong id="modalTime">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="full-width">
+
+                <span>
+                    Address
+                </span>
+
+                <strong id="modalAddress">
+                    —
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+        <hr>
+
+
+        <!-- ==================================================
+             HISTORY
+             ================================================== -->
+
+        <h3>
+            Schedule History
+        </h3>
+
+
+        <div
+            id="historyList"
+            class="history-list"
+        >
+
+            Loading...
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     JAVASCRIPT
+     ====================================================== -->
+
+<script src="js/work-calendar.js"></script>
+<script src="js/session-timeout.js"></script>
+
+</body>
+</html>
