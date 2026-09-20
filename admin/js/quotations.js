@@ -121,9 +121,18 @@ async function apiRequest(
         );
 
 
+    /*
+     * ONLY 401 means the admin authentication
+     * has expired / is invalid.
+     *
+     * 403 is NOT treated as logout because
+     * the backend also uses 403 for valid
+     * business restrictions such as:
+     *
+     * "Payment proof requires approval."
+     */
     if (
-        response.status === 401 ||
-        response.status === 403
+        response.status === 401
     ) {
         localStorage.removeItem(
             "securepro_admin_token"
@@ -1061,13 +1070,28 @@ function renderQuotations() {
                                     <!-- PAYMENT PROOF -->
 
                                     <button
-                                        class="action-button action-text proof"
+                                        class="action-button action-text proof ${
+                                            isApproved
+                                                ? ""
+                                                : "approval-locked"
+                                        }"
                                         data-upload-proof="${quotation.id}"
                                         title="${
-                                            quotation.payment_proof_url
-                                                ? "Replace payment proof"
-                                                : "Add payment proof"
+                                            isApproved
+
+                                                ? (
+                                                    quotation.payment_proof_url
+                                                        ? "Replace payment proof"
+                                                        : "Add payment proof"
+                                                )
+
+                                                : "Quotation must be approved by Super Admin before payment proof can be uploaded"
                                         }"
+                                        ${
+                                            isApproved
+                                                ? ""
+                                                : "disabled"
+                                        }
                                     >
 
                                         <svg
@@ -1082,9 +1106,15 @@ function renderQuotations() {
                                         </svg>
 
                                         ${
-                                            quotation.payment_proof_url
-                                                ? "Replace"
-                                                : "Proof"
+                                            isApproved
+
+                                                ? (
+                                                    quotation.payment_proof_url
+                                                        ? "Replace"
+                                                        : "Proof"
+                                                )
+
+                                                : "Locked"
                                         }
 
                                     </button>
@@ -2201,9 +2231,53 @@ function openFile(
    PAYMENT PROOF
 ========================================================= */
 
+/*
+ * Payment proof is ONLY available after
+ * Super Admin approval.
+ *
+ * This check exists in the frontend for UX.
+ * The backend controller also performs the
+ * same check for security.
+ */
+
 function choosePaymentProof(
     id
 ) {
+
+    const quotation =
+        quotations.find(
+            item =>
+                item.id === id
+        );
+
+
+    if (!quotation) {
+
+        showError(
+            "Quotation not found."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * HARD FRONTEND LOCK
+     */
+    if (
+        quotation.approval_status !==
+        "approved"
+    ) {
+
+        showError(
+            "Payment proof can only be uploaded after Super Admin approves the quotation."
+        );
+
+        return;
+
+    }
+
 
     proofQuotationId =
         id;
@@ -2214,7 +2288,6 @@ function choosePaymentProof(
 
 
     proofInput.click();
-
 }
 
 
@@ -2256,6 +2329,40 @@ async function uploadPaymentProof() {
         showError(
             "Payment proof must be a PDF, JPG, PNG, or WEBP file."
         );
+
+        return;
+
+    }
+
+
+    const quotation =
+        quotations.find(
+            item =>
+                item.id ===
+                proofQuotationId
+        );
+
+
+    /*
+     * SECOND FRONTEND CHECK
+     *
+     * Protects against stale UI data.
+     */
+    if (
+        !quotation ||
+        quotation.approval_status !==
+        "approved"
+    ) {
+
+        showError(
+            "Payment proof can only be uploaded after Super Admin approves the quotation."
+        );
+
+        proofQuotationId =
+            null;
+
+        proofInput.value =
+            "";
 
         return;
 

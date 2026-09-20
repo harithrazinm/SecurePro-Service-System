@@ -1106,11 +1106,12 @@ async function uploadPaymentProof(
             await connection.query(
                 `
                 SELECT
-                    id,
-                    request_id
-                FROM quotations
-                WHERE id = ?
-                LIMIT 1
+    id,
+    request_id,
+    approval_status
+FROM quotations
+WHERE id = ?
+LIMIT 1
                 `,
                 [
                     req.params.id
@@ -1133,6 +1134,23 @@ async function uploadPaymentProof(
 
         }
 
+        if (
+    quotationRows[0].approval_status !==
+    "approved"
+) {
+
+    await connection.rollback();
+
+    return res.status(403).json({
+
+        success: false,
+
+        message:
+            "Payment proof can only be uploaded after Super Admin approves the quotation."
+
+    });
+
+}
 
         const requestId =
             quotationRows[0].request_id;
