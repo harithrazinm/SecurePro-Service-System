@@ -1591,3 +1591,892 @@ textarea:focus-visible {
 .answer-value { display:flex; flex-wrap:wrap; gap:8px; }
 .answer-tag { display:inline-flex; align-items:center; padding:6px 10px; border:1px solid #dbe5f3; border-radius:999px; background:#eef5ff; color:#2563eb; font-size:12px; font-weight:700; line-height:1; }
 .report-writer-display { font-weight:700; }
+/* =========================================================
+   ANSWER ENHANCEMENT
+========================================================= */
+
+.answer-item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    min-width: 0;
+}
+
+.answer-number {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #e9ecf2;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.answer-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.answer-label {
+    margin-bottom: 9px;
+}
+
+.answer-value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    color: var(--navy);
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.answer-tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 7px 12px;
+    border: 1px solid #dbe5f3;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #172033;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.answer-tag:hover {
+    border-color: #c8d5ea;
+    background: #f8fbff;
+}
+
+.answer-empty {
+    color: var(--muted);
+    font-style: italic;
+}
+
+
+/* =========================================================
+   QUOTATION STATUS
+========================================================= */
+
+.quotation-status-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: capitalize;
+}
+
+
+/* =========================================================
+   INVOICE
+========================================================= */
+
+.invoice-history {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.invoice-card {
+    padding: 22px;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    background: #f8fafc;
+}
+
+.invoice-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.invoice-card-header h3 {
+    margin: 0;
+    color: var(--navy);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.invoice-card-header small {
+    display: block;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.invoice-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: #e0e7ff;
+    color: #3730a3;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.invoice-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.invoice-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.invoice-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid #d7deea;
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--brand) !important;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.invoice-link:hover {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+}
+
+
+/* =========================================================
+   INVOICE / PAYMENT PANELS
+========================================================= */
+
+.invoice-panel,
+.payment-panel,
+.payment-verification-panel {
+    margin-top: 18px;
+    padding: 22px;
+    border: 1px dashed #c9d3e6;
+    border-radius: 16px;
+    background: #f7f9fd;
+}
+
+.invoice-panel-title {
+    color: var(--navy);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.invoice-help {
+    margin: 6px 0 18px;
+    color: var(--slate);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.invoice-message {
+    margin-top: 12px;
+    padding: 11px 15px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.invoice-message.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.invoice-message.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+
+/* =========================================================
+   PAYMENT LIST
+========================================================= */
+
+.payment-list {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--card-border);
+}
+
+.payment-list-title {
+    margin-bottom: 12px;
+    color: var(--navy);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.payment-row {
+    padding: 18px;
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.payment-row + .payment-row {
+    margin-top: 12px;
+}
+
+.payment-row-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.payment-row-header strong {
+    display: block;
+    color: var(--navy);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.payment-file-name {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    word-break: break-word;
+}
+
+.payment-pending,
+.payment-verified,
+.payment-rejected {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.payment-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.payment-verified {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.payment-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+
+/* =========================================================
+   PAYMENT VERIFICATION
+========================================================= */
+
+.invoice-verify-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .invoice-meta-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .answer-item {
+        gap: 12px;
+    }
+
+    .answer-number {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+    }
+
+    .invoice-card-header {
+        flex-direction: column;
+    }
+
+    .invoice-meta-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-panel,
+    .payment-panel,
+    .payment-verification-panel {
+        padding: 18px;
+    }
+
+    .payment-row-header {
+        flex-direction: column;
+    }
+
+    .invoice-verify-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .invoice-verify-actions button {
+        width: 100%;
+    }
+
+}
+/* =========================================================
+   CUSTOMER REQUIREMENTS — MODERN UI
+========================================================= */
+
+.service-information-card {
+    padding-bottom: 34px;
+}
+
+
+/* ---------------------------------------------------------
+   SECTION HEADER
+--------------------------------------------------------- */
+
+.section-heading-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+
+.section-number {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #0f172a;
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    letter-spacing: 0.02em;
+}
+
+
+.section-title {
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 26px;
+    line-height: 1.2;
+
+    font-weight: 800;
+}
+
+
+.section-description {
+    margin: 7px 0 0;
+
+    color: #64748b;
+
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   SERVICE SUMMARY
+========================================================= */
+
+.service-summary-card {
+    margin-top: 26px;
+
+    padding: 25px 28px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+
+    background: #f8fafc;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+.service-summary-card .field-label {
+    color: #94a3b8;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    letter-spacing: 0.12em;
+}
+
+
+.service-summary-card strong {
+    color: #0f172a;
+
+    font-size: 20px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   REQUIREMENTS HEADING
+========================================================= */
+
+.requirements-heading {
+    margin-top: 34px;
+    margin-bottom: 18px;
+}
+
+
+.requirements-heading h3 {
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 19px;
+    font-weight: 800;
+}
+
+
+.requirements-heading p {
+    margin: 5px 0 0;
+
+    color: #64748b;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   ANSWERS GRID
+========================================================= */
+
+.answers-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+
+/* =========================================================
+   ANSWER CARD
+========================================================= */
+
+.answer-item {
+    min-width: 0;
+
+    display: flex;
+    align-items: flex-start;
+
+    gap: 16px;
+
+    padding: 20px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 17px;
+
+    background: #ffffff;
+
+    transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.answer-item:hover {
+    transform: translateY(-1px);
+
+    border-color: #cbd5e1;
+
+    box-shadow:
+        0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+
+/* =========================================================
+   ANSWER NUMBER
+========================================================= */
+
+.answer-index {
+    flex: 0 0 auto;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: #eef1f5;
+
+    color: #334155;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   ANSWER CONTENT
+========================================================= */
+
+.answer-content {
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.answer-question {
+    margin-bottom: 10px;
+
+    color: #0f172a;
+
+    font-size: 15px;
+    line-height: 1.4;
+
+    font-weight: 800;
+}
+
+
+.answer-description {
+    margin-bottom: 10px;
+
+    color: #64748b;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   ANSWER VALUE
+========================================================= */
+
+.answer-value {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    align-items: center;
+}
+
+
+.answer-chip {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 38px;
+
+    padding: 8px 14px;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 11px;
+
+    background: #ffffff;
+
+    color: #172033;
+
+    font-size: 14px;
+    line-height: 1.3;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.02);
+}
+
+
+.answer-chip + .answer-chip {
+    margin-left: 0;
+}
+
+
+/* =========================================================
+   ANSWER UNIT
+========================================================= */
+
+.answer-unit {
+    margin-top: 7px;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* Hide technical question code from admin UI */
+
+.answer-code {
+    display: none;
+}
+
+
+/* =========================================================
+   CUSTOMER NOTES
+========================================================= */
+
+.customer-notes-card {
+    margin-top: 24px;
+}
+
+
+.customer-notes-content {
+    min-height: 120px;
+
+    margin-top: 24px;
+
+    padding: 28px;
+
+    display: flex;
+    align-items: flex-start;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+
+    background: #f8fafc;
+
+    color: #475569;
+
+    font-size: 16px;
+    line-height: 1.7;
+
+    white-space: pre-wrap;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.answers-grid > .empty-state {
+    grid-column: 1 / -1;
+
+    padding: 32px;
+
+    border: 1px dashed #cbd5e1;
+    border-radius: 16px;
+
+    background: #f8fafc;
+
+    text-align: center;
+}
+
+
+.answers-grid > .empty-state strong {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #0f172a;
+
+    font-size: 15px;
+}
+
+
+.answers-grid > .empty-state span {
+    color: #64748b;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .answers-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .section-heading-content {
+        gap: 12px;
+    }
+
+
+    .section-number {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+
+        border-radius: 10px;
+    }
+
+
+    .section-title {
+        font-size: 21px;
+    }
+
+
+    .section-description {
+        font-size: 14px;
+    }
+
+
+    .service-summary-card {
+        padding: 20px;
+    }
+
+
+    .answer-item {
+        padding: 16px;
+
+        gap: 12px;
+    }
+
+
+    .answer-index {
+        width: 36px;
+        height: 36px;
+    }
+
+
+    .answer-question {
+        font-size: 14px;
+    }
+
+
+    .answer-chip {
+        font-size: 13px;
+
+        padding: 7px 11px;
+    }
+
+
+    .customer-notes-content {
+        padding: 20px;
+    }
+
+}
+/* =========================================================
+   REQUEST.CSS PATCH
+   Paste this at the very END of css/request.css
+========================================================= */
+
+
+/* Section number: white text on the dark box.
+   The first .section-number rule used `color: ... !important`,
+   which beat the later white colour. Same specificity, later
+   rule wins, so this fixes it without editing the old rule. */
+.section-number {
+    color: #ffffff !important;
+}
+
+
+/* Awaiting Payment badge (was falling back to green like Completed) */
+.status-badge.awaiting_payment {
+    background: #f3e8ff;
+    color: #6b21a8 !important;
+}
+
+
+/* Technician final report badge (classes set by request.js) */
+.status-badge.report-none,
+.status-badge.report-draft {
+    background: #eef2f7;
+    color: #475569 !important;
+}
+
+.status-badge.report-submitted {
+    background: #dbeafe;
+    color: #1d4ed8 !important;
+}
+
+.status-badge.report-approved {
+    background: #dcfce7;
+    color: #15803d !important;
+}
+
+.status-badge.report-rejected {
+    background: #fee2e2;
+    color: #b91c1c !important;
+}
+
+
+/* Progress update badge when the status is missing/unknown */
+.progress-status.draft,
+.progress-status.unknown {
+    background: #eef2f7;
+    color: #475569;
+}
+
+
+/* Section titles: the plain 26px rule was overriding the older
+   768px media query, so titles stayed large on small screens. */
+@media (max-width: 768px) {
+    .section-title,
+    .card-title {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 600px) {
+    .section-title,
+    .card-title {
+        font-size: 21px;
+    }
+}

@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Job Details - SecurePro Admin</title>
+
     <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/request.css">
+    <link rel="stylesheet" href="css/request.css?v=20260921-2">
 </head>
 
 <body>
@@ -14,386 +16,1114 @@
     <div class="app-shell">
 
         <!-- =====================================================
-     TOPBAR
-====================================================== -->
+             TOPBAR
+        ====================================================== -->
+
         <header class="topbar-card">
 
             <div class="brand">
-                <div class="brand-mark">S</div>
+
+                <div class="brand-mark">
+                    S
+                </div>
+
                 <div class="brand-text">
                     <strong>SECUREPRO</strong>
                     <span>System Solutions</span>
                 </div>
+
             </div>
 
+
             <nav class="top-nav">
+
+                <!-- DASHBOARD -->
                 <a href="dashboard.html">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="9" rx="1.5" />
-                        <rect x="14" y="3" width="7" height="5" rx="1.5" />
-                        <rect x="14" y="12" width="7" height="9" rx="1.5" />
-                        <rect x="3" y="16" width="7" height="5" rx="1.5" />
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2">
+
+                        <rect x="3"
+                              y="3"
+                              width="7"
+                              height="9"
+                              rx="1.5" />
+
+                        <rect x="14"
+                              y="3"
+                              width="7"
+                              height="5"
+                              rx="1.5" />
+
+                        <rect x="14"
+                              y="12"
+                              width="7"
+                              height="9"
+                              rx="1.5" />
+
+                        <rect x="3"
+                              y="16"
+                              width="7"
+                              height="5"
+                              rx="1.5" />
+
                     </svg>
+
                     Dashboard
+
                 </a>
 
+
+                <!-- QUOTATIONS -->
                 <a href="quotations.html">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2">
+
                         <path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+
                         <path d="M9 12h6M9 16h4" />
+
                     </svg>
+
                     Quotations
-                </a>
-                <a href="job-pending.html">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M12 7v5l3 3" />
-                    </svg>
-                    Job Pending
-                </a>
-                <a href="work-calendar.html">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="17" rx="2" />
-                        <path d="M3 9h18M8 2v4M16 2v4" />
-                        <path d="M8 13h2M14 13h2M8 17h2M14 17h2" />
-                    </svg>
-                    Work Calendar
-                </a>
-                <a href="requests.html" class="active">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z" />
-                        <rect x="5" y="5" width="14" height="16" rx="2" />
-                        <path d="M9 12h6M9 16h6" />
-                    </svg>
-                    Service Requests
+
                 </a>
 
+
+                <!-- JOB PENDING -->
+                <a href="job-pending.html">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2">
+
+                        <circle cx="12"
+                                cy="12"
+                                r="9" />
+
+                        <path d="M12 7v5l3 3" />
+
+                    </svg>
+
+                    Job Pending
+
+                </a>
+
+
+                <!-- WORK CALENDAR -->
+                <a href="work-calendar.html">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2">
+
+                        <rect x="3"
+                              y="4"
+                              width="18"
+                              height="17"
+                              rx="2" />
+
+                        <path d="M3 9h18M8 2v4M16 2v4" />
+
+                        <path d="M8 13h2M14 13h2M8 17h2M14 17h2" />
+
+                    </svg>
+
+                    Work Calendar
+
+                </a>
+
+
+                <!-- SERVICE REQUESTS -->
+                <a href="requests.html"
+                   class="active">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2">
+
+                        <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z" />
+
+                        <rect x="5"
+                              y="5"
+                              width="14"
+                              height="16"
+                              rx="2" />
+
+                        <path d="M9 12h6M9 16h6" />
+
+                    </svg>
+
+                    Service Requests
+
+                </a>
+
+
+                <!-- INVOICES -->
                 <a href="invoices.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="5" y="3" width="14" height="18" rx="2"/>
-            <path d="M8 7h8M8 11h8M8 15h5"/>
-            <path d="M16 18h.01"/>
-        </svg>
-        Invoices & Payments
-    </a>
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2">
+
+                        <rect x="5"
+                              y="3"
+                              width="14"
+                              height="18"
+                              rx="2" />
+
+                        <path d="M8 7h8M8 11h8M8 15h5" />
+
+                        <path d="M16 18h.01" />
+
+                    </svg>
+
+                    Invoices & Payments
+
+                </a>
+
             </nav>
 
         </header>
 
-        <button type="button" id="logoutButton" class="logout-bar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+
+        <!-- =====================================================
+             LOGOUT
+        ====================================================== -->
+
+        <button type="button"
+                id="logoutButton"
+                class="logout-bar">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 width="16"
+                 height="16">
+
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+
                 <path d="M16 17l5-5-5-5" />
+
                 <path d="M21 12H9" />
+
             </svg>
+
             Logout
+
         </button>
 
 
         <!-- =====================================================
-     MAIN CONTENT
-====================================================== -->
+             MAIN
+        ====================================================== -->
+
         <main>
 
             <div class="request-page">
 
+
+                <!-- =================================================
+                     PAGE INTRO
+                ================================================== -->
+
                 <div class="eyebrow-row">
-                    <span class="eyebrow">SecurePro Administration</span>
-                    <span class="admin-pill">
-                        <span class="dot"></span>
-                        <span id="sidebarAdminName">SecurePro Admin</span>
+
+                    <span class="eyebrow">
+                        SecurePro Administration
                     </span>
+
+                    <span class="admin-pill">
+
+                        <span class="dot"></span>
+
+                        <span id="sidebarAdminName">
+                            SecurePro Admin
+                        </span>
+
+                    </span>
+
                 </div>
 
-                <!-- =============================================
-             PAGE HEADER
-        ============================================== -->
+
+                <!-- =================================================
+                     PAGE HEADER
+                ================================================== -->
+
                 <header class="request-header">
+
                     <div class="request-header-row">
+
                         <div>
-                            <a href="requests.html" class="back-link">← Back to Service Requests</a>
-                            <h1 id="requestCode" class="page-title">Loading...</h1>
-                            <p id="requestService" class="request-service">Loading service...</p>
+
+                            <a href="requests.html"
+                               class="back-link">
+
+                                ← Back to Service Requests
+
+                            </a>
+
+                            <h1 id="requestCode"
+                                class="page-title">
+
+                                Loading...
+
+                            </h1>
+
+                            <p id="requestService"
+                               class="request-service">
+
+                                Loading service...
+
+                            </p>
+
                         </div>
 
-                        <span id="requestStatusBadge" class="status-badge">Loading...</span>
+
+                        <span id="requestStatusBadge"
+                              class="status-badge">
+
+                            Loading...
+
+                        </span>
+
                     </div>
+
                 </header>
 
 
-                <!-- ERROR -->
-                <div id="requestError" class="error-message" hidden></div>
+                <!-- =================================================
+                     ERROR
+                ================================================== -->
 
-                <!-- LOADING -->
-                <div id="requestLoading" class="loading-state">
-
+                <div id="requestError"
+                     class="error-message"
+                     hidden>
                 </div>
 
 
-                <!-- =============================================
-             REQUEST DETAILS
-        ============================================== -->
-                <div id="requestDetails" hidden>
+                <!-- =================================================
+                     REQUEST DETAILS
+                ================================================== -->
+
+                <div id="requestDetails"
+                     hidden>
 
 
-                    <!-- 01 CUSTOMER INFORMATION -->
+                    <!-- =================================================
+                         01 CUSTOMER INFORMATION
+                    ================================================== -->
+
                     <section class="detail-card">
+
                         <div class="section-header">
+
                             <div>
-                                <span class="section-number">01</span>
+
+                                <span class="section-number">
+                                    01
+                                </span>
+
                                 <div>
-                                    <h2 class="section-title">Customer Information</h2>
-                                    <p class="section-description">Customer contact and address details.</p>
+
+                                    <h2 class="section-title">
+                                        Customer Information
+                                    </h2>
+
+                                    <p class="section-description">
+                                        Customer contact and address details.
+                                    </p>
+
                                 </div>
+
                             </div>
+
                         </div>
 
-                        <div id="customerGrid" class="customer-grid"></div>
+
+                        <div id="customerGrid"
+                             class="customer-grid">
+                        </div>
+
                     </section>
 
 
-                    <!-- 02 SERVICE INFORMATION -->
+                  <!-- =================================================
+     02 SERVICE INFORMATION
+================================================== -->
+
+<section class="detail-card service-information-card">
+
+    <div class="section-header">
+
+        <div class="section-heading-content">
+
+            <span class="section-number">
+                02
+            </span>
+
+            <div>
+
+                <h2 class="section-title">
+                    What the Customer Requested
+                </h2>
+
+                <p class="section-description">
+                    Review the customer's answers before starting work.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- SERVICE -->
+
+    <div class="service-summary-card">
+
+        <span class="field-label">
+            SERVICE
+        </span>
+
+        <strong id="serviceName">
+            —
+        </strong>
+
+    </div>
+
+
+    <!-- CUSTOMER REQUIREMENTS -->
+
+    <div class="requirements-heading">
+
+        <div>
+
+            <h3>
+                Customer Requirements
+            </h3>
+
+            <p>
+                The customer's selected service requirements are shown below.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div id="answersGrid"
+         class="answers-grid">
+    </div>
+
+</section>
+
+
+                   <!-- =================================================
+     03 CUSTOMER NOTES
+================================================== -->
+
+<section class="detail-card customer-notes-card">
+
+    <div class="section-header">
+
+        <div class="section-heading-content">
+
+            <span class="section-number">
+                03
+            </span>
+
+            <div>
+
+                <h2 class="section-title">
+                    Customer Notes
+                </h2>
+
+                <p class="section-description">
+                    Additional information provided by the customer.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="customerNotes"
+         class="customer-notes-content">
+    </div>
+
+</section>
+
+
+                    <!-- =================================================
+                         04 CUSTOMER PHOTOS
+                    ================================================== -->
+
                     <section class="detail-card">
+
                         <div class="section-header">
+
                             <div>
-                                <span class="section-number">02</span>
+
+                                <span class="section-number">
+                                    04
+                                </span>
+
                                 <div>
-                                    <h2 class="section-title">Service Information</h2>
-                                    <p class="section-description">Requested service and configuration.</p>
+
+                                    <h2 class="section-title">
+                                        Customer Photos
+                                    </h2>
+
+                                    <p class="section-description">
+                                        Photos uploaded with the service request.
+                                    </p>
+
                                 </div>
+
                             </div>
+
                         </div>
 
-                        <div class="customer-grid">
-                            <div class="customer-field full-width">
-                                <span class="field-label">Service</span>
-                                <div class="field-value" id="serviceName">—</div>
-                            </div>
-                        </div>
-
-                        <div class="sub-section">
-                            <div class="sub-section-heading">
-                                <h3>Service Configuration</h3>
-                            </div>
-                            <div id="answersGrid" class="answers-grid"></div>
-                        </div>
-                    </section>
-
-
-                    <!-- 03 CUSTOMER NOTES -->
-                    <section class="detail-card">
-                        <div class="section-header">
-                            <div>
-                                <span class="section-number">03</span>
-                                <div>
-                                    <h2 class="section-title">Customer Notes</h2>
-                                    <p class="section-description">Additional information provided by the customer.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="customerNotes" class="notes-box"></div>
-                    </section>
-
-
-                    <!-- 04 CUSTOMER PHOTOS -->
-                    <section class="detail-card">
-                        <div class="section-header">
-                            <div>
-                                <span class="section-number">04</span>
-                                <div>
-                                    <h2 class="section-title">Customer Photos</h2>
-                                    <p class="section-description">Photos uploaded with the service request.</p>
-                                </div>
-                            </div>
-                        </div>
 
                         <div class="sub-section-heading">
+
                             <span></span>
-                            <span id="photoCount">0 photos</span>
+
+                            <span id="photoCount">
+                                0 photos
+                            </span>
+
                         </div>
 
-                        <div id="photosGrid" class="photo-grid"></div>
+
+                        <div id="photosGrid"
+                             class="photo-grid">
+                        </div>
+
                     </section>
 
 
-                    <!-- 05 SERVICE PROGRESS -->
-                    <section id="serviceProgressCard" class="detail-card">
+                    <!-- =================================================
+                         05 SERVICE PROGRESS
+                    ================================================== -->
+
+                    <section id="serviceProgressCard"
+                             class="detail-card">
+
                         <div class="section-header">
+
                             <div>
-                                <span class="section-number">05</span>
+
+                                <span class="section-number">
+                                    05
+                                </span>
+
                                 <div>
-                                    <h2 class="section-title">Service Progress</h2>
-                                    <p class="section-description">Technician progress updates recorded throughout the
-                                        service job.</p>
+
+                                    <h2 class="section-title">
+                                        Service Progress
+                                    </h2>
+
+                                    <p class="section-description">
+                                        Technician progress updates recorded throughout the service job.
+                                    </p>
+
                                 </div>
+
                             </div>
+
                         </div>
 
-                        <div id="progressReportsEmpty" class="progress-empty">
+
+                        <div id="progressReportsEmpty"
+                             class="progress-empty">
+
                             No progress updates have been submitted yet.
+
                         </div>
-                        <div id="progressTimeline" class="progress-timeline"></div>
+
+
+                        <div id="progressTimeline"
+                             class="progress-timeline">
+                        </div>
+
                     </section>
 
 
-                    <!-- 06 TECHNICIAN FINAL REPORT -->
-                    <section id="technicianReportCard" class="detail-card">
+                    <!-- =================================================
+                         06 TECHNICIAN FINAL REPORT
+                    ================================================== -->
+
+                    <section id="technicianReportCard"
+                             class="detail-card">
+
                         <div class="section-header">
+
                             <div>
-                                <span class="section-number">06</span>
+
+                                <span class="section-number">
+                                    06
+                                </span>
+
                                 <div>
-                                    <h2 class="section-title">Technician Final Report</h2>
-                                    <p class="section-description">Work performed and technician findings.</p>
+
+                                    <h2 class="section-title">
+                                        Technician Final Report
+                                    </h2>
+
+                                    <p class="section-description">
+                                        Work performed and technician findings.
+                                    </p>
+
                                 </div>
+
                             </div>
+
                         </div>
 
-                        <div id="technicianReportStatus" class="status-badge">No report submitted</div>
 
-                        <div class="report-grid" style="margin-top: 18px;">
+                        <div id="technicianReportStatus"
+                             class="status-badge">
+
+                            No report submitted
+
+                        </div>
+
+
+                        <div class="report-grid"
+                             style="margin-top:18px;">
+
+
                             <div class="report-field full-width">
-                                <div class="report-label">Work Performed</div>
-                                <div id="reportWorkPerformed" class="report-value">—</div>
+
+                                <div class="report-label">
+                                    Work Performed
+                                </div>
+
+                                <div id="reportWorkPerformed"
+                                     class="report-value">
+                                    —
+                                </div>
+
                             </div>
+
 
                             <div class="report-field full-width">
-                                <div class="report-label">Findings</div>
-                                <div id="reportFindings" class="report-value">—</div>
+
+                                <div class="report-label">
+                                    Findings
+                                </div>
+
+                                <div id="reportFindings"
+                                     class="report-value">
+                                    —
+                                </div>
+
                             </div>
 
-                            <div class="report-field">
-                                <div class="report-label">Materials Used</div>
-                                <div id="reportMaterialsUsed" class="report-value">—</div>
-                            </div>
 
                             <div class="report-field">
-                                <div class="report-label">Technician Notes</div>
-                                <div id="reportTechnicianNotes" class="report-value">—</div>
+
+                                <div class="report-label">
+                                    Materials Used
+                                </div>
+
+                                <div id="reportMaterialsUsed"
+                                     class="report-value">
+                                    —
+                                </div>
+
                             </div>
 
+
                             <div class="report-field">
-                                <div class="report-label">Reported By</div>
-                                <div id="reportReportedBy" class="report-value report-writer-display">—</div>
+
+                                <div class="report-label">
+                                    Technician Notes
+                                </div>
+
+                                <div id="reportTechnicianNotes"
+                                     class="report-value">
+                                    —
+                                </div>
+
                             </div>
+
+
+                            <div class="report-field">
+
+                                <div class="report-label">
+                                    Reported By
+                                </div>
+
+                                <div id="reportReportedBy"
+                                     class="report-value report-writer-display">
+                                    —
+                                </div>
+
+                            </div>
+
                         </div>
 
-                        <!-- REVIEW REMARKS (shown after a report has been reviewed) -->
-                        <div id="reportReviewRemarks" class="report-review" hidden>
-                            <div class="report-label">Admin Review Remarks</div>
-                            <p id="reportReviewRemarksText" class="report-value">—</p>
+
+                        <!-- REVIEW REMARKS -->
+
+                        <div id="reportReviewRemarks"
+                             class="report-review"
+                             hidden>
+
+                            <div class="report-label">
+                                Admin Review Remarks
+                            </div>
+
+                            <p id="reportReviewRemarksText"
+                               class="report-value">
+                                —
+                            </p>
+
                         </div>
+
 
                         <!-- COMPLETION MEDIA -->
+
                         <div class="sub-section">
+
                             <div class="sub-section-heading">
-                                <h3>Completion Media</h3>
-                                <span id="completionMediaCount">0 files</span>
+
+                                <h3>
+                                    Completion Media
+                                </h3>
+
+                                <span id="completionMediaCount">
+                                    0 files
+                                </span>
+
                             </div>
-                            <div id="completionMediaGrid" class="photo-grid"></div>
+
+
+                            <div id="completionMediaGrid"
+                                 class="photo-grid">
+                            </div>
+
                         </div>
 
-                        <!-- APPROVE / REJECT REPORT (only shown when report.status === "submitted") -->
-                        <section id="reportReviewSection" class="report-review" hidden>
-                            <div class="report-label">Review Technician Report</div>
+
+                        <!-- REPORT REVIEW -->
+
+                        <section id="reportReviewSection"
+                                 class="report-review"
+                                 hidden>
+
+                            <div class="report-label">
+                                Review Technician Report
+                            </div>
+
 
                             <div class="report-review-actions">
-                                <button type="button" id="approveReportButton" class="approve-button">✓ Approve
-                                    Report</button>
-                                <button type="button" id="rejectReportButton" class="reject-button">✕ Reject
-                                    Report</button>
+
+                                <button type="button"
+                                        id="approveReportButton"
+                                        class="approve-button">
+
+                                    ✓ Approve Report
+
+                                </button>
+
+
+                                <button type="button"
+                                        id="rejectReportButton"
+                                        class="reject-button">
+
+                                    ✕ Reject Report
+
+                                </button>
+
                             </div>
 
-                            <div id="rejectForm" class="reject-form" hidden>
-                                <label for="rejectReason" class="form-label">Rejection Reason</label>
+
+                            <div id="rejectForm"
+                                 class="reject-form"
+                                 hidden>
+
+                                <label for="rejectReason"
+                                       class="form-label">
+
+                                    Rejection Reason
+
+                                </label>
+
+
                                 <textarea id="rejectReason"
-                                    placeholder="Explain why this report is being rejected..."></textarea>
+                                          placeholder="Explain why this report is being rejected...">
+                                </textarea>
+
 
                                 <div class="reject-form-actions">
-                                    <button type="button" id="cancelRejectButton"
-                                        class="quotation-button">Cancel</button>
-                                    <button type="button" id="confirmRejectButton" class="reject-button">Reject
-                                        Report</button>
+
+                                    <button type="button"
+                                            id="cancelRejectButton"
+                                            class="quotation-button">
+
+                                        Cancel
+
+                                    </button>
+
+
+                                    <button type="button"
+                                            id="confirmRejectButton"
+                                            class="reject-button">
+
+                                        Reject Report
+
+                                    </button>
+
                                 </div>
+
                             </div>
+
                         </section>
+
                     </section>
 
 
-                    <!-- 07 REQUEST STATUS -->
+                    <!-- =================================================
+                         07 FINAL INVOICE & PAYMENT
+                    ================================================== -->
+
                     <section class="detail-card">
+
                         <div class="section-header">
+
                             <div>
-                                <span class="section-number">07</span>
+
+                                <span class="section-number">
+                                    07
+                                </span>
+
                                 <div>
-                                    <h2 class="section-title">Request Status</h2>
-                                    <p class="section-description">Current status and status update.</p>
+
+                                    <h2 class="section-title">
+                                        Final Invoice & Payment
+                                    </h2>
+
+                                    <p class="section-description">
+                                        Upload the final invoice and verify the customer's payment proof.
+                                    </p>
+
                                 </div>
+
                             </div>
+
                         </div>
+
+
+                        <!-- INVOICE HISTORY -->
+
+                        <div id="invoiceHistory"
+                             class="invoice-history">
+
+                            <div class="empty-state">
+                                Loading invoice information...
+                            </div>
+
+                        </div>
+
+
+                        <!-- FINAL INVOICE UPLOAD -->
+
+                        <div id="invoiceUploadPanel"
+                             class="invoice-panel">
+
+                            <div class="invoice-panel-title">
+                                Final Invoice
+                            </div>
+
+                            <p class="invoice-help">
+                                Upload the final invoice PDF generated by SecurePro.
+                                The invoice amount is already contained in the PDF.
+                                Admin does not need to enter any amount.
+                            </p>
+
+
+                            <label for="invoiceFile"
+                                   class="form-label">
+
+                                Final Invoice PDF
+
+                            </label>
+
+
+                            <input type="file"
+                                   id="invoiceFile"
+                                   accept="application/pdf,.pdf">
+
+
+                            <button type="button"
+                                    id="uploadInvoiceButton"
+                                    class="primary-button"
+                                    style="margin-top:14px;">
+
+                                Upload Final Invoice
+
+                            </button>
+
+
+                            <div id="invoiceUploadMessage"
+                                 class="invoice-message"
+                                 hidden>
+                            </div>
+
+                        </div>
+
+
+                        <!-- PAYMENT PROOF UPLOAD -->
+
+                        <div id="paymentPanel"
+                             class="payment-panel"
+                             hidden>
+
+                            <div class="invoice-panel-title">
+                                Customer Payment Proof
+                            </div>
+
+                            <p class="invoice-help">
+                                Upload the payment receipt or proof received from the customer.
+                                No payment amount or payment method is required.
+                            </p>
+
+
+                            <label for="paymentProofFile"
+                                   class="form-label">
+
+                                Payment Proof
+
+                            </label>
+
+
+                            <input type="file"
+                                   id="paymentProofFile"
+                                   accept="image/*,.pdf">
+
+
+                            <button type="button"
+                                    id="uploadPaymentProofButton"
+                                    class="primary-button"
+                                    style="margin-top:14px;">
+
+                                Upload Payment Proof
+
+                            </button>
+
+
+                            <div id="paymentUploadMessage"
+                                 class="invoice-message"
+                                 hidden>
+                            </div>
+
+                        </div>
+
+
+                        <!-- PAYMENT VERIFICATION -->
+
+                        <div id="paymentVerificationPanel"
+                             class="payment-verification-panel"
+                             hidden>
+                        </div>
+
+                    </section>
+
+
+                    <!-- =================================================
+                         08 REQUEST STATUS
+                    ================================================== -->
+
+                    <section class="detail-card">
+
+                        <div class="section-header">
+
+                            <div>
+
+                                <span class="section-number">
+                                    08
+                                </span>
+
+                                <div>
+
+                                    <h2 class="section-title">
+                                        Request Status
+                                    </h2>
+
+                                    <p class="section-description">
+                                        Current status and status update.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
 
                         <div class="status-section">
+
                             <div class="status-current">
-                                <div class="status-current-label">Current Status</div>
-                                <div id="currentStatusBadge" class="status-current-value">Loading...</div>
+
+                                <div class="status-current-label">
+                                    Current Status
+                                </div>
+
+                                <div id="currentStatusBadge"
+                                     class="status-current-value">
+
+                                    Loading...
+
+                                </div>
+
                             </div>
+
 
                             <div class="status-control">
-                                <label for="requestStatus">Change Status</label>
+
+                                <label for="requestStatus">
+                                    Change Status
+                                </label>
+
+
                                 <select id="requestStatus">
-                                    <option value="pending">Pending</option>
-                                    <option value="assigned">Assigned</option>
-                                    <option value="in_progress">In Progress</option>
-                                    <option value="waiting_parts">Waiting Parts</option>
-                                    <option value="awaiting_payment">Awaiting Payment</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="cancelled">Cancelled</option>
+
+                                    <option value="pending">
+                                        Pending
+                                    </option>
+
+                                    <option value="assigned">
+                                        Assigned
+                                    </option>
+
+                                    <option value="in_progress">
+                                        In Progress
+                                    </option>
+
+                                    <option value="waiting_parts">
+                                        Waiting Parts
+                                    </option>
+
+                                    <option value="awaiting_payment">
+                                        Awaiting Payment
+                                    </option>
+
+                                    <option value="completed">
+                                        Completed
+                                    </option>
+
+                                    <option value="cancelled">
+                                        Cancelled
+                                    </option>
+
                                 </select>
+
                             </div>
+
                         </div>
 
+
                         <div class="save-area">
-                            <button type="button" id="saveButton" class="primary-button save-button">Save
-                                Changes</button>
+
+                            <button type="button"
+                                    id="saveButton"
+                                    class="primary-button save-button">
+
+                                Save Changes
+
+                            </button>
+
                         </div>
+
                     </section>
 
 
-                    <!-- 08 TECHNICIAN ASSIGNMENT -->
+                    <!-- =================================================
+                         09 TECHNICIAN ASSIGNMENT
+                    ================================================== -->
+
                     <section class="detail-card">
+
                         <div class="section-header">
+
                             <div>
-                                <span class="section-number">08</span>
+
+                                <span class="section-number">
+                                    09
+                                </span>
+
                                 <div>
-                                    <h2 class="section-title">Technician Assignment</h2>
+
+                                    <h2 class="section-title">
+                                        Technician Assignment
+                                    </h2>
+
                                     <p class="section-description">
                                         Assign a technician and schedule the service appointment.
                                     </p>
+
                                 </div>
+
                             </div>
+
                         </div>
+
 
                         <div class="technician-assignment">
 
+
                             <!-- TECHNICIAN -->
+
                             <div class="technician-select-wrapper">
-                                <label for="technicianSelect" class="form-label">
+
+                                <label for="technicianSelect"
+                                       class="form-label">
+
                                     Assign Technician
+
                                 </label>
 
-                                <select id="technicianSelect" class="technician-select">
+
+                                <select id="technicianSelect"
+                                        class="technician-select">
+
                                     <option value="">
                                         No technician assigned
                                     </option>
+
                                 </select>
 
+
                                 <small class="form-help">
+
                                     Select the technician responsible for this job.
+
                                 </small>
+
                             </div>
 
+
                             <!-- CURRENT TECHNICIAN -->
+
                             <div class="technician-current">
+
                                 <span class="field-label">
                                     Current Technician
                                 </span>
@@ -401,78 +1131,165 @@
                                 <strong id="currentTechnicianName">
                                     No technician assigned
                                 </strong>
+
                             </div>
 
-                            <!-- SCHEDULE DATE -->
+
+                            <!-- DATE -->
+
                             <div class="technician-select-wrapper">
-                                <label for="scheduledDate" class="form-label">
-                                    Scheduled Date <span class="required">*</span>
+
+                                <label for="scheduledDate"
+                                       class="form-label">
+
+                                    Scheduled Date
+                                    <span class="required">*</span>
+
                                 </label>
 
-                                <input type="date" id="scheduledDate" class="technician-input" required>
+
+                                <input type="date"
+                                       id="scheduledDate"
+                                       class="technician-input"
+                                       required>
+
 
                                 <small class="form-help">
+
                                     Required when assigning a technician.
+
                                 </small>
+
                             </div>
 
-                            <!-- SCHEDULE TIME -->
+
+                            <!-- TIME -->
+
                             <div class="technician-select-wrapper">
-                                <label for="scheduledTime" class="form-label">
+
+                                <label for="scheduledTime"
+                                       class="form-label">
+
                                     Scheduled Time
+
                                 </label>
 
-                                <input type="time" id="scheduledTime" class="technician-input">
+
+                                <input type="time"
+                                       id="scheduledTime"
+                                       class="technician-input">
+
 
                                 <small class="form-help">
+
                                     Optional appointment time.
+
                                 </small>
+
                             </div>
 
                         </div>
+
 
                         <div class="save-area">
-                            <button type="button" id="saveTechnicianButton" class="primary-button save-button">
+
+                            <button type="button"
+                                    id="saveTechnicianButton"
+                                    class="primary-button save-button">
+
                                 Assign Technician
+
                             </button>
+
                         </div>
 
-                        <div id="technicianAssignmentMessage" class="assignment-message" hidden></div>
+
+                        <div id="technicianAssignmentMessage"
+                             class="assignment-message"
+                             hidden>
+                        </div>
+
                     </section>
 
 
+                    <!-- =================================================
+                         10 REQUEST INFORMATION
+                    ================================================== -->
 
-
-
-                    <!-- 09 REQUEST INFORMATION -->
                     <section class="detail-card">
+
                         <div class="section-header">
+
                             <div>
-                                <span class="section-number">09</span>
+
+                                <span class="section-number">
+                                    10
+                                </span>
+
                                 <div>
-                                    <h2 class="section-title">Request Information</h2>
-                                    <p class="section-description">Request timestamps and system information.</p>
+
+                                    <h2 class="section-title">
+                                        Request Information
+                                    </h2>
+
+                                    <p class="section-description">
+                                        Request timestamps and system information.
+                                    </p>
+
                                 </div>
+
                             </div>
+
                         </div>
+
 
                         <div class="customer-grid">
-                            <div class="customer-field">
-                                <span class="field-label">Created At</span>
-                                <div id="createdAt" class="field-value">—</div>
-                            </div>
 
                             <div class="customer-field">
-                                <span class="field-label">Last Updated</span>
-                                <div id="updatedAt" class="field-value">—</div>
+
+                                <span class="field-label">
+                                    Created At
+                                </span>
+
+                                <div id="createdAt"
+                                     class="field-value">
+                                    —
+                                </div>
+
                             </div>
 
+
                             <div class="customer-field">
-                                <span class="field-label">Completed At</span>
-                                <div id="completedAt" class="field-value">—</div>
+
+                                <span class="field-label">
+                                    Last Updated
+                                </span>
+
+                                <div id="updatedAt"
+                                     class="field-value">
+                                    —
+                                </div>
+
                             </div>
+
+
+                            <div class="customer-field">
+
+                                <span class="field-label">
+                                    Completed At
+                                </span>
+
+                                <div id="completedAt"
+                                     class="field-value">
+                                    —
+                                </div>
+
+                            </div>
+
                         </div>
+
                     </section>
+
 
                 </div>
 
@@ -482,8 +1299,13 @@
 
     </div>
 
-    <script src="js/request.js"></script>
-    <script src="js/session-timeout.js"></script>
+
+    <!-- =====================================================
+         SCRIPTS
+    ====================================================== -->
+
+    <script src="js/request.js?v=20260921-2"></script>
+    <script src="js/session-timeout.js?v=20260921-2"></script>
 
 </body>
 

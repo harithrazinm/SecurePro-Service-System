@@ -1,16 +1,20 @@
 /* =========================================================
+   SECUREPRO ADMIN — REQUEST DETAILS
+   Fixed version
+========================================================= */
+
+
+/* =========================================================
    API CONFIGURATION
 ========================================================= */
 
-const API_BASE =
-    ["localhost", "127.0.0.1"].includes(window.location.hostname)
-        ? "http://localhost:5001/api"
-        : "https://securepro-service-system.onrender.com/api";
+const IS_LOCAL = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
-const BACKEND_BASE =
-    ["localhost", "127.0.0.1"].includes(window.location.hostname)
-        ? "http://localhost:5001"
-        : "https://securepro-service-system.onrender.com";
+const BACKEND_BASE = IS_LOCAL
+    ? "http://localhost:5001"
+    : "https://securepro-service-system.onrender.com";
+
+const API_BASE = `${BACKEND_BASE}/api`;
 
 
 /* =========================================================
@@ -19,29 +23,56 @@ const BACKEND_BASE =
 
 let requestData = null;
 let selectedStatus = null;
+let techniciansCache = null;
+
+const $ = (selector) => document.querySelector(selector);
 
 
 /* =========================================================
-   TOKEN
+   SESSION / AUTH
 ========================================================= */
 
 function getToken() {
     return localStorage.getItem("securepro_admin_token");
 }
 
-
-/* =========================================================
-   REQUEST ID
-========================================================= */
-
 function getRequestId() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("id");
+    return new URLSearchParams(window.location.search).get("id");
+}
+
+function redirectToLogin() {
+    window.location.href = "login.html";
+}
+
+function clearSession() {
+    localStorage.removeItem("securepro_admin_token");
+    localStorage.removeItem("securepro_admin_user");
+}
+
+function requireToken() {
+    if (!getToken()) {
+        redirectToLogin();
+        return false;
+    }
+    return true;
+}
+
+/*
+ * Only a real HTTP 401 logs the admin out.
+ * (Matching words like "token" in the message was too fragile.)
+ */
+function handleAuthError(error) {
+    if (error?.status === 401) {
+        clearSession();
+        redirectToLogin();
+        return true;
+    }
+    return false;
 }
 
 
 /* =========================================================
-   HTML ESCAPE
+   GENERAL HELPERS
 ========================================================= */
 
 function escapeHtml(value) {
@@ -53,11 +84,6 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
-
-/* =========================================================
-   DATE FORMAT
-========================================================= */
-
 function formatDate(value) {
     if (!value) return "—";
     const date = new Date(value);
@@ -65,10 +91,56 @@ function formatDate(value) {
     return date.toLocaleString("en-MY", { dateStyle: "medium", timeStyle: "short" });
 }
 
+function formatLabel(value) {
+    if (value === null || value === undefined || value === "") return "";
+    return String(value)
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+/* <input type="date"> needs YYYY-MM-DD, even if the API sends a full ISO string. */
+function toDateInputValue(value) {
+    const match = String(value || "").match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : "";
+}
+
+/* <input type="time"> needs HH:MM. */
+function toTimeInputValue(value) {
+    const match = String(value || "").match(/^(\d{2}:\d{2})/);
+    return match ? match[1] : "";
+}
+
+function resolveFileUrl(path) {
+    const rawPath = String(path || "").trim();
+    if (!rawPath) return "";
+    if (rawPath.startsWith("http://") || rawPath.startsWith("https://")) return rawPath;
+    return `${BACKEND_BASE}${rawPath.startsWith("/") ? "" : "/"}${rawPath}`;
+}
+
+function moneyValue(value) {
+    const number = Number(value || 0);
+    return Number.isFinite(number) ? number : 0;
+}
+
+function moneyText(value) {
+    return `RM ${moneyValue(value).toFixed(2)}`;
+}
+
+function metaItem(label, value) {
+    return `<div class="quotation-meta-item"><div class="label">${escapeHtml(label)}</div><div class="value">${escapeHtml(value)}</div></div>`;
+}
+
 
 /* =========================================================
-   STATUS FORMAT
+   STATUS FORMATTERS
 ========================================================= */
+
+const REQUEST_STATUSES = [
+    "pending", "assigned", "in_progress",
+    "waiting_parts", "awaiting_payment", "completed", "cancelled"
+];
 
 function formatStatus(status) {
     const labels = {
@@ -83,33 +155,35 @@ function formatStatus(status) {
     return labels[status] || status || "Unknown";
 }
 
-
-/* =========================================================
-   STATUS CSS CLASS
-   NOTE: request.css defines rules like `.status-badge.pending`
-   (no "status-" prefix), so the class we hand back here must
-   NOT be prefixed — that mismatch was why badges never picked
-   up their color before.
-========================================================= */
-
 function statusClass(status) {
-    const allowed = [
-        "pending", "assigned", "in_progress",
-        "waiting_parts", "awaiting_payment", "completed", "cancelled"
-    ];
-    return allowed.includes(status) ? status : "pending";
+    return REQUEST_STATUSES.includes(status) ? status : "pending";
 }
-
-
-/* =========================================================
-   REPORT STATUS
-========================================================= */
 
 function formatReportStatus(status) {
     const labels = {
         draft: "Draft",
         submitted: "Submitted",
         approved: "Approved",
+        rejected: "Rejected"
+    };
+    return labels[status] || status || "Unknown";
+}
+
+function formatInvoiceStatus(status) {
+    const labels = {
+        draft: "Draft",
+        sent: "Sent",
+        payment_submitted: "Payment Submitted",
+        paid: "Paid",
+        cancelled: "Cancelled"
+    };
+    return labels[status] || status || "Unknown";
+}
+
+function formatPaymentStatus(status) {
+    const labels = {
+        pending: "Pending Verification",
+        verified: "Verified",
         rejected: "Rejected"
     };
     return labels[status] || status || "Unknown";
@@ -122,6 +196,7 @@ function formatReportStatus(status) {
 
 async function parseResponse(response) {
     let result = null;
+
     try {
         result = await response.json();
     } catch {
@@ -133,15 +208,15 @@ async function parseResponse(response) {
 
         if (response.status === 401) {
             message = "Authentication expired. Please login again.";
-        }
-        if (response.status === 403) {
+        } else if (response.status === 403) {
             message = result?.message || "You do not have permission to perform this action.";
-        }
-        if (response.status === 404) {
+        } else if (response.status === 404) {
             message = result?.message || "API endpoint or request was not found.";
         }
 
-        throw new Error(message);
+        const error = new Error(message);
+        error.status = response.status;
+        throw error;
     }
 
     return result;
@@ -153,83 +228,70 @@ async function parseResponse(response) {
 ========================================================= */
 
 function showError(message) {
-    const element = document.querySelector("#requestError");
+    const element = $("#requestError");
+
     if (!element) {
         console.error(message);
         return;
     }
+
     element.textContent = message || "Unable to load request.";
     element.hidden = false;
 }
 
 function hideError() {
-    const element = document.querySelector("#requestError");
+    const element = $("#requestError");
     if (!element) return;
     element.textContent = "";
     element.hidden = true;
 }
 
+/* Replaces the "Loading..." placeholders when the first load fails. */
+function showLoadFailure() {
+    const code = $("#requestCode");
+    const service = $("#requestService");
+    const badge = $("#requestStatusBadge");
 
-/* =========================================================
-   AUTH CHECK
-========================================================= */
-
-function requireToken() {
-    const token = getToken();
-    if (!token) {
-        window.location.href = "login.html";
-        return false;
-    }
-    return true;
-}
-
-function handleAuthError(error) {
-    const message = String(error?.message || "").toLowerCase();
-
-    if (
-        message.includes("authentication") ||
-        message.includes("401") ||
-        message.includes("token")
-    ) {
-        localStorage.removeItem("securepro_admin_token");
-        localStorage.removeItem("securepro_admin_user");
-        window.location.href = "login.html";
-        return true;
-    }
-
-    return false;
+    if (code) code.textContent = "Unable to load request";
+    if (service) service.textContent = "";
+    if (badge) badge.hidden = true;
 }
 
 
 /* =========================================================
    LOAD REQUEST
+   silent = true  →  refresh the data without hiding the page
+   or resetting the scroll position (used after actions).
 ========================================================= */
 
-async function loadRequest() {
+async function loadRequest({ silent = false } = {}) {
     hideError();
 
     const requestId = getRequestId();
+
     if (!requestId) {
         showError("No request ID was provided.");
+        showLoadFailure();
         return;
     }
 
-    const token = getToken();
-    if (!token) {
-        window.location.href = "login.html";
+    if (!getToken()) {
+        redirectToLogin();
         return;
     }
 
-    const loading = document.querySelector("#requestLoading");
-    const details = document.querySelector("#requestDetails");
+    const loading = $("#requestLoading");
+    const details = $("#requestDetails");
 
-    if (loading) loading.hidden = false;
-    if (details) details.hidden = true;
+    if (!silent) {
+        if (loading) loading.hidden = false;
+        if (details) details.hidden = true;
+    }
 
     try {
         const response = await fetch(
             `${API_BASE}/admin/requests/${encodeURIComponent(requestId)}`,
-            { method: "GET", headers: { "Authorization": `Bearer ${token}` } }
+            { method: "GET", headers: { Authorization: `Bearer ${getToken()}` } }
         );
 
         const result = await parseResponse(response);
@@ -239,10 +301,12 @@ async function loadRequest() {
     } catch (error) {
         console.error("Request details error:", error);
         if (handleAuthError(error)) return;
+
         showError(error.message || "Unable to load request.");
+        if (!requestData) showLoadFailure();
 
     } finally {
-        if (loading) loading.hidden = true;
+        if (!silent && loading) loading.hidden = true;
         if (details && requestData) details.hidden = false;
     }
 }
@@ -268,10 +332,7 @@ function renderRequest(data) {
     renderAssignment(data);
     renderMeta(data);
 
-    const loading = document.querySelector("#requestLoading");
-    const details = document.querySelector("#requestDetails");
-
-    if (loading) loading.hidden = true;
+    const details = $("#requestDetails");
     if (details) details.hidden = false;
 
     loadTechnicians(data);
@@ -279,47 +340,39 @@ function renderRequest(data) {
 
 
 /* =========================================================
-   HEADER
+   HEADER / SERVICE
 ========================================================= */
 
-function renderHeader(data) {
-    const requestCode = document.querySelector("#requestCode");
-    const requestService = document.querySelector("#requestService");
-    const statusBadge = document.querySelector("#requestStatusBadge");
-
-    const service =
+function getServiceName(data) {
+    return (
         data.service_name ||
         data.service?.name_en ||
         data.service?.name?.en ||
         data.service_name_en ||
-        "—";
+        "—"
+    );
+}
 
+function renderHeader(data) {
     const status = data.status || "pending";
 
+    const requestCode = $("#requestCode");
+    const requestService = $("#requestService");
+    const statusBadge = $("#requestStatusBadge");
+
     if (requestCode) requestCode.textContent = data.request_code || "—";
-    if (requestService) requestService.textContent = service;
+    if (requestService) requestService.textContent = getServiceName(data);
 
     if (statusBadge) {
+        statusBadge.hidden = false;
         statusBadge.textContent = formatStatus(status);
         statusBadge.className = `status-badge ${statusClass(status)}`;
     }
 }
 
-
-/* =========================================================
-   SERVICE
-========================================================= */
-
 function renderService(data) {
-    const service =
-        data.service_name ||
-        data.service?.name_en ||
-        data.service?.name?.en ||
-        data.service_name_en ||
-        "—";
-
-    const element = document.querySelector("#serviceName");
-    if (element) element.textContent = service;
+    const element = $("#serviceName");
+    if (element) element.textContent = getServiceName(data);
 }
 
 
@@ -328,7 +381,7 @@ function renderService(data) {
 ========================================================= */
 
 function renderCustomer(data) {
-    const container = document.querySelector("#customerGrid");
+    const container = $("#customerGrid");
     if (!container) return;
 
     const customer = data.customer || {};
@@ -347,126 +400,310 @@ function renderCustomer(data) {
         : "—";
 
     container.innerHTML = `
-        <div class="customer-field">
-            <span class="field-label">Customer Name</span>
-            <div class="field-value">${escapeHtml(name)}</div>
-        </div>
-
-        <div class="customer-field">
-            <span class="field-label">Phone</span>
-            <div class="field-value">${phoneHtml}</div>
-        </div>
-
-        <div class="customer-field">
-            <span class="field-label">Email</span>
-            <div class="field-value">${emailHtml}</div>
-        </div>
-
-        <div class="customer-field full-width">
-            <span class="field-label">Installation Address</span>
-            <div class="field-value">${escapeHtml(address)}</div>
-        </div>
+        <div class="customer-field"><span class="field-label">Customer Name</span><div class="field-value">${escapeHtml(name)}</div></div>
+        <div class="customer-field"><span class="field-label">Phone</span><div class="field-value">${phoneHtml}</div></div>
+        <div class="customer-field"><span class="field-label">Email</span><div class="field-value">${emailHtml}</div></div>
+        <div class="customer-field full-width"><span class="field-label">Installation Address</span><div class="field-value">${escapeHtml(address)}</div></div>
     `;
 }
 
 
 /* =========================================================
-   CUSTOMER ANSWERS
+   CUSTOMER ANSWERS — LABELS
 ========================================================= */
 
+const QUESTION_LABELS = {
+    location: "Installation Location",
+    installation_location: "Installation Location",
+    property_type: "Property Type",
+    building_type: "Building Type",
+    camera_location: "Camera Location",
+    camera_light: "Camera Light Type",
+    camera_light_type: "Camera Light Type",
+    light_type: "Camera Light Type",
+    installation_type: "Installation Type",
+    wiring_type: "Installation Type",
+    wiring: "Installation Type",
+    connection_type: "Installation Type",
+    camera_quantity: "Camera Quantity",
+    quantity: "Quantity",
+    camera_resolution: "Camera Resolution",
+    resolution: "Camera Resolution",
+    additional_equipment: "Additional Equipment",
+    equipment: "Additional Equipment",
+    accessories: "Additional Accessories",
+    additional_accessories: "Additional Accessories",
+    alarm_type: "Alarm Type",
+    alarm: "Alarm Type",
+    alarm_area: "Alarm Areas",
+    technical_features: "Technical Features",
+    features: "Technical Features",
+    internet: "Internet Availability",
+    internet_available: "Internet Availability",
+    internet_access: "Internet Availability",
+    site_visit: "Site Visit Requirement",
+    request_site_visit: "Site Visit Requirement",
+    coverage: "Coverage Area",
+    coverage_area: "Coverage Area",
+    areas: "Coverage Area"
+};
+
+function getAnswerCode(answer) {
+    return String(answer.question_code || answer.code || answer.key || "")
+        .trim()
+        .toLowerCase();
+}
+
+function getQuestionDisplayLabel(answer) {
+    const question = String(answer.question?.en || "").trim();
+
+    // "Customer Requirement" is a generic placeholder, not useful to admin.
+    if (question && question.toLowerCase() !== "customer requirement") {
+        return question;
+    }
+
+    const code = getAnswerCode(answer);
+
+    if (QUESTION_LABELS[code]) return QUESTION_LABELS[code];
+    if (code) return formatLabel(code);
+
+    return "Customer Requirement";
+}
+
+
+/* =========================================================
+   CUSTOMER ANSWERS — VALUES
+========================================================= */
+
+const ANSWER_VALUE_LABELS = {
+    dual_light: "Dual Light",
+    single_light: "Single Light",
+    "1080p_2mp": "1080P 2MP",
+    "1080p 2mp": "1080P 2MP",
+    wired: "Wired",
+    wireless: "Wireless",
+    home: "Home",
+    office: "Office",
+    shop: "Shop",
+    yes: "Yes",
+    no: "No",
+    true: "Yes",
+    false: "No",
+    none: "None",
+    monitor: "TV / Screen Monitor",
+    tv: "TV / Screen Monitor",
+    screen_monitor: "TV / Screen Monitor",
+    rack: "4U Server Rack Cabinet",
+    server_rack: "4U Server Rack Cabinet",
+    ups: "UPS (Battery Backup)",
+    battery_backup: "UPS (Battery Backup)",
+    audio_alarm: "Audio Alarm",
+    internet_available: "Internet Available",
+    site_visit: "Site Visit",
+    request_site_visit: "Request Site Visit"
+};
+
+const ACRONYMS = {
+    cctv: "CCTV", ups: "UPS", nvr: "NVR", dvr: "DVR",
+    poe: "PoE", tv: "TV", hdd: "HDD", ip: "IP", led: "LED"
+};
+
+function capitalizeWord(word) {
+    const lower = word.toLowerCase();
+    if (ACRONYMS[lower]) return ACRONYMS[lower];
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
+/*
+ * Turns any answer shape (array / object / JSON string / text)
+ * into a flat list of strings.
+ */
+function normalizeAnswerValues(value) {
+    if (value === null || value === undefined || value === "") return [];
+
+    if (Array.isArray(value)) {
+        return value.flatMap(item => normalizeAnswerValues(item)).filter(Boolean);
+    }
+
+    if (typeof value === "object") {
+        const candidates = [
+            value.label?.en, value.label,
+            value.name?.en, value.name,
+            value.value?.en, value.value,
+            value.text?.en, value.text,
+            value.en,
+            value.option_label_en, value.option_value
+        ];
+
+        for (const item of candidates) {
+            if (item !== null && item !== undefined && item !== "") {
+                return normalizeAnswerValues(item);
+            }
+        }
+
+        /*
+         * Multi-field answer, e.g. { indoor: 1, outdoor: 1 }.
+         * Keep the key so it shows "Indoor: 1" / "Outdoor: 1"
+         * instead of just "1" and "1".
+         */
+        return Object.entries(value).flatMap(([key, item]) => {
+            const parts = normalizeAnswerValues(item);
+            if (!parts.length) return [];
+            return [`${formatLabel(key)}: ${parts.join(", ")}`];
+        });
+    }
+
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+
+        const looksLikeJson =
+            (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+            (trimmed.startsWith("{") && trimmed.endsWith("}"));
+
+        if (looksLikeJson) {
+            try {
+                return normalizeAnswerValues(JSON.parse(trimmed));
+            } catch {
+                // Not JSON — treat as text.
+            }
+        }
+
+        /*
+         * Split on commas ONLY for lists of code-style tokens
+         * (e.g. "wired,ups"). Sentences and numbers like "1,000"
+         * are left intact.
+         */
+        const isThousands = /^\d{1,3}(,\d{3})+(\.\d+)?$/.test(trimmed);
+
+        if (trimmed.includes(",") && !isThousands) {
+            const parts = trimmed.split(",").map(part => part.trim()).filter(Boolean);
+
+            if (parts.length > 1 && parts.every(part => /^[A-Za-z0-9_.-]+$/.test(part))) {
+                return parts;
+            }
+        }
+
+        return [trimmed];
+    }
+
+    return [String(value)];
+}
+
+/*
+ * Prettifies machine-style values only.
+ * Real free text (model names, sentences, phone numbers) is untouched.
+ * `code` is the question code, used to decide if a range means "Areas".
+ */
+function formatAnswerValue(value, code = "") {
+    const text = String(value ?? "").trim();
+    if (!text) return "Not specified";
+
+    const key = text.toLowerCase();
+
+    if (ANSWER_VALUE_LABELS[key]) return ANSWER_VALUE_LABELS[key];
+
+    // 4mp, 8mp, 1080p ...
+    if (/^\d+(mp|p|k)$/.test(key)) return text.toUpperCase();
+
+    // Ranges: 1_4 / 1-4
+    const range = key.match(/^(\d+)[_-](\d+)$/);
+    if (range) {
+        if (/area|coverage/.test(String(code).toLowerCase())) {
+            return `${range[1]}–${range[2]} Areas`;
+        }
+        if (key.includes("_")) return `${range[1]}–${range[2]}`;
+        return text;
+    }
+
+    // indoor_1 / outdoor2
+    const counter = key.match(/^(indoor|outdoor)[_-]?(\d+)$/);
+    if (counter) {
+        return `${capitalizeWord(counter[1])}: ${counter[2]}`;
+    }
+
+    // snake_case (lowercase with underscores) → Title Case
+    if (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(text)) {
+        return text.split("_").map(capitalizeWord).join(" ");
+    }
+
+    // Single lowercase word → capitalize
+    if (/^[a-z]+$/.test(text)) return capitalizeWord(text);
+
+    // Anything else is real text: leave it exactly as the customer wrote it.
+    return text;
+}
+
+function getAnswerDisplayValue(answer) {
+    const isEmpty = v => v === null || v === undefined || v === "";
+
+    let value = answer.answer;
+
+    if (isEmpty(value) && !isEmpty(answer.number_value)) {
+        value = answer.number_value;
+    }
+
+    if (isEmpty(value)) {
+        value = answer.text_value;
+    }
+
+    if (isEmpty(value) && Array.isArray(answer.options) && answer.options.length) {
+        value = answer.options
+            .map(option =>
+                option.option_label_en ||
+                option.label?.en ||
+                option.option_value ||
+                option.value ||
+                ""
+            )
+            .filter(Boolean);
+    }
+
+    return isEmpty(value) ? "Not specified" : value;
+}
+
 function renderAnswers(data) {
-    const container = document.querySelector("#answersGrid");
+    const container = $("#answersGrid");
     if (!container) return;
 
     const answers = Array.isArray(data.answers) ? data.answers : [];
 
     if (!answers.length) {
-        container.innerHTML = `
-            <div class="empty-state">
-                No customer requirements found for this request.
-            </div>
-        `;
+        container.innerHTML = `<div class="empty-state"><strong>No customer requirements found</strong><span>This request does not contain any service answers.</span></div>`;
         return;
     }
 
-    container.innerHTML = answers.map((answer) => {
-        let value = answer.answer;
+    container.innerHTML = answers.map((answer, index) => {
+        const question = getQuestionDisplayLabel(answer);
+        const code = getAnswerCode(answer);
 
-        if (value === null || value === undefined || value === "") {
-            if (answer.number_value !== null && answer.number_value !== undefined) {
-                value = answer.number_value;
-            }
-        }
+        const values = normalizeAnswerValues(getAnswerDisplayValue(answer))
+            .map(item => formatAnswerValue(item, code))
+            .filter(Boolean);
 
-        if (value === null || value === undefined || value === "") {
-            value = answer.text_value;
-        }
+        const chips = values.length
+            ? values.map(item => `<span class="answer-chip">${escapeHtml(item)}</span>`).join("")
+            : `<span class="answer-chip">Not specified</span>`;
 
-        if (
-            (value === null || value === undefined || value === "") &&
-            Array.isArray(answer.options) &&
-            answer.options.length
-        ) {
-            value = answer.options
-                .map(option =>
-                    option.option_label_en ||
-                    option.label?.en ||
-                    option.option_value ||
-                    option.value ||
-                    ""
-                )
-                .filter(Boolean)
-                .join(", ");
-        }
-
-        if (value === null || value === undefined || value === "") {
-            value = "Not specified";
-        }
-
-        const unit =
-            answer.unit && typeof answer.unit === "object"
-                ? (answer.unit.en || answer.unit.ms || "")
-                : (answer.unit || "");
-
-        if (unit && !String(value).includes(unit)) {
-            value = `${value} ${unit}`;
-        }
-
-        const question =
-            answer.question?.en ||
-            answer.title_en ||
-            answer.question_en ||
-            answer.question_code ||
-            "Customer Requirement";
-
-        const fullWidth = String(value).length > 40 ? " full-width" : "";
-
-        return `
-            <div class="answer-item${fullWidth}">
-                <div class="answer-label">${escapeHtml(question)}</div>
-                <div class="answer-value">${escapeHtml(value)}</div>
-            </div>
-        `;
+        return `<article class="answer-item"><div class="answer-index">${String(index + 1).padStart(2, "0")}</div><div class="answer-content"><div class="answer-question">${escapeHtml(question)}</div><div class="answer-value">${chips}</div></div></article>`;
     }).join("");
 }
 
 
 /* =========================================================
-   NOTES
+   CUSTOMER NOTES
+   (values are written on ONE line — the CSS uses
+   white-space: pre-wrap, so extra whitespace would show.)
 ========================================================= */
 
 function renderNotes(data) {
-    const container = document.querySelector("#customerNotes");
+    const container = $("#customerNotes");
     if (!container) return;
 
     const notes = data.customer_notes || data.customer?.notes || "";
 
     if (!String(notes).trim()) {
-        container.innerHTML = `
-            <div class="empty-state">
-                The customer did not provide additional notes.
-            </div>
-        `;
+        container.innerHTML = `<div class="empty-state">The customer did not provide additional notes.</div>`;
         return;
     }
 
@@ -479,8 +716,8 @@ function renderNotes(data) {
 ========================================================= */
 
 function renderPhotos(data) {
-    const container = document.querySelector("#photosGrid");
-    const count = document.querySelector("#photoCount");
+    const container = $("#photosGrid");
+    const count = $("#photoCount");
     if (!container) return;
 
     const photos = Array.isArray(data.photos) ? data.photos : [];
@@ -490,36 +727,45 @@ function renderPhotos(data) {
     }
 
     if (!photos.length) {
-        container.innerHTML = `
-            <div class="empty-state">
-                No photos were uploaded with this request.
-            </div>
-        `;
+        container.innerHTML = `<div class="empty-state">No photos were uploaded with this request.</div>`;
         return;
     }
 
     container.innerHTML = photos.map((photo, index) => {
-        const rawPath = String(photo.file_path || "").trim();
-
-        const photoUrl =
-            rawPath.startsWith("http://") || rawPath.startsWith("https://")
-                ? rawPath
-                : `${BACKEND_BASE}${rawPath.startsWith("/") ? "" : "/"}${rawPath}`;
-
+        const url = resolveFileUrl(photo.file_path);
         const fileName = photo.file_name || `Customer Photo ${index + 1}`;
 
-        return `
-            <a class="photo-card" href="${escapeHtml(photoUrl)}" target="_blank" rel="noopener noreferrer">
-                <img
-                    src="${escapeHtml(photoUrl)}"
-                    alt="${escapeHtml(fileName)}"
-                    loading="lazy"
-                    onerror="this.style.display='none';"
-                >
-                <span class="photo-name">${escapeHtml(fileName)}</span>
-            </a>
-        `;
+        return `<a class="photo-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtml(url)}" alt="${escapeHtml(fileName)}" loading="lazy" onerror="this.style.display='none';"><span class="photo-name">${escapeHtml(fileName)}</span></a>`;
     }).join("");
+}
+
+
+/* =========================================================
+   MEDIA CARD (shared by progress + completion media)
+========================================================= */
+
+function renderMediaCard(item, index, { cardClass, nameClass = "", fallbackName }) {
+    const url = resolveFileUrl(item.file_path);
+
+    const type =
+        item.media_type ||
+        (item.mime_type?.startsWith("video/") ? "video" : "image");
+
+    const fileName = item.file_name || `${fallbackName} ${index + 1}`;
+    const nameAttr = nameClass ? ` class="${nameClass}"` : "";
+
+    if (type === "video") {
+        return `<div class="${cardClass}"><video src="${escapeHtml(url)}" controls preload="metadata"></video><span${nameAttr}>${escapeHtml(fileName)}</span></div>`;
+    }
+
+    return `<a class="${cardClass}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtml(url)}" alt="${escapeHtml(fileName)}" loading="lazy"><span${nameAttr}>${escapeHtml(fileName)}</span></a>`;
+}
+
+function renderProgressMedia(item, index) {
+    return renderMediaCard(item, index, {
+        cardClass: "progress-media-card",
+        fallbackName: "Progress Media"
+    });
 }
 
 
@@ -528,8 +774,8 @@ function renderPhotos(data) {
 ========================================================= */
 
 function renderProgressReports(data) {
-    const timeline = document.querySelector("#progressTimeline");
-    const empty = document.querySelector("#progressReportsEmpty");
+    const timeline = $("#progressTimeline");
+    const empty = $("#progressReportsEmpty");
     if (!timeline) return;
 
     const reports = Array.isArray(data.progress_reports)
@@ -549,136 +795,78 @@ function renderProgressReports(data) {
         const title = report.report_title || `Progress Update ${number}`;
         const media = Array.isArray(report.media) ? report.media : [];
 
-        return `
-            <article class="progress-item">
-                <div class="progress-marker">${escapeHtml(number)}</div>
-                <div class="progress-card">
-                    <div class="progress-card-header">
-                        <div>
-                            <div class="progress-kicker">Progress Update ${escapeHtml(number)}</div>
-                            <h3 class="progress-title">${escapeHtml(title)}</h3>
-                        </div>
-                        <div class="progress-meta">
-                            <span class="progress-status ${escapeHtml(report.status || "approved")}">
-                                ${escapeHtml(formatReportStatus(report.status || "approved"))}
-                            </span>
-                            <span class="progress-date">${escapeHtml(formatDate(report.submitted_at || report.created_at))}</span>
-                        </div>
-                    </div>
+        const statusKey = ["draft", "submitted", "approved", "rejected"].includes(report.status)
+            ? report.status
+            : "unknown";
 
-                    <div class="progress-grid">
-                        <div class="progress-field progress-field-full">
-                            <div class="report-label">Work Performed</div>
-                            <div class="report-value">${escapeHtml(report.work_performed || "—")}</div>
-                        </div>
-                        <div class="progress-field progress-field-full">
-                            <div class="report-label">Findings</div>
-                            <div class="report-value">${escapeHtml(report.findings || "—")}</div>
-                        </div>
-                        <div class="progress-field">
-                            <div class="report-label">Materials Used</div>
-                            <div class="report-value">${escapeHtml(report.materials_used || "—")}</div>
-                        </div>
-                        <div class="progress-field">
-                            <div class="report-label">Technician Notes</div>
-                            <div class="report-value">${escapeHtml(report.technician_notes || "—")}</div>
-                        </div>
-                        <div class="progress-field">
-                            <div class="report-label">Reported By</div>
-                            <div class="report-value report-writer-display">${escapeHtml(report.reported_by || "—")}</div>
-                        </div>
-                    </div>
+        const mediaHtml = media.length
+            ? `<div class="progress-media-section"><div class="progress-media-heading"><span>Progress Media</span><span>${media.length} ${media.length === 1 ? "file" : "files"}</span></div><div class="progress-media-grid">${media.map((item, i) => renderProgressMedia(item, i)).join("")}</div></div>`
+            : "";
 
-                    ${media.length ? `
-                        <div class="progress-media-section">
-                            <div class="progress-media-heading">
-                                <span>Progress Media</span>
-                                <span>${media.length} ${media.length === 1 ? "file" : "files"}</span>
-                            </div>
-                            <div class="progress-media-grid">
-                                ${media.map((item, mediaIndex) => renderProgressMedia(item, mediaIndex)).join("")}
-                            </div>
-                        </div>
-                    ` : ""}
+        const remarksHtml = report.review_remarks
+            ? `<div class="progress-review-remarks"><div class="report-label">Admin Remarks</div><div class="report-value">${escapeHtml(report.review_remarks)}</div></div>`
+            : "";
 
-                    ${report.review_remarks ? `
-                        <div class="progress-review-remarks">
-                            <div class="report-label">Admin Remarks</div>
-                            <div class="report-value">${escapeHtml(report.review_remarks)}</div>
-                        </div>
-                    ` : ""}
-                </div>
-            </article>
-        `;
+        return `<article class="progress-item"><div class="progress-marker">${escapeHtml(number)}</div><div class="progress-card"><div class="progress-card-header"><div><div class="progress-kicker">Progress Update ${escapeHtml(number)}</div><h3 class="progress-title">${escapeHtml(title)}</h3></div><div class="progress-meta"><span class="progress-status ${statusKey}">${escapeHtml(formatReportStatus(report.status))}</span><span class="progress-date">${escapeHtml(formatDate(report.submitted_at || report.created_at))}</span></div></div><div class="progress-grid"><div class="progress-field progress-field-full"><div class="report-label">Work Performed</div><div class="report-value">${escapeHtml(report.work_performed || "—")}</div></div><div class="progress-field progress-field-full"><div class="report-label">Findings</div><div class="report-value">${escapeHtml(report.findings || "—")}</div></div><div class="progress-field"><div class="report-label">Materials Used</div><div class="report-value">${escapeHtml(report.materials_used || "—")}</div></div><div class="progress-field"><div class="report-label">Technician Notes</div><div class="report-value">${escapeHtml(report.technician_notes || "—")}</div></div><div class="progress-field"><div class="report-label">Reported By</div><div class="report-value report-writer-display">${escapeHtml(report.reported_by || "—")}</div></div></div>${mediaHtml}${remarksHtml}</div></article>`;
     }).join("");
-}
-
-function renderProgressMedia(item, index) {
-    const rawPath = String(item.file_path || "").trim();
-    const url = rawPath.startsWith("http://") || rawPath.startsWith("https://")
-        ? rawPath
-        : `${BACKEND_BASE}${rawPath.startsWith("/") ? "" : "/"}${rawPath}`;
-    const type = item.media_type || (item.mime_type?.startsWith("video/") ? "video" : "image");
-    const fileName = item.file_name || `Progress Media ${index + 1}`;
-
-    if (type === "video") {
-        return `
-            <div class="progress-media-card">
-                <video src="${escapeHtml(url)}" controls preload="metadata"></video>
-                <span>${escapeHtml(fileName)}</span>
-            </div>
-        `;
-    }
-
-    return `
-        <a class="progress-media-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
-            <img src="${escapeHtml(url)}" alt="${escapeHtml(fileName)}" loading="lazy">
-            <span>${escapeHtml(fileName)}</span>
-        </a>
-    `;
 }
 
 
 /* =========================================================
-   TECHNICIAN REPORT
+   TECHNICIAN FINAL REPORT
 ========================================================= */
 
+function setReportBadge(statusKey, label) {
+    const badge = $("#technicianReportStatus");
+    if (!badge) return;
+    badge.textContent = label;
+    badge.className = `status-badge report-${statusKey}`;
+}
+
 function renderTechnicianReport(data) {
-    const card = document.querySelector("#technicianReportCard");
+    const card = $("#technicianReportCard");
     if (!card) return;
 
     const report = data.report || null;
     card.hidden = false;
 
-    const status = document.querySelector("#technicianReportStatus");
-    const work = document.querySelector("#reportWorkPerformed");
-    const findings = document.querySelector("#reportFindings");
-    const materials = document.querySelector("#reportMaterialsUsed");
-    const notes = document.querySelector("#reportTechnicianNotes");
-    const reportedBy = document.querySelector("#reportReportedBy");
+    const work = $("#reportWorkPerformed");
+    const findings = $("#reportFindings");
+    const materials = $("#reportMaterialsUsed");
+    const notes = $("#reportTechnicianNotes");
+    const reportedBy = $("#reportReportedBy");
 
     if (!report) {
-        if (status) status.textContent = "No report submitted";
+        setReportBadge("none", "No report submitted");
+
         if (work) work.textContent = "The technician has not submitted a work report yet.";
         if (findings) findings.textContent = "—";
         if (materials) materials.textContent = "—";
         if (notes) notes.textContent = "—";
         if (reportedBy) reportedBy.textContent = "—";
 
+        const remarksCard = $("#reportReviewRemarks");
+        if (remarksCard) remarksCard.hidden = true;
+
         renderCompletionMedia([]);
         hideReportReview();
         return;
     }
 
-    if (status) status.textContent = formatReportStatus(report.status);
+    const statusKey = ["draft", "submitted", "approved", "rejected"].includes(report.status)
+        ? report.status
+        : "none";
+
+    setReportBadge(statusKey, formatReportStatus(report.status));
+
     if (work) work.textContent = report.work_performed || "—";
     if (findings) findings.textContent = report.findings || "—";
     if (materials) materials.textContent = report.materials_used || "—";
     if (notes) notes.textContent = report.technician_notes || "—";
     if (reportedBy) reportedBy.textContent = report.reported_by || "—";
 
-    const remarksCard = document.querySelector("#reportReviewRemarks");
-    const remarksText = document.querySelector("#reportReviewRemarksText");
+    const remarksCard = $("#reportReviewRemarks");
+    const remarksText = $("#reportReviewRemarksText");
 
     if (remarksCard && remarksText) {
         if (report.review_remarks && String(report.review_remarks).trim()) {
@@ -697,14 +885,9 @@ function renderTechnicianReport(data) {
     setupReportReview(report);
 }
 
-
-/* =========================================================
-   COMPLETION MEDIA
-========================================================= */
-
 function renderCompletionMedia(media) {
-    const grid = document.querySelector("#completionMediaGrid");
-    const count = document.querySelector("#completionMediaCount");
+    const grid = $("#completionMediaGrid");
+    const count = $("#completionMediaCount");
     if (!grid) return;
 
     const items = Array.isArray(media) ? media : [];
@@ -714,41 +897,17 @@ function renderCompletionMedia(media) {
     }
 
     if (!items.length) {
-        grid.innerHTML = `
-            <div class="empty-state">
-                No completion photos or videos were uploaded.
-            </div>
-        `;
+        grid.innerHTML = `<div class="empty-state">No completion photos or videos were uploaded.</div>`;
         return;
     }
 
-    grid.innerHTML = items.map((item, index) => {
-        const rawPath = String(item.file_path || "").trim();
-
-        const url =
-            rawPath.startsWith("http://") || rawPath.startsWith("https://")
-                ? rawPath
-                : `${BACKEND_BASE}${rawPath.startsWith("/") ? "" : "/"}${rawPath}`;
-
-        const type = item.media_type || (item.mime_type?.startsWith("video/") ? "video" : "image");
-        const fileName = item.file_name || `Completion Media ${index + 1}`;
-
-        if (type === "video") {
-            return `
-                <div class="photo-card">
-                    <video src="${escapeHtml(url)}" controls preload="metadata"></video>
-                    <span class="photo-name">${escapeHtml(fileName)}</span>
-                </div>
-            `;
-        }
-
-        return `
-            <a class="photo-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
-                <img src="${escapeHtml(url)}" alt="${escapeHtml(fileName)}" loading="lazy">
-                <span class="photo-name">${escapeHtml(fileName)}</span>
-            </a>
-        `;
-    }).join("");
+    grid.innerHTML = items.map((item, index) =>
+        renderMediaCard(item, index, {
+            cardClass: "photo-card",
+            nameClass: "photo-name",
+            fallbackName: "Completion Media"
+        })
+    ).join("");
 }
 
 
@@ -756,13 +915,18 @@ function renderCompletionMedia(media) {
    REPORT REVIEW
 ========================================================= */
 
+function hideReportReview() {
+    const section = $("#reportReviewSection");
+    if (section) section.hidden = true;
+}
+
 function setupReportReview(report) {
-    const section = document.querySelector("#reportReviewSection");
-    const approveButton = document.querySelector("#approveReportButton");
-    const rejectButton = document.querySelector("#rejectReportButton");
-    const rejectForm = document.querySelector("#rejectForm");
-    const cancelRejectButton = document.querySelector("#cancelRejectButton");
-    const confirmRejectButton = document.querySelector("#confirmRejectButton");
+    const section = $("#reportReviewSection");
+    const approveButton = $("#approveReportButton");
+    const rejectButton = $("#rejectReportButton");
+    const rejectForm = $("#rejectForm");
+    const cancelRejectButton = $("#cancelRejectButton");
+    const confirmRejectButton = $("#confirmRejectButton");
 
     if (!section || !approveButton || !rejectButton) return;
 
@@ -773,37 +937,35 @@ function setupReportReview(report) {
     }
 
     section.hidden = false;
-
     if (rejectForm) rejectForm.hidden = true;
 
     approveButton.onclick = async () => {
         const confirmed = window.confirm(
-    "Are you sure you want to approve this technician report?\n\n" +
-    "The service request will be moved to Awaiting Payment. " +
-    "It will only become Completed after the final payment is verified."
-);
+            "Are you sure you want to approve this technician report?\n\n" +
+            "The service request will be moved to Awaiting Payment. " +
+            "It will only become Completed after the final payment is verified."
+        );
+
         if (!confirmed) return;
         await reviewTechnicianReport("approve");
     };
 
     rejectButton.onclick = () => {
         if (rejectForm) rejectForm.hidden = false;
-        const reason = document.querySelector("#rejectReason");
-        if (reason) reason.focus();
+        $("#rejectReason")?.focus();
     };
 
     if (cancelRejectButton) {
         cancelRejectButton.onclick = () => {
             if (rejectForm) rejectForm.hidden = true;
-            const reason = document.querySelector("#rejectReason");
+            const reason = $("#rejectReason");
             if (reason) reason.value = "";
         };
     }
 
     if (confirmRejectButton) {
         confirmRejectButton.onclick = async () => {
-            const reasonElement = document.querySelector("#rejectReason");
-            const reason = reasonElement?.value.trim() || "";
+            const reason = ($("#rejectReason")?.value || "").trim();
 
             if (!reason) {
                 alert("Please enter a rejection reason.");
@@ -815,17 +977,12 @@ function setupReportReview(report) {
     }
 }
 
-
-/* =========================================================
-   REVIEW REPORT API
-========================================================= */
-
 async function reviewTechnicianReport(action, reason = "") {
     if (!requestData) return;
 
-    const approveButton = document.querySelector("#approveReportButton");
-    const rejectButton = document.querySelector("#rejectReportButton");
-    const confirmRejectButton = document.querySelector("#confirmRejectButton");
+    const approveButton = $("#approveReportButton");
+    const rejectButton = $("#rejectReportButton");
+    const confirmRejectButton = $("#confirmRejectButton");
 
     if (approveButton) approveButton.disabled = true;
     if (rejectButton) rejectButton.disabled = true;
@@ -833,8 +990,8 @@ async function reviewTechnicianReport(action, reason = "") {
 
     if (action === "approve") {
         if (approveButton) approveButton.textContent = "Approving...";
-    } else {
-        if (confirmRejectButton) confirmRejectButton.textContent = "Rejecting...";
+    } else if (confirmRejectButton) {
+        confirmRejectButton.textContent = "Rejecting...";
     }
 
     try {
@@ -843,7 +1000,7 @@ async function reviewTechnicianReport(action, reason = "") {
             {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${getToken()}`,
+                    Authorization: `Bearer ${getToken()}`,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ action, reason })
@@ -851,7 +1008,8 @@ async function reviewTechnicianReport(action, reason = "") {
         );
 
         const result = await parseResponse(response);
-        await loadRequest();
+
+        await loadRequest({ silent: true });
         alert(result.message || "Report review completed.");
 
     } catch (error) {
@@ -875,36 +1033,402 @@ async function reviewTechnicianReport(action, reason = "") {
     }
 }
 
-function hideReportReview() {
-    const section = document.querySelector("#reportReviewSection");
-    if (section) section.hidden = true;
+
+/* =========================================================
+   INVOICE HELPERS
+========================================================= */
+
+/* Newest first, without relying on backend ordering. */
+function sortInvoices(invoices) {
+    return [...invoices].sort((a, b) => {
+        const timeA = new Date(a.created_at).getTime();
+        const timeB = new Date(b.created_at).getTime();
+        if (Number.isNaN(timeA) || Number.isNaN(timeB)) return 0;
+        return timeB - timeA;
+    });
+}
+
+/* The invoice currently in play = newest one that is not cancelled. */
+function getActiveInvoice(data) {
+    const invoices = Array.isArray(data?.invoices) ? data.invoices : [];
+    return sortInvoices(invoices).find(invoice => invoice.status !== "cancelled") || null;
 }
 
 
 /* =========================================================
-   STATUS
-   NOTE: #requestStatus is a real <select> in the HTML now.
-   We must never overwrite its innerHTML/textContent — that
-   was destroying its <option> list on every render before.
-   The current-status display lives in its own element,
-   #currentStatusBadge.
+   INVOICE SECTION
+========================================================= */
+
+function renderPaymentRow(payment) {
+    const proofUrl = resolveFileUrl(payment.payment_proof_url);
+    const status = payment.status || "pending";
+
+    const fileName = payment.payment_proof_name
+        ? `<span class="payment-file-name">${escapeHtml(payment.payment_proof_name)}</span>`
+        : "";
+
+    const meta = [
+        metaItem("Submitted", formatDate(payment.submitted_at)),
+        payment.verified_at ? metaItem("Verified", formatDate(payment.verified_at)) : "",
+        payment.remarks ? metaItem("Remarks", payment.remarks) : ""
+    ].join("");
+
+    const proofLink = proofUrl
+        ? `<div class="invoice-actions"><a class="invoice-link" href="${escapeHtml(proofUrl)}" target="_blank" rel="noopener noreferrer">View Payment Proof</a></div>`
+        : "";
+
+    const verifyActions = status === "pending"
+        ? `<div class="invoice-verify-actions"><button type="button" class="approve-button" data-verify-payment="${escapeHtml(payment.id)}">✓ Confirm Payment</button><button type="button" class="reject-button" data-reject-payment="${escapeHtml(payment.id)}">✕ Reject Payment</button></div>`
+        : "";
+
+    return `<div class="payment-row"><div class="payment-row-header"><div><strong>Payment Proof</strong>${fileName}</div><span class="payment-${escapeHtml(status)}">${escapeHtml(formatPaymentStatus(status))}</span></div><div class="invoice-meta-grid">${meta}</div>${proofLink}${verifyActions}</div>`;
+}
+
+function renderInvoiceSection(data) {
+    const container = $("#invoiceHistory");
+    const verificationPanel = $("#paymentVerificationPanel");
+    if (!container) return;
+
+    const invoices = sortInvoices(Array.isArray(data.invoices) ? data.invoices : []);
+    const active = getActiveInvoice(data);
+
+    if (!invoices.length) {
+        container.innerHTML = `<div class="empty-state">No final invoice has been uploaded yet.</div>`;
+    } else {
+        container.innerHTML = invoices.map(invoice => {
+            const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
+
+            const paymentHtml = payments.length
+                ? payments.map(renderPaymentRow).join("")
+                : `<div class="empty-state">No payment proof has been uploaded for this invoice.</div>`;
+
+            // Admin does not enter an amount, so hide amounts that are empty.
+            const meta = [
+                moneyValue(invoice.total_amount) > 0 ? metaItem("Invoice Total", moneyText(invoice.total_amount)) : "",
+                moneyValue(invoice.amount_paid) > 0 ? metaItem("Amount Paid", moneyText(invoice.amount_paid)) : "",
+                moneyValue(invoice.balance_due) > 0 ? metaItem("Balance Due", moneyText(invoice.balance_due)) : "",
+                metaItem("Created By", invoice.created_by_name || "—")
+            ].join("");
+
+            const invoiceUrl = resolveFileUrl(invoice.invoice_file_url);
+
+            const invoiceLink = invoiceUrl
+                ? `<div class="invoice-actions"><a class="invoice-link" href="${escapeHtml(invoiceUrl)}" target="_blank" rel="noopener noreferrer">View Final Invoice PDF</a></div>`
+                : "";
+
+            return `<div class="invoice-card"><div class="invoice-card-header"><div><h3>${escapeHtml(invoice.invoice_number || "Final Invoice")}</h3><small>Uploaded ${escapeHtml(formatDate(invoice.created_at))}</small></div><span class="invoice-status">${escapeHtml(formatInvoiceStatus(invoice.status))}</span></div><div class="invoice-meta-grid">${meta}</div>${invoiceLink}<div class="payment-list"><div class="payment-list-title">Customer Payment Proof</div>${paymentHtml}</div></div>`;
+        }).join("");
+    }
+
+    if (verificationPanel) {
+        const hasPendingPayment = invoices.some(invoice =>
+            Array.isArray(invoice.payments) &&
+            invoice.payments.some(payment => payment.status === "pending")
+        );
+
+        const show = hasPendingPayment && active?.status !== "paid";
+
+        verificationPanel.hidden = !show;
+        verificationPanel.innerHTML = show
+            ? `<div class="invoice-panel-title">Payment Verification</div><p class="invoice-help">Review the customer's payment proof above. Confirming the payment updates the invoice, and the service request is completed according to the payment verification result.</p>`
+            : "";
+    }
+
+    updateInvoiceFormState(data);
+    bindInvoicePaymentActions();
+}
+
+function updateInvoiceFormState(data) {
+    const active = getActiveInvoice(data);
+
+    const invoiceUploadPanel = $("#invoiceUploadPanel");
+    const paymentPanel = $("#paymentPanel");
+    const uploadPaymentButton = $("#uploadPaymentProofButton");
+
+    // Invoice upload: shown only while there is no active (non-cancelled) invoice.
+    if (invoiceUploadPanel) invoiceUploadPanel.hidden = Boolean(active);
+
+    // Payment proof upload: needs an active invoice that is not yet paid.
+    const paymentClosed = !active || active.status === "paid";
+
+    if (paymentPanel) paymentPanel.hidden = paymentClosed;
+    if (uploadPaymentButton) uploadPaymentButton.disabled = paymentClosed;
+}
+
+function showInvoiceMessage(id, message, error = false) {
+    const element = $(`#${id}`);
+    if (!element) return;
+
+    element.textContent = message;
+    element.className = `invoice-message ${error ? "error" : "success"}`;
+    element.hidden = false;
+}
+
+
+/* =========================================================
+   UPLOAD FINAL INVOICE
+========================================================= */
+
+async function uploadInvoice() {
+    const requestId = getRequestId();
+    const fileInput = $("#invoiceFile");
+    const file = fileInput?.files?.[0];
+    const button = $("#uploadInvoiceButton");
+
+    if (!requestId) {
+        showInvoiceMessage("invoiceUploadMessage", "Request ID is missing.", true);
+        return;
+    }
+
+    if (!file) {
+        showInvoiceMessage("invoiceUploadMessage", "Please select the final invoice PDF.", true);
+        return;
+    }
+
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+    if (!isPdf) {
+        showInvoiceMessage("invoiceUploadMessage", "Final invoice must be a PDF file.", true);
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        showInvoiceMessage("invoiceUploadMessage", "File is too large. Maximum size is 10 MB.", true);
+        return;
+    }
+
+    const confirmed = window.confirm(
+        "Upload this final invoice PDF?\n\n" +
+        "The invoice amount is already contained inside the PDF. " +
+        "No amount entry is required."
+    );
+
+    if (!confirmed) return;
+
+    // Only the PDF is uploaded. Admin does not enter an amount.
+    const form = new FormData();
+    form.append("invoice_file", file);
+
+    try {
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Uploading...";
+        }
+
+        showInvoiceMessage("invoiceUploadMessage", "Uploading final invoice...");
+
+        const response = await fetch(
+            `${API_BASE}/invoices/request/${encodeURIComponent(requestId)}`,
+            {
+                method: "POST",
+                headers: { Authorization: `Bearer ${getToken()}` },
+                body: form
+            }
+        );
+
+        const result = await parseResponse(response);
+
+        if (fileInput) fileInput.value = "";
+
+        await loadRequest({ silent: true });
+
+        showInvoiceMessage(
+            "invoiceUploadMessage",
+            result.message || "Final invoice uploaded successfully."
+        );
+
+    } catch (error) {
+        console.error("Upload invoice error:", error);
+        if (handleAuthError(error)) return;
+
+        showInvoiceMessage(
+            "invoiceUploadMessage",
+            error.message || "Unable to upload final invoice.",
+            true
+        );
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Upload Final Invoice";
+        }
+    }
+}
+
+
+/* =========================================================
+   UPLOAD PAYMENT PROOF
+========================================================= */
+
+async function uploadInvoicePaymentProof() {
+    const invoice = getActiveInvoice(requestData);
+    const fileInput = $("#paymentProofFile");
+    const file = fileInput?.files?.[0];
+    const button = $("#uploadPaymentProofButton");
+
+    if (!invoice) {
+        showInvoiceMessage("paymentUploadMessage", "Upload a final invoice first.", true);
+        return;
+    }
+
+    if (!file) {
+        showInvoiceMessage("paymentUploadMessage", "Please select the customer's payment proof.", true);
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        showInvoiceMessage("paymentUploadMessage", "File is too large. Maximum size is 10 MB.", true);
+        return;
+    }
+
+    const confirmed = window.confirm(
+        "Upload this payment proof?\n\n" +
+        "No payment amount or payment method is required."
+    );
+
+    if (!confirmed) return;
+
+    // Only the proof file is uploaded. No amount, no payment method.
+    const form = new FormData();
+    form.append("payment_proof", file);
+
+    try {
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Uploading...";
+        }
+
+        showInvoiceMessage("paymentUploadMessage", "Uploading payment proof...");
+
+        const response = await fetch(
+            `${API_BASE}/invoices/${encodeURIComponent(invoice.id)}/payment-proof`,
+            {
+                method: "POST",
+                headers: { Authorization: `Bearer ${getToken()}` },
+                body: form
+            }
+        );
+
+        const result = await parseResponse(response);
+
+        if (fileInput) fileInput.value = "";
+
+        await loadRequest({ silent: true });
+
+        showInvoiceMessage(
+            "paymentUploadMessage",
+            result.message || "Payment proof uploaded successfully."
+        );
+
+    } catch (error) {
+        console.error("Upload payment proof error:", error);
+        if (handleAuthError(error)) return;
+
+        showInvoiceMessage(
+            "paymentUploadMessage",
+            error.message || "Unable to upload payment proof.",
+            true
+        );
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Upload Payment Proof";
+        }
+    }
+}
+
+
+/* =========================================================
+   VERIFY / REJECT PAYMENT
+========================================================= */
+
+function bindInvoicePaymentActions() {
+    document.querySelectorAll("[data-verify-payment]").forEach(button => {
+        button.onclick = () => verifyInvoicePayment(button.dataset.verifyPayment, "approve");
+    });
+
+    document.querySelectorAll("[data-reject-payment]").forEach(button => {
+        button.onclick = () => verifyInvoicePayment(button.dataset.rejectPayment, "reject");
+    });
+}
+
+async function verifyInvoicePayment(paymentId, action) {
+    let remarks = "";
+
+    if (action === "reject") {
+        const input = window.prompt("Enter the reason for rejecting this payment proof:");
+
+        // Cancel (null) or empty reason → stop.
+        if (input === null || !input.trim()) return;
+        remarks = input.trim();
+
+    } else {
+        const input = window.prompt("Optional verification remark:", "Payment verified.");
+
+        // Cancel (null) must NOT approve the payment.
+        if (input === null) return;
+        remarks = input.trim();
+    }
+
+    const confirmed = window.confirm(
+        action === "approve" ? "Confirm this payment proof?" : "Reject this payment proof?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/invoices/payments/${encodeURIComponent(paymentId)}/verify`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${getToken()}`
+                },
+                body: JSON.stringify({ action, remarks: remarks || null })
+            }
+        );
+
+        const result = await parseResponse(response);
+
+        await loadRequest({ silent: true });
+        alert(result.message || "Payment updated successfully.");
+
+    } catch (error) {
+        console.error("Verify invoice payment error:", error);
+        if (handleAuthError(error)) return;
+        alert(error.message || "Unable to update payment.");
+    }
+}
+
+
+/* =========================================================
+   REQUEST STATUS
+   The backend status is the single source of truth: the
+   header badge, the status card and the dropdown all show
+   data.status.
 ========================================================= */
 
 function renderStatus(data) {
     const status = data.status || "pending";
     selectedStatus = status;
 
-    const currentBadge = document.querySelector("#currentStatusBadge");
+    const currentBadge = $("#currentStatusBadge");
 
     if (currentBadge) {
         currentBadge.textContent = formatStatus(status);
-        currentBadge.className =
-            `status-current-value status-badge ${statusClass(status)}`;
+        currentBadge.className = `status-current-value status-badge ${statusClass(status)}`;
     }
 
-    const select = document.querySelector("#requestStatus");
-
+    const select = $("#requestStatus");
     if (!select) return;
+
+    // Reset first, so options disabled by an earlier render don't stay disabled.
+    Array.from(select.options).forEach(option => {
+        option.disabled = false;
+        option.title = "";
+    });
 
     select.value = status;
 
@@ -912,278 +1436,178 @@ function renderStatus(data) {
         Array.isArray(data.invoices) &&
         data.invoices.some(invoice => invoice.status === "paid");
 
-    const hasInvoice =
-        Array.isArray(data.invoices) &&
-        data.invoices.length > 0;
-
-    const completedOption =
-        select.querySelector('option[value="completed"]');
-
-    const awaitingPaymentOption =
-        select.querySelector('option[value="awaiting_payment"]');
+    const completedOption = select.querySelector('option[value="completed"]');
+    const awaitingPaymentOption = select.querySelector('option[value="awaiting_payment"]');
 
     if (completedOption) {
-        completedOption.disabled =
-            !hasPaidInvoice && status !== "completed";
+        completedOption.disabled = !hasPaidInvoice && status !== "completed";
 
-        completedOption.title =
-            completedOption.disabled
-                ? "Complete the service request only after the final invoice payment has been verified."
-                : "";
+        if (completedOption.disabled) {
+            completedOption.title =
+                "Complete the service request only after the final invoice payment has been verified.";
+        }
     }
 
-    /*
-     * Awaiting Payment should normally happen after
-     * the technician report has been approved.
-     */
     if (awaitingPaymentOption) {
-        awaitingPaymentOption.disabled =
-            status === "completed" ||
-            status === "cancelled";
+        awaitingPaymentOption.disabled = status === "completed" || status === "cancelled";
     }
 
-    /*
-     * If the request is already completed,
-     * prevent moving it backwards manually.
-     */
+    // A completed request cannot be moved backwards manually.
     if (status === "completed") {
         Array.from(select.options).forEach(option => {
-            if (option.value !== "completed") {
-                option.disabled = true;
-            }
+            if (option.value !== "completed") option.disabled = true;
         });
-    }
-
-    /*
-     * If payment has already been verified,
-     * keep the request completed.
-     */
-    if (hasPaidInvoice) {
-        select.value = "completed";
-        selectedStatus = "completed";
-
-        if (currentBadge) {
-            currentBadge.textContent = "Completed";
-            currentBadge.className =
-                "status-current-value status-badge completed";
-        }
     }
 }
 
 function setupStatusSelect() {
-    const select = document.querySelector("#requestStatus");
+    const select = $("#requestStatus");
     if (!select) return;
 
     select.addEventListener("change", () => {
         selectedStatus = select.value;
 
-        const currentBadge = document.querySelector("#currentStatusBadge");
+        const currentBadge = $("#currentStatusBadge");
+
         if (currentBadge) {
             currentBadge.textContent = formatStatus(selectedStatus);
-            currentBadge.className = `status-current-value status-badge ${statusClass(selectedStatus)}`;
+            currentBadge.className =
+                `status-current-value status-badge ${statusClass(selectedStatus)}`;
         }
     });
 }
 
 
 /* =========================================================
-   LOAD TECHNICIANS
+   TECHNICIANS
 ========================================================= */
 
-/* =========================================================
-   LOAD TECHNICIANS
-========================================================= */
+function formatTechnicianLabel(technician) {
+    if (!technician) return "No technician assigned";
+
+    const name = technician.name || "";
+    const email = technician.email || "";
+
+    if (name && email) return `${name} — ${email}`;
+    return name || email || "Technician";
+}
+
+/* The technician list is fetched once and reused on every re-render. */
+async function fetchTechnicians() {
+    if (techniciansCache) return techniciansCache;
+
+    const response = await fetch(
+        `${API_BASE}/admin/technicians`,
+        { method: "GET", headers: { Authorization: `Bearer ${getToken()}` } }
+    );
+
+    const result = await parseResponse(response);
+    techniciansCache = Array.isArray(result.data) ? result.data : [];
+
+    return techniciansCache;
+}
+
+function addTechnicianOption(select, id, label) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = label;
+    select.appendChild(option);
+}
 
 async function loadTechnicians(data = requestData) {
-    const select = document.querySelector("#technicianSelect");
-
+    const select = $("#technicianSelect");
     if (!select) return;
 
     try {
         select.disabled = true;
-        select.innerHTML = `
-            <option value="">Loading technicians...</option>
-        `;
 
-        const response = await fetch(
-            `${API_BASE}/admin/technicians`,
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${getToken()}`
-                }
-            }
-        );
-
-        const result = await parseResponse(response);
-
-        const technicians =
-            Array.isArray(result.data)
-                ? result.data
-                : [];
-
-        const currentTechnicianId =
-            data?.technician?.id ||
-            data?.technician_id ||
-            "";
-
-        select.innerHTML = `
-            <option value="">
-                No technician assigned
-            </option>
-        `;
-
-        technicians.forEach(technician => {
-            const option = document.createElement("option");
-
-            option.value = technician.id;
-
-            option.textContent =
-                technician.name
-                    ? `${technician.name}${technician.email ? ` — ${technician.email}` : ""}`
-                    : technician.email || "Technician";
-
-            select.appendChild(option);
-        });
-
-        if (currentTechnicianId) {
-            select.value = currentTechnicianId;
-        } else {
-            select.value = "";
+        if (!techniciansCache) {
+            select.innerHTML = `<option value="">Loading technicians...</option>`;
         }
 
+        const technicians = await fetchTechnicians();
+
+        const current = data?.technician || null;
+        const currentId = current?.id || data?.technician_id || "";
+
+        select.innerHTML = "";
+        addTechnicianOption(select, "", "No technician assigned");
+
+        technicians.forEach(technician => {
+            addTechnicianOption(select, technician.id, formatTechnicianLabel(technician));
+        });
+
+        // If the assigned technician is missing from the list, keep them selectable
+        // so the current assignment is shown correctly.
+        if (currentId && !technicians.some(t => String(t.id) === String(currentId))) {
+            addTechnicianOption(
+                select,
+                currentId,
+                current ? formatTechnicianLabel(current) : "Currently assigned technician"
+            );
+        }
+
+        select.value = currentId || "";
         select.disabled = false;
 
         updateTechnicianDisplay();
 
     } catch (error) {
-        console.error(
-            "Unable to load technicians:",
-            error
-        );
-
+        console.error("Unable to load technicians:", error);
         if (handleAuthError(error)) return;
 
-        select.innerHTML = `
-            <option value="">
-                Unable to load technicians
-            </option>
-        `;
-
+        select.innerHTML = `<option value="">Unable to load technicians</option>`;
         select.disabled = false;
     }
 }
 
-
-/* =========================================================
-   TECHNICIAN DISPLAY
-========================================================= */
-
 function updateTechnicianDisplay() {
-    const select =
-        document.querySelector("#technicianSelect");
-
-    const currentName =
-        document.querySelector("#currentTechnicianName");
+    const select = $("#technicianSelect");
+    const currentName = $("#currentTechnicianName");
 
     if (!select || !currentName) return;
 
-    const selectedOption =
-        select.options[select.selectedIndex];
-
-    if (
-        !select.value ||
-        !selectedOption
-    ) {
-        currentName.textContent =
-            "No technician assigned";
-        return;
-    }
+    const selectedOption = select.options[select.selectedIndex];
 
     currentName.textContent =
-        selectedOption.textContent;
+        !select.value || !selectedOption
+            ? "No technician assigned"
+            : selectedOption.textContent;
 }
 
-
-/* =========================================================
-   ASSIGNMENT DISPLAY
-========================================================= */
-
 function renderAssignment(data) {
+    const technicianSelect = $("#technicianSelect");
+    const scheduledDate = $("#scheduledDate");
+    const scheduledTime = $("#scheduledTime");
+    const currentName = $("#currentTechnicianName");
 
-    const technicianSelect =
-        document.querySelector(
-            "#technicianSelect"
-        );
+    if (!technicianSelect) return;
 
-    const scheduledDate =
-        document.querySelector(
-            "#scheduledDate"
-        );
+    const technician = data?.technician || null;
+    const technicianId = technician?.id || data?.technician_id || "";
 
-    const scheduledTime =
-        document.querySelector(
-            "#scheduledTime"
-        );
+    technicianSelect.value = technicianId;
 
-    const currentName =
-        document.querySelector(
-            "#currentTechnicianName"
-        );
-
-    if (!technicianSelect) {
-        return;
-    }
-
-    const technician =
-        data?.technician || null;
-
-    const technicianId =
-        technician?.id ||
-        data?.technician_id ||
-        "";
-
-    /*
-     * Technician
-     */
-    technicianSelect.value =
-        technicianId;
-
-    /*
-     * Current technician display
-     */
+    // Same label format as the dropdown, so the name doesn't change on load.
     if (currentName) {
-
-        currentName.textContent =
-            technician?.name ||
-            technician?.email ||
-            "No technician assigned";
-
+        currentName.textContent = technician
+            ? formatTechnicianLabel(technician)
+            : "No technician assigned";
     }
 
-    /*
-     * Scheduled date
-     */
-    if (scheduledDate) {
+    if (scheduledDate) scheduledDate.value = toDateInputValue(data?.scheduled_date);
+    if (scheduledTime) scheduledTime.value = toTimeInputValue(data?.scheduled_time);
 
-        scheduledDate.value =
-            data?.scheduled_date ||
-            "";
+    if (techniciansCache) updateTechnicianDisplay();
+}
 
-    }
+function showAssignmentMessage(text, type = "") {
+    const message = $("#technicianAssignmentMessage");
+    if (!message) return;
 
-    /*
-     * Scheduled time
-     */
-    if (scheduledTime) {
-
-        scheduledTime.value =
-            data?.scheduled_time ||
-            "";
-
-    }
-
-    updateTechnicianDisplay();
+    message.hidden = false;
+    message.className = `assignment-message${type ? ` ${type}` : ""}`;
+    message.textContent = text;
 }
 
 
@@ -1192,11 +1616,8 @@ function renderAssignment(data) {
 ========================================================= */
 
 async function saveTechnicianAssignment() {
-
     if (!requestData) {
-        alert(
-            "Request information has not loaded yet."
-        );
+        alert("Request information has not loaded yet.");
         return;
     }
 
@@ -1207,223 +1628,130 @@ async function saveTechnicianAssignment() {
         return;
     }
 
-    const token = getToken();
-
-    if (!token) {
-        window.location.href = "login.html";
+    if (!getToken()) {
+        redirectToLogin();
         return;
     }
 
-    const technicianSelect =
-        document.querySelector("#technicianSelect");
+    const technicianSelect = $("#technicianSelect");
+    const scheduledDate = $("#scheduledDate");
+    const scheduledTime = $("#scheduledTime");
+    const button = $("#saveTechnicianButton");
 
-    const scheduledDate =
-        document.querySelector("#scheduledDate");
+    if (!technicianSelect) return;
 
-    const scheduledTime =
-        document.querySelector("#scheduledTime");
-
-    const button =
-        document.querySelector("#saveTechnicianButton");
-
-    const message =
-        document.querySelector(
-            "#technicianAssignmentMessage"
-        );
-
-    if (!technicianSelect) {
+    // If the list never loaded, the dropdown is empty and saving would
+    // wrongly remove the current technician.
+    if (!techniciansCache) {
+        alert("The technician list has not loaded. Please refresh the page and try again.");
         return;
     }
 
-    const technicianId =
-        technicianSelect.value || null;
+    const technicianId = technicianSelect.value || null;
+    const dateValue = scheduledDate?.value || "";
+    const timeValue = scheduledTime?.value || "";
+
+    if (technicianId && !dateValue) {
+        alert("Scheduled date is required when assigning a technician.");
+        scheduledDate?.focus();
+        return;
+    }
+
+    const technicianName = technicianId
+        ? (technicianSelect.selectedOptions?.[0]?.textContent || "Selected technician")
+        : "No technician assigned";
+
+    const confirmed = window.confirm(
+        "Confirm technician assignment?\n\n" +
+        `Technician: ${technicianName}\n` +
+        `Scheduled Date: ${dateValue || "Not scheduled"}\n` +
+        `Scheduled Time: ${timeValue || "Not specified"}`
+    );
+
+    if (!confirmed) return;
 
     /*
-     * A technician assignment requires a scheduled date.
+     * Status rules:
+     *  - Assigning from Pending/Assigned → Assigned.
+     *  - Any later stage (in progress, waiting parts, awaiting payment ...)
+     *    keeps its current status.
+     *  - Removing the technician from an Assigned job → back to Pending.
      */
-    if (technicianId && !scheduledDate?.value) {
+    const currentStatus = requestData.status;
+    let nextStatus = currentStatus;
 
-        alert(
-            "Scheduled date is required when assigning a technician."
-        );
-
-        scheduledDate?.focus();
-
-        return;
+    if (technicianId) {
+        if (currentStatus === "pending" || currentStatus === "assigned") {
+            nextStatus = "assigned";
+        }
+    } else if (currentStatus === "assigned") {
+        nextStatus = "pending";
     }
 
-    const technicianName =
-        technicianId
-            ? (
-                technicianSelect
-                    .selectedOptions?.[0]
-                    ?.textContent ||
-                "Selected technician"
-            )
-            : "No technician assigned";
-
-    const dateValue =
-        scheduledDate?.value || "";
-
-    const timeValue =
-        scheduledTime?.value || "";
-
-    const confirmed =
-        window.confirm(
-            "Confirm technician assignment?\n\n" +
-            `Technician: ${technicianName}\n` +
-            `Scheduled Date: ${dateValue || "Not scheduled"}\n` +
-            `Scheduled Time: ${timeValue || "Not specified"}`
-        );
-
-    if (!confirmed) {
-        return;
-    }
+    let savedLabel = null;
 
     try {
-
         if (button) {
             button.disabled = true;
             button.textContent = "Saving...";
         }
 
-        if (message) {
-            message.hidden = false;
-            message.className =
-                "assignment-message";
-            message.textContent =
-                "Saving technician assignment...";
-        }
+        showAssignmentMessage("Saving technician assignment...");
 
-        const response =
-            await fetch(
-                `${API_BASE}/admin/requests/${encodeURIComponent(requestId)}`,
-                {
-                    method: "PUT",
+        const response = await fetch(
+            `${API_BASE}/admin/requests/${encodeURIComponent(requestId)}`,
+            {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${getToken()}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    technician_id: technicianId,
+                    scheduled_date: dateValue || null,
+                    scheduled_time: timeValue || null,
+                    status: nextStatus
+                })
+            }
+        );
 
-                    headers: {
-                        "Authorization":
-                            `Bearer ${token}`,
+        await parseResponse(response);
+        await loadRequest({ silent: true });
 
-                        "Content-Type":
-                            "application/json"
-                    },
+        showAssignmentMessage(
+            technicianId
+                ? "Technician assigned and schedule saved successfully."
+                : "Technician assignment removed.",
+            "success"
+        );
 
-                    body: JSON.stringify({
-                        technician_id:
-                            technicianId,
-
-                        scheduled_date:
-                            dateValue || null,
-
-                        scheduled_time:
-                            timeValue || null,
-
-                        /*
-                         * When a technician is selected,
-                         * make sure the request is assigned.
-                         */
-                        status:
-                            technicianId
-                                ? "assigned"
-                                : requestData.status
-                    })
-                }
-            );
-
-        const result =
-            await parseResponse(response);
-
-        /*
-         * Update local data.
-         */
-        if (result.data) {
-
-            requestData = {
-                ...requestData,
-                ...result.data
-            };
-
-        }
-
-        /*
-         * Reload from database.
-         */
-        await loadRequest();
-
-        if (message) {
-
-            message.hidden = false;
-
-            message.className =
-                "assignment-message success";
-
-            message.textContent =
-                technicianId
-                    ? "Technician assigned and schedule saved successfully."
-                    : "Technician assignment removed.";
-
-        }
-
-        if (button) {
-
-            button.textContent =
-                technicianId
-                    ? "Technician Assigned ✓"
-                    : "Assignment Removed ✓";
-
-        }
+        savedLabel = technicianId ? "Technician Assigned ✓" : "Assignment Removed ✓";
 
     } catch (error) {
+        console.error("Save technician assignment error:", error);
+        if (handleAuthError(error)) return;
 
-        console.error(
-            "Save technician assignment error:",
-            error
-        );
-
-        if (handleAuthError(error)) {
-            return;
-        }
-
-        if (message) {
-
-            message.hidden = false;
-
-            message.className =
-                "assignment-message error";
-
-            message.textContent =
-                error.message ||
-                "Unable to save technician assignment.";
-
-        }
-
-        alert(
-            error.message ||
-            "Unable to save technician assignment."
-        );
+        showAssignmentMessage(error.message || "Unable to save technician assignment.", "error");
+        alert(error.message || "Unable to save technician assignment.");
 
     } finally {
-
         if (button) {
-
             button.disabled = false;
+            button.textContent = savedLabel || "Assign Technician";
 
-            setTimeout(() => {
-
-                button.textContent =
-                    "Assign Technician";
-
-            }, 1500);
-
+            if (savedLabel) {
+                setTimeout(() => { button.textContent = "Assign Technician"; }, 1500);
+            }
         }
-
     }
 }
 
 
 /* =========================================================
-   SAVE CHANGES
+   SAVE REQUEST STATUS
+   Sends ONLY the status. Technician changes go through the
+   separate "Assign Technician" button, so changing the status
+   can never remove or change the technician by accident.
 ========================================================= */
 
 async function saveChanges() {
@@ -1433,45 +1761,39 @@ async function saveChanges() {
     }
 
     const requestId = getRequestId();
+
     if (!requestId) {
         alert("Request ID is missing.");
         return;
     }
 
-    const token = getToken();
-    if (!token) {
-        window.location.href = "login.html";
+    if (!getToken()) {
+        redirectToLogin();
         return;
     }
 
     const status = selectedStatus || requestData.status || "pending";
+
     const hasPaidInvoice =
-    Array.isArray(requestData.invoices) &&
-    requestData.invoices.some(invoice => invoice.status === "paid");
+        Array.isArray(requestData.invoices) &&
+        requestData.invoices.some(invoice => invoice.status === "paid");
 
-if (status === "completed" && !hasPaidInvoice) {
-    alert(
-        "This service request cannot be marked as Completed until the final invoice payment has been verified."
-    );
-    return;
-}
-
-    const technicianSelect = document.querySelector("#technicianSelect");
-    const technicianId = technicianSelect && technicianSelect.value ? technicianSelect.value : null;
-
-    const button = document.querySelector("#saveButton");
-
-    const technicianText = technicianId
-        ? (technicianSelect.selectedOptions?.[0]?.textContent || "Assigned")
-        : "No technician assigned";
+    // Completed is only allowed after payment verification.
+    if (status === "completed" && !hasPaidInvoice) {
+        alert(
+            "This service request cannot be marked as Completed until the final invoice payment has been verified."
+        );
+        return;
+    }
 
     const confirmed = window.confirm(
-        "Save these changes?\n\n" +
-        `Status: ${formatStatus(status)}\n` +
-        `Technician: ${technicianText}`
+        "Save this status change?\n\n" +
+        `Status: ${formatStatus(status)}`
     );
 
     if (!confirmed) return;
+
+    const button = $("#saveButton");
 
     try {
         if (button) {
@@ -1484,33 +1806,16 @@ if (status === "completed" && !hasPaidInvoice) {
             {
                 method: "PUT",
                 headers: {
-                    "Authorization": `Bearer ${token}`,
+                    Authorization: `Bearer ${getToken()}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ status, technician_id: technicianId })
+                body: JSON.stringify({ status })
             }
         );
 
         const result = await parseResponse(response);
 
-        if (result.data) {
-            requestData = { ...requestData, ...result.data };
-        }
-
-        requestData.status = result.data?.status || status;
-        selectedStatus = requestData.status;
-
-        renderStatus(requestData);
-
-        if (technicianSelect) {
-            technicianSelect.value = technicianId || "";
-        }
-
-        if (button) button.textContent = "Saved ✓";
-
-        // Reload from the database to confirm the change persisted.
-        await loadRequest();
-
+        await loadRequest({ silent: true });
         alert(result.message || "Changes saved successfully.");
 
     } catch (error) {
@@ -1532,9 +1837,9 @@ if (status === "completed" && !hasPaidInvoice) {
 ========================================================= */
 
 function renderMeta(data) {
-    const created = document.querySelector("#createdAt");
-    const updated = document.querySelector("#updatedAt");
-    const completed = document.querySelector("#completedAt");
+    const created = $("#createdAt");
+    const updated = $("#updatedAt");
+    const completed = $("#completedAt");
 
     if (created) created.textContent = formatDate(data.created_at);
     if (updated) updated.textContent = formatDate(data.updated_at);
@@ -1543,468 +1848,23 @@ function renderMeta(data) {
 
 
 /* =========================================================
-   QUOTATION HISTORY
-========================================================= */
-
-function quotationMetaItem(label, value) {
-    return `
-        <div class="quotation-meta-item">
-            <div class="label">${escapeHtml(label)}</div>
-            <div class="value">${escapeHtml(value)}</div>
-        </div>
-    `;
-}
-
-function renderQuotationHistory(data) {
-    const container = document.querySelector("#quotationHistory");
-    const uploadSection = document.querySelector("#finalQuotationUpload");
-    if (!container) return;
-
-    const quotations = data.quotations || {};
-    const original = quotations.original || null;
-    const finalQuotation = quotations.final || null;
-
-    let html = "";
-
-    /* ORIGINAL QUOTATION */
-    html += `
-        <div class="quotation-history-item">
-            <div class="quotation-history-item-header">
-                <h3>${original ? escapeHtml(original.quotation_number || "Quotation") : "Original quotation — not created"}</h3>
-                ${original ? `<small>${escapeHtml(original.status || "draft")}</small>` : ""}
-            </div>
-            ${
-                original
-                    ? `
-                        <div class="quotation-meta">
-                            ${quotationMetaItem("Created", formatDate(original.created_at))}
-                            ${quotationMetaItem("Status", original.status || "—")}
-                            ${quotationMetaItem("Total", `RM ${Number(original.total || 0).toFixed(2)}`)}
-                        </div>
-                        ${
-                            original.quotation_file_url
-                                ? `<a class="quotation-button" href="${escapeHtml(original.quotation_file_url)}" target="_blank" rel="noopener noreferrer">View Original Quotation PDF</a>`
-                                : ""
-                        }
-                    `
-                    : `<div class="empty-state">No original quotation found.</div>`
-            }
-        </div>
-    `;
-
-    /* PAYMENT PROOF */
-    html += `
-        <div class="quotation-history-item">
-            <div class="quotation-history-item-header">
-                <h3>${original?.payment_proof_name ? escapeHtml(original.payment_proof_name) : "Payment proof — not uploaded"}</h3>
-                ${original?.payment_status ? `<small>${escapeHtml(original.payment_status)}</small>` : ""}
-            </div>
-            ${
-                original?.payment_proof_url
-                    ? `
-                        <div class="quotation-meta">
-                            ${quotationMetaItem("Status", original.payment_status || "proof_uploaded")}
-                            ${quotationMetaItem("Uploaded", formatDate(original.payment_proof_uploaded_at))}
-                        </div>
-                        <a class="payment-proof-button" href="${escapeHtml(original.payment_proof_url)}" target="_blank" rel="noopener noreferrer">View Payment Proof</a>
-                    `
-                    : `<div class="empty-state">No payment proof has been uploaded.</div>`
-            }
-        </div>
-    `;
-
-    /* FINAL QUOTATION */
-    html += `
-        <div class="quotation-history-item">
-            <div class="quotation-history-item-header">
-                <h3>${finalQuotation ? escapeHtml(finalQuotation.quotation_number || "Final Quotation") : "Final quotation — not uploaded"}</h3>
-                ${finalQuotation ? `<small>Final</small>` : ""}
-            </div>
-            ${
-                finalQuotation
-                    ? `
-                        <div class="quotation-meta">
-                            ${quotationMetaItem("Uploaded", formatDate(finalQuotation.created_at))}
-                            ${quotationMetaItem("Status", finalQuotation.status || "sent")}
-                        </div>
-                        ${
-                            finalQuotation.quotation_file_url
-                                ? `<a class="view-quotation-button" href="${escapeHtml(finalQuotation.quotation_file_url)}" target="_blank" rel="noopener noreferrer">View Final Quotation PDF</a>`
-                                : ""
-                        }
-                    `
-                    : `<div class="empty-state">No final quotation has been uploaded yet.</div>`
-            }
-        </div>
-    `;
-
-    container.innerHTML = html;
-
-    // Final quotation upload is only available once the job is completed.
-    if (uploadSection) {
-        uploadSection.hidden = data.status !== "completed";
-    }
-}
-
-
-/* =========================================================
-   FINAL INVOICE & PAYMENT
-========================================================= */
-
-function moneyValue(value) {
-    const number = Number(value || 0);
-    return Number.isFinite(number) ? number : 0;
-}
-
-function moneyText(value) {
-    return `RM ${moneyValue(value).toFixed(2)}`;
-}
-
-function renderInvoiceSection(data) {
-    const container = document.querySelector("#invoiceHistory");
-    const verificationPanel = document.querySelector("#paymentVerificationPanel");
-    if (!container) return;
-
-    const invoices = Array.isArray(data.invoices) ? data.invoices : [];
-    const latest = invoices[0] || null;
-
-    if (!invoices.length) {
-        container.innerHTML = `<div class="empty-state">No final invoice has been uploaded yet.</div>`;
-    } else {
-        container.innerHTML = invoices.map(invoice => {
-            const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
-            const paymentHtml = payments.length
-                ? payments.map(payment => `
-                    <div class="payment-row">
-                        <strong>${moneyText(payment.amount)}</strong>
-                        <span class="payment-${escapeHtml(payment.status)}">${escapeHtml(formatPaymentStatus(payment.status))}</span>
-                        <div class="invoice-meta-grid" style="margin-top:10px;">
-                            ${quotationMetaItem("Method", payment.payment_method || "—")}
-                            ${quotationMetaItem("Submitted", formatDate(payment.submitted_at))}
-                            ${quotationMetaItem("Verified", formatDate(payment.verified_at))}
-                            ${quotationMetaItem("Remarks", payment.remarks || "—")}
-                        </div>
-                        ${payment.payment_proof_url ? `<div class="invoice-actions"><a class="invoice-link" href="${escapeHtml(payment.payment_proof_url)}" target="_blank" rel="noopener noreferrer">View Payment Proof</a></div>` : ""}
-                        ${payment.status === "pending" ? `
-                            <div class="invoice-verify-actions">
-                                <button type="button" class="approve-button" data-verify-payment="${escapeHtml(payment.id)}">✓ Confirm Payment</button>
-                                <button type="button" class="reject-button" data-reject-payment="${escapeHtml(payment.id)}">✕ Reject Payment</button>
-                            </div>
-                        ` : ""}
-                    </div>
-                `).join("")
-                : `<div class="empty-state">No payment proof has been uploaded for this invoice.</div>`;
-
-            return `
-                <div class="invoice-card">
-                    <div class="invoice-card-header">
-                        <div>
-                            <h3>${escapeHtml(invoice.invoice_number || "Final Invoice")}</h3>
-                            <small>Uploaded ${escapeHtml(formatDate(invoice.created_at))}</small>
-                        </div>
-                        <span class="invoice-status">${escapeHtml(formatInvoiceStatus(invoice.status))}</span>
-                    </div>
-                    <div class="invoice-meta-grid">
-                        ${quotationMetaItem("Total", moneyText(invoice.total_amount))}
-                        ${quotationMetaItem("Already Paid", moneyText(invoice.amount_paid))}
-                        ${quotationMetaItem("Balance Due", moneyText(invoice.balance_due))}
-                        ${quotationMetaItem("Created By", invoice.created_by_name || "—")}
-                    </div>
-                    ${invoice.invoice_file_url ? `<div class="invoice-actions"><a class="invoice-link" href="${escapeHtml(invoice.invoice_file_url)}" target="_blank" rel="noopener noreferrer">View Final Invoice PDF</a></div>` : ""}
-                    <div class="payment-list"><strong>Payment Proof</strong>${paymentHtml}</div>
-                </div>
-            `;
-        }).join("");
-    }
-
-    if (verificationPanel) {
-        verificationPanel.hidden = !latest || latest.status === "paid";
-        verificationPanel.innerHTML = latest && latest.status !== "paid"
-            ? `<div class="invoice-panel-title">Payment Verification</div><p class="invoice-help">Confirming a payment updates the invoice balance. The service request becomes <strong>Completed</strong> only when the balance reaches RM 0.00.</p>`
-            : "";
-    }
-
-    bindInvoicePaymentActions();
-    updateInvoiceFormState(data);
-}
-
-function formatInvoiceStatus(status) {
-    const labels = {
-        draft: "Draft",
-        sent: "Sent",
-        payment_submitted: "Payment Submitted",
-        paid: "Paid",
-        cancelled: "Cancelled"
-    };
-    return labels[status] || status || "Unknown";
-}
-
-function formatPaymentStatus(status) {
-    const labels = { pending: "Pending Verification", verified: "Verified", rejected: "Rejected" };
-    return labels[status] || status || "Unknown";
-}
-
-function updateInvoiceFormState(data) {
-    const invoices = Array.isArray(data.invoices) ? data.invoices : [];
-    const latest = invoices[0] || null;
-    const paymentPanel = document.querySelector(".payment-panel");
-    const uploadPaymentButton = document.querySelector("#uploadPaymentProofButton");
-    if (paymentPanel) paymentPanel.hidden = !latest || latest.status === "paid";
-    if (uploadPaymentButton) uploadPaymentButton.disabled = !latest || latest.status === "paid";
-
-    const subtotal = document.querySelector("#invoiceSubtotal");
-    if (subtotal && !subtotal.value && data.quotations?.original?.total) {
-        subtotal.value = Number(data.quotations.original.total).toFixed(2);
-    }
-
-    updateInvoiceBalancePreview();
-}
-
-function updateInvoiceBalancePreview() {
-    const total = moneyValue(document.querySelector("#invoiceTotal")?.value);
-    const paid = moneyValue(document.querySelector("#invoiceAmountPaid")?.value);
-    const balance = Math.max(0, total - paid);
-    const element = document.querySelector("#invoiceBalancePreview");
-    if (element) element.textContent = moneyText(balance);
-}
-
-function showInvoiceMessage(id, message, error = false) {
-    const element = document.querySelector(`#${id}`);
-    if (!element) return;
-    element.textContent = message;
-    element.className = `invoice-message ${error ? "error" : "success"}`;
-    element.hidden = false;
-}
-
-async function uploadInvoice() {
-    const requestId = getRequestId();
-    const file = document.querySelector("#invoiceFile")?.files?.[0];
-    const total = moneyValue(document.querySelector("#invoiceTotal")?.value);
-    const paid = moneyValue(document.querySelector("#invoiceAmountPaid")?.value);
-    const button = document.querySelector("#uploadInvoiceButton");
-
-    if (!file) return showInvoiceMessage("invoiceUploadMessage", "Please select the final invoice PDF.", true);
-    if (!file.name.toLowerCase().endsWith(".pdf")) return showInvoiceMessage("invoiceUploadMessage", "Invoice must be a PDF file.", true);
-    if (file.size > 10 * 1024 * 1024) return showInvoiceMessage("invoiceUploadMessage", "File is too large. Maximum size is 10 MB.", true);
-    if (total <= 0) return showInvoiceMessage("invoiceUploadMessage", "Please enter the total invoice amount.", true);
-    if (paid > total) return showInvoiceMessage("invoiceUploadMessage", "Amount already paid cannot exceed the total.", true);
-
-    const form = new FormData();
-    form.append("invoice_file", file);
-    form.append("subtotal", document.querySelector("#invoiceSubtotal")?.value || "0");
-    form.append("discount", document.querySelector("#invoiceDiscount")?.value || "0");
-    form.append("tax", document.querySelector("#invoiceTax")?.value || "0");
-    form.append("additional_charge", document.querySelector("#invoiceAdditionalCharge")?.value || "0");
-    form.append("total_amount", total.toFixed(2));
-    form.append("amount_paid", paid.toFixed(2));
-
-    try {
-        if (button) { button.disabled = true; button.textContent = "Uploading..."; }
-        const response = await fetch(`${API_BASE}/invoices/request/${encodeURIComponent(requestId)}`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${getToken()}` },
-            body: form
-        });
-        const result = await parseResponse(response);
-        document.querySelector("#invoiceFile").value = "";
-        await loadRequest();
-        showInvoiceMessage("invoiceUploadMessage", result.message || "Final invoice uploaded successfully.");
-    } catch (error) {
-        if (handleAuthError(error)) return;
-        showInvoiceMessage("invoiceUploadMessage", error.message || "Unable to upload invoice.", true);
-    } finally {
-        if (button) { button.disabled = false; button.textContent = "Upload Final Invoice"; }
-    }
-}
-
-async function uploadInvoicePaymentProof() {
-    const invoice = (requestData?.invoices || [])[0];
-    const file = document.querySelector("#paymentProofFile")?.files?.[0];
-    const amount = moneyValue(document.querySelector("#paymentAmount")?.value);
-    const button = document.querySelector("#uploadPaymentProofButton");
-    if (!invoice) return showInvoiceMessage("paymentUploadMessage", "Upload a final invoice first.", true);
-    if (!file) return showInvoiceMessage("paymentUploadMessage", "Please select the customer's payment proof.", true);
-    if (amount <= 0) return showInvoiceMessage("paymentUploadMessage", "Please enter the payment amount.", true);
-    if (file.size > 10 * 1024 * 1024) return showInvoiceMessage("paymentUploadMessage", "File is too large. Maximum size is 10 MB.", true);
-
-    const form = new FormData();
-    form.append("payment_proof", file);
-    form.append("amount", amount.toFixed(2));
-    form.append("payment_method", document.querySelector("#paymentMethod")?.value || "");
-    try {
-        if (button) { button.disabled = true; button.textContent = "Uploading..."; }
-        const response = await fetch(`${API_BASE}/invoices/${encodeURIComponent(invoice.id)}/payment-proof`, {
-            method: "POST", headers: { Authorization: `Bearer ${getToken()}` }, body: form
-        });
-        const result = await parseResponse(response);
-        document.querySelector("#paymentProofFile").value = "";
-        document.querySelector("#paymentAmount").value = "";
-        await loadRequest();
-        showInvoiceMessage("paymentUploadMessage", result.message || "Payment proof uploaded successfully.");
-    } catch (error) {
-        if (handleAuthError(error)) return;
-        showInvoiceMessage("paymentUploadMessage", error.message || "Unable to upload payment proof.", true);
-    } finally {
-        if (button) { button.disabled = false; button.textContent = "Upload Payment Proof"; }
-    }
-}
-
-function bindInvoicePaymentActions() {
-    document.querySelectorAll("[data-verify-payment]").forEach(button => {
-        button.addEventListener("click", () => verifyInvoicePayment(button.dataset.verifyPayment, "approve"));
-    });
-    document.querySelectorAll("[data-reject-payment]").forEach(button => {
-        button.addEventListener("click", () => verifyInvoicePayment(button.dataset.rejectPayment, "reject"));
-    });
-}
-
-async function verifyInvoicePayment(paymentId, action) {
-    const remarks = action === "reject"
-        ? window.prompt("Enter the reason for rejecting this payment proof:")
-        : window.prompt("Optional verification remark:", "Payment verified.");
-    if (action === "reject" && !remarks) return;
-    if (!window.confirm(action === "approve" ? "Confirm this payment proof?" : "Reject this payment proof?")) return;
-
-    try {
-        const response = await fetch(`${API_BASE}/invoices/payments/${encodeURIComponent(paymentId)}/verify`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
-            body: JSON.stringify({ action, remarks: remarks || null })
-        });
-        const result = await parseResponse(response);
-        await loadRequest();
-        alert(result.message || "Payment updated successfully.");
-    } catch (error) {
-        if (handleAuthError(error)) return;
-        alert(error.message || "Unable to update payment.");
-    }
-}
-
-/* =========================================================
-   FINAL QUOTATION MESSAGE
-========================================================= */
-
-function showFinalQuotationMessage(message, isError = false) {
-    const element = document.querySelector("#finalQuotationMessage");
-    if (!element) return;
-
-    element.textContent = message;
-    element.className = `quotation-upload-message ${isError ? "error" : "success"}`;
-    element.hidden = false;
-}
-
-
-/* =========================================================
-   UPLOAD FINAL QUOTATION
-========================================================= */
-
-async function uploadFinalQuotation() {
-    const requestId = getRequestId();
-    const fileInput = document.querySelector("#finalQuotationFile");
-    const button = document.querySelector("#uploadFinalQuotationButton");
-
-    if (!requestId) {
-        showFinalQuotationMessage("Request ID is missing.", true);
-        return;
-    }
-
-    if (!fileInput || !fileInput.files.length) {
-        showFinalQuotationMessage("Please select a PDF file.", true);
-        return;
-    }
-
-    const file = fileInput.files[0];
-
-    const isPdf =
-        file.type === "application/pdf" ||
-        file.name.toLowerCase().endsWith(".pdf");
-
-    if (!isPdf) {
-        showFinalQuotationMessage("Final quotation must be a PDF file.", true);
-        return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-        showFinalQuotationMessage("File is too large. Maximum size is 10 MB.", true);
-        return;
-    }
-
-    const existingFinal = Boolean(requestData?.quotations?.final);
-
-    const confirmed = window.confirm(
-        existingFinal
-            ? "A final quotation already exists. Uploading this file will replace the existing final quotation. Continue?"
-            : "Upload this final quotation?"
-    );
-
-    if (!confirmed) return;
-
-    const formData = new FormData();
-    formData.append("quotation_file", file);
-
-    try {
-        if (button) {
-            button.disabled = true;
-            button.textContent = "Uploading...";
-        }
-
-        showFinalQuotationMessage("Uploading final quotation...", false);
-
-        const response = await fetch(
-            `${API_BASE}/quotations/${encodeURIComponent(requestId)}/final-quotation`,
-            {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${getToken()}` },
-                body: formData
-            }
-        );
-
-        const result = await parseResponse(response);
-
-        fileInput.value = "";
-        await loadRequest();
-
-        showFinalQuotationMessage(result.message || "Final quotation uploaded successfully.", false);
-
-    } catch (error) {
-        console.error("Upload final quotation error:", error);
-        if (handleAuthError(error)) return;
-        showFinalQuotationMessage(error.message || "Unable to upload final quotation.", true);
-
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.textContent = "Upload Final Quotation";
-        }
-    }
-}
-
-
-/* =========================================================
-   LOGOUT
+   LOGOUT / ADMIN INFO
 ========================================================= */
 
 function logout() {
-    localStorage.removeItem("securepro_admin_token");
-    localStorage.removeItem("securepro_admin_user");
-    window.location.href = "login.html";
+    clearSession();
+    redirectToLogin();
 }
-
-
-/* =========================================================
-   ADMIN INFORMATION
-========================================================= */
 
 function loadAdminInfo() {
     try {
         const raw = localStorage.getItem("securepro_admin_user");
         if (!raw) return;
 
-        const user = JSON.parse(raw);
-        const name = user.name || "Admin";
+        const name = JSON.parse(raw).name || "Admin";
 
-        const sidebar = document.querySelector("#sidebarAdminName");
-        const topbar = document.querySelector("#topbarAdminName");
+        const sidebar = $("#sidebarAdminName");
+        const topbar = $("#topbarAdminName");
 
         if (sidebar) sidebar.textContent = name;
         if (topbar) topbar.textContent = name;
@@ -2025,45 +1885,12 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAdminInfo();
     setupStatusSelect();
 
-    const saveButton = document.querySelector("#saveButton");
-    if (saveButton) saveButton.addEventListener("click", saveChanges);
-
-    const logoutButton = document.querySelector("#logoutButton");
-    if (logoutButton) logoutButton.addEventListener("click", logout);
-
-    const uploadButton = document.querySelector("#uploadFinalQuotationButton");
-    if (uploadButton) uploadButton.addEventListener("click", uploadFinalQuotation);
-
-    const uploadInvoiceButton = document.querySelector("#uploadInvoiceButton");
-    if (uploadInvoiceButton) uploadInvoiceButton.addEventListener("click", uploadInvoice);
-
-    const uploadPaymentProofButton = document.querySelector("#uploadPaymentProofButton");
-    if (uploadPaymentProofButton) uploadPaymentProofButton.addEventListener("click", uploadInvoicePaymentProof);
-
-    ["#invoiceTotal", "#invoiceAmountPaid"].forEach(selector => {
-        const input = document.querySelector(selector);
-        if (input) input.addEventListener("input", updateInvoiceBalancePreview);
-    });
-
-    const saveTechnicianButton =
-    document.querySelector("#saveTechnicianButton");
-
-if (saveTechnicianButton) {
-    saveTechnicianButton.addEventListener(
-        "click",
-        saveTechnicianAssignment
-    );
-}
-
-const technicianSelect =
-    document.querySelector("#technicianSelect");
-
-if (technicianSelect) {
-    technicianSelect.addEventListener(
-        "change",
-        updateTechnicianDisplay
-    );
-}
+    $("#saveButton")?.addEventListener("click", saveChanges);
+    $("#logoutButton")?.addEventListener("click", logout);
+    $("#uploadInvoiceButton")?.addEventListener("click", uploadInvoice);
+    $("#uploadPaymentProofButton")?.addEventListener("click", uploadInvoicePaymentProof);
+    $("#saveTechnicianButton")?.addEventListener("click", saveTechnicianAssignment);
+    $("#technicianSelect")?.addEventListener("change", updateTechnicianDisplay);
 
     loadRequest();
 });

@@ -544,7 +544,141 @@ function renderCustomer(data) {
     `;
 
 }
+/* =========================================================
+   QUESTION DISPLAY LABEL
+========================================================= */
 
+function getQuestionDisplayLabel(answer) {
+
+    /*
+     * Use the backend English question first.
+     */
+
+if (
+    answer.question?.en &&
+    String(answer.question.en).trim() &&
+    String(answer.question.en).trim().toLowerCase() !== "customer requirement"
+) {
+
+    return answer.question.en;
+
+}
+
+
+    const code =
+        String(
+            answer.question_code || ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    /*
+     * Known SecurePro question labels.
+     */
+
+    const labels = {
+
+        location:
+            "Installation Location",
+
+        installation_location:
+            "Installation Location",
+
+        camera_location:
+            "Camera Location",
+
+        light_type:
+            "Camera Light Type",
+
+        camera_light:
+            "Camera Light Type",
+
+        camera_light_type:
+            "Camera Light Type",
+
+        connection_type:
+            "Installation Type",
+
+        installation_type:
+            "Installation Type",
+
+        wiring:
+            "Installation Type",
+
+        camera_quantity:
+            "Camera Quantity",
+
+        quantity:
+            "Quantity",
+
+        camera_resolution:
+            "Camera Resolution",
+
+        resolution:
+            "Camera Resolution",
+
+        equipment:
+            "Additional Equipment",
+
+        additional_equipment:
+            "Additional Equipment",
+
+        alarm_type:
+            "Alarm Type",
+
+        alarm:
+            "Alarm Type",
+
+        coverage:
+            "Coverage Area",
+
+        coverage_area:
+            "Coverage Area",
+
+        areas:
+            "Coverage Area",
+
+        internet:
+            "Internet Availability",
+
+        internet_available:
+            "Internet Availability",
+
+        site_visit:
+            "Site Visit",
+
+        request_site_visit:
+            "Site Visit"
+
+    };
+
+
+    if (labels[code]) {
+
+        return labels[code];
+
+    }
+
+
+    /*
+     * Generic fallback:
+     *
+     * camera_resolution
+     *       ↓
+     * Camera Resolution
+     */
+
+    if (code) {
+
+        return formatLabel(code);
+
+    }
+
+
+    return "Customer Requirement";
+
+}
 /* =========================================================
    CUSTOMER ANSWERS
 ========================================================= */
@@ -552,21 +686,16 @@ function renderCustomer(data) {
 function renderAnswers(data) {
 
     const container =
-        document.querySelector(
-            "#answersGrid"
-        );
-
+        document.querySelector("#answersGrid");
 
     if (!container) {
         return;
     }
 
-
     const answers =
         Array.isArray(data.answers)
             ? data.answers
             : [];
-
 
     if (!answers.length) {
 
@@ -589,101 +718,76 @@ function renderAnswers(data) {
         return;
     }
 
-
     container.innerHTML =
         answers
-            .map(
-                (answer, index) => {
+            .map((answer, index) => {
 
-                    const question =
-                        answer.question?.en ||
-                        answer.question_code ||
-                        "Customer Requirement";
+                const question =
+                    getQuestionDisplayLabel(answer);
 
+                const value =
+                    getAnswerDisplayValue(answer);
 
-                    const value =
-                        getAnswerDisplayValue(
-                            answer
-                        );
+                const formattedValue =
+                    formatAnswerForDisplay(
+                        value
+                    );
 
+                return `
 
-                    return `
+                    <article class="answer-item">
 
-                        <article
-                            class="answer-item"
-                        >
+                        <div class="answer-index">
 
-                            <div class="answer-index">
+                            ${String(index + 1).padStart(2, "0")}
 
-                                ${String(
-                        index + 1
-                    ).padStart(
-                        2,
-                        "0"
-                    )}
+                        </div>
 
-                            </div>
+                        <div class="answer-content">
 
+                            <div class="answer-question">
 
-                            <div class="answer-content">
-
-                                <div class="answer-question">
-
-                                    ${escapeHtml(
-                        question
-                    )}
-
-                                </div>
-
-
-                                ${answer.description?.en
-                            ? `
-                                            <div
-                                                class="answer-description"
-                                            >
-
-                                                ${escapeHtml(
-                                answer.description.en
-                            )}
-
-                                            </div>
-                                        `
-                            : ""
-                        }
-
-
-                                <div class="answer-value">
-
-                                    ${escapeHtml(
-                            value
-                        )}
-
-                                </div>
-
-
-                                ${answer.unit
-                            ? `
-                                            <div
-                                                class="answer-unit"
-                                            >
-
-                                                ${escapeHtml(
-                                formatUnit(answer.unit)
-                            )}
-
-                                            </div>
-                                        `
-                            : ""
-                        }
+                                ${escapeHtml(question)}
 
                             </div>
 
-                        </article>
+                            ${
+                                answer.description?.en
+                                    ? `
+                                        <div class="answer-description">
+                                            ${escapeHtml(
+                                                answer.description.en
+                                            )}
+                                        </div>
+                                    `
+                                    : ""
+                            }
 
-                    `;
+                            <div class="answer-value">
 
-                }
-            )
+                                ${formattedValue}
+
+                            </div>
+
+                            ${
+                                answer.unit
+                                    ? `
+                                        <div class="answer-unit">
+                                            ${escapeHtml(
+                                                formatUnit(answer.unit)
+                                            )}
+                                        </div>
+                                    `
+                                    : ""
+                            }
+
+                        </div>
+
+                    </article>
+
+                `;
+
+            })
             .join("");
 
 }
@@ -753,6 +857,32 @@ function formatUnit(unit) {
 }
 
 /* =========================================================
+   FORMAT LABEL
+========================================================= */
+
+function formatLabel(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+
+        return "";
+
+    }
+
+    return String(value)
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, letter =>
+            letter.toUpperCase()
+        );
+
+}
+
+/* =========================================================
    GET ANSWER DISPLAY VALUE
 ========================================================= */
 
@@ -760,7 +890,7 @@ function getAnswerDisplayValue(answer) {
 
     /*
      * ------------------------------------------------------
-     * 1. COUNTER
+     * 1. COUNTER / JSON OBJECT
      * ------------------------------------------------------
      */
 
@@ -772,39 +902,21 @@ function getAnswerDisplayValue(answer) {
         const counterValue =
             answer.text_value;
 
+        const parsed =
+            parseJsonValue(counterValue);
 
-        if (counterValue) {
+        if (
+            parsed &&
+            typeof parsed === "object" &&
+            !Array.isArray(parsed)
+        ) {
 
-            try {
-
-                const values =
-                    typeof counterValue === "string"
-                        ? JSON.parse(counterValue)
-                        : counterValue;
-
-
-                if (
-                    values &&
-                    typeof values === "object" &&
-                    !Array.isArray(values)
-                ) {
-
-                    return Object.entries(
-                        values
-                    )
-                        .map(
-                            ([key, value]) =>
-                                `${formatLabel(key)}: ${value}`
-                        )
-                        .join(" • ");
-
-                }
-
-            } catch (error) {
-
-                // Continue to normal answer handling.
-
-            }
+            return Object.entries(parsed)
+                .map(
+                    ([key, value]) =>
+                        `${formatLabel(key)}: ${value}`
+                )
+                .join(" • ");
 
         }
 
@@ -814,14 +926,6 @@ function getAnswerDisplayValue(answer) {
     /*
      * ------------------------------------------------------
      * 2. SELECTED OPTIONS
-     *
-     * Supports both:
-     *
-     * option.label.en
-     *
-     * and
-     *
-     * option.option_label_en
      * ------------------------------------------------------
      */
 
@@ -832,19 +936,17 @@ function getAnswerDisplayValue(answer) {
 
         const optionValues =
             answer.options
-                .map(
-                    option => {
+                .map(option => {
 
-                        return (
-                            option.label?.en ||
-                            option.option_label_en ||
-                            option.value ||
-                            option.option_value ||
-                            ""
-                        );
+                    return (
+                        option.label?.en ||
+                        option.option_label_en ||
+                        option.value ||
+                        option.option_value ||
+                        ""
+                    );
 
-                    }
-                )
+                })
                 .filter(Boolean);
 
 
@@ -856,7 +958,7 @@ function getAnswerDisplayValue(answer) {
 
         if (uniqueOptions.length > 0) {
 
-            return uniqueOptions.join(", ");
+            return uniqueOptions.join(" • ");
 
         }
 
@@ -866,14 +968,6 @@ function getAnswerDisplayValue(answer) {
     /*
      * ------------------------------------------------------
      * 3. answer.answer
-     *
-     * Backend may already return:
-     *
-     * "Home, Home"
-     *
-     * Normalize it to:
-     *
-     * "Home"
      * ------------------------------------------------------
      */
 
@@ -883,6 +977,47 @@ function getAnswerDisplayValue(answer) {
         String(answer.answer).trim() !== ""
     ) {
 
+        const parsed =
+            parseJsonValue(
+                answer.answer
+            );
+
+
+        /*
+         * JSON object
+         */
+
+        if (
+            parsed &&
+            typeof parsed === "object" &&
+            !Array.isArray(parsed)
+        ) {
+
+            return Object.entries(parsed)
+                .map(
+                    ([key, value]) =>
+                        `${formatLabel(key)}: ${value}`
+                )
+                .join(" • ");
+
+        }
+
+
+        /*
+         * JSON array
+         */
+
+        if (Array.isArray(parsed)) {
+
+            return removeDuplicateValues(
+                parsed.map(value =>
+                    formatValueText(value)
+                )
+            ).join(" • ");
+
+        }
+
+
         return normalizeAnswerText(
             answer.answer
         );
@@ -891,10 +1026,10 @@ function getAnswerDisplayValue(answer) {
 
 
     /*
- * ------------------------------------------------------
- * 4. NUMBER
- * ------------------------------------------------------
- */
+     * ------------------------------------------------------
+     * 4. NUMBER
+     * ------------------------------------------------------
+     */
 
     if (
         answer.number_value !== null &&
@@ -902,18 +1037,20 @@ function getAnswerDisplayValue(answer) {
     ) {
 
         const rawNumber =
-            Number(answer.number_value);
+            Number(
+                answer.number_value
+            );
+
 
         const questionCode =
             String(
                 answer.question_code || ""
-            ).toLowerCase();
+            )
+                .toLowerCase();
 
-        /*
-         * Measurement / size fields
-         * can contain decimal values.
-         */
+
         const decimalFields = [
+
             "arm_length",
             "pump_height",
             "pipe_length",
@@ -922,14 +1059,18 @@ function getAnswerDisplayValue(answer) {
             "height",
             "size",
             "dimension"
+
         ];
+
 
         const isDecimalField =
             decimalFields.includes(
                 questionCode
             );
 
+
         let numberValue;
+
 
         if (!Number.isNaN(rawNumber)) {
 
@@ -958,10 +1099,12 @@ function getAnswerDisplayValue(answer) {
 
         }
 
+
         const unit =
             formatUnit(
                 answer.unit
             );
+
 
         if (unit) {
 
@@ -969,7 +1112,9 @@ function getAnswerDisplayValue(answer) {
 
         }
 
+
         return numberValue;
+
     }
 
 
@@ -985,6 +1130,47 @@ function getAnswerDisplayValue(answer) {
         String(answer.text_value).trim() !== ""
     ) {
 
+        const parsed =
+            parseJsonValue(
+                answer.text_value
+            );
+
+
+        /*
+         * JSON object stored inside text_value
+         */
+
+        if (
+            parsed &&
+            typeof parsed === "object" &&
+            !Array.isArray(parsed)
+        ) {
+
+            return Object.entries(parsed)
+                .map(
+                    ([key, value]) =>
+                        `${formatLabel(key)}: ${value}`
+                )
+                .join(" • ");
+
+        }
+
+
+        /*
+         * JSON array
+         */
+
+        if (Array.isArray(parsed)) {
+
+            return removeDuplicateValues(
+                parsed.map(value =>
+                    formatValueText(value)
+                )
+            ).join(" • ");
+
+        }
+
+
         return normalizeAnswerText(
             answer.text_value
         );
@@ -992,16 +1178,242 @@ function getAnswerDisplayValue(answer) {
     }
 
 
-    /*
-     * ------------------------------------------------------
-     * 6. EMPTY
-     * ------------------------------------------------------
-     */
-
     return "Not specified";
 
 }
 
+/* =========================================================
+   PARSE JSON VALUE
+========================================================= */
+
+function parseJsonValue(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return null;
+
+    }
+
+
+    if (
+        typeof value === "object"
+    ) {
+
+        return value;
+
+    }
+
+
+    const text =
+        String(value).trim();
+
+
+    if (
+        !text.startsWith("{") &&
+        !text.startsWith("[")
+    ) {
+
+        return null;
+
+    }
+
+
+    try {
+
+        return JSON.parse(text);
+
+    } catch (error) {
+
+        return null;
+
+    }
+
+}
+
+
+/* =========================================================
+   FORMAT VALUE TEXT
+========================================================= */
+
+function formatValueText(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    if (
+        typeof value === "object"
+    ) {
+
+        return Object.entries(value)
+            .map(
+                ([key, item]) =>
+                    `${formatLabel(key)}: ${item}`
+            )
+            .join(" • ");
+
+    }
+
+
+    return formatReadableValue(
+        String(value)
+    );
+
+}
+
+
+/* =========================================================
+   FORMAT READABLE VALUE
+========================================================= */
+
+function formatReadableValue(value) {
+
+    if (!value) {
+
+        return "Not specified";
+
+    }
+
+
+    let result =
+        String(value)
+            .trim()
+            .replace(/[_-]+/g, " ")
+            .replace(/\s+/g, " ");
+
+
+    /*
+     * Special formatting for common technical values.
+     */
+
+    result =
+        result.replace(
+            /\b1080p\b/gi,
+            "1080P"
+        );
+
+
+    result =
+        result.replace(
+            /\b2mp\b/gi,
+            "2MP"
+        );
+
+
+    result =
+        result.replace(
+            /\b4u\b/gi,
+            "4U"
+        );
+
+
+    /*
+     * Title case only when the value
+     * is a simple technical identifier.
+     */
+
+    if (
+        /^[a-z0-9 ]+$/i.test(result)
+    ) {
+
+        result =
+            result.replace(
+                /\b[a-z]/g,
+                letter =>
+                    letter.toUpperCase()
+            );
+
+    }
+
+
+    return result;
+
+}
+
+
+/* =========================================================
+   FORMAT ANSWER FOR HTML
+========================================================= */
+
+function formatAnswerForDisplay(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        String(value).trim() === ""
+    ) {
+
+        return `
+            <span class="answer-value-empty">
+                Not specified
+            </span>
+        `;
+
+    }
+
+
+    const text =
+        String(value).trim();
+
+
+    /*
+     * Multiple values separated by bullets.
+     */
+
+    if (text.includes(" • ")) {
+
+        const parts =
+            text
+                .split(" • ")
+                .map(part => part.trim())
+                .filter(Boolean);
+
+
+        return `
+
+            <div class="answer-value-list">
+
+                ${parts
+                    .map(
+                        part => `
+                            <span class="answer-value-chip">
+                                ${escapeHtml(
+                                    formatReadableValue(part)
+                                )}
+                            </span>
+                        `
+                    )
+                    .join("")}
+
+            </div>
+
+        `;
+
+    }
+
+
+    return `
+
+        <span class="answer-value-main">
+
+            ${escapeHtml(
+                formatReadableValue(text)
+            )}
+
+        </span>
+
+    `;
+
+}
 
 /* =========================================================
    NORMALIZE ANSWER TEXT
