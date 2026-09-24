@@ -29,3 +29,6 @@ database/securepro-data.sql
 # Backup files
 *.backup
 *.bak.DS_Store
+.DS_Store
+*.zip
+*_backup_*.sql

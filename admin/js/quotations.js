@@ -55,8 +55,15 @@ const notesInput =
 const proofInput =
     $("#paymentProofFile");
 
+const quotationJobList =
+    $("#quotationJobList");
+
+const quotationJobCount =
+    $("#quotationJobCount");
 
 let quotations = [];
+
+let serviceRequests = [];
 
 let proofQuotationId =
     null;
@@ -1171,11 +1178,14 @@ async function loadQuotations() {
         if (!result) return;
 
 
-        quotations =
-            result.data || [];
+       quotations =
+    Array.isArray(result.data)
+        ? result.data
+        : [];
 
 
-        renderQuotations();
+renderQuotations();
+renderQuotationJobQueue();
 
     } catch (error) {
 
@@ -1211,6 +1221,145 @@ async function loadQuotations() {
 
 }
 
+/* =========================================================
+  QUOTATION JOB QUEUE
+========================================================= */
+
+function getRequestCustomerName(request) {
+    return (
+        request?.customer?.name ||
+        request?.customer_name ||
+        request?.customer?.full_name ||
+        "Unknown customer"
+    );
+}
+
+function getRequestServiceName(request) {
+    return (
+        request?.service_name ||
+        request?.service?.name ||
+        request?.service?.title ||
+        request?.service_type ||
+        request?.serviceType ||
+        "Service request"
+    );
+}
+
+function getRequestSubmittedDate(request) {
+    return (
+        request?.created_at ||
+        request?.submitted_at ||
+        request?.request_date ||
+        request?.createdAt ||
+        null
+    );
+}
+
+function renderQuotationJobQueue() {
+    if (!quotationJobList) return;
+
+    const existingRequestIds = new Set(
+        quotations
+            .map(quotation => quotation?.request_id)
+            .filter(Boolean)
+    );
+
+    const jobs = serviceRequests.filter(request => {
+        return request?.id &&
+            !existingRequestIds.has(request.id);
+    });
+
+    if (quotationJobCount) {
+        quotationJobCount.textContent =
+            String(jobs.length);
+    }
+
+    if (!jobs.length) {
+        quotationJobList.innerHTML = `
+            <div class="quotation-job-empty">
+                <div class="quotation-job-empty-icon">✓</div>
+
+                <strong>
+                    All quotation jobs are up to date
+                </strong>
+
+                <p>
+                    There are currently no service
+                    requests waiting for a quotation.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+    quotationJobList.innerHTML = jobs.map(request => {
+
+        const requestId =
+            escapeHtml(request.id);
+
+        const requestCode =
+            escapeHtml(
+                request.request_code ||
+                request.code ||
+                "Service Request"
+            );
+
+        const customer =
+            escapeHtml(
+                getRequestCustomerName(request)
+            );
+
+        const service =
+            escapeHtml(
+                getRequestServiceName(request)
+            );
+
+        const submitted =
+            formatDate(
+                getRequestSubmittedDate(request)
+            );
+
+        return `
+            <article class="quotation-job-item">
+
+                <div class="quotation-job-main">
+
+                    <span class="quotation-job-code">
+                        ${requestCode}
+                    </span>
+
+                    <strong class="quotation-job-customer">
+                        ${customer}
+                    </strong>
+
+                    <div class="quotation-job-meta">
+
+                        <span>
+                            ${service}
+                        </span>
+
+                        <span>
+                            Submitted: ${escapeHtml(submitted)}
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="quotation-job-upload"
+                    data-upload-quotation="${requestId}"
+                >
+                    Upload Quotation
+                </button>
+
+            </article>
+        `;
+
+    }).join("");
+}
 
 /* =========================================================
    LOAD REQUESTS
@@ -1228,6 +1377,12 @@ async function loadRequests() {
 
         if (!result) return;
 
+
+        serviceRequests =
+    Array.isArray(result.data)
+        ? result.data
+        : [];
+        
 
         const existingRequestIds =
             new Set(
@@ -1290,6 +1445,7 @@ async function loadRequests() {
 
             }
         );
+renderQuotationJobQueue();
 
     } catch (error) {
 
@@ -2561,6 +2717,32 @@ tableBody?.addEventListener(
     }
 );
 
+quotationJobList?.addEventListener(
+    "click",
+    event => {
+
+        const button =
+            event.target.closest(
+                "[data-upload-quotation]"
+            );
+
+        if (!button) return;
+
+        const requestId =
+            button.dataset.uploadQuotation;
+
+        if (!requestId) return;
+
+        openCreateModal();
+
+        if (requestSelect) {
+            requestSelect.value =
+                requestId;
+        }
+
+        quotationFile?.focus();
+    }
+);
 
 /* =========================================================
    EVENTS

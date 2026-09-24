@@ -312,28 +312,27 @@ async function loadDashboard() {
 
 
     } catch (error) {
-
+ 
         console.error(
             "Dashboard loading error:",
             error
         );
-
-
-        $("#projectTable").innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="8"
-                    class="empty"
-                >
-                    Unable to load dashboard.
-                </td>
-
-            </tr>
-
+ 
+        const count = $("#projectCount");
+ 
+        if (count) {
+            count.textContent = "—";
+        }
+ 
+        $("#projectList").innerHTML = `
+            <div class="empty-state error-state">
+                <div>
+                    <strong>Unable to load dashboard</strong>
+                    <span>${esc(error.message || "Please try again.")}</span>
+                </div>
+            </div>
         `;
-
+ 
     }
 
 }
@@ -370,191 +369,115 @@ function setValue(
 function renderRecentProjects(
     projects
 ) {
-
-    const table =
-        $("#projectTable");
-
-
-    if (!projects.length) {
-
-        table.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="8"
-                    class="empty"
-                >
-                    No projects found.
-                </td>
-
-            </tr>
-
-        `;
-
-        return;
-
+ 
+    const list =
+        $("#projectList");
+ 
+    const count =
+        $("#projectCount");
+ 
+ 
+    if (count) {
+ 
+        count.textContent =
+            `${projects.length} ${
+                projects.length === 1
+                    ? "project"
+                    : "projects"
+            }`;
+ 
     }
-
-
-    table.innerHTML =
-        projects.map(
-            project => `
-
-                <tr>
-
-                    <td>
-
-                        <strong>
-                            ${esc(
-                                project.request_code
-                            )}
-                        </strong>
-
-                        <small>
-                            ${esc(
-                                project.service_name ||
-                                "—"
-                            )}
-                        </small>
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                            project.customer_name ||
-                            "—"
-                        )}
-
-                    </td>
-
-
-                    <td>
-
-                        ${
-                            project.quotation_file_url
-
-                                ? `
-                                    <span class="table-status success">
-                                        Uploaded
-                                    </span>
-                                `
-
-                                : `
-                                    <span class="table-status">
-                                        —
-                                    </span>
-                                `
-                        }
-
-                    </td>
-
-
-                    <td>
-
-                        ${
-                            project.invoice_status ===
-                            "paid"
-
-                                ? `
-                                    <span class="table-status success">
-                                        Paid
-                                    </span>
-                                `
-
-                                : project.invoice_status
-
-                                    ? `
-                                        <span class="table-status">
-                                            ${esc(
-                                                String(
-                                                    project.invoice_status
-                                                ).replaceAll(
-                                                    "_",
-                                                    " "
-                                                )
-                                            )}
-                                        </span>
-                                    `
-
-                                    : `
-                                        <span class="table-status">
-                                            —
-                                        </span>
-                                    `
-                        }
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                            project.technician_name ||
-                            "Not assigned"
-                        )}
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                            formatReportStatus(
-                                project.report_status
-                            )
-                        )}
-
-                    </td>
-
-
-                    <td>
-
-                        <span
-                            class="
-                                status-pill
-                                ${esc(
-                                    project.status ||
-                                    ""
-                                )}
-                            "
-                        >
-
-                            ${esc(
-                                statusLabel(
-                                    project.status
-                                )
-                            )}
-
+ 
+ 
+    if (!projects.length) {
+ 
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">✓</div>
+                <div>
+                    <strong>No projects found</strong>
+                    <span>Projects will appear here once requests are created.</span>
+                </div>
+            </div>
+        `;
+ 
+        return;
+ 
+    }
+ 
+ 
+    list.innerHTML =
+        projects.map(project => {
+ 
+            const invoiceStatus =
+                project.invoice_status;
+ 
+            const payment =
+                invoiceStatus === "paid"
+                    ? `<span class="table-status success">Paid</span>`
+                    : invoiceStatus
+                        ? `<span class="table-status">${esc(
+                            String(invoiceStatus).replaceAll("_", " ")
+                        )}</span>`
+                        : `<span class="table-status">—</span>`;
+ 
+            const quotation =
+                project.quotation_file_url
+                    ? `<span class="table-status success">Uploaded</span>`
+                    : `<span class="table-status">—</span>`;
+ 
+            return `
+                <article class="project-row">
+ 
+                    <div>
+                        <strong class="row-main">${esc(project.request_code)}</strong>
+                        <small class="row-sub">${esc(project.service_name || "—")}</small>
+                    </div>
+ 
+                    <div class="col-customer">
+                        <span class="row-label">Customer</span>
+                        <strong class="row-value">${esc(project.customer_name || "—")}</strong>
+                    </div>
+ 
+                    <div class="col-quotation">
+                        <span class="row-label">Quotation</span>
+                        ${quotation}
+                    </div>
+ 
+                    <div class="col-payment">
+                        <span class="row-label">Payment</span>
+                        ${payment}
+                    </div>
+ 
+                    <div class="col-technician">
+                        <span class="row-label">Technician</span>
+                        <strong class="row-value">${esc(project.technician_name || "Not assigned")}</strong>
+                    </div>
+ 
+                    <div class="col-report">
+                        <span class="row-label">Report</span>
+                        <strong class="row-value">${esc(formatReportStatus(project.report_status))}</strong>
+                    </div>
+ 
+                    <div>
+                        <span class="status-pill ${esc(project.status || "")}">
+                            ${esc(statusLabel(project.status))}
                         </span>
-
-                    </td>
-
-
-                    <td>
-
-                        <a
-                            class="view-link"
-                            href="project.html?id=${encodeURIComponent(
-                                project.id
-                            )}"
-                        >
-
-                            View →
-
+                    </div>
+ 
+                    <div class="col-view">
+                        <a class="view-link"
+                           href="project.html?id=${encodeURIComponent(project.id)}">
+                            View
                         </a>
-
-                    </td>
-
-                </tr>
-
-            `
-        ).join("");
-
+                    </div>
+ 
+                </article>
+            `;
+ 
+        }).join("");
+ 
 }
-
 
 /* ======================================================
    REPORT STATUS

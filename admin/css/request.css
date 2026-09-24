@@ -2480,3 +2480,190 @@ textarea:focus-visible {
         font-size: 21px;
     }
 }
+
+/* =========================================================
+   CUSTOMER ANSWERS — JSON / COUNTER DISPLAY PATCH
+   Paste at the VERY END of request.css
+========================================================= */
+
+.answer-value-modern {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+
+/* ---------------------------------------------------------
+   NORMAL ANSWER CHIP
+--------------------------------------------------------- */
+
+.answer-chip-modern {
+    width: fit-content;
+    min-height: 36px;
+    padding: 8px 13px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+
+    background: #f8fafc;
+    color: #172033;
+
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+
+    box-shadow: none;
+}
+
+
+/* ---------------------------------------------------------
+   COUNTER ROW
+--------------------------------------------------------- */
+
+.answer-counter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    min-height: 42px;
+
+    padding: 8px 12px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+
+    background: #f8fafc;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+
+.answer-counter-row:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+
+/* ---------------------------------------------------------
+   COUNTER LABEL
+--------------------------------------------------------- */
+
+.answer-counter-label {
+    display: inline-flex;
+    align-items: center;
+
+    min-width: 0;
+
+    gap: 9px;
+
+    color: #334155;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+.answer-counter-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+
+    flex: 0 0 auto;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+
+    font-size: 14px;
+}
+
+
+/* ---------------------------------------------------------
+   COUNTER VALUE
+--------------------------------------------------------- */
+
+.answer-counter-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 32px;
+    min-height: 28px;
+
+    padding: 3px 9px;
+
+    border-radius: 8px;
+
+    background: #eef2ff;
+    color: #3730a3;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* ---------------------------------------------------------
+   EMPTY ANSWER
+--------------------------------------------------------- */
+
+.answer-empty {
+    color: #94a3b8;
+    font-size: 13px;
+    font-style: italic;
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE
+--------------------------------------------------------- */
+
+@media (max-width: 600px) {
+
+    .answer-counter-row {
+        min-height: 40px;
+        padding: 7px 10px;
+    }
+
+    .answer-counter-label {
+        font-size: 12px;
+    }
+
+    .answer-counter-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+    }
+
+    .answer-counter-value {
+        min-width: 30px;
+        padding: 3px 8px;
+    }
+
+}
+
+.assignment-message.locked {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.assignment-message.error {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+}

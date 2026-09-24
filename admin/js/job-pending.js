@@ -3,7 +3,7 @@ const API_BASE =
         ? "http://localhost:5001/api"
         : "https://securepro-service-system.onrender.com/api";
 
-        
+
 const token = localStorage.getItem("securepro_admin_token");
 let adminUser = null;
 try { adminUser = JSON.parse(localStorage.getItem("securepro_admin_user") || "null"); } catch (_) { }
@@ -29,6 +29,42 @@ function formatDate(value) {
     return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("en-MY", { dateStyle: "medium", timeStyle: "short" });
 }
 
+function formatJobStatus(status) {
+
+    const labels = {
+
+        pending:
+            "Pending Assignment",
+
+        assigned:
+            "Assigned",
+
+        in_progress:
+            "In Progress",
+
+        waiting_parts:
+            "Waiting Parts",
+
+        awaiting_payment:
+            "Awaiting Payment",
+
+        completed:
+            "Completed",
+
+        cancelled:
+            "Cancelled"
+
+    };
+
+
+    return (
+        labels[status] ||
+        status ||
+        "Unknown"
+    );
+
+}
+
 async function loadJobs() {
     errorBox.hidden = true;
     tableBody.innerHTML = '<tr><td colspan="5" class="table-loading">Loading job pending list...</td></tr>';
@@ -51,21 +87,188 @@ async function loadJobs() {
 }
 
 function renderJobs(jobs) {
-    const term = searchInput.value.trim().toLowerCase();
-    const filtered = jobs.filter(job => [job.request_code, job.customer?.name, job.customer?.phone, job.service?.name].join(" ").toLowerCase().includes(term));
-    totalLabel.textContent = `${filtered.length} job${filtered.length === 1 ? "" : "s"}`;
+
+    const term =
+        searchInput.value
+            .trim()
+            .toLowerCase();
+
+
+    const filtered =
+        jobs.filter(
+            job =>
+                [
+                    job.request_code,
+                    job.customer?.name,
+                    job.customer?.phone,
+                    job.service?.name,
+                    job.technician?.name,
+                    job.status
+                ]
+                    .join(" ")
+                    .toLowerCase()
+                    .includes(term)
+        );
+
+
+    totalLabel.textContent =
+        `${filtered.length} job${filtered.length === 1 ? "" : "s"}`;
+
+
     if (!filtered.length) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="table-empty">No paid jobs are waiting for technician assignment.</td></tr>';
+
+        tableBody.innerHTML =
+            `
+            <tr>
+                <td
+                    colspan="6"
+                    class="table-empty"
+                >
+                    No active jobs found.
+                </td>
+            </tr>
+            `;
+
         return;
+
     }
-    tableBody.innerHTML = filtered.map(job => `
-        <tr>
-            <td><span class="request-code">${escapeHtml(job.request_code)}</span><span class="request-date">Submitted ${escapeHtml(formatDate(job.created_at))}</span></td>
-            <td><span class="customer-name">${escapeHtml(job.customer?.name)}</span><span class="customer-phone">${escapeHtml(job.customer?.phone)}</span></td>
-            <td><span class="service-name">${escapeHtml(job.service?.name)}</span></td>
-            <td>${escapeHtml(formatDate(job.payment_proof_uploaded_at))}</td>
-            <td><a class="view-button" href="request.html?id=${encodeURIComponent(job.id)}#technicianSelect">Assign technician</a></td>
-        </tr>`).join("");
+
+
+    tableBody.innerHTML =
+        filtered.map(
+            job => {
+
+                const technicianName =
+                    job.technician?.name ||
+                    "Not assigned";
+
+
+                const status =
+                    formatJobStatus(
+                        job.status
+                    );
+
+
+                const actionLabel =
+                    job.technician?.id
+                        ? "View Job"
+                        : "Assign Technician";
+
+
+                return `
+                    <tr>
+
+                        <td>
+
+                            <span class="request-code">
+                                ${escapeHtml(
+                                    job.request_code
+                                )}
+                            </span>
+
+                            <span class="request-date">
+                                Submitted
+                                ${escapeHtml(
+                                    formatDate(
+                                        job.created_at
+                                    )
+                                )}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="customer-name">
+                                ${escapeHtml(
+                                    job.customer?.name
+                                )}
+                            </span>
+
+                            <span class="customer-phone">
+                                ${escapeHtml(
+                                    job.customer?.phone
+                                )}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="service-name">
+                                ${escapeHtml(
+                                    job.service?.name
+                                )}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="job-status">
+                                ${escapeHtml(
+                                    status
+                                )}
+                            </span>
+
+                            <span class="request-date">
+                                Payment proof:
+                                ${escapeHtml(
+                                    formatDate(
+                                        job.payment_proof_uploaded_at
+                                    )
+                                )}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="technician-name">
+                                ${escapeHtml(
+                                    technicianName
+                                )}
+                            </span>
+
+                            ${
+                                job.scheduled_date
+                                    ? `
+                                        <span class="request-date">
+                                            Scheduled:
+                                            ${escapeHtml(
+                                                job.scheduled_date
+                                            )}
+                                        </span>
+                                    `
+                                    : ""
+                            }
+
+                        </td>
+
+
+                        <td>
+
+                            <a
+                                class="view-button"
+                                href="request.html?id=${encodeURIComponent(
+                                    job.id
+                                )}#technicianSelect"
+                            >
+                                ${actionLabel}
+                            </a>
+
+                        </td>
+
+                    </tr>
+                `;
+
+            }
+        ).join("");
+
 }
 
 let latestJobs = [];

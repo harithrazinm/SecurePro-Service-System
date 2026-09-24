@@ -12,83 +12,114 @@
 </head>
 
 <body>
-<div class="app-shell">
+    <div class="app-shell">
 
-<header class="topbar-card">
-    <div class="brand">
-        <div class="brand-mark">S</div>
-        <div class="brand-text">
-            <strong>SECUREPRO</strong>
-            <span>System Solutions</span>
-        </div>
-    </div>
-    <nav class="top-nav">
-        <a href="dashboard.html">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-            Dashboard
-        </a>
-                      <a href="quotations.html">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 12h6M9 16h4"/></svg>
-            Quotations
-        </a>
-        <a href="job-pending.html" class="active">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-            Job Pending
-        </a>
-  
-        <a href="work-calendar.html">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8 13h2M14 13h2M8 17h2M14 17h2"/></svg>
-            Work Calendar
-        </a>
-        <a href="requests.html">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z"/><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 12h6M9 16h6"/></svg>
-            Service Requests
-        </a>
+        <header class="topbar-card">
+            <div class="brand">
+                <div class="brand-mark">S</div>
+                <div class="brand-text">
+                    <strong>SECUREPRO</strong>
+                    <span>System Solutions</span>
+                </div>
+            </div>
+            <nav class="top-nav">
+                <a href="dashboard.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="9" rx="1.5" />
+                        <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                        <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                        <rect x="3" y="16" width="7" height="5" rx="1.5" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="quotations.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+                        <path d="M9 12h6M9 16h4" />
+                    </svg>
+                    Quotations
+                </a>
+                <a href="job-pending.html" class="active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 3" />
+                    </svg>
+                    Job Pending
+                </a>
 
-<a href="invoices.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="5" y="3" width="14" height="18" rx="2"/>
-            <path d="M8 7h8M8 11h8M8 15h5"/>
-            <path d="M16 18h.01"/>
-        </svg>
-        Invoices & Payments
-    </a>
+                <a href="work-calendar.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="17" rx="2" />
+                        <path d="M3 9h18M8 2v4M16 2v4" />
+                        <path d="M8 13h2M14 13h2M8 17h2M14 17h2" />
+                    </svg>
+                    Work Calendar
+                </a>
+                <a href="requests.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z" />
+                        <rect x="5" y="5" width="14" height="16" rx="2" />
+                        <path d="M9 12h6M9 16h6" />
+                    </svg>
+                    Service Requests
+                </a>
 
-    </nav>
-</header>
+                <a href="invoices.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="5" y="3" width="14" height="18" rx="2" />
+                        <path d="M8 7h8M8 11h8M8 15h5" />
+                        <path d="M16 18h.01" />
+                    </svg>
+                    Invoices & Payments
+                </a>
 
-<button type="button" id="logoutButton" class="logout-bar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-    Logout
-</button>
+            </nav>
+        </header>
 
-<main>
-    <div class="eyebrow-row">
-        <span class="eyebrow">JOB MANAGEMENT</span>
-        <span class="admin-pill">
-            <span class="dot"></span>
-            <span id="topbarAdminName">Admin</span>
-        </span>
-    </div>
-    <span id="sidebarAdminName" class="admin-name">Admin</span>
+        <button type="button" id="logoutButton" class="logout-bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+            </svg>
+            Logout
+        </button>
 
-    <header class="request-header">
-        <h1 class="page-title">Job Pending</h1>
-    </header>
+        <main>
+            <div class="eyebrow-row">
+                <span class="eyebrow">JOB MANAGEMENT</span>
+                <span class="admin-pill">
+                    <span class="dot"></span>
+                    <span id="topbarAdminName">Admin</span>
+                </span>
+            </div>
+            <span id="sidebarAdminName" class="admin-name">Admin</span>
+
+            <header class="request-header">
+                <h1 class="page-title">Job Pending</h1>
+            </header>
 
             <div class="dashboard-content">
                 <section class="dashboard-intro">
-                    <div><span class="eyebrow">READY TO ASSIGN</span>
-                        <h2>Paid jobs awaiting a technician</h2>
-                        <p>Jobs appear here automatically after payment proof is uploaded. Open a job to assign its
-                            technician and schedule.</p>
+                    <div><span class="eyebrow">
+                            ACTIVE JOBS
+                        </span>
+                        <h2>Active service jobs</h2>
+
+                        <p>
+                            Jobs remain here from payment confirmation until the service
+                            request is completed or cancelled.
+                        </p>
                     </div><button id="refreshButton" class="refresh-button" type="button">
-                        <span>↻  Refresh</span></button>
+                        <span>↻ Refresh</span></button>
                 </section>
                 <section class="requests-section">
                     <div class="section-heading">
-                        <div><span class="eyebrow">ASSIGNMENT QUEUE</span>
-                            <h2>Job pending</h2>
+                        <div><span class="eyebrow">
+                                SERVICE JOB QUEUE
+                            </span>
+
+                            <h2>Active Jobs</h2>
                         </div><span id="requestTotalLabel" class="request-total">Loading...</span>
                     </div>
                     <div class="request-toolbar">
@@ -100,17 +131,31 @@
                         <table>
                             <thead>
                                 <tr>
+
                                     <th>Job</th>
+
                                     <th>Customer</th>
+
                                     <th>Service</th>
-                                    <th>Payment proof</th>
+
+                                    <th>Status</th>
+
+                                    <th>Technician</th>
+
                                     <th>Action</th>
+
                                 </tr>
                             </thead>
                             <tbody id="requestsTableBody">
+
                                 <tr>
-                                    <td colspan="5" class="table-loading">Loading job pending list...</td>
+
+                                    <td colspan="6" class="table-loading">
+                                        Loading active jobs...
+                                    </td>
+
                                 </tr>
+
                             </tbody>
                         </table>
                     </div>

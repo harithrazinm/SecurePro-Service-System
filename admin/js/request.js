@@ -100,6 +100,39 @@ function formatLabel(value) {
         .replace(/\b\w/g, letter => letter.toUpperCase());
 }
 
+function formatUnit(unit) {
+    if (unit === null || unit === undefined || unit === "") {
+        return "";
+    }
+
+    if (typeof unit === "string" || typeof unit === "number") {
+        return String(unit).trim();
+    }
+
+    if (Array.isArray(unit)) {
+        return unit
+            .map(item => formatUnit(item))
+            .filter(Boolean)
+            .join(" / ");
+    }
+
+    if (typeof unit === "object") {
+        return String(
+            unit.en ||
+            unit.ms ||
+            unit.label ||
+            unit.name ||
+            unit.value ||
+            unit.unit ||
+            unit.symbol ||
+            unit.text ||
+            ""
+        ).trim();
+    }
+
+    return "";
+}
+
 /* <input type="date"> needs YYYY-MM-DD, even if the API sends a full ISO string. */
 function toDateInputValue(value) {
     const match = String(value || "").match(/^(\d{4}-\d{2}-\d{2})/);
@@ -409,286 +442,1966 @@ function renderCustomer(data) {
 
 
 /* =========================================================
-   CUSTOMER ANSWERS — LABELS
+   CUSTOMER ANSWERS
+   SOURCE OF TRUTH = services.js
 ========================================================= */
 
-const QUESTION_LABELS = {
-    location: "Installation Location",
-    installation_location: "Installation Location",
-    property_type: "Property Type",
-    building_type: "Building Type",
-    camera_location: "Camera Location",
-    camera_light: "Camera Light Type",
-    camera_light_type: "Camera Light Type",
-    light_type: "Camera Light Type",
-    installation_type: "Installation Type",
-    wiring_type: "Installation Type",
-    wiring: "Installation Type",
-    connection_type: "Installation Type",
-    camera_quantity: "Camera Quantity",
-    quantity: "Quantity",
-    camera_resolution: "Camera Resolution",
-    resolution: "Camera Resolution",
-    additional_equipment: "Additional Equipment",
-    equipment: "Additional Equipment",
-    accessories: "Additional Accessories",
-    additional_accessories: "Additional Accessories",
-    alarm_type: "Alarm Type",
-    alarm: "Alarm Type",
-    alarm_area: "Alarm Areas",
-    technical_features: "Technical Features",
-    features: "Technical Features",
-    internet: "Internet Availability",
-    internet_available: "Internet Availability",
-    internet_access: "Internet Availability",
-    site_visit: "Site Visit Requirement",
-    request_site_visit: "Site Visit Requirement",
-    coverage: "Coverage Area",
-    coverage_area: "Coverage Area",
-    areas: "Coverage Area"
-};
+/*
+ * services.js contains:
+ *
+ * SERVICES.cctv.questions
+ * SERVICES.alarm.questions
+ * SERVICES.access.questions
+ * SERVICES.attendance.questions
+ * SERVICES.autogate.questions
+ * SERVICES.barriergate.questions
+ * SERVICES.pabx.questions
+ * SERVICES.solar_cctv.questions
+ * SERVICES.solar_pump.questions
+ * SERVICES.troubleshoot_repair.questions
+ *
+ * The Admin page must use these definitions directly.
+ */
 
-function getAnswerCode(answer) {
-    return String(answer.question_code || answer.code || answer.key || "")
-        .trim()
-        .toLowerCase();
-}
+const SERVICE_CATALOG =
+    typeof SERVICES !== "undefined"
+        ? SERVICES
+        : {};
 
-function getQuestionDisplayLabel(answer) {
-    const question = String(answer.question?.en || "").trim();
 
-    // "Customer Requirement" is a generic placeholder, not useful to admin.
-    if (question && question.toLowerCase() !== "customer requirement") {
-        return question;
-    }
+if (!Object.keys(SERVICE_CATALOG).length) {
 
-    const code = getAnswerCode(answer);
+    console.warn(
+        "SecurePro services catalog was not found. " +
+        "Make sure services.js is loaded before request.js."
+    );
 
-    if (QUESTION_LABELS[code]) return QUESTION_LABELS[code];
-    if (code) return formatLabel(code);
-
-    return "Customer Requirement";
 }
 
 
 /* =========================================================
-   CUSTOMER ANSWERS — VALUES
+   ANSWER CODE
 ========================================================= */
 
-const ANSWER_VALUE_LABELS = {
-    dual_light: "Dual Light",
-    single_light: "Single Light",
-    "1080p_2mp": "1080P 2MP",
-    "1080p 2mp": "1080P 2MP",
-    wired: "Wired",
-    wireless: "Wireless",
-    home: "Home",
-    office: "Office",
-    shop: "Shop",
-    yes: "Yes",
-    no: "No",
-    true: "Yes",
-    false: "No",
-    none: "None",
-    monitor: "TV / Screen Monitor",
-    tv: "TV / Screen Monitor",
-    screen_monitor: "TV / Screen Monitor",
-    rack: "4U Server Rack Cabinet",
-    server_rack: "4U Server Rack Cabinet",
-    ups: "UPS (Battery Backup)",
-    battery_backup: "UPS (Battery Backup)",
-    audio_alarm: "Audio Alarm",
-    internet_available: "Internet Available",
-    site_visit: "Site Visit",
-    request_site_visit: "Request Site Visit"
-};
+function getAnswerCode(answer) {
 
-const ACRONYMS = {
-    cctv: "CCTV", ups: "UPS", nvr: "NVR", dvr: "DVR",
-    poe: "PoE", tv: "TV", hdd: "HDD", ip: "IP", led: "LED"
-};
+    if (!answer) {
+        return "";
+    }
 
-function capitalizeWord(word) {
-    const lower = word.toLowerCase();
-    if (ACRONYMS[lower]) return ACRONYMS[lower];
-    return lower.charAt(0).toUpperCase() + lower.slice(1);
+    return String(
+        answer.question_code ||
+        answer.question?.id ||
+        answer.question?.code ||
+        answer.question_id ||
+        answer.questionId ||
+        answer.code ||
+        answer.field_code ||
+        answer.field_key ||
+        answer.fieldKey ||
+        answer.key ||
+        ""
+    )
+        .trim()
+        .toLowerCase();
+
 }
 
-/*
- * Turns any answer shape (array / object / JSON string / text)
- * into a flat list of strings.
- */
-function normalizeAnswerValues(value) {
-    if (value === null || value === undefined || value === "") return [];
 
-    if (Array.isArray(value)) {
-        return value.flatMap(item => normalizeAnswerValues(item)).filter(Boolean);
+/* =========================================================
+   FIND SERVICE DEFINITION
+========================================================= */
+
+function findServiceDefinition(data) {
+
+    if (!data) {
+        return null;
     }
 
-    if (typeof value === "object") {
-        const candidates = [
-            value.label?.en, value.label,
-            value.name?.en, value.name,
-            value.value?.en, value.value,
-            value.text?.en, value.text,
-            value.en,
-            value.option_label_en, value.option_value
-        ];
 
-        for (const item of candidates) {
-            if (item !== null && item !== undefined && item !== "") {
-                return normalizeAnswerValues(item);
-            }
-        }
+    /*
+     * First use the service ID/code.
+     */
 
-        /*
-         * Multi-field answer, e.g. { indoor: 1, outdoor: 1 }.
-         * Keep the key so it shows "Indoor: 1" / "Outdoor: 1"
-         * instead of just "1" and "1".
-         */
-        return Object.entries(value).flatMap(([key, item]) => {
-            const parts = normalizeAnswerValues(item);
-            if (!parts.length) return [];
-            return [`${formatLabel(key)}: ${parts.join(", ")}`];
-        });
+    const serviceId =
+        String(
+            data.service_id ||
+            data.serviceId ||
+            data.service?.id ||
+            data.service?.code ||
+            data.service_type ||
+            data.serviceType ||
+            ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (
+        serviceId &&
+        SERVICE_CATALOG[serviceId]
+    ) {
+
+        return SERVICE_CATALOG[serviceId];
+
     }
 
-    if (typeof value === "string") {
-        const trimmed = value.trim();
-        if (!trimmed) return [];
 
-        const looksLikeJson =
-            (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
-            (trimmed.startsWith("{") && trimmed.endsWith("}"));
+    /*
+     * Try the request's service object.
+     */
 
-        if (looksLikeJson) {
-            try {
-                return normalizeAnswerValues(JSON.parse(trimmed));
-            } catch {
-                // Not JSON — treat as text.
-            }
-        }
+    if (
+        data.service &&
+        typeof data.service === "object"
+    ) {
 
-        /*
-         * Split on commas ONLY for lists of code-style tokens
-         * (e.g. "wired,ups"). Sentences and numbers like "1,000"
-         * are left intact.
-         */
-        const isThousands = /^\d{1,3}(,\d{3})+(\.\d+)?$/.test(trimmed);
-
-        if (trimmed.includes(",") && !isThousands) {
-            const parts = trimmed.split(",").map(part => part.trim()).filter(Boolean);
-
-            if (parts.length > 1 && parts.every(part => /^[A-Za-z0-9_.-]+$/.test(part))) {
-                return parts;
-            }
-        }
-
-        return [trimmed];
-    }
-
-    return [String(value)];
-}
-
-/*
- * Prettifies machine-style values only.
- * Real free text (model names, sentences, phone numbers) is untouched.
- * `code` is the question code, used to decide if a range means "Areas".
- */
-function formatAnswerValue(value, code = "") {
-    const text = String(value ?? "").trim();
-    if (!text) return "Not specified";
-
-    const key = text.toLowerCase();
-
-    if (ANSWER_VALUE_LABELS[key]) return ANSWER_VALUE_LABELS[key];
-
-    // 4mp, 8mp, 1080p ...
-    if (/^\d+(mp|p|k)$/.test(key)) return text.toUpperCase();
-
-    // Ranges: 1_4 / 1-4
-    const range = key.match(/^(\d+)[_-](\d+)$/);
-    if (range) {
-        if (/area|coverage/.test(String(code).toLowerCase())) {
-            return `${range[1]}–${range[2]} Areas`;
-        }
-        if (key.includes("_")) return `${range[1]}–${range[2]}`;
-        return text;
-    }
-
-    // indoor_1 / outdoor2
-    const counter = key.match(/^(indoor|outdoor)[_-]?(\d+)$/);
-    if (counter) {
-        return `${capitalizeWord(counter[1])}: ${counter[2]}`;
-    }
-
-    // snake_case (lowercase with underscores) → Title Case
-    if (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(text)) {
-        return text.split("_").map(capitalizeWord).join(" ");
-    }
-
-    // Single lowercase word → capitalize
-    if (/^[a-z]+$/.test(text)) return capitalizeWord(text);
-
-    // Anything else is real text: leave it exactly as the customer wrote it.
-    return text;
-}
-
-function getAnswerDisplayValue(answer) {
-    const isEmpty = v => v === null || v === undefined || v === "";
-
-    let value = answer.answer;
-
-    if (isEmpty(value) && !isEmpty(answer.number_value)) {
-        value = answer.number_value;
-    }
-
-    if (isEmpty(value)) {
-        value = answer.text_value;
-    }
-
-    if (isEmpty(value) && Array.isArray(answer.options) && answer.options.length) {
-        value = answer.options
-            .map(option =>
-                option.option_label_en ||
-                option.label?.en ||
-                option.option_value ||
-                option.value ||
+        const nestedId =
+            String(
+                data.service.id ||
+                data.service.code ||
                 ""
             )
-            .filter(Boolean);
+                .trim()
+                .toLowerCase();
+
+        if (
+            nestedId &&
+            SERVICE_CATALOG[nestedId]
+        ) {
+
+            return SERVICE_CATALOG[nestedId];
+
+        }
+
     }
 
-    return isEmpty(value) ? "Not specified" : value;
+
+    /*
+     * If no ID is available, match
+     * using the service display name.
+     */
+
+    const serviceName =
+        String(
+            getServiceName(data) || ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (
+        !serviceName ||
+        serviceName === "—"
+    ) {
+
+        return null;
+
+    }
+
+
+    return Object.values(
+        SERVICE_CATALOG
+    ).find(
+        service => {
+
+            const englishName =
+                String(
+                    service?.name?.en ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            const malayName =
+                String(
+                    service?.name?.ms ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            return (
+                englishName === serviceName ||
+                malayName === serviceName
+            );
+
+        }
+    ) || null;
+
 }
 
+
+/* =========================================================
+   FIND QUESTION DEFINITION
+========================================================= */
+
+function findQuestionDefinition(
+    serviceDefinition,
+    questionCode
+) {
+
+    if (
+        !serviceDefinition ||
+        !Array.isArray(
+            serviceDefinition.questions
+        ) ||
+        !questionCode
+    ) {
+
+        return null;
+
+    }
+
+
+    const normalizedCode =
+        String(
+            questionCode
+        )
+            .trim()
+            .toLowerCase();
+
+
+    return (
+        serviceDefinition.questions.find(
+            question => {
+
+                const id =
+                    String(
+                        question?.id ||
+                        ""
+                    )
+                        .trim()
+                        .toLowerCase();
+
+                return id === normalizedCode;
+
+            }
+        ) ||
+        null
+    );
+
+}
+
+
+/* =========================================================
+   QUESTION TITLE
+========================================================= */
+
+function getConfiguredQuestionTitle(
+    questionDefinition
+) {
+
+    if (
+        !questionDefinition
+    ) {
+
+        return null;
+
+    }
+
+
+    /*
+     * Admin displays English.
+     *
+     * If English is unavailable,
+     * use Malay as fallback.
+     */
+
+    const title =
+        questionDefinition.title;
+
+
+    if (
+        typeof title === "string"
+    ) {
+
+        const text =
+            title.trim();
+
+        return text || null;
+
+    }
+
+
+    if (
+        title &&
+        typeof title === "object"
+    ) {
+
+        return (
+            String(
+                title.en ||
+                title.ms ||
+                ""
+            ).trim() ||
+            null
+        );
+
+    }
+
+
+    return null;
+
+}
+
+
+/* =========================================================
+   OPTION LABEL
+========================================================= */
+
+function resolveConfiguredOptionLabel(
+    questionDefinition,
+    rawValue
+) {
+
+    if (
+        !questionDefinition ||
+        !Array.isArray(
+            questionDefinition.options
+        )
+    ) {
+
+        return null;
+
+    }
+
+
+    const token =
+        String(
+            rawValue ?? ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (!token) {
+        return null;
+    }
+
+
+    const match =
+        questionDefinition.options.find(
+            option => {
+
+                /*
+                 * Object option:
+                 *
+                 * {
+                 *     value: "wired",
+                 *     label: {
+                 *         en: "Wired",
+                 *         ms: "Berwayar"
+                 *     }
+                 * }
+                 */
+
+                if (
+                    option &&
+                    typeof option === "object" &&
+                    !Array.isArray(option)
+                ) {
+
+                    const optionValue =
+                        String(
+                            option.value ||
+                            option.id ||
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+                    return (
+                        optionValue === token
+                    );
+
+                }
+
+
+                /*
+                 * Array option:
+                 *
+                 * [
+                 *     "need_new_gate",
+                 *     "Yes, I Need a New Gate",
+                 *     "Ya, Saya Memerlukan Pagar Baharu",
+                 *     ...
+                 * ]
+                 */
+
+                if (
+                    Array.isArray(option)
+                ) {
+
+                    return (
+                        String(
+                            option[0] ||
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase() ===
+                        token
+                    );
+
+                }
+
+
+                return false;
+
+            }
+        );
+
+
+    if (!match) {
+        return null;
+    }
+
+
+    /*
+     * Object option.
+     */
+
+    if (
+        match &&
+        typeof match === "object" &&
+        !Array.isArray(match)
+    ) {
+
+        if (
+            match.label &&
+            typeof match.label === "object"
+        ) {
+
+            return (
+                match.label.en ||
+                match.label.ms ||
+                match.value ||
+                null
+            );
+
+        }
+
+        return (
+            match.label ||
+            match.value ||
+            null
+        );
+
+    }
+
+
+    /*
+     * Array option.
+     */
+
+    if (
+        Array.isArray(match)
+    ) {
+
+        /*
+         * [value, English, Malay, ...]
+         */
+
+        return (
+            match[1] ||
+            match[2] ||
+            match[0] ||
+            null
+        );
+
+    }
+
+
+    return null;
+
+}
+
+
+/* =========================================================
+   COUNTER VALUES
+========================================================= */
+
+function formatConfiguredCounterValues(
+    questionDefinition,
+    rawValue
+) {
+
+    let entries =
+        rawValue;
+
+
+    /*
+     * Sometimes MySQL/API returns
+     * the counter object as JSON text.
+     */
+
+    if (
+        typeof entries === "string"
+    ) {
+
+        try {
+
+            entries =
+                JSON.parse(
+                    entries
+                );
+
+        } catch {
+
+            return null;
+
+        }
+
+    }
+
+
+    if (
+        !entries ||
+        typeof entries !== "object" ||
+        Array.isArray(entries)
+    ) {
+
+        return null;
+
+    }
+
+
+    const results = [];
+
+
+    Object.entries(
+        entries
+    ).forEach(
+        ([key, count]) => {
+
+            if (
+                count === null ||
+                count === undefined ||
+                count === ""
+            ) {
+
+                return;
+
+            }
+
+
+            const counterDefinition =
+                Array.isArray(
+                    questionDefinition?.counters
+                )
+                    ? questionDefinition.counters.find(
+                        counter =>
+                            String(
+                                counter?.id ||
+                                ""
+                            )
+                                .toLowerCase() ===
+                            String(key)
+                                .toLowerCase()
+                    )
+                    : null;
+
+
+            let label;
+
+
+            if (
+                counterDefinition?.label
+            ) {
+
+                if (
+                    typeof counterDefinition.label ===
+                        "object"
+                ) {
+
+                    label =
+                        counterDefinition.label.en ||
+                        counterDefinition.label.ms;
+
+                } else {
+
+                    label =
+                        counterDefinition.label;
+
+                }
+
+            }
+
+
+            if (!label) {
+
+                label =
+                    formatLabel(
+                        key
+                    );
+
+            }
+
+
+            results.push(
+                `${label}: ${count}`
+            );
+
+        }
+    );
+
+
+    return results.length
+        ? results
+        : null;
+
+}
+
+
+/* =========================================================
+   NUMBER VALUE
+========================================================= */
+
+function formatConfiguredNumber(
+    questionDefinition,
+    rawValue
+) {
+
+    if (
+        rawValue === null ||
+        rawValue === undefined ||
+        rawValue === ""
+    ) {
+
+        return "Not specified";
+
+    }
+
+
+    const unit =
+        questionDefinition?.unit;
+
+
+    if (!unit) {
+
+        return String(
+            rawValue
+        );
+
+    }
+
+
+    let unitText = "";
+
+
+    if (
+        typeof unit === "string"
+    ) {
+
+        unitText =
+            unit;
+
+    } else if (
+        typeof unit === "object"
+    ) {
+
+        unitText =
+            unit.en ||
+            unit.ms ||
+            "";
+
+    }
+
+
+    return unitText
+        ? `${rawValue} ${unitText}`
+        : String(rawValue);
+
+}
+
+/* =========================================================
+   GET ANSWER DISPLAY HTML
+   Converts answer values into clean UI elements.
+========================================================= */
+
+function getAnswerDisplayHtml(answer) {
+
+    /*
+     * ------------------------------------------------------
+     * 1. COUNTER / JSON OBJECT
+     *
+     * Example:
+     *
+     * {"door":1,"window":1,"sliding":1}
+     *
+     * becomes:
+     *
+     * Door      1
+     * Window    1
+     * Sliding   1
+     * ------------------------------------------------------
+     */
+
+    if (
+        answer.question_type === "counter" ||
+        answer.type === "counter"
+    ) {
+
+        const counterValue =
+            answer.text_value;
+
+        if (
+            counterValue !== null &&
+            counterValue !== undefined &&
+            String(counterValue).trim() !== ""
+        ) {
+
+            try {
+
+                const values =
+                    typeof counterValue === "string"
+                        ? JSON.parse(counterValue)
+                        : counterValue;
+
+                if (
+                    values &&
+                    typeof values === "object" &&
+                    !Array.isArray(values)
+                ) {
+
+                    const entries =
+                        Object.entries(values);
+
+                    if (entries.length > 0) {
+
+                        return entries
+                            .map(
+                                ([key, value]) => {
+
+                                    return `
+                                        <div class="answer-counter-row">
+
+                                            <span class="answer-counter-label">
+
+                                                <span class="answer-counter-icon">
+                                                    ${getAnswerIcon(key)}
+                                                </span>
+
+                                                ${escapeHtml(
+                                                    formatAnswerLabel(key)
+                                                )}
+
+                                            </span>
+
+                                            <strong class="answer-counter-value">
+                                                ${escapeHtml(
+                                                    String(value)
+                                                )}
+                                            </strong>
+
+                                        </div>
+                                    `;
+
+                                }
+                            )
+                            .join("");
+
+                    }
+
+                }
+
+            } catch (error) {
+
+                /*
+                 * If the value is not valid JSON,
+                 * continue with normal answer handling.
+                 */
+
+            }
+
+        }
+
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * 2. SELECTED OPTIONS
+     * ------------------------------------------------------
+     */
+
+    if (
+        Array.isArray(answer.options) &&
+        answer.options.length > 0
+    ) {
+
+        const optionValues =
+            answer.options
+                .map(
+                    option => {
+
+                        return (
+                            option.label?.en ||
+                            option.option_label_en ||
+                            option.value ||
+                            option.option_value ||
+                            ""
+                        );
+
+                    }
+                )
+                .filter(Boolean);
+
+        const uniqueOptions =
+            removeDuplicateValues(
+                optionValues
+            );
+
+        if (uniqueOptions.length > 0) {
+
+            return uniqueOptions
+                .map(
+                    option => `
+                        <span class="answer-chip answer-chip-modern">
+                            ${escapeHtml(
+                                formatAnswerText(
+                                    option
+                                )
+                            )}
+                        </span>
+                    `
+                )
+                .join("");
+
+        }
+
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * 3. answer.answer
+     * ------------------------------------------------------
+     */
+
+    if (
+        answer.answer !== null &&
+        answer.answer !== undefined &&
+        String(answer.answer).trim() !== ""
+    ) {
+
+        const rawAnswer =
+            answer.answer;
+
+        /*
+         * Try JSON first.
+         * This handles cases where the backend
+         * stores JSON in answer.answer instead
+         * of text_value.
+         */
+
+        if (
+            typeof rawAnswer === "object" &&
+            !Array.isArray(rawAnswer)
+        ) {
+
+            return renderObjectAnswer(
+                rawAnswer
+            );
+
+        }
+
+        if (
+            typeof rawAnswer === "string" &&
+            rawAnswer.trim().startsWith("{")
+        ) {
+
+            try {
+
+                const parsed =
+                    JSON.parse(rawAnswer);
+
+                if (
+                    parsed &&
+                    typeof parsed === "object" &&
+                    !Array.isArray(parsed)
+                ) {
+
+                    return renderObjectAnswer(
+                        parsed
+                    );
+
+                }
+
+            } catch (error) {
+
+                // Continue with normal text handling.
+
+            }
+
+        }
+
+        return renderTextAnswer(
+            normalizeAnswerText(
+                rawAnswer
+            )
+        );
+
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * 4. NUMBER
+     * ------------------------------------------------------
+     */
+
+    if (
+        answer.number_value !== null &&
+        answer.number_value !== undefined
+    ) {
+
+        const rawNumber =
+            Number(
+                answer.number_value
+            );
+
+        let numberValue;
+
+        if (!Number.isNaN(rawNumber)) {
+
+            const questionCode =
+                String(
+                    answer.question_code || ""
+                ).toLowerCase();
+
+            const decimalFields = [
+                "arm_length",
+                "pump_height",
+                "pipe_length",
+                "length",
+                "width",
+                "height",
+                "size",
+                "dimension"
+            ];
+
+            const isDecimalField =
+                decimalFields.includes(
+                    questionCode
+                );
+
+            if (isDecimalField) {
+
+                numberValue =
+                    rawNumber
+                        .toFixed(2)
+                        .replace(/\.?0+$/, "");
+
+            } else {
+
+                numberValue =
+                    Math.round(
+                        rawNumber
+                    ).toString();
+
+            }
+
+        } else {
+
+            numberValue =
+                String(
+                    answer.number_value
+                );
+
+        }
+
+        const unit =
+            formatUnit(
+                answer.unit
+            );
+
+        return `
+            <span class="answer-chip answer-chip-modern">
+                ${escapeHtml(
+                    unit
+                        ? `${numberValue} ${unit}`
+                        : numberValue
+                )}
+            </span>
+        `;
+
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * 5. TEXT
+     * ------------------------------------------------------
+     */
+
+    if (
+        answer.text_value !== null &&
+        answer.text_value !== undefined &&
+        String(answer.text_value).trim() !== ""
+    ) {
+
+        const text =
+            String(
+                answer.text_value
+            ).trim();
+
+        /*
+         * Check whether text_value contains JSON.
+         */
+
+        if (
+            text.startsWith("{") &&
+            text.endsWith("}")
+        ) {
+
+            try {
+
+                const parsed =
+                    JSON.parse(text);
+
+                if (
+                    parsed &&
+                    typeof parsed === "object" &&
+                    !Array.isArray(parsed)
+                ) {
+
+                    return renderObjectAnswer(
+                        parsed
+                    );
+
+                }
+
+            } catch (error) {
+
+                // Normal text handling.
+
+            }
+
+        }
+
+        return renderTextAnswer(
+            normalizeAnswerText(
+                text
+            )
+        );
+
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * 6. EMPTY
+     * ------------------------------------------------------
+     */
+
+    return `
+        <span class="answer-empty">
+            Not specified
+        </span>
+    `;
+
+}
+
+/* =========================================================
+   RENDER OBJECT ANSWER
+========================================================= */
+
+function renderObjectAnswer(values) {
+
+    if (
+        !values ||
+        typeof values !== "object" ||
+        Array.isArray(values)
+    ) {
+
+        return `
+            <span class="answer-empty">
+                Not specified
+            </span>
+        `;
+
+    }
+
+    const entries =
+        Object.entries(values);
+
+    if (!entries.length) {
+
+        return `
+            <span class="answer-empty">
+                Not specified
+            </span>
+        `;
+
+    }
+
+    return entries
+        .map(
+            ([key, value]) => {
+
+                return `
+                    <div class="answer-counter-row">
+
+                        <span class="answer-counter-label">
+
+                            <span class="answer-counter-icon">
+                                ${getAnswerIcon(key)}
+                            </span>
+
+                            ${escapeHtml(
+                                formatAnswerLabel(key)
+                            )}
+
+                        </span>
+
+                        <strong class="answer-counter-value">
+                            ${escapeHtml(
+                                formatCounterValue(value)
+                            )}
+                        </strong>
+
+                    </div>
+                `;
+
+            }
+        )
+        .join("");
+
+}
+
+
+/* =========================================================
+   RENDER TEXT ANSWER
+========================================================= */
+
+function renderTextAnswer(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        String(value).trim() === ""
+    ) {
+
+        return `
+            <span class="answer-empty">
+                Not specified
+            </span>
+        `;
+
+    }
+
+    /*
+     * If multiple comma-separated values exist,
+     * show each one as a chip.
+     */
+
+    const parts =
+        String(value)
+            .split(",")
+            .map(
+                part =>
+                    part.trim()
+            )
+            .filter(Boolean);
+
+    const unique =
+        removeDuplicateValues(
+            parts
+        );
+
+    if (unique.length > 1) {
+
+        return unique
+            .map(
+                part => `
+                    <span class="answer-chip answer-chip-modern">
+                        ${escapeHtml(
+                            formatAnswerText(
+                                part
+                            )
+                        )}
+                    </span>
+                `
+            )
+            .join("");
+
+    }
+
+    return `
+        <span class="answer-chip answer-chip-modern">
+            ${escapeHtml(
+                formatAnswerText(
+                    unique[0] || value
+                )
+            )}
+        </span>
+    `;
+
+}
+
+
+/* =========================================================
+   FORMAT ANSWER LABEL
+========================================================= */
+
+function formatAnswerLabel(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+    return String(value)
+        .replace(
+            /[_-]+/g,
+            " "
+        )
+        .replace(
+            /([a-z])([A-Z])/g,
+            "$1 $2"
+        )
+        .replace(
+            /\s+/g,
+            " "
+        )
+        .trim()
+        .replace(
+            /\b\w/g,
+            character =>
+                character.toUpperCase()
+        );
+
+}
+
+
+/* =========================================================
+   FORMAT ANSWER TEXT
+========================================================= */
+
+function formatAnswerText(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+    const text =
+        String(value)
+            .trim();
+
+    /*
+     * Common boolean values.
+     */
+
+    if (
+        text.toLowerCase() === "yes"
+    ) {
+
+        return "YES";
+
+    }
+
+    if (
+        text.toLowerCase() === "no"
+    ) {
+
+        return "NO";
+
+    }
+
+    /*
+     * Common option values.
+     */
+
+    return text
+        .replace(
+            /[_-]+/g,
+            " "
+        )
+        .replace(
+            /\s+/g,
+            " "
+        )
+        .trim()
+        .toUpperCase();
+
+}
+
+
+/* =========================================================
+   FORMAT COUNTER VALUE
+========================================================= */
+
+function formatCounterValue(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "0";
+
+    }
+
+    /*
+     * Boolean counter values.
+     */
+
+    if (
+        value === true
+    ) {
+
+        return "Yes";
+
+    }
+
+    if (
+        value === false
+    ) {
+
+        return "No";
+
+    }
+
+    return String(
+        value
+    );
+
+}
+
+
+/* =========================================================
+   ANSWER ICON
+========================================================= */
+
+function getAnswerIcon(key) {
+
+    const normalized =
+        String(
+            key || ""
+        )
+            .toLowerCase()
+            .replace(
+                /[_-]+/g,
+                " "
+            );
+
+    if (
+        normalized.includes("door")
+    ) {
+
+        return "🚪";
+
+    }
+
+    if (
+        normalized.includes("window")
+    ) {
+
+        return "🪟";
+
+    }
+
+    if (
+        normalized.includes("sliding")
+    ) {
+
+        return "↔";
+
+    }
+
+    if (
+        normalized.includes("camera")
+    ) {
+
+        return "📷";
+
+    }
+
+    if (
+        normalized.includes("sensor")
+    ) {
+
+        return "◉";
+
+    }
+
+    if (
+        normalized.includes("gate")
+    ) {
+
+        return "▣";
+
+    }
+
+    if (
+        normalized.includes("unit")
+    ) {
+
+        return "▤";
+
+    }
+
+    return "•";
+
+}
+/* =========================================================
+   NORMALIZE RAW ANSWER
+========================================================= */
+
+function getAnswerDisplayValue(
+    answer
+) {
+
+    if (!answer) {
+        return "Not specified";
+    }
+
+
+    const isEmpty =
+        value =>
+            value === null ||
+            value === undefined ||
+            value === "";
+
+
+    let value =
+        answer.answer;
+
+
+    /*
+     * Number answer.
+     */
+
+    if (
+        isEmpty(value) &&
+        !isEmpty(
+            answer.number_value
+        )
+    ) {
+
+        value =
+            answer.number_value;
+
+    }
+
+
+    /*
+     * Text answer.
+     */
+
+    if (
+        isEmpty(value) &&
+        !isEmpty(
+            answer.text_value
+        )
+    ) {
+
+        value =
+            answer.text_value;
+
+    }
+
+
+    /*
+     * Database may return selected
+     * options separately.
+     */
+
+    if (
+        isEmpty(value) &&
+        Array.isArray(
+            answer.options
+        ) &&
+        answer.options.length
+    ) {
+
+        value =
+            answer.options
+                .map(
+                    option =>
+                        option.option_value ||
+                        option.value ||
+                        option.option_label_en ||
+                        option.label?.en ||
+                        ""
+                )
+                .filter(Boolean);
+
+    }
+
+
+    return isEmpty(value)
+        ? "Not specified"
+        : value;
+
+}
+
+
+/* =========================================================
+   FORMAT ONE ANSWER USING SERVICES.JS
+========================================================= */
+
+function formatConfiguredAnswer(
+    questionDefinition,
+    rawValue
+) {
+
+    if (
+        rawValue === null ||
+        rawValue === undefined ||
+        rawValue === ""
+    ) {
+
+        return "Not specified";
+
+    }
+
+
+    /*
+     * COUNTER
+     */
+
+    if (
+        questionDefinition?.type ===
+            "counter"
+    ) {
+
+        const counters =
+            formatConfiguredCounterValues(
+                questionDefinition,
+                rawValue
+            );
+
+        if (counters) {
+
+            return counters;
+
+        }
+
+    }
+
+
+    /*
+     * NUMBER
+     */
+
+    if (
+        questionDefinition?.type ===
+            "number"
+    ) {
+
+        return formatConfiguredNumber(
+            questionDefinition,
+            rawValue
+        );
+
+    }
+
+
+    /*
+     * MULTI
+     */
+
+    if (
+        questionDefinition?.type ===
+            "multi" ||
+        Array.isArray(rawValue)
+    ) {
+
+        const values =
+            Array.isArray(rawValue)
+                ? rawValue
+                : [rawValue];
+
+
+        return values
+            .map(
+                value =>
+                    resolveConfiguredOptionLabel(
+                        questionDefinition,
+                        value
+                    ) ||
+                    normalizeAnswerText(
+                        value
+                    )
+            )
+            .filter(Boolean);
+
+    }
+
+
+    /*
+     * SINGLE
+     */
+
+    if (
+        questionDefinition?.type ===
+            "single"
+    ) {
+
+        return (
+            resolveConfiguredOptionLabel(
+                questionDefinition,
+                rawValue
+            ) ||
+            normalizeAnswerText(
+                rawValue
+            )
+        );
+
+    }
+
+
+    /*
+     * TEXT / TEXTAREA / FALLBACK
+     */
+
+    if (
+        typeof rawValue ===
+            "object"
+    ) {
+
+        return Object.entries(
+            rawValue
+        ).map(
+            ([key, value]) =>
+                `${formatLabel(key)}: ${value}`
+        );
+
+    }
+
+
+    return normalizeAnswerText(
+        rawValue
+    );
+
+}
+
+
+/* =========================================================
+   CUSTOMER ANSWERS
+========================================================= */
+
 function renderAnswers(data) {
-    const container = $("#answersGrid");
-    if (!container) return;
 
-    const answers = Array.isArray(data.answers) ? data.answers : [];
+    const container =
+        document.querySelector(
+            "#answersGrid"
+        );
 
-    if (!answers.length) {
-        container.innerHTML = `<div class="empty-state"><strong>No customer requirements found</strong><span>This request does not contain any service answers.</span></div>`;
+    if (!container) {
         return;
     }
 
-    container.innerHTML = answers.map((answer, index) => {
-        const question = getQuestionDisplayLabel(answer);
-        const code = getAnswerCode(answer);
+    const answers =
+        Array.isArray(data.answers)
+            ? data.answers
+            : [];
 
-        const values = normalizeAnswerValues(getAnswerDisplayValue(answer))
-            .map(item => formatAnswerValue(item, code))
-            .filter(Boolean);
+    if (!answers.length) {
 
-        const chips = values.length
-            ? values.map(item => `<span class="answer-chip">${escapeHtml(item)}</span>`).join("")
-            : `<span class="answer-chip">Not specified</span>`;
+        container.innerHTML = `
+            <div class="empty-state">
 
-        return `<article class="answer-item"><div class="answer-index">${String(index + 1).padStart(2, "0")}</div><div class="answer-content"><div class="answer-question">${escapeHtml(question)}</div><div class="answer-value">${chips}</div></div></article>`;
-    }).join("");
+                <strong>
+                    No customer requirements found
+                </strong>
+
+                <span>
+                    This request does not contain any service answers.
+                </span>
+
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        answers
+            .map(
+                (answer, index) => {
+
+                    const question =
+                        answer.question?.en ||
+                        answer.question_code ||
+                        "Customer Requirement";
+
+                    const answerHtml =
+                        getAnswerDisplayHtml(answer);
+
+                    return `
+                        <article class="answer-item">
+
+                            <div class="answer-index">
+                                ${String(
+                                    index + 1
+                                ).padStart(2, "0")}
+                            </div>
+
+                            <div class="answer-content">
+
+                                <div class="answer-question">
+                                    ${escapeHtml(
+                                        question
+                                    )}
+                                </div>
+
+                                ${
+                                    answer.description?.en
+                                        ? `
+                                            <div class="answer-description">
+                                                ${escapeHtml(
+                                                    answer.description.en
+                                                )}
+                                            </div>
+                                        `
+                                        : ""
+                                }
+
+                                <div class="answer-value answer-value-modern">
+
+                                    ${answerHtml}
+
+                                </div>
+
+                                ${
+                                    answer.unit
+                                        ? `
+                                            <div class="answer-unit">
+                                                ${escapeHtml(
+                                                    formatUnit(
+                                                        answer.unit
+                                                    )
+                                                )}
+                                            </div>
+                                        `
+                                        : ""
+                                }
+
+                            </div>
+
+                        </article>
+                    `;
+
+                }
+            )
+            .join("");
+
 }
 
+
+/* =========================================================
+   FALLBACK ONLY
+========================================================= */
+
+/*
+ * This function is intentionally kept only as a
+ * compatibility fallback for old records/API responses.
+ *
+ * New/current questions MUST come from services.js.
+ */
+
+function getQuestionDisplayLabel(
+    answer
+) {
+
+    const candidates = [
+
+        answer?.question?.en,
+
+        answer?.question_en,
+
+        answer?.title?.en,
+
+        answer?.title_en,
+
+        answer?.label?.en,
+
+        answer?.label_en,
+
+        answer?.name?.en,
+
+        answer?.field_label?.en,
+
+        answer?.field_label,
+
+        typeof answer?.question ===
+            "string"
+            ? answer.question
+            : null
+
+    ];
+
+
+    for (
+        const candidate of candidates
+    ) {
+
+        const text =
+            String(
+                candidate || ""
+            ).trim();
+
+
+        if (
+            text &&
+            text.toLowerCase() !==
+                "customer requirement"
+        ) {
+
+            return text;
+
+        }
+
+    }
+
+
+    const code =
+        getAnswerCode(
+            answer
+        );
+
+
+    if (code) {
+
+        return formatLabel(
+            code
+        );
+
+    }
+
+
+    return "Customer Requirement";
+
+}
+
+
+/* =========================================================
+   NORMALIZE ANSWER TEXT
+========================================================= */
+
+function normalizeAnswerText(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "Not specified";
+
+    }
+
+
+    const text =
+        String(value)
+            .trim();
+
+
+    if (!text) {
+
+        return "Not specified";
+
+    }
+
+
+    /*
+     * Remove duplicate comma-separated
+     * values while preserving order.
+     */
+
+    if (
+        text.includes(",")
+    ) {
+
+        const parts =
+            text
+                .split(",")
+                .map(
+                    part =>
+                        part.trim()
+                )
+                .filter(Boolean);
+
+
+        const unique =
+            removeDuplicateValues(
+                parts
+            );
+
+
+        return unique.join(
+            ", "
+        );
+
+    }
+
+
+    return text;
+
+}
+
+
+/* =========================================================
+   REMOVE DUPLICATES
+========================================================= */
+
+function removeDuplicateValues(
+    values
+) {
+
+    const seen =
+        new Set();
+
+
+    return values.filter(
+        value => {
+
+            const normalized =
+                String(value)
+                    .trim()
+                    .toLowerCase();
+
+
+            if (!normalized) {
+                return false;
+            }
+
+
+            if (
+                seen.has(
+                    normalized
+                )
+            ) {
+
+                return false;
+
+            }
+
+
+            seen.add(
+                normalized
+            );
+
+
+            return true;
+
+        }
+    );
+
+}
 
 /* =========================================================
    CUSTOMER NOTES
@@ -1514,6 +3227,176 @@ function addTechnicianOption(select, id, label) {
     select.appendChild(option);
 }
 
+/* =========================================================
+   QUOTATION PAYMENT PROOF CHECK
+========================================================= */
+
+/*
+ * Technician assignment is unlocked only after the Admin
+ * uploads the customer's INITIAL quotation payment proof.
+ *
+ * This is NOT the final invoice payment proof.
+ */
+function hasQuotationPaymentProof(data) {
+
+    const quotations =
+        data?.quotations || {};
+
+
+    const candidates = [
+
+        quotations.final,
+
+        quotations.original
+
+    ].filter(Boolean);
+
+
+    return candidates.some(
+        quotation => {
+
+            const proofUrl =
+                String(
+                    quotation?.payment_proof_url || ""
+                ).trim();
+
+
+            const paymentStatus =
+                String(
+                    quotation?.payment_status || ""
+                ).trim().toLowerCase();
+
+
+            return (
+                proofUrl !== "" &&
+                paymentStatus === "proof_uploaded"
+            );
+
+        }
+    );
+
+}
+
+/* =========================================================
+   TECHNICIAN ASSIGNMENT LOCK
+========================================================= */
+
+function updateTechnicianAssignmentLock(
+    data = requestData
+) {
+
+    const technicianSelect =
+        $("#technicianSelect");
+
+    const scheduledDate =
+        $("#scheduledDate");
+
+    const scheduledTime =
+        $("#scheduledTime");
+
+    const saveButton =
+        $("#saveTechnicianButton");
+
+    const message =
+        $("#technicianAssignmentMessage");
+
+
+    if (
+        !technicianSelect
+    ) {
+
+        return;
+
+    }
+
+
+    const hasPaymentProof =
+        hasQuotationPaymentProof(
+            data
+        );
+
+
+    /*
+     * -----------------------------------------------------
+     * PAYMENT PROOF NOT UPLOADED
+     * -----------------------------------------------------
+     */
+
+    if (!hasPaymentProof) {
+
+        technicianSelect.disabled = true;
+
+        if (scheduledDate) {
+            scheduledDate.disabled = true;
+        }
+
+        if (scheduledTime) {
+            scheduledTime.disabled = true;
+        }
+
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.textContent =
+                "Payment Proof Required";
+        }
+
+
+        if (message) {
+
+            message.hidden = false;
+
+            message.className =
+                "assignment-message locked";
+
+            message.textContent =
+                "🔒 Technician assignment is locked. " +
+                "Please upload the customer's quotation payment proof first.";
+
+        }
+
+
+        return;
+
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * PAYMENT PROOF EXISTS
+     * -----------------------------------------------------
+     */
+
+    technicianSelect.disabled = false;
+
+    if (scheduledDate) {
+        scheduledDate.disabled = false;
+    }
+
+    if (scheduledTime) {
+        scheduledTime.disabled = false;
+    }
+
+
+    if (saveButton) {
+
+        saveButton.disabled = false;
+
+        saveButton.textContent =
+            "Assign Technician";
+
+    }
+
+
+    if (message) {
+
+        message.hidden = true;
+
+        message.textContent = "";
+
+    }
+
+}
+
 async function loadTechnicians(data = requestData) {
     const select = $("#technicianSelect");
     if (!select) return;
@@ -1547,10 +3430,15 @@ async function loadTechnicians(data = requestData) {
             );
         }
 
-        select.value = currentId || "";
-        select.disabled = false;
+       select.value = currentId || "";
 
-        updateTechnicianDisplay();
+updateTechnicianDisplay();
+
+/*
+ * Technician assignment is controlled by quotation
+ * payment proof.
+ */
+updateTechnicianAssignmentLock(data);
 
     } catch (error) {
         console.error("Unable to load technicians:", error);
@@ -1598,7 +3486,12 @@ function renderAssignment(data) {
     if (scheduledDate) scheduledDate.value = toDateInputValue(data?.scheduled_date);
     if (scheduledTime) scheduledTime.value = toTimeInputValue(data?.scheduled_time);
 
-    if (techniciansCache) updateTechnicianDisplay();
+    if (techniciansCache) {
+    updateTechnicianDisplay();
+}
+
+updateTechnicianAssignmentLock(data);
+
 }
 
 function showAssignmentMessage(text, type = "") {
@@ -1646,6 +3539,26 @@ async function saveTechnicianAssignment() {
         alert("The technician list has not loaded. Please refresh the page and try again.");
         return;
     }
+    
+
+    /*
+ * Technician assignment is not allowed until
+ * quotation payment proof has been uploaded.
+ */
+if (!hasQuotationPaymentProof(requestData)) {
+
+    showAssignmentMessage(
+        "🔒 Technician assignment is locked. Please upload the customer's quotation payment proof first.",
+        "error"
+    );
+
+    alert(
+        "Technician cannot be assigned yet.\n\n" +
+        "Please upload the customer's quotation payment proof first."
+    );
+
+    return;
+}
 
     const technicianId = technicianSelect.value || null;
     const dateValue = scheduledDate?.value || "";

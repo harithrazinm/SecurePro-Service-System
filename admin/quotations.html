@@ -8,7 +8,7 @@
     <title>SecurePro | Quotations</title>
 
     <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/quotations.css">
+    <link rel="stylesheet" href="css/quotations.css?v=20260924-1">
     <link rel="stylesheet" href="css/admin-theme.css">
     <link rel="stylesheet" href="css/request.css">
     <link rel="stylesheet" href="css/quotations-approval.css">
@@ -16,636 +16,596 @@
 
 <body>
 
-<div class="app-shell">
+    <div class="app-shell">
 
-    <!-- =========================
+        <!-- =========================
          TOP BAR
     ========================== -->
-    <header class="topbar-card">
+        <header class="topbar-card">
 
-        <div class="brand">
+            <div class="brand">
 
-            <div class="brand-mark">
-                S
+                <div class="brand-mark">
+                    S
+                </div>
+
+                <div class="brand-text">
+                    <strong>SECUREPRO</strong>
+                    <span>System Solutions</span>
+                </div>
+
             </div>
 
-            <div class="brand-text">
-                <strong>SECUREPRO</strong>
-                <span>System Solutions</span>
-            </div>
 
-        </div>
+            <nav class="top-nav">
 
+                <a href="dashboard.html">
 
-        <nav class="top-nav">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 
-            <a href="dashboard.html">
+                        <rect x="3" y="3" width="7" height="9" rx="1.5" />
+                        <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                        <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                        <rect x="3" y="16" width="7" height="5" rx="1.5" />
 
-                <svg viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
+                    </svg>
 
-                    <rect x="3" y="3" width="7" height="9" rx="1.5"/>
-                    <rect x="14" y="3" width="7" height="5" rx="1.5"/>
-                    <rect x="14" y="12" width="7" height="9" rx="1.5"/>
-                    <rect x="3" y="16" width="7" height="5" rx="1.5"/>
+                    Dashboard
 
-                </svg>
+                </a>
+                <a href="quotations.html" class="active">
 
-                Dashboard
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 
-            </a>
- <a href="quotations.html" class="active">
+                        <path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+                        <path d="M9 12h6M9 16h4" />
 
-                <svg viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
+                    </svg>
 
-                    <path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
-                    <path d="M9 12h6M9 16h4"/>
+                    Quotations
 
-                </svg>
+                </a>
 
-                Quotations
+                <a href="job-pending.html">
 
-            </a>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 
-             <a href="job-pending.html">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 3" />
 
-                <svg viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
+                    </svg>
 
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="M12 7v5l3 3"/>
+                    Job Pending
 
-                </svg>
+                </a>
 
-                Job Pending
 
-            </a>
 
 
-           
 
+                <a href="work-calendar.html">
 
-            <a href="work-calendar.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 
-                <svg viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="17" rx="2" />
+                        <path d="M3 9h18M8 2v4M16 2v4" />
+                        <path d="M8 13h2M14 13h2M8 17h2M14 17h2" />
 
-                    <rect x="3" y="4" width="18" height="17" rx="2"/>
-                    <path d="M3 9h18M8 2v4M16 2v4"/>
-                    <path d="M8 13h2M14 13h2M8 17h2M14 17h2"/>
+                    </svg>
 
-                </svg>
+                    Work Calendar
 
-                Work Calendar
+                </a>
 
-            </a>
+                <a href="requests.html">
 
-            <a href="requests.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 
-                <svg viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
+                        <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z" />
+                        <rect x="5" y="5" width="14" height="16" rx="2" />
+                        <path d="M9 12h6M9 16h6" />
 
-                    <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z"/>
-                    <rect x="5" y="5" width="14" height="16" rx="2"/>
-                    <path d="M9 12h6M9 16h6"/>
+                    </svg>
 
-                </svg>
+                    Service Requests
 
-                Service Requests
+                </a>
 
-            </a>
 
+                <a href="invoices.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="5" y="3" width="14" height="18" rx="2" />
+                        <path d="M8 7h8M8 11h8M8 15h5" />
+                        <path d="M16 18h.01" />
+                    </svg>
+                    Invoices & Payments
+                </a>
 
-           <a href="invoices.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="5" y="3" width="14" height="18" rx="2"/>
-            <path d="M8 7h8M8 11h8M8 15h5"/>
-            <path d="M16 18h.01"/>
-        </svg>
-        Invoices & Payments
-    </a>
 
-
-        </nav>
-
-    </header>
-
-
-    <!-- =========================
-         LOGOUT
-    ========================== -->
-
-    <button
-        type="button"
-        id="logoutButton"
-        class="logout-bar"
-    >
-
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            width="16"
-            height="16"
-        >
-
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <path d="M16 17l5-5-5-5"/>
-            <path d="M21 12H9"/>
-
-        </svg>
-
-        Logout
-
-    </button>
-
-
-    <!-- =========================
-         MAIN
-    ========================== -->
-
-    <main>
-
-        <div class="eyebrow-row">
-
-            <span class="eyebrow">
-                SECUREPRO ADMINISTRATION
-            </span>
-
-
-            <span class="admin-pill">
-
-                <span class="dot"></span>
-
-                <span id="topbarAdminName">
-                    Admin
-                </span>
-
-            </span>
-
-        </div>
-
-
-        <span
-            id="sidebarAdminName"
-            class="admin-name"
-        >
-            Admin
-        </span>
-
-
-        <header class="request-header">
-
-            <h1 class="page-title">
-                Quotations
-            </h1>
+            </nav>
 
         </header>
 
 
         <!-- =========================
-             QUOTATION CONTENT
-        ========================== -->
+         LOGOUT
+    ========================== -->
 
-        <div class="quotation-content">
+        <button type="button" id="logoutButton" class="logout-bar">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+
+            </svg>
+
+            Logout
+
+        </button>
 
 
-            <!-- HERO -->
+        <!-- =========================
+         MAIN
+    ========================== -->
 
-            <section class="quotation-intro quotation-hero">
+        <main>
 
-                <div>
+            <div class="eyebrow-row">
 
-                    <span class="eyebrow">
-                        SALES &amp; QUOTATIONS
+                <span class="eyebrow">
+                    SECUREPRO ADMINISTRATION
+                </span>
+
+
+                <span class="admin-pill">
+
+                    <span class="dot"></span>
+
+                    <span id="topbarAdminName">
+                        Admin
                     </span>
 
+                </span>
 
-                    <h2>
-                        Customer quotations
-                    </h2>
-
-
-                    <p>
-                        Upload prepared quotations, send them with WhatsApp
-                        or email, and track each customer follow-up.
-                    </p>
-
-                </div>
+            </div>
 
 
-                <button
-                    id="createQuotationButton"
-                    class="primary-button hero-button"
-                    type="button"
-                >
-                    + Upload Quotation
-                </button>
-
-            </section>
+            <span id="sidebarAdminName" class="admin-name">
+                Admin
+            </span>
 
 
-            <!-- ERROR -->
+            <header class="request-header">
 
-            <div
-                id="quotationError"
-                class="quotation-error"
-                hidden
-            ></div>
+                <h1 class="page-title">
+                    Quotations
+                </h1>
+
+            </header>
 
 
             <!-- =========================
-                 QUOTATION TABLE
-            ========================== -->
+             QUOTATION CONTENT
+        ========================== -->
 
-            <section class="quotation-card">
+            <div class="quotation-content">
 
-                <div class="quotation-card-header">
+
+                <!-- HERO -->
+
+                <section class="quotation-intro quotation-hero">
 
                     <div>
 
                         <span class="eyebrow">
-                            QUOTATION LIST
+                            SALES &amp; QUOTATIONS
                         </span>
 
 
-                        <h3>
-                            All quotations
-                        </h3>
+                        <h2>
+                            Customer quotations
+                        </h2>
+
+
+                        <p>
+                            Upload prepared quotations, send them with WhatsApp
+                            or email, and track each customer follow-up.
+                        </p>
 
                     </div>
 
 
-                    <button
-                        id="refreshButton"
-                        class="secondary-button"
-                        type="button"
-                    >
-                        ↻ Refresh
+                    <button id="createQuotationButton" class="primary-button hero-button" type="button">
+                        + Upload Quotation
                     </button>
+
+                </section>
+
+
+                <!-- ERROR -->
+
+                <div id="quotationError" class="quotation-error" hidden></div>
+
+
+                <!-- =========================
+                 QUOTATION TABLE
+            ========================== -->
+
+                <section class="quotation-card">
+
+                    <div class="quotation-card-header">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                QUOTATION LIST
+                            </span>
+
+                            <!-- =====================================================
+     JOBS REQUIRING QUOTATION
+===================================================== -->
+
+                            <section class="quotation-work-queue">
+
+                                <div class="work-queue-header">
+
+                                    <div>
+                                        <span class="eyebrow">
+                                            ACTION REQUIRED
+                                        </span>
+
+                                        <h2>
+                                            Jobs Requiring Quotation
+                                        </h2>
+
+                                        <p>
+                                            Service requests that do not have a quotation yet.
+                                            Select a job below to upload its quotation.
+                                        </p>
+                                    </div>
+
+                                    <div class="work-queue-count">
+                                        <strong id="quotationJobCount">0</strong>
+                                        <span>Jobs</span>
+                                    </div>
+
+                                </div>
+
+
+                                <div id="quotationJobList" class="quotation-job-list">
+
+                                    <div class="quotation-job-loading">
+                                        Loading jobs...
+                                    </div>
+
+                                </div>
+
+                            </section>
+                            <h3>
+                                All quotations
+                            </h3>
+
+                        </div>
+
+
+                        <button id="refreshButton" class="secondary-button" type="button">
+                            ↻ Refresh
+                        </button>
+
+                    </div>
+
+
+                    <!-- TOOLBAR -->
+
+                    <div class="quotation-toolbar">
+
+                        <div class="search-box">
+
+                            <span>
+                                ⌕
+                            </span>
+
+
+                            <input type="search" id="searchInput"
+                                placeholder="Search quotation, customer or request...">
+
+                        </div>
+
+
+                        <select id="statusFilter">
+
+                            <option value="">
+                                All Status
+                            </option>
+
+                            <option value="draft">
+                                Draft
+                            </option>
+
+                            <option value="sent">
+                                Sent
+                            </option>
+
+                            <option value="accepted">
+                                Accepted
+                            </option>
+
+                            <option value="rejected">
+                                Rejected
+                            </option>
+
+                            <option value="expired">
+                                Expired
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- TABLE -->
+
+                    <div class="table-wrapper">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Quotation
+                                    </th>
+
+
+                                    <th>
+                                        Customer
+                                    </th>
+
+
+                                    <th>
+                                        Service
+                                    </th>
+
+
+                                    <th>
+                                        Status
+                                    </th>
+
+
+                                    <!-- NEW -->
+                                    <th>
+                                        Approval
+                                    </th>
+
+
+                                    <th>
+                                        Sent
+                                    </th>
+
+
+                                    <th>
+                                        Follow-up
+                                    </th>
+
+
+                                    <th>
+                                        Payment proof
+                                    </th>
+
+
+                                    <th>
+                                        Actions
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="quotationsTableBody">
+
+                                <tr>
+
+                                    <td colspan="9" class="table-loading">
+                                        Loading quotations...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <!-- =====================================================
+     QUOTATION MODAL
+===================================================== -->
+
+    <div id="quotationModal" class="modal-overlay" hidden>
+
+        <div class="quotation-modal">
+
+
+            <!-- =========================
+             MODAL HEADER
+        ========================== -->
+
+            <div class="modal-header">
+
+                <div>
+
+                    <span id="modalEyebrow" class="eyebrow">
+                        NEW QUOTATION
+                    </span>
+
+
+                    <h2 id="modalTitle">
+                        Create quotation
+                    </h2>
 
                 </div>
 
 
-                <!-- TOOLBAR -->
+                <button id="closeModalButton" class="close-button" type="button">
+                    ×
+                </button>
 
-                <div class="quotation-toolbar">
-
-                    <div class="search-box">
-
-                        <span>
-                            ⌕
-                        </span>
+            </div>
 
 
-                        <input
-                            type="search"
-                            id="searchInput"
-                            placeholder="Search quotation, customer or request..."
-                        >
+            <!-- =========================
+             FORM
+        ========================== -->
 
+            <form id="quotationForm">
+
+
+                <!-- =========================
+                 CUSTOMER REQUEST
+            ========================== -->
+
+                <div class="form-section">
+
+                    <div class="form-section-title">
+                        Customer request
                     </div>
 
 
-                    <select id="statusFilter">
+                    <label for="requestId">
+                        Service Request
+                    </label>
+
+
+                    <select id="requestId" required>
 
                         <option value="">
-                            All Status
-                        </option>
-
-                        <option value="draft">
-                            Draft
-                        </option>
-
-                        <option value="sent">
-                            Sent
-                        </option>
-
-                        <option value="accepted">
-                            Accepted
-                        </option>
-
-                        <option value="rejected">
-                            Rejected
-                        </option>
-
-                        <option value="expired">
-                            Expired
+                            Loading requests...
                         </option>
 
                     </select>
 
-                </div>
 
-
-                <!-- TABLE -->
-
-                <div class="table-wrapper">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    Quotation
-                                </th>
-
-
-                                <th>
-                                    Customer
-                                </th>
-
-
-                                <th>
-                                    Service
-                                </th>
-
-
-                                <th>
-                                    Status
-                                </th>
-
-
-                                <!-- NEW -->
-                                <th>
-                                    Approval
-                                </th>
-
-
-                                <th>
-                                    Sent
-                                </th>
-
-
-                                <th>
-                                    Follow-up
-                                </th>
-
-
-                                <th>
-                                    Payment proof
-                                </th>
-
-
-                                <th>
-                                    Actions
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody id="quotationsTableBody">
-
-                            <tr>
-
-                                <td
-                                    colspan="9"
-                                    class="table-loading"
-                                >
-                                    Loading quotations...
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
+                    <small>
+                        Each service request can have
+                        only one quotation.
+                    </small>
 
                 </div>
 
-            </section>
 
-        </div>
-
-    </main>
-
-</div>
-
-
-<!-- =====================================================
-     QUOTATION MODAL
-===================================================== -->
-
-<div
-    id="quotationModal"
-    class="modal-overlay"
-    hidden
->
-
-    <div class="quotation-modal">
-
-
-        <!-- =========================
-             MODAL HEADER
-        ========================== -->
-
-        <div class="modal-header">
-
-            <div>
-
-                <span
-                    id="modalEyebrow"
-                    class="eyebrow"
-                >
-                    NEW QUOTATION
-                </span>
-
-
-                <h2 id="modalTitle">
-                    Create quotation
-                </h2>
-
-            </div>
-
-
-            <button
-                id="closeModalButton"
-                class="close-button"
-                type="button"
-            >
-                ×
-            </button>
-
-        </div>
-
-
-        <!-- =========================
-             FORM
-        ========================== -->
-
-        <form id="quotationForm">
-
-
-            <!-- =========================
-                 CUSTOMER REQUEST
-            ========================== -->
-
-            <div class="form-section">
-
-                <div class="form-section-title">
-                    Customer request
-                </div>
-
-
-                <label for="requestId">
-                    Service Request
-                </label>
-
-
-                <select
-                    id="requestId"
-                    required
-                >
-
-                    <option value="">
-                        Loading requests...
-                    </option>
-
-                </select>
-
-
-                <small>
-                    Each service request can have
-                    only one quotation.
-                </small>
-
-            </div>
-
-
-            <!-- =========================
+                <!-- =========================
                  QUOTATION PDF
             ========================== -->
 
-            <div class="form-section">
+                <div class="form-section">
 
-                <div class="form-section-title">
-                    Quotation document
+                    <div class="form-section-title">
+                        Quotation document
+                    </div>
+
+
+                    <label for="quotationFile">
+                        Quotation PDF
+                    </label>
+
+
+                    <input id="quotationFile" type="file" accept="application/pdf,.pdf">
+
+
+                    <small>
+                        PDF only, maximum 10 MB.
+                        When editing, leave empty to
+                        keep the existing PDF.
+                    </small>
+
                 </div>
 
 
-                <label for="quotationFile">
-                    Quotation PDF
-                </label>
-
-
-                <input
-                    id="quotationFile"
-                    type="file"
-                    accept="application/pdf,.pdf"
-                >
-
-
-                <small>
-                    PDF only, maximum 10 MB.
-                    When editing, leave empty to
-                    keep the existing PDF.
-                </small>
-
-            </div>
-
-
-            <!-- =================================================
+                <!-- =================================================
                  SUPER ADMIN APPROVAL NOTICE
             ================================================== -->
 
-            <div
-                id="quotationApprovalNotice"
-                class="quotation-approval-notice"
-            ></div>
+                <div id="quotationApprovalNotice" class="quotation-approval-notice"></div>
 
 
-            <!-- =========================
+                <!-- =========================
                  NOTES
             ========================== -->
 
-            <div class="form-section">
+                <div class="form-section">
 
-                <div class="form-section-title">
-                    Internal note
+                    <div class="form-section-title">
+                        Internal note
+                    </div>
+
+
+                    <label for="notes">
+                        Notes
+                    </label>
+
+
+                    <textarea id="notes" rows="4" placeholder="Optional internal note..."></textarea>
+
                 </div>
 
 
-                <label for="notes">
-                    Notes
-                </label>
-
-
-                <textarea
-                    id="notes"
-                    rows="4"
-                    placeholder="Optional internal note..."
-                ></textarea>
-
-            </div>
-
-
-            <!-- =========================
+                <!-- =========================
                  FORM ERROR
             ========================== -->
 
-            <div
-                id="formError"
-                class="form-error"
-                hidden
-            ></div>
+                <div id="formError" class="form-error" hidden></div>
 
 
-            <!-- =========================
+                <!-- =========================
                  ACTIONS
             ========================== -->
 
-            <div class="modal-actions">
+                <div class="modal-actions">
 
-                <button
-                    id="cancelButton"
-                    type="button"
-                    class="secondary-button"
-                >
-                    Cancel
-                </button>
+                    <button id="cancelButton" type="button" class="secondary-button">
+                        Cancel
+                    </button>
 
 
-                <button
-                    id="saveButton"
-                    type="submit"
-                    class="primary-button"
-                >
-                    Create quotation
-                </button>
+                    <button id="saveButton" type="submit" class="primary-button">
+                        Create quotation
+                    </button>
 
-            </div>
+                </div>
 
-        </form>
+            </form>
+
+        </div>
 
     </div>
 
-</div>
 
-
-<!-- =====================================================
+    <!-- =====================================================
      PAYMENT PROOF UPLOAD
 ===================================================== -->
 
-<input
-    id="paymentProofFile"
-    type="file"
-    accept="image/*,.pdf"
-    hidden
->
+    <input id="paymentProofFile" type="file" accept="image/*,.pdf" hidden>
 
 
-<!-- =====================================================
+    <!-- =====================================================
      JAVASCRIPT
 ===================================================== -->
 
-<script src="js/quotations.js"></script>
-<script src="js/session-timeout.js"></script>
+    <script src="js/quotations.js?v=20260924-1"></script>
+    <script src="js/session-timeout.js?v=20260924-1"></script>
 
 </body>
 

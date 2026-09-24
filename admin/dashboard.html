@@ -7,7 +7,7 @@
     <title>SecurePro | Admin Dashboard</title>
 
     <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=20260917-2">
+    <link rel="stylesheet" href="css/dashboard.css?v=20260924-1">
 <link rel="stylesheet" href="css/admin-theme.css">
 <link rel="stylesheet" href="css/request.css">
 </head>
@@ -61,21 +61,33 @@
     </button>
 
     <main class="dashboard-main">
-        <section class="dashboard-page-head">
+
+        <!-- HERO -->
+        <section class="dashboard-hero">
             <div>
                 <div class="eyebrow-row">
                     <span class="eyebrow">SECUREPRO ADMINISTRATION</span>
                     <span class="admin-pill"><span class="dot"></span><span id="topbarAdminName">Admin</span></span>
                 </div>
-                <span id="sidebarAdminName" class="admin-name" aria-hidden="true">Admin</span>
                 <h1 class="page-title">Dashboard</h1>
                 <p class="page-subtitle">A clear overview of service requests, technician assignments and completed work.</p>
             </div>
-            <button id="refreshButton" class="refresh-button" type="button">
-                <span class="refresh-icon">↻</span> Refresh
-            </button>
+
+            <div class="hero-actions">
+                <div class="hero-date">
+                    <span>Today</span>
+                    <strong id="todayDate">—</strong>
+                </div>
+                <button id="refreshButton" class="refresh-button" type="button">
+                    <span class="refresh-icon">↻</span> Refresh
+                </button>
+            </div>
         </section>
 
+        <!-- ERROR (used by dashboard.js showError/hideError) -->
+        <div id="dashboardError" class="dashboard-error" hidden></div>
+
+        <!-- STATS -->
         <section class="stats-grid" aria-label="Service request statistics">
             <article class="stat-card stat-card-primary">
                 <div class="stat-top"><span class="stat-label">Total Requests</span><span class="stat-icon">#</span></div>
@@ -108,41 +120,104 @@
             </article>
         </section>
 
-        <section class="requests-section" id="recentRequests">
-            <div class="section-heading">
+        <!-- JOB PENDING -->
+        <section class="dashboard-panel job-pending-panel" id="jobPendingSection">
+            <div class="panel-heading">
                 <div>
-                    <span class="eyebrow">RECENT ACTIVITY</span>
-                    <h2>Latest service requests</h2>
-                    <p>Review the five most recent customer orders and their current status.</p>
+                    <span class="eyebrow">JOB MANAGEMENT</span>
+                    <h2>Job Pending</h2>
+                    <p>Paid service jobs waiting for technician assignment or currently being handled.</p>
                 </div>
-                <a class="view-all-button" href="requests.html">View all requests <span>→</span></a>
+
+                <div class="panel-heading-actions">
+                    <span id="jobPendingCount" class="panel-count">Loading...</span>
+                    <a class="panel-link" href="job-pending.html">
+                        View all <span>→</span>
+                    </a>
+                </div>
             </div>
 
-            <div id="dashboardError" class="dashboard-error" hidden></div>
-
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Request</th>
-                            <th>Customer</th>
-                            <th>Service</th>
-                            <th>Status</th>
-                            <th>Technician</th>
-                            <th>Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="requestsTableBody">
-                        <tr><td colspan="7" class="table-loading"><span class="loading-dot"></span> Loading recent requests...</td></tr>
-                    </tbody>
-                </table>
+            <div class="job-pending-list" id="jobPendingList">
+                <div class="job-pending-loading">
+                    <span class="loading-dot"></span>
+                    Loading job pending...
+                </div>
             </div>
         </section>
+
+        <!-- CALENDAR + UPCOMING JOBS -->
+        <section class="dashboard-bottom-grid">
+
+            <!-- WORK CALENDAR -->
+            <article class="dashboard-panel calendar-panel">
+                <div class="panel-heading compact-heading">
+                    <div>
+                        <span class="eyebrow">SCHEDULE MANAGEMENT</span>
+                        <h2>Work Calendar</h2>
+                        <p>Scheduled technician jobs by date.</p>
+                    </div>
+
+                    <div class="panel-heading-actions">
+                        <a class="panel-link" href="work-calendar.html">
+                            Open calendar <span>→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="calendar-toolbar">
+                    <button type="button" id="calendarPrev" class="calendar-nav" aria-label="Previous month">‹</button>
+                    <strong id="calendarMonth">—</strong>
+                    <button type="button" id="calendarNext" class="calendar-nav" aria-label="Next month">›</button>
+                </div>
+
+                <div class="calendar-weekdays" aria-hidden="true">
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span>Sat</span>
+                    <span>Sun</span>
+                </div>
+
+                <div class="calendar-grid" id="calendarGrid">
+                    <div class="calendar-loading">Loading calendar...</div>
+                </div>
+
+                <div class="calendar-footer">
+                    <span><i class="calendar-dot today"></i> Today</span>
+                    <span><i class="calendar-dot"></i> Has scheduled job</span>
+                </div>
+            </article>
+
+            <!-- UPCOMING JOBS -->
+            <article class="dashboard-panel upcoming-panel">
+                <div class="panel-heading compact-heading">
+                    <div>
+                        <span class="eyebrow">UPCOMING</span>
+                        <h2>Upcoming Jobs</h2>
+                        <p>Next scheduled work appointments.</p>
+                    </div>
+
+                    <div class="panel-heading-actions">
+                        <span id="upcomingCount" class="panel-count">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="upcoming-jobs" id="upcomingJobs">
+                    <div class="job-pending-loading">
+                        <span class="loading-dot"></span>
+                        Loading upcoming jobs...
+                    </div>
+                </div>
+            </article>
+
+        </section>
+
     </main>
 </div>
 
-<script src="js/dashboard.js?v=20260917-2"></script>
+<script src="js/dashboard.js?v=20260924-1"></script>
 <script src="js/session-timeout.js"></script>
 </body>
 </html>

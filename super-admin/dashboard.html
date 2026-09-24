@@ -24,6 +24,11 @@
         href="css/super-admin.css"
     >
 
+    <link
+        rel="stylesheet"
+        href="css/super-admin-dashboard.css"
+    >
+
 </head>
 
 
@@ -33,7 +38,7 @@
 
 
         <!-- =========================================
-             SIDEBAR
+             SIDEBAR (unchanged)
         ========================================== -->
 
         <aside class="sidebar">
@@ -145,81 +150,64 @@
 
         <main class="main">
 
-
-            <!-- TOP BAR -->
-
-            <header class="topbar">
-
-                <div>
-
-                    <small>
-                        SECUREPRO SUPER ADMINISTRATION
-                    </small>
-
-                    <h1>
-                        Monitoring Dashboard
-                    </h1>
-
-                </div>
-
-
-                <div class="online">
-
-                    ●
-
-                    <span id="topName">
-                        Super Admin
-                    </span>
-
-                </div>
-
-            </header>
-
-
-
-            <!-- CONTENT -->
-
             <section class="content">
 
 
-                <!-- INTRO -->
+                <!-- HERO -->
 
-                <div class="intro">
+                <section class="dashboard-hero">
 
                     <div>
 
-                        <span class="eyebrow">
-                            OVERVIEW
-                        </span>
+                        <div class="eyebrow-row">
 
-                        <h2>
-                            Project monitoring
-                        </h2>
+                            <span class="eyebrow">
+                                SECUREPRO SUPER ADMINISTRATION
+                            </span>
 
-                        <p>
-                            Monitor quotations, invoices,
-                            payment proofs, technician
-                            progress, reports and completed
-                            projects.
+                            <span class="admin-pill">
+                                <span class="dot"></span>
+                                <span id="topName">Super Admin</span>
+                            </span>
+
+                        </div>
+
+                        <h1 class="page-title">
+                            Monitoring Dashboard
+                        </h1>
+
+                        <p class="page-subtitle">
+                            Monitor quotations, invoices, payment proofs,
+                            technician progress, reports and completed projects.
                         </p>
 
                     </div>
 
 
-                    <button
-                        id="refreshButton"
-                        class="refresh"
-                        type="button"
-                    >
-                        ↻ Refresh
-                    </button>
+                    <div class="hero-actions">
 
-                </div>
+                        <div class="hero-date">
+                            <span>Today</span>
+                            <strong id="todayDate">—</strong>
+                        </div>
+
+                        <button
+                            id="refreshButton"
+                            class="refresh-button"
+                            type="button"
+                        >
+                            <span class="refresh-icon">↻</span>
+                            Refresh
+                        </button>
+
+                    </div>
+
+                </section>
 
 
 
                 <!-- =====================================
-                     STAT CARDS
+                     STAT CARDS (unchanged)
                 ====================================== -->
 
                 <section class="stats">
@@ -379,12 +367,79 @@
 
 
                 <!-- =====================================
+                     CALENDAR + UPCOMING JOBS
+                ====================================== -->
+
+                <section class="dashboard-bottom-grid">
+
+                    <article class="panel dashboard-panel calendar-panel">
+
+                        <div class="panel-heading">
+                            <div>
+                                <span class="eyebrow">SCHEDULE MONITORING</span>
+                                <h2>Work Calendar</h2>
+                                <p>Scheduled technician jobs by date.</p>
+                            </div>
+
+                            <div class="panel-heading-actions">
+                                <a class="panel-link" href="work-calendar.html">
+                                    Open calendar <span>→</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="calendar-toolbar">
+                            <button type="button" id="calendarPrev" class="calendar-nav" aria-label="Previous month">‹</button>
+                            <strong id="calendarMonth">—</strong>
+                            <button type="button" id="calendarNext" class="calendar-nav" aria-label="Next month">›</button>
+                        </div>
+
+                        <div class="calendar-weekdays" aria-hidden="true">
+                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                        </div>
+
+                        <div class="calendar-grid" id="calendarGrid">
+                            <div class="calendar-loading">Loading calendar...</div>
+                        </div>
+
+                        <div class="calendar-footer">
+                            <span><i class="calendar-dot today"></i> Today</span>
+                            <span><i class="calendar-dot"></i> Has scheduled job</span>
+                        </div>
+
+                    </article>
+
+
+                    <article class="panel dashboard-panel upcoming-panel">
+
+                        <div class="panel-heading">
+                            <div>
+                                <span class="eyebrow">UPCOMING</span>
+                                <h2>Upcoming Jobs</h2>
+                                <p>Next scheduled work appointments.</p>
+                            </div>
+
+                            <div class="panel-heading-actions">
+                                <span id="upcomingCount" class="panel-count">Loading...</span>
+                            </div>
+                        </div>
+
+                        <div class="upcoming-jobs" id="upcomingJobs">
+                            <div class="project-list-loading">Loading upcoming jobs...</div>
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- =====================================
                      RECENT PROJECTS
                 ====================================== -->
 
-                <section class="panel">
+                <section class="panel dashboard-panel">
 
-                    <div class="panel-head">
+                    <div class="panel-heading">
 
                         <div>
 
@@ -396,81 +451,31 @@
                                 Recent Projects
                             </h2>
 
+                            <p>
+                                Latest projects with quotation, payment,
+                                technician and report status.
+                            </p>
+
                         </div>
 
 
-                        <a href="projects.html">
-                            View all →
-                        </a>
+                        <div class="panel-heading-actions">
+                            <span id="projectCount" class="panel-count">Loading...</span>
+                            <a class="panel-link" href="projects.html">
+                                View all <span>→</span>
+                            </a>
+                        </div>
 
                     </div>
 
 
 
-                    <div class="table-wrap">
-
-                        <table>
-
-                            <thead>
-
-                                <tr>
-
-                                    <th>
-                                        Project
-                                    </th>
-
-                                    <th>
-                                        Customer
-                                    </th>
-
-                                    <th>
-                                        Quotation
-                                    </th>
-
-                                    <th>
-                                        Payment
-                                    </th>
-
-                                    <th>
-                                        Technician
-                                    </th>
-
-                                    <th>
-                                        Report
-                                    </th>
-
-                                    <th>
-                                        Status
-                                    </th>
-
-                                    <th>
-                                    </th>
-
-                                </tr>
-
-                            </thead>
-
-
-                            <tbody id="projectTable">
-
-                                <tr>
-
-                                    <td
-                                        colspan="8"
-                                        class="empty"
-                                    >
-                                        Loading...
-                                    </td>
-
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
+                    <div class="project-list" id="projectList">
+                        <div class="project-list-loading">Loading...</div>
                     </div>
 
                 </section>
+
 
 
             </section>
@@ -483,7 +488,7 @@
 
 
     <!-- =============================================
-         FILE MODAL
+         FILE MODAL (unchanged)
     ============================================== -->
 
     <div
@@ -504,9 +509,6 @@
             aria-modal="true"
             aria-labelledby="fileModalTitle"
         >
-
-
-            <!-- MODAL HEADER -->
 
             <div class="file-modal-head">
 
@@ -539,9 +541,6 @@
             </div>
 
 
-
-            <!-- MODAL BODY -->
-
             <div
                 id="fileModalBody"
                 class="file-modal-body"
@@ -552,7 +551,6 @@
                 </div>
 
             </div>
-
 
         </section>
 
@@ -565,7 +563,22 @@
     ============================================== -->
 
     <script src="js/dashboard.js?v=20260915-1"></script>
-<script src="js/session-timeout.js"></script>
+    <script src="js/dashboard-schedule.js?v=20260924-1"></script>
+    <script src="js/session-timeout.js"></script>
+
+    <script>
+        /* Fill the hero date (dashboard.js has no todayDate handler) */
+        (function () {
+            var el = document.getElementById("todayDate");
+            if (!el) return;
+            el.textContent = new Date().toLocaleDateString("en-MY", {
+                weekday: "short",
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
+        })();
+    </script>
 
 </body>
 

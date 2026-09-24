@@ -240,27 +240,17 @@ async function getRequests(req, res) {
 }
 
 
-/*
- * ======================================================
- * GET JOB PENDING REQUESTS
- *
- * Job Pending contains requests that still require
- * administrative / technician workflow.
- *
- * IMPORTANT:
- *
- * A request moves out of this workflow only after
- * final payment has been verified and the request
- * becomes completed.
- * ======================================================
- */
+// ======================================================
+// GET JOB PENDING REQUESTS
+// ======================================================
 
 async function getJobPendingRequests(req, res) {
 
     try {
 
         const [requests] =
-            await pool.query(`
+            await pool.query(
+                `
                 SELECT
 
                     sr.id,
@@ -271,6 +261,7 @@ async function getJobPendingRequests(req, res) {
                     sr.status,
                     sr.technician_id,
                     sr.created_at,
+                    sr.updated_at,
                     sr.scheduled_date,
                     sr.scheduled_time,
 
@@ -293,18 +284,55 @@ async function getJobPendingRequests(req, res) {
                     ON q.request_id = sr.id
 
                 WHERE
-                    sr.status = 'pending'
 
-                    AND sr.technician_id IS NULL
+                    /*
+                     * Only active jobs remain in Job Pending.
+                     */
+                    sr.status NOT IN (
+                        'completed',
+                        'cancelled'
+                    )
 
+                    /*
+                     * Customer must have uploaded
+                     * quotation payment proof.
+                     */
                     AND q.payment_status = 'proof_uploaded'
 
                     AND q.payment_proof_url IS NOT NULL
 
+                    AND TRIM(
+                        q.payment_proof_url
+                    ) <> ''
+
                 ORDER BY
+
+                    CASE sr.status
+
+                        WHEN 'pending'
+                            THEN 1
+
+                        WHEN 'assigned'
+                            THEN 2
+
+                        WHEN 'in_progress'
+                            THEN 3
+
+                        WHEN 'waiting_parts'
+                            THEN 4
+
+                        WHEN 'awaiting_payment'
+                            THEN 5
+
+                        ELSE 6
+
+                    END ASC,
+
                     q.payment_proof_uploaded_at DESC,
+
                     sr.created_at DESC
-            `);
+                `
+            );
 
 
         return res.json({
@@ -321,6 +349,7 @@ async function getJobPendingRequests(req, res) {
                         request_code:
                             request.request_code,
 
+
                         customer: {
 
                             name:
@@ -334,6 +363,7 @@ async function getJobPendingRequests(req, res) {
 
                         },
 
+
                         service: {
 
                             name:
@@ -343,8 +373,10 @@ async function getJobPendingRequests(req, res) {
 
                         },
 
+
                         status:
                             request.status,
+
 
                         technician:
                             request.technician_id
@@ -359,17 +391,25 @@ async function getJobPendingRequests(req, res) {
                                 }
                                 : null,
 
+
                         scheduled_date:
                             request.scheduled_date,
+
 
                         scheduled_time:
                             request.scheduled_time,
 
+
                         payment_proof_uploaded_at:
                             request.payment_proof_uploaded_at,
 
+
                         created_at:
-                            request.created_at
+                            request.created_at,
+
+
+                        updated_at:
+                            request.updated_at
 
                     })
                 )
@@ -383,6 +423,7 @@ async function getJobPendingRequests(req, res) {
             error
         );
 
+
         return res.status(500).json({
 
             success: false,
@@ -395,7 +436,6 @@ async function getJobPendingRequests(req, res) {
     }
 
 }
-
 
 /*
  * ======================================================
@@ -1452,50 +1492,114 @@ async function updateRequest(req, res) {
         }
 
 
-        if (technician_id) {
+      if (technician_id) {
 
-            const [technicians] =
-                await connection.query(
-                    `
-                    SELECT
+    /*
+     * =====================================================
+     * PAYMENT PROOF CHECK
+     * =====================================================
+     *
+     * A technician may ONLY be assigned after Admin
+     * has uploaded the customer's quotation payment proof.
+     *
+     * This is the INITIAL quotation/customer payment.
+     *
+     * The FINAL INVOICE payment is a separate workflow
+     * and must NOT be used for technician assignment.
+     */
 
-                        id,
-                        name,
-                        email
+    const [paymentProofRows] =
+        await connection.query(
+            `
+            SELECT
+                id,
+                payment_proof_url,
+                payment_status,
+                payment_proof_uploaded_at
 
-                    FROM users
+            FROM quotations
 
-                    WHERE id = ?
+            WHERE
+                request_id = ?
 
-                      AND role = 'technician'
+                AND payment_proof_url IS NOT NULL
 
-                      AND status = 'active'
+                AND TRIM(payment_proof_url) <> ''
 
-                    LIMIT 1
-                    `,
-                    [
-                        technician_id
-                    ]
-                );
+                AND payment_status = 'proof_uploaded'
+
+            ORDER BY
+                payment_proof_uploaded_at DESC
+
+            LIMIT 1
+            `,
+            [
+                requestId
+            ]
+        );
 
 
-            if (
-                technicians.length === 0
-            ) {
+    if (!paymentProofRows.length) {
 
-                return res.status(400).json({
+        return res.status(400).json({
 
-                    success: false,
+            success: false,
 
-                    message:
-                        "Selected technician is not valid or inactive."
+            message:
+                "Technician cannot be assigned yet. Please upload the customer's quotation payment proof first."
 
-                });
+        });
 
-            }
+    }
 
-        }
 
+    /*
+     * =====================================================
+     * TECHNICIAN VALIDATION
+     * =====================================================
+     */
+
+    const [technicians] =
+        await connection.query(
+            `
+            SELECT
+                id,
+                name,
+                email
+
+            FROM users
+
+            WHERE
+                id = ?
+
+                AND role = 'technician'
+
+                AND status = 'active'
+
+            LIMIT 1
+            `,
+            [
+                technician_id
+            ]
+        );
+
+
+    if (
+        technicians.length === 0
+    ) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "Selected technician is not valid or inactive."
+
+        });
+
+    }
+
+}
 
         let finalStatus =
             status !== undefined &&

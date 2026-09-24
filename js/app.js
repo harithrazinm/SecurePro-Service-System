@@ -1,7 +1,3 @@
-/* =========================================================
-   SECUREPRO - CUSTOMER PAGE
-   ========================================================= */
-
 const API_BASE =
     /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
         ? "http://localhost:5001/api"
@@ -11,72 +7,77 @@ let currentLanguage = "ms";
 
 const translations = {
     en: {
-        eyebrow: "SMART SECURITY SOLUTIONS",
-        heroTitle: "Find the right system for your space.",
-        heroDescription: "Answer a few simple questions and we'll help identify the right SecurePro solution for your home or business.",
-        startButton: "Start Your Request",
-        servicesTitle: "Choose a solution",
-        servicesDescription: "Select the service you are interested in.",
-        loadingServices: "Loading services...",
-        unableToLoadServices: "Unable to load services.",
-        questions: "questions",
-        heroStatusValue: "System active",
-        heroVisualCaption: "Real-time monitoring for every SecurePro solution.",
-        guideTitle: "How to use SecurePro",
-        guideDescription: "Choose the service you need below. You will then be guided through a few simple questions to help us understand your requirements.",
-        guideStep1: "Choose a service",
-        guideStep2: "Answer the questions",
-        guideStep3: "Review & send",
-        contactEyebrow: "CONTACT US",
-        contactTitle: "Need assistance?",
-        contactDescription: "For enquiries about products, services or service requests, please contact Sonic System Solution.",
-        contactSecurePro: "Security & Smart System Solutions",
-        operatedByLabel: "Operated by",
-        officialPortalLabel: "Official Service Portal",
-        officialPortalDescription: "SecurePro Service Management System",
-        footerText: "Security and smart system solutions.",
-        footerCompany: "SecurePro is operated by Sonic System Solution.",
-        officialPlatform: "Official SecurePro Service Platform"
+        navHome:"Home", navSolutions:"Solutions", navServices:"Services", navWhy:"Why Us", navContact:"Contact", navQuote:"Get a Quote", navGuide:"How to Create a Request",
+        heroKicker:"SMART SECURITY SOLUTIONS",
+        heroTitle:"Your safety.<br><span>Our priority.</span>",
+        heroDescription:"CCTV, access control, alarm, autogate and smart-system solutions for homes, businesses and professional premises.",
+        heroPrimary:"Explore Solutions", heroSecondary:"Request a Quote",
+        trustOne:"Quality Products", trustTwo:"Professional Installation", trustThree:"After-Sales Support",
+        heroBadgeTitle:"SECURE YOUR SPACE", heroBadgeText:"Smart security solutions",
+        statusTitle:"System Active", statusText:"Protection around the clock",
+        introLabel:"SONIC SYSTEM SOLUTION",
+        introTitle:"One place for all your security needs.",
+        introText:"From consultation and installation to maintenance and troubleshooting, SecurePro helps you manage your service needs more easily.",
+        solutionsLabel:"OUR SOLUTIONS", solutionsTitle:"Complete solutions for every space.",
+        solutionsText:"Choose the system you need and we will guide you through the request process.",
+        loadingServices:"Loading services...", unableToLoadServices:"Unable to load services.", questions:"questions",
+        processLabel:"OUR SERVICES", processTitle:"More than installation. We support you throughout the journey.",
+        processText:"Get support from initial consultation through post-installation service.",
+        processOne:"Product & service consultation", processTwo:"Professional installation", processThree:"Maintenance & wiring", processFour:"Troubleshooting & upgrade",
+        statExperience:"Years of experience", statProjects:"Projects completed", statSupport:"Commitment to quality", statProtection:"Solution support",
+        whyLabel:"WHY CHOOSE SONIC", whyTitle:"Technology that helps you feel safer.",
+        whyText:"We combine the right products, neat installation and after-sales support to create practical security solutions.",
+        whyButton:"Talk to us ↗",
+        whyOneTitle:"Quality Products", whyOneText:"Choose equipment that fits your project requirements and budget.",
+        whyTwoTitle:"Professional Team", whyTwoText:"Installation and configuration are handled carefully.",
+        whyThreeTitle:"After-Sales Support", whyThreeText:"Support for maintenance, troubleshooting and upgrades.",
+        whyFourTitle:"Site Visit", whyFourText:"Get assessment and recommendations based on the actual location.",
+        contactLabel:"LET'S SECURE YOUR PROPERTY", contactTitle:"Get your site visit and quotation.",
+        contactText:"Contact Sonic System Solution for product enquiries, services or installation requests.",
+        phoneLabel:"CONTACT US", contactButton:"Start Your Request →",
+        footerText:"Security and smart system solutions for homes and businesses.",
+        footerSolutions:"Solutions", footerServices:"Services", footerContact:"Contact", footerBottom:"Official SecurePro Service Platform"
     },
     ms: {
-        eyebrow: "PENYELESAIAN KESELAMATAN PINTAR",
-        heroTitle: "Cari sistem yang sesuai untuk ruang anda.",
-        heroDescription: "Jawab beberapa soalan mudah dan kami akan membantu mengenal pasti penyelesaian SecurePro yang sesuai untuk rumah atau perniagaan anda.",
-        startButton: "Mula Permintaan",
-        servicesTitle: "Pilih penyelesaian",
-        servicesDescription: "Pilih servis yang anda perlukan.",
-        loadingServices: "Memuatkan servis...",
-        unableToLoadServices: "Tidak dapat memuatkan servis.",
-        questions: "soalan",
-        heroStatusValue: "Sistem aktif",
-        heroVisualCaption: "Pemantauan masa nyata untuk setiap penyelesaian SecurePro.",
-        guideTitle: "Cara menggunakan SecurePro",
-        guideDescription: "Pilih servis yang anda perlukan di bawah. Anda akan dibimbing melalui beberapa soalan mudah untuk membantu kami memahami keperluan anda.",
-        guideStep1: "Pilih servis",
-        guideStep2: "Jawab soalan",
-        guideStep3: "Semak & hantar",
-        contactEyebrow: "HUBUNGI KAMI",
-        contactTitle: "Perlukan bantuan?",
-        contactDescription: "Untuk pertanyaan mengenai produk, perkhidmatan atau permintaan servis, sila hubungi Sonic System Solution.",
-        contactSecurePro: "Penyelesaian Keselamatan & Sistem Pintar",
-        operatedByLabel: "Dikendalikan oleh",
-        officialPortalLabel: "Portal Servis Rasmi",
-        officialPortalDescription: "Sistem Pengurusan Servis SecurePro",
-        footerText: "Penyelesaian keselamatan dan sistem pintar.",
-        footerCompany: "SecurePro dikendalikan oleh Sonic System Solution.",
-        officialPlatform: "Platform Servis Rasmi SecurePro"
+        navHome:"Utama", navSolutions:"Penyelesaian", navServices:"Servis", navWhy:"Kenapa Kami", navContact:"Hubungi", navQuote:"Dapatkan Sebut Harga", navGuide:"Cara Membuat Permintaan",
+        heroKicker:"PENYELESAIAN KESELAMATAN PINTAR",
+        heroTitle:"Keselamatan anda.<br><span>Keutamaan kami.</span>",
+        heroDescription:"Penyelesaian CCTV, akses kawalan, alarm, autogate dan sistem pintar untuk rumah, perniagaan dan premis profesional.",
+        heroPrimary:"Terokai Penyelesaian", heroSecondary:"Minta Sebut Harga",
+        trustOne:"Produk Berkualiti", trustTwo:"Pemasangan Profesional", trustThree:"Sokongan Selepas Jualan",
+        heroBadgeTitle:"SECURE YOUR SPACE", heroBadgeText:"Penyelesaian keselamatan pintar",
+        statusTitle:"Sistem Aktif", statusText:"Perlindungan sepanjang masa",
+        introLabel:"SONIC SYSTEM SOLUTION",
+        introTitle:"Satu tempat untuk semua keperluan keselamatan anda.",
+        introText:"Daripada konsultasi dan pemasangan sehingga penyelenggaraan dan troubleshooting, SecurePro membantu anda mengurus keperluan servis dengan lebih mudah.",
+        solutionsLabel:"OUR SOLUTIONS", solutionsTitle:"Penyelesaian lengkap untuk setiap ruang.",
+        solutionsText:"Pilih sistem yang diperlukan dan kami akan membimbing anda melalui proses permintaan.",
+        loadingServices:"Memuatkan servis...", unableToLoadServices:"Tidak dapat memuatkan servis.", questions:"soalan",
+        processLabel:"OUR SERVICES", processTitle:"Lebih daripada pemasangan. Kami sokong anda sepanjang perjalanan.",
+        processText:"Dapatkan bantuan daripada konsultasi awal sehingga servis selepas pemasangan.",
+        processOne:"Konsultasi produk & servis", processTwo:"Pemasangan profesional", processThree:"Penyelenggaraan & wiring", processFour:"Troubleshooting & upgrade",
+        statExperience:"Tahun pengalaman", statProjects:"Projek disiapkan", statSupport:"Komitmen kepada kualiti", statProtection:"Sokongan penyelesaian",
+        whyLabel:"WHY CHOOSE SONIC", whyTitle:"Teknologi yang membantu anda rasa lebih selamat.",
+        whyText:"Kami menggabungkan produk yang sesuai, pemasangan kemas dan sokongan selepas jualan untuk menghasilkan penyelesaian yang praktikal.",
+        whyButton:"Bercakap dengan kami ↗",
+        whyOneTitle:"Produk Berkualiti", whyOneText:"Pilih peralatan yang sesuai dengan keperluan dan bajet projek.",
+        whyTwoTitle:"Pasukan Profesional", whyTwoText:"Pemasangan dan konfigurasi dilaksanakan dengan teliti.",
+        whyThreeTitle:"Sokongan Selepas Jualan", whyThreeText:"Bantuan untuk penyelenggaraan, troubleshooting dan upgrade.",
+        whyFourTitle:"Site Visit", whyFourText:"Dapatkan penilaian dan cadangan berdasarkan lokasi sebenar.",
+        contactLabel:"LET'S SECURE YOUR PROPERTY", contactTitle:"Dapatkan site visit dan sebut harga anda.",
+        contactText:"Hubungi Sonic System Solution untuk pertanyaan produk, servis atau permintaan pemasangan.",
+        phoneLabel:"HUBUNGI KAMI", contactButton:"Mula Permintaan →",
+        footerText:"Penyelesaian keselamatan dan sistem pintar untuk rumah dan perniagaan.",
+        footerSolutions:"Penyelesaian", footerServices:"Servis", footerContact:"Hubungi", footerBottom:"Platform Servis Rasmi SecurePro"
     }
 };
 
 function applyLanguage() {
     document.documentElement.lang = currentLanguage;
-
     document.querySelectorAll("[data-i18n]").forEach(element => {
         const key = element.dataset.i18n;
         const translation = translations[currentLanguage][key];
-        if (translation) {
-            element.textContent = translation;
-        }
+        if (translation) element.innerHTML = translation;
     });
 
     const button = document.querySelector("#languageToggle");
@@ -89,107 +90,85 @@ function applyLanguage() {
 
 async function loadServices() {
     const grid = document.querySelector("#servicesGrid");
-    if (!grid) {
-        return;
-    }
+    if (!grid) return;
+
+    const serviceImages = {
+        cctv:"assets/cctvt.png",
+        autogate:"assets/autogatet.png",
+        alarm:"assets/alarmt.jpeg",
+        barriergate:"assets/barriert.png",
+        solar_cctv:"assets/solarcctvt.jpg",
+        attendance:"assets/timet.jpeg",
+        access:"assets/doort.jpeg",
+        pabx:"assets/pabxt.jpeg",
+        solar_pump:"assets/solarpt.jpeg",
+        troubleshoot_repair:"assets/tnr.jpg"
+    };
 
     try {
         grid.innerHTML = `<div class="loading">${escapeHtml(translations[currentLanguage].loadingServices)}</div>`;
-
         const response = await fetch(`${API_BASE}/services`);
-        if (!response.ok) {
-            throw new Error(translations[currentLanguage].unableToLoadServices);
-        }
+        if (!response.ok) throw new Error(translations[currentLanguage].unableToLoadServices);
 
         const result = await response.json();
-        if (!result.success) {
-            throw new Error(translations[currentLanguage].unableToLoadServices);
-        }
+        if (!result.success) throw new Error(translations[currentLanguage].unableToLoadServices);
 
-        renderServices(Array.isArray(result.data) ? result.data : []);
+        grid.innerHTML = "";
+
+        (Array.isArray(result.data) ? result.data : []).forEach(service => {
+            const card = document.createElement("article");
+            card.className = "service-card";
+            card.tabIndex = 0;
+            card.setAttribute("role", "button");
+
+            const image = serviceImages[service.id];
+            const serviceName = service.name?.[currentLanguage] || service.name?.ms || service.name?.en || "Service";
+            const questionCount = Number(service.questionCount || 0);
+
+            card.innerHTML = `
+                <div class="service-image">
+                    ${image
+                        ? `<img src="${image}" alt="${escapeHtml(serviceName)}">`
+                        : `<div class="service-image-placeholder">?</div>`}
+                </div>
+                <h3>${escapeHtml(serviceName)}</h3>
+                <p>${questionCount} ${escapeHtml(translations[currentLanguage].questions)}</p>
+            `;
+
+            const openService = () => {
+                localStorage.setItem("securepro_language", currentLanguage);
+                window.location.href = `pages/service.html?service=${encodeURIComponent(service.id)}`;
+            };
+
+            card.addEventListener("click", openService);
+            card.addEventListener("keydown", event => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openService();
+                }
+            });
+
+            grid.appendChild(card);
+        });
     } catch (error) {
         console.error("Load services error:", error);
         grid.innerHTML = `<div class="loading">${escapeHtml(translations[currentLanguage].unableToLoadServices)}</div>`;
     }
 }
 
-function renderServices(services) {
-    const grid = document.querySelector("#servicesGrid");
-    if (!grid) {
-        return;
-    }
-
-    const serviceImages = {
-        cctv: "assets/cctv.png",
-        autogate: "assets/autogate.png",
-        alarm: "assets/alarm.png",
-        barriergate: "assets/barrier.png",
-        solar_cctv: "assets/solarcctv.png",
-        attendance: "assets/time.png",
-        access: "assets/door.png",
-        pabx: "assets/pabx.png",
-        solar_pump: "assets/solar-pump.png",
-        troubleshoot_repair: "assets/trob.png"
-    };
-
-    grid.innerHTML = "";
-
-    services.forEach(service => {
-        const card = document.createElement("article");
-        card.className = "service-card";
-        card.tabIndex = 0;
-        card.setAttribute("role", "button");
-
-        const image = serviceImages[service.id];
-        const serviceName = service.name?.[currentLanguage] || service.name?.ms || service.name?.en || "Service";
-        const questionCount = Number(service.questionCount || 0);
-
-        card.innerHTML = `
-            <div class="service-image">
-                ${image
-                    ? `<img src="${image}" alt="${escapeHtml(serviceName)}">`
-                    : `<div class="service-image-placeholder">?</div>`
-                }
-            </div>
-            <h3>${escapeHtml(serviceName)}</h3>
-            <p>${questionCount} ${escapeHtml(translations[currentLanguage].questions)}</p>
-        `;
-
-        const openService = () => {
-            localStorage.setItem("securepro_language", currentLanguage);
-            window.location.href = `pages/service.html?service=${encodeURIComponent(service.id)}`;
-        };
-
-        card.addEventListener("click", openService);
-        card.addEventListener("keydown", event => {
-            if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                openService();
-            }
-        });
-
-        grid.appendChild(card);
-    });
-}
-
 function escapeHtml(value) {
     return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     const savedLanguage = localStorage.getItem("securepro_language");
-
-    if (savedLanguage === "en" || savedLanguage === "ms") {
-        currentLanguage = savedLanguage;
-    } else {
-        currentLanguage = "ms";
-        localStorage.setItem("securepro_language", "ms");
-    }
+    currentLanguage = savedLanguage === "en" || savedLanguage === "ms" ? savedLanguage : "ms";
+    localStorage.setItem("securepro_language", currentLanguage);
 
     applyLanguage();
     loadServices();
@@ -201,7 +180,18 @@ document.addEventListener("DOMContentLoaded", () => {
         loadServices();
     });
 
-    document.querySelector("#startButton")?.addEventListener("click", () => {
-        document.querySelector("#services")?.scrollIntoView({ behavior: "smooth" });
+    const menuToggle = document.querySelector("#menuToggle");
+    const mainNav = document.querySelector("#mainNav");
+
+    menuToggle?.addEventListener("click", () => {
+        const open = mainNav.classList.toggle("open");
+        menuToggle.setAttribute("aria-expanded", String(open));
+    });
+
+    mainNav?.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+            mainNav.classList.remove("open");
+            menuToggle?.setAttribute("aria-expanded", "false");
+        });
     });
 });

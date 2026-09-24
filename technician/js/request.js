@@ -14,13 +14,30 @@ let requestData = null;
  * =========================================================
  * SELECTED COMPLETION MEDIA
  * =========================================================
- *
- * This array keeps all photos/videos selected by the
- * technician, even after the file input is cleared.
- *
  */
 
 let selectedCompletionMedia = [];
+
+
+/* =========================================================
+   SERVICE CATALOG
+   IMPORTANT:
+   services.js MUST be loaded before request.js
+========================================================= */
+
+const SERVICE_CATALOG =
+    typeof SERVICES !== "undefined"
+        ? SERVICES
+        : {};
+
+if (!Object.keys(SERVICE_CATALOG).length) {
+
+    console.warn(
+        "SERVICES catalog not found. " +
+        "Make sure services.js is loaded before request.js."
+    );
+
+}
 
 
 /* =========================================================
@@ -32,50 +49,95 @@ async function parseResponse(response) {
     let payload = null;
 
     try {
-        payload = await response.json();
+
+        payload =
+            await response.json();
+
     } catch (error) {
+
         payload = null;
+
     }
 
+
     if (!response.ok) {
+
         const message =
             payload?.message ||
             payload?.error ||
             `Request failed with status ${response.status}.`;
 
-        const error = new Error(message);
-        error.status = response.status;
-        error.data = payload;
+        const error =
+            new Error(message);
+
+        error.status =
+            response.status;
+
+        error.data =
+            payload;
+
         throw error;
+
     }
 
+
     return payload || {};
+
 }
 
 
 function handleAuthError(error) {
 
-    if (error?.status !== 401 && error?.status !== 403) {
+    if (
+        error?.status !== 401 &&
+        error?.status !== 403
+    ) {
+
         return false;
+
     }
 
+
     try {
-        localStorage.removeItem("token");
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("accessToken");
+
+        localStorage.removeItem(
+            "token"
+        );
+
+        localStorage.removeItem(
+            "authToken"
+        );
+
+        localStorage.removeItem(
+            "accessToken"
+        );
+
     } catch (storageError) {
-        console.warn("Unable to clear stored authentication token.", storageError);
+
+        console.warn(
+            "Unable to clear stored authentication token.",
+            storageError
+        );
+
     }
+
 
     const message =
         error?.message ||
         "Your session has expired. Please log in again.";
 
-    window.alert(message);
 
-    window.location.href = "../technician/login.html";
+    window.alert(
+        message
+    );
+
+
+    window.location.href =
+        "../technician/login.html";
+
 
     return true;
+
 }
 
 
@@ -86,7 +148,10 @@ function getRequestId() {
             window.location.search
         );
 
-    return params.get("id");
+
+    return params.get(
+        "id"
+    );
 
 }
 
@@ -96,11 +161,26 @@ function escapeHtml(value) {
     return String(
         value ?? ""
     )
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
@@ -132,8 +212,11 @@ function formatDate(value) {
     return date.toLocaleString(
         "en-MY",
         {
-            dateStyle: "medium",
-            timeStyle: "short"
+            dateStyle:
+                "medium",
+
+            timeStyle:
+                "short"
         }
     );
 
@@ -167,12 +250,15 @@ function formatStatus(status) {
 
     };
 
+
     return (
         labels[status] ||
         status ||
         "Unknown"
     );
+
 }
+
 
 function showError(message) {
 
@@ -387,10 +473,12 @@ function renderHeader(data) {
             "#requestCode"
         );
 
+
     const serviceName =
         document.querySelector(
             "#serviceName"
         );
+
 
     const status =
         document.querySelector(
@@ -423,12 +511,14 @@ function renderHeader(data) {
                 data.status
             );
 
+
         status.className =
             `status-badge status-${data.status || "pending"}`;
 
     }
 
 }
+
 
 /* =========================================================
    CUSTOMER
@@ -452,8 +542,12 @@ function renderCustomer(data) {
     const phone =
         data.customer_phone
             ? `
-                <a href="tel:${escapeHtml(data.customer_phone)}">
-                    ${escapeHtml(data.customer_phone)}
+                <a href="tel:${escapeHtml(
+                    data.customer_phone
+                )}">
+                    ${escapeHtml(
+                        data.customer_phone
+                    )}
                 </a>
             `
             : "—";
@@ -462,8 +556,12 @@ function renderCustomer(data) {
     const email =
         data.customer_email
             ? `
-                <a href="mailto:${escapeHtml(data.customer_email)}">
-                    ${escapeHtml(data.customer_email)}
+                <a href="mailto:${escapeHtml(
+                    data.customer_email
+                )}">
+                    ${escapeHtml(
+                        data.customer_email
+                    )}
                 </a>
             `
             : "—";
@@ -479,8 +577,9 @@ function renderCustomer(data) {
 
             <strong>
                 ${escapeHtml(
-        data.customer_name || "—"
-    )}
+                    data.customer_name ||
+                    "—"
+                )}
             </strong>
 
         </div>
@@ -520,8 +619,9 @@ function renderCustomer(data) {
 
             <strong>
                 ${escapeHtml(
-        data.service_name || "—"
-    )}
+                    data.service_name ||
+                    "—"
+                )}
             </strong>
 
         </div>
@@ -535,8 +635,9 @@ function renderCustomer(data) {
 
             <p>
                 ${escapeHtml(
-        data.customer_address || "—"
-    )}
+                    data.customer_address ||
+                    "—"
+                )}
             </p>
 
         </div>
@@ -544,251 +645,695 @@ function renderCustomer(data) {
     `;
 
 }
+
+
 /* =========================================================
-   QUESTION DISPLAY LABEL
+   SERVICE DEFINITION
 ========================================================= */
 
-function getQuestionDisplayLabel(answer) {
+function getServiceName(data) {
 
-    /*
-     * Use the backend English question first.
-     */
-
-if (
-    answer.question?.en &&
-    String(answer.question.en).trim() &&
-    String(answer.question.en).trim().toLowerCase() !== "customer requirement"
-) {
-
-    return answer.question.en;
+    return (
+        data?.service_name ||
+        data?.service?.name?.en ||
+        data?.service?.name?.ms ||
+        data?.service?.name ||
+        ""
+    );
 
 }
 
 
-    const code =
+function findServiceDefinition(data) {
+
+    if (!data) {
+
+        return null;
+
+    }
+
+
+    const possibleIds = [
+
+        data.service_id,
+
+        data.serviceId,
+
+        data.service?.id,
+
+        data.service?.service_id,
+
+        data.service?.serviceId,
+
+        data.service?.code,
+
+        data.service_type,
+
+        data.serviceType
+
+    ];
+
+
+    for (
+        const id of possibleIds
+    ) {
+
+        const code =
+            String(id || "")
+                .trim()
+                .toLowerCase();
+
+
+        if (
+            code &&
+            SERVICE_CATALOG[code]
+        ) {
+
+            return SERVICE_CATALOG[code];
+
+        }
+
+    }
+
+
+    /*
+     * Fallback:
+     * Match service by display name.
+     */
+
+    const serviceName =
         String(
-            answer.question_code || ""
+            getServiceName(data)
         )
             .trim()
             .toLowerCase();
 
 
-    /*
-     * Known SecurePro question labels.
-     */
+    if (!serviceName) {
 
-    const labels = {
+        return null;
 
-        location:
-            "Installation Location",
-
-        installation_location:
-            "Installation Location",
-
-        camera_location:
-            "Camera Location",
-
-        light_type:
-            "Camera Light Type",
-
-        camera_light:
-            "Camera Light Type",
-
-        camera_light_type:
-            "Camera Light Type",
-
-        connection_type:
-            "Installation Type",
-
-        installation_type:
-            "Installation Type",
-
-        wiring:
-            "Installation Type",
-
-        camera_quantity:
-            "Camera Quantity",
-
-        quantity:
-            "Quantity",
-
-        camera_resolution:
-            "Camera Resolution",
-
-        resolution:
-            "Camera Resolution",
-
-        equipment:
-            "Additional Equipment",
-
-        additional_equipment:
-            "Additional Equipment",
-
-        alarm_type:
-            "Alarm Type",
-
-        alarm:
-            "Alarm Type",
-
-        coverage:
-            "Coverage Area",
-
-        coverage_area:
-            "Coverage Area",
-
-        areas:
-            "Coverage Area",
-
-        internet:
-            "Internet Availability",
-
-        internet_available:
-            "Internet Availability",
-
-        site_visit:
-            "Site Visit",
-
-        request_site_visit:
-            "Site Visit"
-
-    };
+    }
 
 
-    if (labels[code]) {
+    return (
+        Object.values(
+            SERVICE_CATALOG
+        ).find(
+            service => {
 
-        return labels[code];
+                const english =
+                    String(
+                        service?.name?.en ||
+                        ""
+                    )
+                        .trim()
+                        .toLowerCase();
+
+
+                const malay =
+                    String(
+                        service?.name?.ms ||
+                        ""
+                    )
+                        .trim()
+                        .toLowerCase();
+
+
+                return (
+                    english ===
+                        serviceName ||
+                    malay ===
+                        serviceName
+                );
+
+            }
+        ) ||
+        null
+    );
+
+}
+
+
+function getAnswerCode(answer) {
+
+    return String(
+
+        answer?.question_code ||
+
+        answer?.question_id ||
+
+        answer?.questionId ||
+
+        answer?.question?.id ||
+
+        answer?.code ||
+
+        ""
+
+    )
+        .trim()
+        .toLowerCase();
+
+}
+
+
+function findQuestionDefinition(
+    serviceDef,
+    answer
+) {
+
+    if (
+        !serviceDef ||
+        !Array.isArray(
+            serviceDef.questions
+        )
+    ) {
+
+        return null;
 
     }
 
 
     /*
-     * Generic fallback:
-     *
-     * camera_resolution
-     *       ↓
-     * Camera Resolution
+     * =====================================================
+     * 1. Try question code
+     * =====================================================
      */
+
+    const code =
+        getAnswerCode(
+            answer
+        );
+
 
     if (code) {
 
-        return formatLabel(code);
+        const codeMatch =
+            serviceDef.questions.find(
+                question =>
+
+                    String(
+                        question?.id ||
+                        ""
+                    )
+                        .trim()
+                        .toLowerCase() ===
+                    code
+            );
+
+
+        if (codeMatch) {
+
+            return codeMatch;
+
+        }
 
     }
 
+
+    /*
+     * =====================================================
+     * 2. Match by backend question title
+     * =====================================================
+     *
+     * Example:
+     *
+     * API:
+     * "What are you securing?"
+     *
+     * services.js:
+     * "What are you securing?"
+     *
+     * → same question
+     */
+
+    const backendQuestion =
+        String(
+            answer?.question_en ||
+            answer?.question?.en ||
+            ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (backendQuestion) {
+
+        const titleMatch =
+            serviceDef.questions.find(
+                question => {
+
+                    const englishTitle =
+                        String(
+                            question?.title?.en ||
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+
+                    const malayTitle =
+                        String(
+                            question?.title?.ms ||
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+
+                    return (
+                        englishTitle ===
+                            backendQuestion ||
+                        malayTitle ===
+                            backendQuestion
+                    );
+
+                }
+            );
+
+
+        if (titleMatch) {
+
+            return titleMatch;
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+/* =========================================================
+   QUESTION TITLE
+========================================================= */
+
+function getConfiguredQuestionTitle(
+    questionDef
+) {
+
+    if (!questionDef) {
+
+        return "";
+
+    }
+
+
+    return (
+        questionDef.title?.en ||
+        questionDef.title?.ms ||
+        questionDef.title ||
+        ""
+    );
+
+}
+
+
+/* =========================================================
+   QUESTION DISPLAY LABEL
+========================================================= */
+
+function getQuestionDisplayLabel(
+    answer,
+    questionDef = null
+) {
+
+    /*
+     * =====================================================
+     * 1. USE BACKEND QUESTION TEXT FIRST
+     * =====================================================
+     *
+     * The technician API already returns:
+     *
+     * question_en
+     * question_ms
+     *
+     * These are the actual questions used when
+     * the customer submitted the request.
+     */
+
+    const backendQuestionCandidates = [
+
+        answer?.question_en,
+
+        answer?.question?.en,
+
+        answer?.question?.title?.en,
+
+        answer?.title_en,
+
+        answer?.label_en,
+
+        answer?.field_label_en,
+
+        answer?.field_label,
+
+        answer?.question_ms,
+
+        answer?.question?.ms
+
+    ];
+
+
+    for (
+        const candidate
+        of backendQuestionCandidates
+    ) {
+
+        const text =
+            String(
+                candidate || ""
+            ).trim();
+
+
+        if (
+            text &&
+            text.toLowerCase() !==
+                "customer requirement"
+        ) {
+
+            return text;
+
+        }
+
+    }
+
+
+    /*
+     * =====================================================
+     * 2. USE services.js QUESTION TITLE
+     * =====================================================
+     */
+
+    const configuredTitle =
+        getConfiguredQuestionTitle(
+            questionDef
+        );
+
+
+    if (
+        configuredTitle &&
+        String(
+            configuredTitle
+        )
+            .trim()
+            .toLowerCase() !==
+            "customer requirement"
+    ) {
+
+        return configuredTitle;
+
+    }
+
+
+    /*
+     * =====================================================
+     * 3. ONLY USE QUESTION CODE IF IT IS A REAL CODE
+     * =====================================================
+     */
+
+    const code =
+        getAnswerCode(
+            answer
+        );
+
+
+    /*
+     * IMPORTANT:
+     *
+     * question_id is a UUID such as:
+     *
+     * 1b5d883f-649c-46e8-9f2c-933f05cafc2f
+     *
+     * NEVER display that as the question.
+     */
+
+    const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+            .test(code);
+
+
+    if (
+        code &&
+        !isUuid
+    ) {
+
+        return formatLabel(
+            code
+        );
+
+    }
+
+
+    /*
+     * =====================================================
+     * 4. FINAL FALLBACK
+     * =====================================================
+     */
 
     return "Customer Requirement";
 
 }
+
 /* =========================================================
-   CUSTOMER ANSWERS
+   OPTION LABEL
 ========================================================= */
 
-function renderAnswers(data) {
+function resolveConfiguredOptionLabel(
+    questionDef,
+    rawValue
+) {
 
-    const container =
-        document.querySelector("#answersGrid");
+    if (
+        !questionDef ||
+        !Array.isArray(
+            questionDef.options
+        )
+    ) {
 
-    if (!container) {
-        return;
+        return null;
+
     }
 
-    const answers =
-        Array.isArray(data.answers)
-            ? data.answers
-            : [];
 
-    if (!answers.length) {
+    const token =
+        String(
+            rawValue ?? ""
+        )
+            .trim()
+            .toLowerCase();
 
-        container.innerHTML = `
 
-            <div class="empty-state">
+    if (!token) {
 
-                <strong>
-                    No customer requirements found
-                </strong>
+        return null;
 
-                <span>
-                    This request does not contain any service answers.
-                </span>
-
-            </div>
-
-        `;
-
-        return;
     }
 
-    container.innerHTML =
-        answers
-            .map((answer, index) => {
 
-                const question =
-                    getQuestionDisplayLabel(answer);
+    /*
+     * Object-style options
+     */
 
-                const value =
-                    getAnswerDisplayValue(answer);
+    const objectMatch =
+        questionDef.options.find(
+            option => {
 
-                const formattedValue =
-                    formatAnswerForDisplay(
-                        value
+                if (
+                    !option ||
+                    Array.isArray(option)
+                ) {
+
+                    return false;
+
+                }
+
+
+                const optionValue =
+                    String(
+                        option.value ??
+                        option.id ??
+                        ""
+                    )
+                        .trim()
+                        .toLowerCase();
+
+
+                return (
+                    optionValue ===
+                    token
+                );
+
+            }
+        );
+
+
+    if (objectMatch) {
+
+        return (
+            objectMatch.label?.en ||
+            objectMatch.label?.ms ||
+            objectMatch.label ||
+            objectMatch.name ||
+            null
+        );
+
+    }
+
+
+    /*
+     * Array/string-style options
+     */
+
+    const arrayMatch =
+        questionDef.options.find(
+            option => {
+
+                if (
+                    typeof option ===
+                    "string"
+                ) {
+
+                    return (
+                        option
+                            .trim()
+                            .toLowerCase() ===
+                        token
                     );
 
-                return `
+                }
 
-                    <article class="answer-item">
 
-                        <div class="answer-index">
+                if (
+                    Array.isArray(option)
+                ) {
 
-                            ${String(index + 1).padStart(2, "0")}
+                    return option.some(
+                        value =>
+                            String(value)
+                                .trim()
+                                .toLowerCase() ===
+                            token
+                    );
 
-                        </div>
+                }
 
-                        <div class="answer-content">
 
-                            <div class="answer-question">
+                return false;
 
-                                ${escapeHtml(question)}
+            }
+        );
 
-                            </div>
 
-                            ${
-                                answer.description?.en
-                                    ? `
-                                        <div class="answer-description">
-                                            ${escapeHtml(
-                                                answer.description.en
-                                            )}
-                                        </div>
-                                    `
-                                    : ""
-                            }
+    if (
+        typeof arrayMatch ===
+        "string"
+    ) {
 
-                            <div class="answer-value">
+        return arrayMatch;
 
-                                ${formattedValue}
+    }
 
-                            </div>
 
-                            ${
-                                answer.unit
-                                    ? `
-                                        <div class="answer-unit">
-                                            ${escapeHtml(
-                                                formatUnit(answer.unit)
-                                            )}
-                                        </div>
-                                    `
-                                    : ""
-                            }
+    if (
+        Array.isArray(
+            arrayMatch
+        )
+    ) {
 
-                        </div>
+        return arrayMatch
+            .map(
+                value =>
+                    String(value)
+            )
+            .join(
+                " / "
+            );
 
-                    </article>
+    }
 
-                `;
 
-            })
-            .join("");
+    return null;
+
+}
+
+
+/* =========================================================
+   COUNTER VALUE
+========================================================= */
+
+function formatConfiguredCounterValues(
+    questionDef,
+    value
+) {
+
+    const parsed =
+        parseJsonValue(
+            value
+        );
+
+
+    if (
+        !parsed ||
+        typeof parsed !==
+            "object" ||
+        Array.isArray(parsed)
+    ) {
+
+        return null;
+
+    }
+
+
+    const counters =
+        Array.isArray(
+            questionDef?.counters
+        )
+            ? questionDef.counters
+            : [];
+
+
+    return Object.entries(
+        parsed
+    )
+        .map(
+            ([key, count]) => {
+
+                const counter =
+                    counters.find(
+                        item =>
+                            String(
+                                item?.id ||
+                                item?.value ||
+                                ""
+                            )
+                                .trim()
+                                .toLowerCase() ===
+                            String(key)
+                                .trim()
+                                .toLowerCase()
+                    );
+
+
+                const label =
+                    counter?.label?.en ||
+                    counter?.label?.ms ||
+                    counter?.label ||
+                    formatLabel(
+                        key
+                    );
+
+
+                return `${label}: ${count}`;
+
+            }
+        )
+        .join(
+            " • "
+        );
 
 }
 
@@ -804,17 +1349,25 @@ function formatUnit(unit) {
         unit === undefined ||
         unit === ""
     ) {
+
         return "";
+
     }
+
 
     if (
         typeof unit === "string" ||
         typeof unit === "number"
     ) {
+
         return String(unit);
+
     }
 
-    if (Array.isArray(unit)) {
+
+    if (
+        Array.isArray(unit)
+    ) {
 
         return unit
             .map(
@@ -823,22 +1376,39 @@ function formatUnit(unit) {
             )
             .filter(Boolean)
             .join(", ");
+
     }
 
-    if (typeof unit === "object") {
+
+    if (
+        typeof unit === "object"
+    ) {
 
         const possibleValues = [
+
             unit.en,
+
             unit.ms,
+
             unit.label,
+
             unit.name,
+
             unit.value,
+
             unit.unit,
+
             unit.symbol,
+
             unit.text
+
         ];
 
-        for (const value of possibleValues) {
+
+        for (
+            const value
+            of possibleValues
+        ) {
 
             if (
                 value !== null &&
@@ -846,15 +1416,22 @@ function formatUnit(unit) {
                 value !== ""
             ) {
 
-                return typeof value === "object"
+                return typeof value ===
+                    "object"
                     ? formatUnit(value)
                     : String(value);
+
             }
+
         }
+
     }
 
+
     return "";
+
 }
+
 
 /* =========================================================
    FORMAT LABEL
@@ -872,364 +1449,26 @@ function formatLabel(value) {
 
     }
 
+
     return String(value)
-        .replace(/[_-]+/g, " ")
-        .replace(/\s+/g, " ")
+
+        .replace(
+            /[_-]+/g,
+            " "
+        )
+
+        .replace(
+            /\s+/g,
+            " "
+        )
+
         .trim()
-        .replace(/\b\w/g, letter =>
-            letter.toUpperCase()
+
+        .replace(
+            /\b\w/g,
+            letter =>
+                letter.toUpperCase()
         );
-
-}
-
-/* =========================================================
-   GET ANSWER DISPLAY VALUE
-========================================================= */
-
-function getAnswerDisplayValue(answer) {
-
-    /*
-     * ------------------------------------------------------
-     * 1. COUNTER / JSON OBJECT
-     * ------------------------------------------------------
-     */
-
-    if (
-        answer.question_type === "counter" ||
-        answer.type === "counter"
-    ) {
-
-        const counterValue =
-            answer.text_value;
-
-        const parsed =
-            parseJsonValue(counterValue);
-
-        if (
-            parsed &&
-            typeof parsed === "object" &&
-            !Array.isArray(parsed)
-        ) {
-
-            return Object.entries(parsed)
-                .map(
-                    ([key, value]) =>
-                        `${formatLabel(key)}: ${value}`
-                )
-                .join(" • ");
-
-        }
-
-    }
-
-
-    /*
-     * ------------------------------------------------------
-     * 2. SELECTED OPTIONS
-     * ------------------------------------------------------
-     */
-
-    if (
-        Array.isArray(answer.options) &&
-        answer.options.length > 0
-    ) {
-
-        const optionValues =
-            answer.options
-                .map(option => {
-
-                    return (
-                        option.label?.en ||
-                        option.option_label_en ||
-                        option.value ||
-                        option.option_value ||
-                        ""
-                    );
-
-                })
-                .filter(Boolean);
-
-
-        const uniqueOptions =
-            removeDuplicateValues(
-                optionValues
-            );
-
-
-        if (uniqueOptions.length > 0) {
-
-            return uniqueOptions.join(" • ");
-
-        }
-
-    }
-
-
-    /*
-     * ------------------------------------------------------
-     * 3. answer.answer
-     * ------------------------------------------------------
-     */
-
-    if (
-        answer.answer !== null &&
-        answer.answer !== undefined &&
-        String(answer.answer).trim() !== ""
-    ) {
-
-        const parsed =
-            parseJsonValue(
-                answer.answer
-            );
-
-
-        /*
-         * JSON object
-         */
-
-        if (
-            parsed &&
-            typeof parsed === "object" &&
-            !Array.isArray(parsed)
-        ) {
-
-            return Object.entries(parsed)
-                .map(
-                    ([key, value]) =>
-                        `${formatLabel(key)}: ${value}`
-                )
-                .join(" • ");
-
-        }
-
-
-        /*
-         * JSON array
-         */
-
-        if (Array.isArray(parsed)) {
-
-            return removeDuplicateValues(
-                parsed.map(value =>
-                    formatValueText(value)
-                )
-            ).join(" • ");
-
-        }
-
-
-        return normalizeAnswerText(
-            answer.answer
-        );
-
-    }
-
-
-    /*
-     * ------------------------------------------------------
-     * 4. NUMBER
-     * ------------------------------------------------------
-     */
-
-    if (
-        answer.number_value !== null &&
-        answer.number_value !== undefined
-    ) {
-
-        const rawNumber =
-            Number(
-                answer.number_value
-            );
-
-
-        const questionCode =
-            String(
-                answer.question_code || ""
-            )
-                .toLowerCase();
-
-
-        const decimalFields = [
-
-            "arm_length",
-            "pump_height",
-            "pipe_length",
-            "length",
-            "width",
-            "height",
-            "size",
-            "dimension"
-
-        ];
-
-
-        const isDecimalField =
-            decimalFields.includes(
-                questionCode
-            );
-
-
-        let numberValue;
-
-
-        if (!Number.isNaN(rawNumber)) {
-
-            if (isDecimalField) {
-
-                numberValue =
-                    rawNumber
-                        .toFixed(2)
-                        .replace(/\.?0+$/, "");
-
-            } else {
-
-                numberValue =
-                    Math.round(
-                        rawNumber
-                    ).toString();
-
-            }
-
-        } else {
-
-            numberValue =
-                String(
-                    answer.number_value
-                );
-
-        }
-
-
-        const unit =
-            formatUnit(
-                answer.unit
-            );
-
-
-        if (unit) {
-
-            return `${numberValue} ${unit}`;
-
-        }
-
-
-        return numberValue;
-
-    }
-
-
-    /*
-     * ------------------------------------------------------
-     * 5. TEXT
-     * ------------------------------------------------------
-     */
-
-    if (
-        answer.text_value !== null &&
-        answer.text_value !== undefined &&
-        String(answer.text_value).trim() !== ""
-    ) {
-
-        const parsed =
-            parseJsonValue(
-                answer.text_value
-            );
-
-
-        /*
-         * JSON object stored inside text_value
-         */
-
-        if (
-            parsed &&
-            typeof parsed === "object" &&
-            !Array.isArray(parsed)
-        ) {
-
-            return Object.entries(parsed)
-                .map(
-                    ([key, value]) =>
-                        `${formatLabel(key)}: ${value}`
-                )
-                .join(" • ");
-
-        }
-
-
-        /*
-         * JSON array
-         */
-
-        if (Array.isArray(parsed)) {
-
-            return removeDuplicateValues(
-                parsed.map(value =>
-                    formatValueText(value)
-                )
-            ).join(" • ");
-
-        }
-
-
-        return normalizeAnswerText(
-            answer.text_value
-        );
-
-    }
-
-
-    return "Not specified";
-
-}
-
-/* =========================================================
-   PARSE JSON VALUE
-========================================================= */
-
-function parseJsonValue(value) {
-
-    if (
-        value === null ||
-        value === undefined
-    ) {
-
-        return null;
-
-    }
-
-
-    if (
-        typeof value === "object"
-    ) {
-
-        return value;
-
-    }
-
-
-    const text =
-        String(value).trim();
-
-
-    if (
-        !text.startsWith("{") &&
-        !text.startsWith("[")
-    ) {
-
-        return null;
-
-    }
-
-
-    try {
-
-        return JSON.parse(text);
-
-    } catch (error) {
-
-        return null;
-
-    }
 
 }
 
@@ -1251,15 +1490,20 @@ function formatValueText(value) {
 
 
     if (
-        typeof value === "object"
+        typeof value ===
+        "object"
     ) {
 
-        return Object.entries(value)
+        return Object.entries(
+            value
+        )
             .map(
                 ([key, item]) =>
                     `${formatLabel(key)}: ${item}`
             )
-            .join(" • ");
+            .join(
+                " • "
+            );
 
     }
 
@@ -1287,13 +1531,15 @@ function formatReadableValue(value) {
     let result =
         String(value)
             .trim()
-            .replace(/[_-]+/g, " ")
-            .replace(/\s+/g, " ");
+            .replace(
+                /[_-]+/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            );
 
-
-    /*
-     * Special formatting for common technical values.
-     */
 
     result =
         result.replace(
@@ -1316,26 +1562,607 @@ function formatReadableValue(value) {
         );
 
 
+    return result;
+
+}
+/* =========================================================
+   GET ANSWER DISPLAY VALUE
+========================================================= */
+
+function getAnswerDisplayValue(
+    answer,
+    questionDef = null
+) {
+
     /*
-     * Title case only when the value
-     * is a simple technical identifier.
+     * ------------------------------------------------------
+     * 1. COUNTER
+     * ------------------------------------------------------
      */
 
     if (
-        /^[a-z0-9 ]+$/i.test(result)
+        answer?.question_type === "counter" ||
+        answer?.type === "counter" ||
+        questionDef?.type === "counter"
     ) {
 
-        result =
-            result.replace(
-                /\b[a-z]/g,
-                letter =>
-                    letter.toUpperCase()
+        const counterValue =
+            answer?.text_value ??
+            answer?.answer;
+
+
+        const configuredCounter =
+            formatConfiguredCounterValues(
+                questionDef,
+                counterValue
             );
+
+
+        if (configuredCounter) {
+
+            return configuredCounter;
+
+        }
 
     }
 
 
-    return result;
+    /*
+     * ------------------------------------------------------
+     * 2. BACKEND OPTIONS ARRAY
+     * ------------------------------------------------------
+     */
+
+    if (
+        Array.isArray(
+            answer?.options
+        ) &&
+        answer.options.length
+    ) {
+
+        const optionValues =
+            answer.options
+                .map(option => {
+
+                    const rawValue =
+                        option?.value ??
+                        option?.option_value ??
+                        option?.id ??
+                        option?.option_id ??
+                        option;
+
+
+                    /*
+                     * First use services.js
+                     */
+
+                    const configuredLabel =
+                        resolveConfiguredOptionLabel(
+                            questionDef,
+                            rawValue
+                        );
+
+
+                    if (configuredLabel) {
+
+                        return configuredLabel;
+
+                    }
+
+
+                    /*
+                     * Backend label fallback
+                     */
+
+                    return (
+                        option?.option_label_en ||
+                        option?.label?.en ||
+                        option?.label?.ms ||
+                        option?.option_value ||
+                        option?.value ||
+                        ""
+                    );
+
+                })
+                .filter(Boolean);
+
+
+        const uniqueOptions =
+            removeDuplicateValues(
+                optionValues
+            );
+
+
+        if (
+            uniqueOptions.length
+        ) {
+
+            return uniqueOptions.join(
+                " • "
+            );
+
+        }
+
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * 3. answer.answer
+     * ------------------------------------------------------
+     */
+
+    if (
+        answer?.answer !== null &&
+        answer?.answer !== undefined &&
+        String(
+            answer.answer
+        ).trim() !== ""
+    ) {
+
+        const parsed =
+            parseJsonValue(
+                answer.answer
+            );
+
+
+        /*
+         * JSON OBJECT
+         */
+
+        if (
+            parsed &&
+            typeof parsed ===
+                "object" &&
+            !Array.isArray(parsed)
+        ) {
+
+            return Object.entries(
+                parsed
+            )
+                .map(
+                    ([key, value]) => {
+
+                        const configuredLabel =
+                            resolveConfiguredOptionLabel(
+                                questionDef,
+                                value
+                            );
+
+
+                        return (
+                            configuredLabel ||
+                            `${formatLabel(key)}: ${value}`
+                        );
+
+                    }
+                )
+                .join(
+                    " • "
+                );
+
+        }
+
+
+        /*
+         * JSON ARRAY
+         */
+
+        if (
+            Array.isArray(parsed)
+        ) {
+
+            return removeDuplicateValues(
+                parsed.map(
+                    value => {
+
+                        const configuredLabel =
+                            resolveConfiguredOptionLabel(
+                                questionDef,
+                                value
+                            );
+
+
+                        return (
+                            configuredLabel ||
+                            formatValueText(value)
+                        );
+
+                    }
+                )
+            ).join(
+                " • "
+            );
+
+        }
+
+
+        /*
+         * Single configured option
+         */
+
+        const configuredLabel =
+            resolveConfiguredOptionLabel(
+                questionDef,
+                answer.answer
+            );
+
+
+        if (configuredLabel) {
+
+            return configuredLabel;
+
+        }
+
+
+        return normalizeAnswerText(
+            answer.answer
+        );
+
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * 4. NUMBER
+     * ------------------------------------------------------
+     */
+
+    if (
+        answer?.number_value !== null &&
+        answer?.number_value !== undefined
+    ) {
+
+        const rawNumber =
+            Number(
+                answer.number_value
+            );
+
+
+        let numberValue;
+
+
+        if (
+            !Number.isNaN(
+                rawNumber
+            )
+        ) {
+
+            numberValue =
+                Number.isInteger(
+                    rawNumber
+                )
+                    ? String(
+                        rawNumber
+                    )
+                    : String(
+                        rawNumber
+                    );
+
+        } else {
+
+            numberValue =
+                String(
+                    answer.number_value
+                );
+
+        }
+
+
+        const unit =
+            formatUnit(
+                answer.unit ||
+                questionDef?.unit
+            );
+
+
+        return unit
+            ? `${numberValue} ${unit}`
+            : numberValue;
+
+    }
+
+
+    /*
+     * ------------------------------------------------------
+     * 5. TEXT VALUE
+     * ------------------------------------------------------
+     */
+
+    if (
+        answer?.text_value !== null &&
+        answer?.text_value !== undefined &&
+        String(
+            answer.text_value
+        ).trim() !== ""
+    ) {
+
+        const parsed =
+            parseJsonValue(
+                answer.text_value
+            );
+
+
+        /*
+         * JSON OBJECT
+         */
+
+        if (
+            parsed &&
+            typeof parsed ===
+                "object" &&
+            !Array.isArray(parsed)
+        ) {
+
+            return Object.entries(
+                parsed
+            )
+                .map(
+                    ([key, value]) => {
+
+                        const configuredLabel =
+                            resolveConfiguredOptionLabel(
+                                questionDef,
+                                value
+                            );
+
+
+                        return (
+                            configuredLabel ||
+                            `${formatLabel(key)}: ${value}`
+                        );
+
+                    }
+                )
+                .join(
+                    " • "
+                );
+
+        }
+
+
+        /*
+         * JSON ARRAY
+         */
+
+        if (
+            Array.isArray(parsed)
+        ) {
+
+            return removeDuplicateValues(
+                parsed.map(
+                    value => {
+
+                        const configuredLabel =
+                            resolveConfiguredOptionLabel(
+                                questionDef,
+                                value
+                            );
+
+
+                        return (
+                            configuredLabel ||
+                            formatValueText(value)
+                        );
+
+                    }
+                )
+            ).join(
+                " • "
+            );
+
+        }
+
+
+        /*
+         * Configured option stored
+         * inside text_value
+         */
+
+        const configuredLabel =
+            resolveConfiguredOptionLabel(
+                questionDef,
+                answer.text_value
+            );
+
+
+        if (configuredLabel) {
+
+            return configuredLabel;
+
+        }
+
+
+        return normalizeAnswerText(
+            answer.text_value
+        );
+
+    }
+
+
+    return "Not specified";
+
+}
+
+
+/* =========================================================
+   CUSTOMER ANSWERS
+========================================================= */
+
+function renderAnswers(data) {
+
+    const container =
+        document.querySelector(
+            "#answersGrid"
+        );
+
+
+    if (!container) {
+
+        return;
+
+    }
+
+
+    const answers =
+        Array.isArray(
+            data?.answers
+        )
+            ? data.answers
+            : [];
+
+
+    if (!answers.length) {
+
+        container.innerHTML = `
+
+            <div class="empty-state">
+
+                <strong>
+                    No customer requirements found
+                </strong>
+
+                <span>
+                    This request does not contain any service answers.
+                </span>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    /*
+     * Get service definition from
+     * services.js.
+     */
+
+    const serviceDef =
+        findServiceDefinition(
+            data
+        );
+
+
+    container.innerHTML =
+        answers
+            .map(
+                (answer, index) => {
+
+                    const questionDef =
+                        findQuestionDefinition(
+                            serviceDef,
+                            answer
+                        );
+
+
+                    const question =
+                        getQuestionDisplayLabel(
+                            answer,
+                            questionDef
+                        );
+
+
+                    const value =
+                        getAnswerDisplayValue(
+                            answer,
+                            questionDef
+                        );
+
+
+                    const formattedValue =
+                        formatAnswerForDisplay(
+                            value
+                        );
+
+
+                    const description =
+                        questionDef?.description?.en ||
+                        answer?.description?.en ||
+                        "";
+
+
+                    const unit =
+                        formatUnit(
+                            answer?.unit ||
+                            questionDef?.unit
+                        );
+
+
+                    return `
+
+                        <article class="answer-item">
+
+                            <div class="answer-index">
+
+                                ${String(
+                                    index + 1
+                                ).padStart(
+                                    2,
+                                    "0"
+                                )}
+
+                            </div>
+
+
+                            <div class="answer-content">
+
+                                <div class="answer-question">
+
+                                    ${escapeHtml(
+                                        question
+                                    )}
+
+                                </div>
+
+
+                                ${
+                                    description
+                                        ? `
+                                            <div class="answer-description">
+
+                                                ${escapeHtml(
+                                                    description
+                                                )}
+
+                                            </div>
+                                        `
+                                        : ""
+                                }
+
+
+                                <div class="answer-value">
+
+                                    ${formattedValue}
+
+                                </div>
+
+
+                                ${
+                                    unit
+                                        ? `
+                                            <div class="answer-unit">
+
+                                                ${escapeHtml(
+                                                    unit
+                                                )}
+
+                                            </div>
+                                        `
+                                        : ""
+                                }
+
+                            </div>
+
+                        </article>
+
+                    `;
+
+                }
+            )
+            .join("");
 
 }
 
@@ -1344,37 +2171,56 @@ function formatReadableValue(value) {
    FORMAT ANSWER FOR HTML
 ========================================================= */
 
-function formatAnswerForDisplay(value) {
+function formatAnswerForDisplay(
+    value
+) {
 
     if (
         value === null ||
         value === undefined ||
-        String(value).trim() === ""
+        String(
+            value
+        ).trim() === ""
     ) {
 
         return `
+
             <span class="answer-value-empty">
+
                 Not specified
+
             </span>
+
         `;
 
     }
 
 
     const text =
-        String(value).trim();
+        String(
+            value
+        ).trim();
 
 
     /*
-     * Multiple values separated by bullets.
+     * Multiple configured values
      */
 
-    if (text.includes(" • ")) {
+    if (
+        text.includes(
+            " • "
+        )
+    ) {
 
         const parts =
             text
-                .split(" • ")
-                .map(part => part.trim())
+                .split(
+                    " • "
+                )
+                .map(
+                    part =>
+                        part.trim()
+                )
                 .filter(Boolean);
 
 
@@ -1385,11 +2231,15 @@ function formatAnswerForDisplay(value) {
                 ${parts
                     .map(
                         part => `
+
                             <span class="answer-value-chip">
+
                                 ${escapeHtml(
-                                    formatReadableValue(part)
+                                    part
                                 )}
+
                             </span>
+
                         `
                     )
                     .join("")}
@@ -1406,7 +2256,7 @@ function formatAnswerForDisplay(value) {
         <span class="answer-value-main">
 
             ${escapeHtml(
-                formatReadableValue(text)
+                text
             )}
 
         </span>
@@ -1415,11 +2265,77 @@ function formatAnswerForDisplay(value) {
 
 }
 
+
+/* =========================================================
+   PARSE JSON VALUE
+========================================================= */
+
+function parseJsonValue(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return null;
+
+    }
+
+
+    if (
+        typeof value ===
+        "object"
+    ) {
+
+        return value;
+
+    }
+
+
+    const text =
+        String(
+            value
+        ).trim();
+
+
+    if (
+        !text.startsWith(
+            "{"
+        ) &&
+        !text.startsWith(
+            "["
+        )
+    ) {
+
+        return null;
+
+    }
+
+
+    try {
+
+        return JSON.parse(
+            text
+        );
+
+    } catch (error) {
+
+        return null;
+
+    }
+
+}
+
+
 /* =========================================================
    NORMALIZE ANSWER TEXT
 ========================================================= */
 
-function normalizeAnswerText(value) {
+function normalizeAnswerText(
+    value
+) {
 
     if (
         value === null ||
@@ -1432,8 +2348,9 @@ function normalizeAnswerText(value) {
 
 
     const text =
-        String(value)
-            .trim();
+        String(
+            value
+        ).trim();
 
 
     if (!text) {
@@ -1444,23 +2361,8 @@ function normalizeAnswerText(value) {
 
 
     /*
-     * If the answer is comma-separated,
-     * remove duplicate values while
-     * preserving their original order.
-     *
-     * Example:
-     *
-     * Home, Home
-     *        ↓
-     * Home
-     *
-     * IP Camera, IP Camera
-     *        ↓
-     * IP Camera
-     *
-     * Front Door, Garage, Front Door
-     *        ↓
-     * Front Door, Garage
+     * Remove duplicate comma-separated
+     * values.
      */
 
     if (
@@ -1477,13 +2379,11 @@ function normalizeAnswerText(value) {
                 .filter(Boolean);
 
 
-        const unique =
-            removeDuplicateValues(
-                parts
-            );
-
-
-        return unique.join(", ");
+        return removeDuplicateValues(
+            parts
+        ).join(
+            ", "
+        );
 
     }
 
@@ -1497,7 +2397,9 @@ function normalizeAnswerText(value) {
    REMOVE DUPLICATE VALUES
 ========================================================= */
 
-function removeDuplicateValues(values) {
+function removeDuplicateValues(
+    values
+) {
 
     const seen =
         new Set();
@@ -1507,7 +2409,9 @@ function removeDuplicateValues(values) {
         value => {
 
             const normalized =
-                String(value)
+                String(
+                    value
+                )
                     .trim()
                     .toLowerCase();
 
@@ -1554,13 +2458,17 @@ function renderNotes(data) {
             "#notesCard"
         );
 
+
     const container =
         document.querySelector(
             "#customerNotes"
         );
 
 
-    if (!card || !container) {
+    if (
+        !card ||
+        !container
+    ) {
 
         return;
 
@@ -1569,20 +2477,24 @@ function renderNotes(data) {
 
     const notes =
         String(
-            data.customer_notes || ""
+            data.customer_notes ||
+            ""
         ).trim();
 
 
     if (!notes) {
 
-        card.hidden = true;
+        card.hidden =
+            true;
 
         return;
 
     }
 
 
-    card.hidden = false;
+    card.hidden =
+        false;
+
 
     container.textContent =
         notes;
@@ -1626,9 +2538,10 @@ function renderPhotos(data) {
     if (count) {
 
         count.textContent =
-            `${photos.length} ${photos.length === 1
-                ? "photo"
-                : "photos"
+            `${photos.length} ${
+                photos.length === 1
+                    ? "photo"
+                    : "photos"
             }`;
 
     }
@@ -1660,7 +2573,10 @@ function renderPhotos(data) {
     container.innerHTML =
         photos
             .map(
-                (photo, index) => {
+                (
+                    photo,
+                    index
+                ) => {
 
                     const rawPath =
                         String(
@@ -1673,13 +2589,16 @@ function renderPhotos(data) {
                         rawPath.startsWith(
                             "http://"
                         ) ||
-                            rawPath.startsWith(
-                                "https://"
-                            )
+                        rawPath.startsWith(
+                            "https://"
+                        )
                             ? rawPath
-                            : `${BACKEND_BASE}${rawPath.startsWith("/")
-                                ? ""
-                                : "/"
+                            : `${BACKEND_BASE}${
+                                rawPath.startsWith(
+                                    "/"
+                                )
+                                    ? ""
+                                    : "/"
                             }${rawPath}`;
 
 
@@ -1691,20 +2610,22 @@ function renderPhotos(data) {
 
                             <a
                                 href="${escapeHtml(
-                        photoUrl
-                    )}"
+                                    photoUrl
+                                )}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
 
                                 <img
                                     src="${escapeHtml(
-                        photoUrl
-                    )}"
+                                        photoUrl
+                                    )}"
                                     alt="${escapeHtml(
-                        photo.file_name ||
-                        `Customer Photo ${index + 1}`
-                    )}"
+                                        photo.file_name ||
+                                        `Customer Photo ${
+                                            index + 1
+                                        }`
+                                    )}"
                                     loading="lazy"
                                 >
 
@@ -1714,16 +2635,23 @@ function renderPhotos(data) {
                             <div class="photo-info">
 
                                 <strong>
+
                                     ${escapeHtml(
-                        photo.file_name ||
-                        `Customer Photo ${index + 1}`
-                    )}
+                                        photo.file_name ||
+                                        `Customer Photo ${
+                                            index + 1
+                                        }`
+                                    )}
+
                                 </strong>
 
+
                                 <span>
+
                                     ${formatDate(
-                        photo.uploaded_at
-                    )}
+                                        photo.uploaded_at
+                                    )}
+
                                 </span>
 
                             </div>
@@ -1740,188 +2668,568 @@ function renderPhotos(data) {
 
 
 /* =========================================================
-   EXISTING REPORT
+   EXISTING REPORTS
 ========================================================= */
 
-function renderExistingReports(data) {
+function renderExistingReports(
+    data
+) {
 
-    const card = document.querySelector("#existingReportCard");
-    const container = document.querySelector("#existingReport");
+    const card =
+        document.querySelector(
+            "#existingReportCard"
+        );
 
-    if (!card || !container) return;
 
-    const reports = Array.isArray(data.reports)
-        ? data.reports
-        : (data.report ? [data.report] : []);
+    const container =
+        document.querySelector(
+            "#existingReport"
+        );
+
+
+    if (
+        !card ||
+        !container
+    ) {
+
+        return;
+
+    }
+
+
+    const reports =
+        Array.isArray(
+            data.reports
+        )
+            ? data.reports
+            : (
+                data.report
+                    ? [data.report]
+                    : []
+            );
+
 
     if (!reports.length) {
-        card.hidden = true;
-        container.innerHTML = "";
+
+        card.hidden =
+            true;
+
+        container.innerHTML =
+            "";
+
         return;
+
     }
 
-    card.hidden = false;
 
-    const ordered = [...reports].sort((a, b) =>
-        new Date(a.created_at || a.submitted_at || 0) -
-        new Date(b.created_at || b.submitted_at || 0)
-    );
+    card.hidden =
+        false;
 
-    const latestFinal = [...reports]
-        .filter(report => report.report_type === "final")
-        .sort((a, b) => new Date(b.created_at || b.submitted_at || 0) - new Date(a.created_at || a.submitted_at || 0))[0] || null;
+
+    const ordered =
+        [
+            ...reports
+        ].sort(
+            (
+                a,
+                b
+            ) =>
+                new Date(
+                    a.created_at ||
+                    a.submitted_at ||
+                    0
+                ) -
+                new Date(
+                    b.created_at ||
+                    b.submitted_at ||
+                    0
+                )
+        );
+
+
+    const latestFinal =
+        [
+            ...reports
+        ]
+            .filter(
+                report =>
+                    report.report_type ===
+                    "final"
+            )
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    new Date(
+                        b.created_at ||
+                        b.submitted_at ||
+                        0
+                    ) -
+                    new Date(
+                        a.created_at ||
+                        a.submitted_at ||
+                        0
+                    )
+            )[0] ||
+            null;
+
 
     const workReportCard =
-    document.querySelector("#workReportCard");
+        document.querySelector(
+            "#workReportCard"
+        );
 
-if (workReportCard) {
 
-    /*
-     * Final report submitted or approved
-     * → hide report form
-     */
-    if (
-        latestFinal &&
-        (
-            latestFinal.status === "submitted" ||
-            latestFinal.status === "approved"
-        )
-    ) {
+    if (workReportCard) {
 
-        workReportCard.hidden = true;
+        /*
+         * Final report submitted/approved
+         * → hide form
+         */
+
+        if (
+            latestFinal &&
+            (
+                latestFinal.status ===
+                    "submitted" ||
+                latestFinal.status ===
+                    "approved"
+            )
+        ) {
+
+            workReportCard.hidden =
+                true;
+
+        }
+
+
+        /*
+         * Final report rejected
+         * → allow resubmission
+         */
+
+        else if (
+            latestFinal &&
+            latestFinal.status ===
+                "rejected" &&
+            requestData?.status ===
+                "in_progress"
+        ) {
+
+            workReportCard.hidden =
+                false;
+
+        }
+
+
+        /*
+         * Normal in-progress job
+         */
+
+        else if (
+            requestData?.status ===
+            "in_progress"
+        ) {
+
+            workReportCard.hidden =
+                false;
+
+        }
+
+
+        /*
+         * Other statuses
+         */
+
+        else {
+
+            workReportCard.hidden =
+                true;
+
+        }
 
     }
 
-    /*
-     * Final report rejected
-     * → allow technician to submit again
-     */
-    else if (
-        latestFinal &&
-        latestFinal.status === "rejected" &&
-        requestData?.status === "in_progress"
-    ) {
-
-        workReportCard.hidden = false;
-
-    }
-
-    /*
-     * Normal work
-     */
-    else if (
-        requestData?.status === "in_progress"
-    ) {
-
-        workReportCard.hidden = false;
-
-    }
-
-    /*
-     * All other statuses
-     */
-    else {
-
-        workReportCard.hidden = true;
-
-    }
-}
 
     container.innerHTML = `
+
         <div class="progress-timeline">
-            ${ordered.map((report, index) => {
-        const isFinal = report.report_type === "final";
-        const title = report.report_title ||
-            (isFinal ? "Final Work Report" : `Progress Update ${report.progress_number || index + 1}`);
-        const status = report.status || "submitted";
-        const media = Array.isArray(report.media) ? report.media : [];
 
-        return `
-                    <article class="progress-item ${isFinal ? "progress-item-final" : ""}">
-                        <div class="progress-marker">
-                            ${isFinal ? "✓" : (report.progress_number || index + 1)}
-                        </div>
-                        <div class="progress-content">
-                            <div class="progress-header">
-                                <div>
-                                    <div class="progress-kicker">${isFinal ? "FINAL REPORT" : `PROGRESS ${report.progress_number || index + 1}`}</div>
-                                    <h3>${escapeHtml(title)}</h3>
-                                </div>
-                                <div class="progress-header-right">
-                                    <span class="progress-status progress-status-${escapeHtml(status)}">${escapeHtml(formatReportStatus(status, isFinal))}</span>
-                                    <time>${escapeHtml(formatDate(report.submitted_at || report.created_at))}</time>
-                                </div>
-                            </div>
+            ${ordered
+                .map(
+                    (
+                        report,
+                        index
+                    ) => {
 
-                            <div class="progress-detail-grid">
-                                <div class="progress-detail">
-                                    <span>Work Performed</span>
-                                    <p>${escapeHtml(report.work_performed || "—")}</p>
-                                </div>
-                                <div class="progress-detail">
-                                    <span>Findings</span>
-                                    <p>${escapeHtml(report.findings || "—")}</p>
-                                </div>
-                                <div class="progress-detail">
-                                    <span>Materials Used</span>
-                                    <p>${escapeHtml(report.materials_used || "—")}</p>
-                                </div>
-                                <div class="progress-detail">
-                                    <span>Technician Notes</span>
-                                    <p>${escapeHtml(report.technician_notes || "—")}</p>
-                                </div>
-                                <div class="progress-detail">
-                                    <span>Reported By</span>
-                                    <p class="report-writer-display">${escapeHtml(report.reported_by || "—")}</p>
-                                </div>
-                            </div>
+                        const isFinal =
+                            report.report_type ===
+                            "final";
 
-                            ${media.length ? `
-                                <div class="progress-media">
-                                    <div class="progress-media-label">Attached Media · ${media.length}</div>
-                                    <div class="progress-media-grid">
-                                        ${media.map(file => {
-            const isImage = file.media_type === "image";
-            return isImage
-                ? `<a href="${escapeHtml(file.file_path)}" target="_blank" rel="noopener"><img src="${escapeHtml(file.file_path)}" alt="${escapeHtml(file.file_name || "Report photo")}"></a>`
-                : `<a class="progress-video" href="${escapeHtml(file.file_path)}" target="_blank" rel="noopener">▶ View Video</a>`;
-        }).join("")}
+
+                        const title =
+                            report.report_title ||
+                            (
+                                isFinal
+                                    ? "Final Work Report"
+                                    : `Progress Update ${
+                                        report.progress_number ||
+                                        index + 1
+                                    }`
+                            );
+
+
+                        const status =
+                            report.status ||
+                            "submitted";
+
+
+                        const media =
+                            Array.isArray(
+                                report.media
+                            )
+                                ? report.media
+                                : [];
+
+
+                        return `
+
+                            <article
+                                class="progress-item ${
+                                    isFinal
+                                        ? "progress-item-final"
+                                        : ""
+                                }"
+                            >
+
+                                <div class="progress-marker">
+
+                                    ${
+                                        isFinal
+                                            ? "✓"
+                                            : (
+                                                report.progress_number ||
+                                                index + 1
+                                            )
+                                    }
+
+                                </div>
+
+
+                                <div class="progress-content">
+
+                                    <div class="progress-header">
+
+                                        <div>
+
+                                            <div class="progress-kicker">
+
+                                                ${
+                                                    isFinal
+                                                        ? "FINAL REPORT"
+                                                        : `PROGRESS ${
+                                                            report.progress_number ||
+                                                            index + 1
+                                                        }`
+                                                }
+
+                                            </div>
+
+
+                                            <h3>
+
+                                                ${escapeHtml(
+                                                    title
+                                                )}
+
+                                            </h3>
+
+                                        </div>
+
+
+                                        <div class="progress-header-right">
+
+                                            <span
+                                                class="progress-status progress-status-${escapeHtml(
+                                                    status
+                                                )}"
+                                            >
+
+                                                ${escapeHtml(
+                                                    formatReportStatus(
+                                                        status,
+                                                        isFinal
+                                                    )
+                                                )}
+
+                                            </span>
+
+
+                                            <time>
+
+                                                ${escapeHtml(
+                                                    formatDate(
+                                                        report.submitted_at ||
+                                                        report.created_at
+                                                    )
+                                                )}
+
+                                            </time>
+
+                                        </div>
+
                                     </div>
-                                </div>
-                            ` : ""}
 
-                            ${report.review_remarks ? `
-                                <div class="progress-review-remarks">
-                                    <strong>Admin Feedback</strong>
-                                    <p>${escapeHtml(report.review_remarks)}</p>
+
+                                    <div class="progress-detail-grid">
+
+                                        <div class="progress-detail">
+
+                                            <span>
+                                                Work Performed
+                                            </span>
+
+                                            <p>
+                                                ${escapeHtml(
+                                                    report.work_performed ||
+                                                    "—"
+                                                )}
+                                            </p>
+
+                                        </div>
+
+
+                                        <div class="progress-detail">
+
+                                            <span>
+                                                Findings
+                                            </span>
+
+                                            <p>
+                                                ${escapeHtml(
+                                                    report.findings ||
+                                                    "—"
+                                                )}
+                                            </p>
+
+                                        </div>
+
+
+                                        <div class="progress-detail">
+
+                                            <span>
+                                                Materials Used
+                                            </span>
+
+                                            <p>
+                                                ${escapeHtml(
+                                                    report.materials_used ||
+                                                    "—"
+                                                )}
+                                            </p>
+
+                                        </div>
+
+
+                                        <div class="progress-detail">
+
+                                            <span>
+                                                Technician Notes
+                                            </span>
+
+                                            <p>
+                                                ${escapeHtml(
+                                                    report.technician_notes ||
+                                                    "—"
+                                                )}
+                                            </p>
+
+                                        </div>
+
+
+                                        <div class="progress-detail">
+
+                                            <span>
+                                                Reported By
+                                            </span>
+
+                                            <p class="report-writer-display">
+
+                                                ${escapeHtml(
+                                                    report.reported_by ||
+                                                    "—"
+                                                )}
+
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    ${
+                                        media.length
+                                            ? `
+
+                                                <div class="progress-media">
+
+                                                    <div class="progress-media-label">
+
+                                                        Attached Media · ${
+                                                            media.length
+                                                        }
+
+                                                    </div>
+
+
+                                                    <div class="progress-media-grid">
+
+                                                        ${media
+                                                            .map(
+                                                                file => {
+
+                                                                    const isImage =
+                                                                        file.media_type ===
+                                                                        "image";
+
+
+                                                                    return isImage
+
+                                                                        ? `
+
+                                                                            <a
+                                                                                href="${escapeHtml(
+                                                                                    file.file_path
+                                                                                )}"
+                                                                                target="_blank"
+                                                                                rel="noopener"
+                                                                            >
+
+                                                                                <img
+                                                                                    src="${escapeHtml(
+                                                                                        file.file_path
+                                                                                    )}"
+                                                                                    alt="${escapeHtml(
+                                                                                        file.file_name ||
+                                                                                        "Report photo"
+                                                                                    )}"
+                                                                                >
+
+                                                                            </a>
+
+                                                                        `
+
+                                                                        : `
+
+                                                                            <a
+                                                                                class="progress-video"
+                                                                                href="${escapeHtml(
+                                                                                    file.file_path
+                                                                                )}"
+                                                                                target="_blank"
+                                                                                rel="noopener"
+                                                                            >
+
+                                                                                ▶ View Video
+
+                                                                            </a>
+
+                                                                        `;
+
+                                                                }
+                                                            )
+                                                            .join("")}
+
+                                                    </div>
+
+                                                </div>
+
+                                            `
+                                            : ""
+                                    }
+
+
+                                    ${
+                                        report.review_remarks
+                                            ? `
+
+                                                <div class="progress-review-remarks">
+
+                                                    <strong>
+                                                        Admin Feedback
+                                                    </strong>
+
+                                                    <p>
+
+                                                        ${escapeHtml(
+                                                            report.review_remarks
+                                                        )}
+
+                                                    </p>
+
+                                                </div>
+
+                                            `
+                                            : ""
+                                    }
+
                                 </div>
-                            ` : ""}
-                        </div>
-                    </article>
-                `;
-    }).join("")}
+
+                            </article>
+
+                        `;
+
+                    }
+                )
+                .join("")}
+
         </div>
+
     `;
+
 }
 
-function formatReportStatus(status, isFinal) {
 
-    if (!isFinal && status === "approved") {
+function formatReportStatus(
+    status,
+    isFinal
+) {
+
+    if (
+        !isFinal &&
+        status === "approved"
+    ) {
+
         return "Recorded";
+
     }
 
+
     const labels = {
-        draft: "Draft",
-        submitted: "Awaiting Admin Review",
-        approved: "Approved",
-        rejected: "Rejected"
+
+        draft:
+            "Draft",
+
+        submitted:
+            "Awaiting Admin Review",
+
+        approved:
+            "Approved",
+
+        rejected:
+            "Rejected"
+
     };
 
-    return labels[status] ||
-        formatStatus(status) ||
-        "Unknown";
-}
 
+    return (
+        labels[status] ||
+        formatStatus(status) ||
+        "Unknown"
+    );
+
+}
 
 /* =========================================================
    JOB ACTION
@@ -1930,48 +3238,82 @@ function formatReportStatus(status, isFinal) {
 function renderJobAction(data) {
 
     const button =
-        document.querySelector("#startJobButton");
+        document.querySelector(
+            "#startJobButton"
+        );
 
     const title =
-        document.querySelector("#jobActionTitle");
+        document.querySelector(
+            "#jobActionTitle"
+        );
 
     const description =
-        document.querySelector("#jobActionDescription");
+        document.querySelector(
+            "#jobActionDescription"
+        );
 
     const workReportCard =
-        document.querySelector("#workReportCard");
+        document.querySelector(
+            "#workReportCard"
+        );
 
-    if (!button) return;
+
+    if (!button) {
+
+        return;
+
+    }
+
 
     const status =
-        data?.status || "pending";
+        data?.status ||
+        "pending";
+
 
     const reports =
-        Array.isArray(data?.reports)
+        Array.isArray(
+            data?.reports
+        )
             ? data.reports
-            : (data?.report ? [data.report] : []);
-
-    /*
-     * Find latest final report
-     */
-    const finalReports =
-        reports
-            .filter(report => report.report_type === "final")
-            .sort((a, b) =>
-                new Date(
-                    b.submitted_at ||
-                    b.created_at ||
-                    0
-                ) -
-                new Date(
-                    a.submitted_at ||
-                    a.created_at ||
-                    0
-                )
+            : (
+                data?.report
+                    ? [data.report]
+                    : []
             );
 
+
+    /*
+     * Find latest final report.
+     */
+
+    const finalReports =
+        reports
+            .filter(
+                report =>
+                    report.report_type ===
+                    "final"
+            )
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    new Date(
+                        b.submitted_at ||
+                        b.created_at ||
+                        0
+                    ) -
+                    new Date(
+                        a.submitted_at ||
+                        a.created_at ||
+                        0
+                    )
+            );
+
+
     const latestFinal =
-        finalReports[0] || null;
+        finalReports[0] ||
+        null;
 
 
     /*
@@ -1980,26 +3322,49 @@ function renderJobAction(data) {
      * ------------------------------------------------------
      */
 
-    if (status === "assigned") {
+    if (
+        status ===
+        "assigned"
+    ) {
 
         if (workReportCard) {
-            workReportCard.hidden = true;
+
+            workReportCard.hidden =
+                true;
+
         }
 
-        button.hidden = false;
-        button.disabled = false;
-        button.textContent = "Start Job";
+
+        button.hidden =
+            false;
+
+
+        button.disabled =
+            false;
+
+
+        button.textContent =
+            "Start Job";
+
 
         if (title) {
-            title.textContent = "Ready to start";
+
+            title.textContent =
+                "Ready to start";
+
         }
+
 
         if (description) {
+
             description.textContent =
                 "Confirm the job details, then start the assigned work.";
+
         }
 
+
         return;
+
     }
 
 
@@ -2009,82 +3374,123 @@ function renderJobAction(data) {
      * ------------------------------------------------------
      */
 
-    if (status === "in_progress") {
+    if (
+        status ===
+        "in_progress"
+    ) {
 
-        button.hidden = true;
+        button.hidden =
+            true;
+
 
         /*
-         * Final report submitted
-         * → Wait for Admin review
+         * Final report submitted.
          */
+
         if (
             latestFinal &&
-            latestFinal.status === "submitted"
+            latestFinal.status ===
+                "submitted"
         ) {
 
             if (workReportCard) {
-                workReportCard.hidden = true;
+
+                workReportCard.hidden =
+                    true;
+
             }
 
+
             if (title) {
+
                 title.textContent =
                     "Final Report Submitted";
+
             }
+
 
             if (description) {
+
                 description.textContent =
                     "Your final report has been submitted successfully and is now waiting for Admin review.";
+
             }
 
+
             return;
+
         }
 
 
         /*
-         * Final report rejected
-         * → Technician can submit again
+         * Final report rejected.
          */
+
         if (
             latestFinal &&
-            latestFinal.status === "rejected"
+            latestFinal.status ===
+                "rejected"
         ) {
 
             if (workReportCard) {
-                workReportCard.hidden = false;
+
+                workReportCard.hidden =
+                    false;
+
             }
+
 
             if (title) {
+
                 title.textContent =
                     "Final Report Requires Revision";
+
             }
+
 
             if (description) {
+
                 description.textContent =
                     "The Admin has rejected the final report. Please review the feedback and submit the report again.";
+
             }
 
+
             return;
+
         }
 
 
         /*
-         * Normal work in progress
+         * Normal work.
          */
+
         if (workReportCard) {
-            workReportCard.hidden = false;
+
+            workReportCard.hidden =
+                false;
+
         }
+
 
         if (title) {
+
             title.textContent =
                 "Job in progress";
+
         }
+
 
         if (description) {
+
             description.textContent =
                 "You can add progress updates or submit the final report when the work is complete.";
+
         }
 
+
         return;
+
     }
 
 
@@ -2094,25 +3500,41 @@ function renderJobAction(data) {
      * ------------------------------------------------------
      */
 
-    if (status === "awaiting_payment") {
+    if (
+        status ===
+        "awaiting_payment"
+    ) {
 
-        button.hidden = true;
+        button.hidden =
+            true;
+
 
         if (workReportCard) {
-            workReportCard.hidden = true;
+
+            workReportCard.hidden =
+                true;
+
         }
+
 
         if (title) {
+
             title.textContent =
                 "Awaiting Payment";
+
         }
+
 
         if (description) {
+
             description.textContent =
                 "Your final report has been approved. The service request is now waiting for the customer payment to be verified by Admin.";
+
         }
 
+
         return;
+
     }
 
 
@@ -2120,27 +3542,43 @@ function renderJobAction(data) {
      * ------------------------------------------------------
      * COMPLETED
      * ------------------------------------------------------
-     */
+ */
 
-    if (status === "completed") {
+    if (
+        status ===
+        "completed"
+    ) {
 
-        button.hidden = true;
+        button.hidden =
+            true;
+
 
         if (workReportCard) {
-            workReportCard.hidden = true;
+
+            workReportCard.hidden =
+                true;
+
         }
+
 
         if (title) {
+
             title.textContent =
                 "Job completed";
+
         }
+
 
         if (description) {
+
             description.textContent =
                 "This service request has been completed.";
+
         }
 
+
         return;
+
     }
 
 
@@ -2150,25 +3588,41 @@ function renderJobAction(data) {
      * ------------------------------------------------------
      */
 
-    if (status === "cancelled") {
+    if (
+        status ===
+        "cancelled"
+    ) {
 
-        button.hidden = true;
+        button.hidden =
+            true;
+
 
         if (workReportCard) {
-            workReportCard.hidden = true;
+
+            workReportCard.hidden =
+                true;
+
         }
+
 
         if (title) {
+
             title.textContent =
                 "Job cancelled";
+
         }
+
 
         if (description) {
+
             description.textContent =
                 "This service request is no longer active.";
+
         }
 
+
         return;
+
     }
 
 
@@ -2178,72 +3632,195 @@ function renderJobAction(data) {
      * ------------------------------------------------------
      */
 
-    button.hidden = true;
+    button.hidden =
+        true;
+
 
     if (workReportCard) {
-        workReportCard.hidden = true;
+
+        workReportCard.hidden =
+            true;
+
     }
+
 
     if (title) {
+
         title.textContent =
             "Job status";
+
     }
+
 
     if (description) {
+
         description.textContent =
             `Current status: ${formatStatus(status)}.`;
+
     }
+
 }
+
+
+/* =========================================================
+   START JOB
+========================================================= */
+
 async function startJob() {
 
-    const requestId = getRequestId();
-    const token = getToken();
-    const button = document.querySelector("#startJobButton");
-    const message = document.querySelector("#jobActionMessage");
+    const requestId =
+        getRequestId();
 
-    if (!requestId || !token || !button) return;
 
-    const confirmed = window.confirm("Start this assigned job now?");
-    if (!confirmed) return;
+    const token =
+        getToken();
 
-    try {
-        button.disabled = true;
-        button.textContent = "Starting...";
 
-        const response = await fetch(
-            `${API_BASE}/technician/requests/${encodeURIComponent(requestId)}/start`,
-            {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            }
+    const button =
+        document.querySelector(
+            "#startJobButton"
         );
 
-        const result = await parseResponse(response);
+
+    const message =
+        document.querySelector(
+            "#jobActionMessage"
+        );
+
+
+    if (
+        !requestId ||
+        !token ||
+        !button
+    ) {
+
+        return;
+
+    }
+
+
+    const confirmed =
+        window.confirm(
+            "Start this assigned job now?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    try {
+
+        button.disabled =
+            true;
+
+
+        button.textContent =
+            "Starting...";
+
+
+        const response =
+            await fetch(
+                `${API_BASE}/technician/requests/${encodeURIComponent(requestId)}/start`,
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    }
+
+                }
+            );
+
+
+        const result =
+            await parseResponse(
+                response
+            );
+
 
         if (result.data) {
-            requestData = { ...requestData, ...result.data };
+
+            requestData = {
+                ...requestData,
+                ...result.data
+            };
+
         }
 
-        requestData.status = result.data?.status || "in_progress";
-        renderRequest(requestData);
+
+        requestData.status =
+            result.data?.status ||
+            "in_progress";
+
+
+        renderRequest(
+            requestData
+        );
+
 
         if (message) {
-            message.hidden = false;
-            message.textContent = result.message || "Job started successfully.";
+
+            message.hidden =
+                false;
+
+
+            message.textContent =
+                result.message ||
+                "Job started successfully.";
+
         }
+
 
     } catch (error) {
-        console.error("Start job error:", error);
-        if (handleAuthError(error)) return;
-        if (message) {
-            message.hidden = false;
-            message.textContent = error.message || "Unable to start the job.";
+
+        console.error(
+            "Start job error:",
+            error
+        );
+
+
+        if (
+            handleAuthError(
+                error
+            )
+        ) {
+
+            return;
+
         }
-        button.disabled = false;
-        button.textContent = "Start Job";
+
+
+        if (message) {
+
+            message.hidden =
+                false;
+
+
+            message.textContent =
+                error.message ||
+                "Unable to start the job.";
+
+        }
+
+
+        button.disabled =
+            false;
+
+
+        button.textContent =
+            "Start Job";
+
     }
+
 }
 
 
@@ -2338,16 +3915,9 @@ function renderMediaPreview() {
     }
 
 
-    /*
-     * Clear current preview
-     */
+    container.innerHTML =
+        "";
 
-    container.innerHTML = "";
-
-
-    /*
-     * No files
-     */
 
     if (
         !selectedCompletionMedia.length
@@ -2368,12 +3938,11 @@ function renderMediaPreview() {
     }
 
 
-    /*
-     * Render every selected file
-     */
-
     selectedCompletionMedia.forEach(
-        (file, index) => {
+        (
+            file,
+            index
+        ) => {
 
             const objectUrl =
                 URL.createObjectURL(
@@ -2407,33 +3976,39 @@ function renderMediaPreview() {
 
                 <div class="media-preview-image">
 
-                    ${isImage
-                    ? `
+                    ${
+                        isImage
+                            ? `
+
                                 <img
                                     src="${escapeHtml(
-                        objectUrl
-                    )}"
+                                        objectUrl
+                                    )}"
                                     alt="${escapeHtml(
-                        file.name
-                    )}"
+                                        file.name
+                                    )}"
                                 >
+
                             `
-                    : ""
-                }
+                            : ""
+                    }
 
 
-                    ${isVideo
-                    ? `
+                    ${
+                        isVideo
+                            ? `
+
                                 <video
                                     src="${escapeHtml(
-                        objectUrl
-                    )}"
+                                        objectUrl
+                                    )}"
                                     controls
                                     preload="metadata"
                                 ></video>
+
                             `
-                    : ""
-                }
+                            : ""
+                    }
 
                 </div>
 
@@ -2443,24 +4018,25 @@ function renderMediaPreview() {
                     <strong>
 
                         ${escapeHtml(
-                    file.name
-                )}
+                            file.name
+                        )}
 
                     </strong>
 
 
                     <span>
 
-                        ${isImage
-                    ? "Photo"
-                    : "Video"
-                }
+                        ${
+                            isImage
+                                ? "Photo"
+                                : "Video"
+                        }
 
                         ·
 
                         ${formatFileSize(
-                    file.size
-                )}
+                            file.size
+                        )}
 
                     </span>
 
@@ -2489,7 +4065,7 @@ function renderMediaPreview() {
 
 
     /*
-     * REMOVE INDIVIDUAL FILE
+     * REMOVE MEDIA
      */
 
     container
@@ -2509,20 +4085,12 @@ function renderMediaPreview() {
                             );
 
 
-                        /*
-                         * Remove selected file
-                         */
-
                         selectedCompletionMedia
                             .splice(
                                 index,
                                 1
                             );
 
-
-                        /*
-                         * Re-render
-                         */
 
                         renderMediaPreview();
 
@@ -2539,7 +4107,9 @@ function renderMediaPreview() {
    ADD COMPLETION MEDIA
 ========================================================= */
 
-function addCompletionMedia(files) {
+function addCompletionMedia(
+    files
+) {
 
     const newFiles =
         Array.from(
@@ -2550,11 +4120,15 @@ function addCompletionMedia(files) {
     const allowedTypes = [
 
         "image/jpeg",
+
         "image/png",
+
         "image/webp",
 
         "video/mp4",
+
         "video/webm",
+
         "video/quicktime"
 
     ];
@@ -2566,16 +4140,12 @@ function addCompletionMedia(files) {
         1024;
 
 
-    /*
-     * Process every newly selected file
-     */
-
     for (
         const file of newFiles
     ) {
 
         /*
-         * Check file type
+         * File type
          */
 
         if (
@@ -2594,7 +4164,7 @@ function addCompletionMedia(files) {
 
 
         /*
-         * Check file size
+         * File size
          */
 
         if (
@@ -2612,7 +4182,7 @@ function addCompletionMedia(files) {
 
 
         /*
-         * Prevent duplicates
+         * Prevent duplicate file.
          */
 
         const alreadyExists =
@@ -2624,7 +4194,6 @@ function addCompletionMedia(files) {
 
                     existing.size ===
                     file.size
-
             );
 
 
@@ -2637,10 +4206,6 @@ function addCompletionMedia(files) {
         }
 
 
-        /*
-         * Add file
-         */
-
         selectedCompletionMedia.push(
             file
         );
@@ -2649,7 +4214,7 @@ function addCompletionMedia(files) {
 
 
     /*
-     * Maximum 10 files
+     * Maximum 10 files.
      */
 
     if (
@@ -2671,10 +4236,6 @@ function addCompletionMedia(files) {
     }
 
 
-    /*
-     * Update preview
-     */
-
     renderMediaPreview();
 
 }
@@ -2684,7 +4245,9 @@ function addCompletionMedia(files) {
    FILE SIZE
 ========================================================= */
 
-function formatFileSize(bytes) {
+function formatFileSize(
+    bytes
+) {
 
     if (!bytes) {
 
@@ -2737,10 +4300,10 @@ function validateCompletionMedia() {
     /*
      * IMPORTANT:
      *
-     * Do NOT use input.files here.
+     * Do not use input.files.
      *
-     * The input is cleared after every selection,
-     * so all files are stored in selectedCompletionMedia.
+     * selectedCompletionMedia is the
+     * persistent file list.
      */
 
     const files =
@@ -2750,11 +4313,15 @@ function validateCompletionMedia() {
     const allowedTypes = [
 
         "image/jpeg",
+
         "image/png",
+
         "image/webp",
 
         "video/mp4",
+
         "video/webm",
+
         "video/quicktime"
 
     ];
@@ -2767,7 +4334,7 @@ function validateCompletionMedia() {
 
 
     /*
-     * Maximum number of files
+     * Maximum files.
      */
 
     if (
@@ -2777,7 +4344,8 @@ function validateCompletionMedia() {
 
         return {
 
-            valid: false,
+            valid:
+                false,
 
             message:
                 "You can upload a maximum of 10 photos/videos."
@@ -2788,7 +4356,7 @@ function validateCompletionMedia() {
 
 
     /*
-     * Validate each file
+     * Validate each file.
      */
 
     for (
@@ -2803,7 +4371,8 @@ function validateCompletionMedia() {
 
             return {
 
-                valid: false,
+                valid:
+                    false,
 
                 message:
                     `${file.name} is not a supported image or video format.`
@@ -2820,7 +4389,8 @@ function validateCompletionMedia() {
 
             return {
 
-                valid: false,
+                valid:
+                    false,
 
                 message:
                     `${file.name} is larger than the 100 MB limit.`
@@ -2834,7 +4404,8 @@ function validateCompletionMedia() {
 
     return {
 
-        valid: true
+        valid:
+            true
 
     };
 
@@ -2845,7 +4416,9 @@ function validateCompletionMedia() {
    SUBMIT WORK REPORT
 ========================================================= */
 
-async function submitReport(event) {
+async function submitReport(
+    event
+) {
 
     event.preventDefault();
 
@@ -2873,7 +4446,10 @@ async function submitReport(event) {
         );
 
 
-    if (!button || !form) {
+    if (
+        !button ||
+        !form
+    ) {
 
         return;
 
@@ -2965,27 +4541,55 @@ async function submitReport(event) {
             ""
         ).trim();
 
+
     const reportType =
-        document.querySelector("#reportType")?.value || "progress";
-
-        if (reportType === "final") {
-
-    const confirmed = window.confirm(
-        "Submit this as the FINAL REPORT?\n\n" +
-        "After submission, the report will be sent to Admin for review. " +
-        "You will not be able to submit another update unless Admin rejects the report."
-    );
-
-    if (!confirmed) {
-        return;
-    }
-}
-    const reportTitle =
-        String(document.querySelector("#reportTitle")?.value || "").trim();
+        document.querySelector(
+            "#reportType"
+        )?.value ||
+        "progress";
 
 
     /*
-     * Work performed is required
+     * Final report confirmation.
+     */
+
+    if (
+        reportType ===
+        "final"
+    ) {
+
+        const confirmed =
+            window.confirm(
+
+                "Submit this as the FINAL REPORT?\n\n" +
+
+                "After submission, the report will be sent to Admin for review. " +
+
+                "You will not be able to submit another update unless Admin rejects the report."
+
+            );
+
+
+        if (!confirmed) {
+
+            return;
+
+        }
+
+    }
+
+
+    const reportTitle =
+        String(
+            document.querySelector(
+                "#reportTitle"
+            )?.value ||
+            ""
+        ).trim();
+
+
+    /*
+     * Work performed is required.
      */
 
     if (!workPerformed) {
@@ -3001,7 +4605,7 @@ async function submitReport(event) {
 
 
     /*
-     * Add report fields
+     * Add report data.
      */
 
     formData.append(
@@ -3027,58 +4631,101 @@ async function submitReport(event) {
         technicianNotes
     );
 
-    formData.append("report_type", reportType);
-    formData.append("report_title", reportTitle);
 
- let reportedBy = "";
-
-const headTechnician = document.getElementById("reportedByHead");
-const technicianOne = document.getElementById("reportedByTechnician");
-
-if (headTechnician && headTechnician.checked) {
-    reportedBy = headTechnician.value;
-} else if (technicianOne && technicianOne.checked) {
-    reportedBy = technicianOne.value;
-}
-
-console.log("====================================");
-console.log("REPORT WRITTEN BY:", reportedBy);
-console.log("HEAD TECHNICIAN CHECKED:", headTechnician?.checked);
-console.log("TECHNICIAN 1 CHECKED:", technicianOne?.checked);
-console.log("====================================");
-console.log("===== REPORT DEBUG =====");
-console.log("reportedBy:", JSON.stringify(reportedBy));
-console.log("head exists:", !!headTechnician);
-console.log("head checked:", headTechnician?.checked);
-console.log("head value:", headTechnician?.value);
-console.log("technician exists:", !!technicianOne);
-console.log("technician checked:", technicianOne?.checked);
-console.log("technician value:", technicianOne?.value);
-console.log("========================");
-
-
-if (!reportedBy) {
-    showReportMessage(
-        "Please select who wrote this report.",
-        "error"
+    formData.append(
+        "report_type",
+        reportType
     );
 
-    button.disabled = false;
 
-    button.textContent =
-        reportType === "final"
-            ? "Submit Final Report"
-            : "Submit Progress Update";
+    formData.append(
+        "report_title",
+        reportTitle
+    );
 
-    return;
-}
 
-formData.append("reported_by", reportedBy);
+    /* =====================================================
+       REPORTED BY
+    ===================================================== */
+
+    let reportedBy =
+        "";
+
+
+    const headTechnician =
+        document.getElementById(
+            "reportedByHead"
+        );
+
+
+    const technicianOne =
+        document.getElementById(
+            "reportedByTechnician"
+        );
+
+
+    if (
+        headTechnician &&
+        headTechnician.checked
+    ) {
+
+        reportedBy =
+            headTechnician.value;
+
+    }
+
+    else if (
+        technicianOne &&
+        technicianOne.checked
+    ) {
+
+        reportedBy =
+            technicianOne.value;
+
+    }
+
+
+    console.log(
+        "REPORT WRITTEN BY:",
+        reportedBy
+    );
+
+
+    if (!reportedBy) {
+
+        showReportMessage(
+            "Please select who wrote this report.",
+            "error"
+        );
+
+
+        button.disabled =
+            false;
+
+
+        button.textContent =
+            reportType ===
+            "final"
+
+                ? "Submit Final Report"
+
+                : "Submit Progress Update";
+
+
+        return;
+
+    }
+
+
+    formData.append(
+        "reported_by",
+        reportedBy
+    );
 
 
     /*
      * ------------------------------------------------------
-     * ADD ALL PHOTOS / VIDEOS
+     * ADD ALL MEDIA
      * ------------------------------------------------------
      */
 
@@ -3098,7 +4745,7 @@ formData.append("reported_by", reportedBy);
      * ------------------------------------------------------
      * BUTTON STATE
      * ------------------------------------------------------
-     */
+ */
 
     button.disabled =
         true;
@@ -3129,12 +4776,8 @@ formData.append("reported_by", reportedBy);
                     },
 
                     /*
-                     * DO NOT set Content-Type manually.
-                     *
-                     * Browser automatically sets:
-                     *
-                     * multipart/form-data
-                     * + boundary
+                     * Do NOT manually set
+                     * Content-Type.
                      */
 
                     body:
@@ -3175,7 +4818,7 @@ formData.append("reported_by", reportedBy);
 
 
         /*
-         * Clear selected media
+         * Clear selected media.
          */
 
         selectedCompletionMedia =
@@ -3183,21 +4826,21 @@ formData.append("reported_by", reportedBy);
 
 
         /*
-         * Reset form
+         * Reset form.
          */
 
         form.reset();
 
 
         /*
-         * Clear media preview
+         * Clear preview.
          */
 
         renderMediaPreview();
 
 
         /*
-         * Reload request details
+         * Reload request.
          */
 
         await loadRequest();
@@ -3209,6 +4852,17 @@ formData.append("reported_by", reportedBy);
             "Submit report error:",
             error
         );
+
+
+        if (
+            handleAuthError(
+                error
+            )
+        ) {
+
+            return;
+
+        }
 
 
         showReportMessage(
@@ -3224,8 +4878,13 @@ formData.append("reported_by", reportedBy);
 
 
         button.textContent =
-            document.querySelector("#reportType")?.value === "final"
+            document.querySelector(
+                "#reportType"
+            )?.value ===
+            "final"
+
                 ? "Submit Final Report"
+
                 : "Submit Progress Update";
 
     }
@@ -3317,7 +4976,7 @@ function logout() {
 
 
 /* =========================================================
-   INIT
+   INITIALIZATION
 ========================================================= */
 
 document.addEventListener(
@@ -3325,7 +4984,7 @@ document.addEventListener(
     () => {
 
         /*
-         * Check technician login
+         * Check technician login.
          */
 
         if (
@@ -3338,7 +4997,7 @@ document.addEventListener(
 
 
         /*
-         * Work report form
+         * Work report form.
          */
 
         const form =
@@ -3356,38 +5015,137 @@ document.addEventListener(
 
         }
 
-        const startButton = document.querySelector("#startJobButton");
-
-        if (startButton) {
-            startButton.addEventListener("click", startJob);
-        }
-
-
-        const reportTypeInput = document.querySelector("#reportType");
-        const reportTitleInput = document.querySelector("#reportTitle");
-        const submitTitle = document.querySelector("#reportSubmitTitle");
-        const submitDescription = document.querySelector("#reportSubmitDescription");
-        const submitButton = document.querySelector("#submitReportButton");
-
-        const updateReportTypeUI = () => {
-            const isFinal = reportTypeInput?.value === "final";
-            if (submitTitle) submitTitle.textContent = isFinal ? "Ready to submit final report?" : "Add a progress update";
-            if (submitDescription) submitDescription.textContent = isFinal
-                ? "The final report will be sent to the admin for review."
-                : "This update will be recorded in the service progress timeline.";
-            if (submitButton) submitButton.textContent = isFinal ? "Submit Final Report" : "Submit Progress Update";
-            if (reportTitleInput && !reportTitleInput.value) {
-                reportTitleInput.placeholder = isFinal ? "e.g. Final Repair Completed" : "e.g. Initial Inspection, Diagnosis, Repair";
-            }
-        };
-
-        if (reportTypeInput) {
-            reportTypeInput.addEventListener("change", updateReportTypeUI);
-            updateReportTypeUI();
-        }
 
         /*
-         * Completion media input
+         * Start job.
+         */
+
+        const startButton =
+            document.querySelector(
+                "#startJobButton"
+            );
+
+
+        if (startButton) {
+
+            startButton.addEventListener(
+                "click",
+                startJob
+            );
+
+        }
+
+
+        /*
+         * Report type controls.
+         */
+
+        const reportTypeInput =
+            document.querySelector(
+                "#reportType"
+            );
+
+
+        const reportTitleInput =
+            document.querySelector(
+                "#reportTitle"
+            );
+
+
+        const submitTitle =
+            document.querySelector(
+                "#reportSubmitTitle"
+            );
+
+
+        const submitDescription =
+            document.querySelector(
+                "#reportSubmitDescription"
+            );
+
+
+        const submitButton =
+            document.querySelector(
+                "#submitReportButton"
+            );
+
+
+        const updateReportTypeUI =
+            () => {
+
+                const isFinal =
+                    reportTypeInput?.value ===
+                    "final";
+
+
+                if (submitTitle) {
+
+                    submitTitle.textContent =
+                        isFinal
+
+                            ? "Ready to submit final report?"
+
+                            : "Add a progress update";
+
+                }
+
+
+                if (submitDescription) {
+
+                    submitDescription.textContent =
+                        isFinal
+
+                            ? "The final report will be sent to the admin for review."
+
+                            : "This update will be recorded in the service progress timeline.";
+
+                }
+
+
+                if (submitButton) {
+
+                    submitButton.textContent =
+                        isFinal
+
+                            ? "Submit Final Report"
+
+                            : "Submit Progress Update";
+
+                }
+
+
+                if (
+                    reportTitleInput &&
+                    !reportTitleInput.value
+                ) {
+
+                    reportTitleInput.placeholder =
+                        isFinal
+
+                            ? "e.g. Final Repair Completed"
+
+                            : "e.g. Initial Inspection, Diagnosis, Repair";
+
+                }
+
+            };
+
+
+        if (reportTypeInput) {
+
+            reportTypeInput.addEventListener(
+                "change",
+                updateReportTypeUI
+            );
+
+
+            updateReportTypeUI();
+
+        }
+
+
+        /*
+         * Completion media input.
          */
 
         const mediaInput =
@@ -3402,23 +5160,14 @@ document.addEventListener(
                 "change",
                 event => {
 
-                    /*
-                     * Add the newly selected files
-                     * to our persistent array.
-                     */
-
                     addCompletionMedia(
                         event.target.files
                     );
 
 
                     /*
-                     * IMPORTANT:
-                     *
-                     * Clear the actual input.
-                     *
-                     * This allows the technician to
-                     * select more files again.
+                     * Clear input so technician
+                     * can select more files.
                      */
 
                     event.target.value =
@@ -3431,14 +5180,14 @@ document.addEventListener(
 
 
         /*
-         * Initial empty preview
+         * Initial media preview.
          */
 
         renderMediaPreview();
 
 
         /*
-         * Load request
+         * Load request.
          */
 
         loadRequest();

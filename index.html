@@ -1,518 +1,136 @@
 <!DOCTYPE html>
 <html lang="ms">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <meta
-        name="description"
-        content="SecurePro by Sonic System Solution provides security and smart system solutions for homes and businesses."
-    >
-
-    <title>
-        SecurePro | Security & Smart System Solutions
-    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SecurePro by Sonic System Solution - Service Request Platform">
+    <title>SecurePro | Service Request</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
-        rel="stylesheet"
-    >
-
-    <link
-        rel="stylesheet"
-        href="css/style.css"
-    >
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
-
 <body>
-
-
-<!-- =====================================================
-     HEADER
-     ===================================================== -->
-
 <header class="site-header">
-
     <div class="container navbar">
-
-        <a
-            href="index.html"
-            class="brand"
-        >
-
-            <span class="brand-mark">
-                S
-            </span>
-
-
+        <a href="index.html" class="brand">
+            <span class="brand-mark">S</span>
             <span>
-
-                <strong>
-                    SECUREPRO
-                </strong>
-
-                <small>
-                    by Sonic System Solution
-                </small>
-
+                <strong>SECUREPRO</strong>
+                <small>by Sonic System Solution</small>
             </span>
-
         </a>
 
+        <nav class="main-nav">
+            <a href="#guide" data-i18n="navGuide">Cara Membuat Permintaan</a>
+            <a href="#services" data-i18n="navServices">Pilih Servis</a>
+        </nav>
 
         <div class="nav-actions">
-
-            <button
-                id="languageToggle"
-                class="language-btn"
-                type="button"
-                aria-label="Change language"
-            >
-                🌐 English
+            <button id="languageToggle" class="language-btn" type="button">🌐 English</button>
+            <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu" aria-expanded="false">
+                <span></span><span></span><span></span>
             </button>
-
         </div>
-
     </div>
-
 </header>
 
-
-
-<!-- =====================================================
-     MAIN
-     ===================================================== -->
-
 <main>
-
-
-    <!-- =================================================
-         HERO
-         ================================================= -->
-
-    <section class="hero">
-
-        <div class="container hero-grid">
-
-
-            <div class="hero-content">
-
-
-                <span
-                    class="eyebrow"
-                    data-i18n="eyebrow"
-                >
-                    PENYELESAIAN KESELAMATAN PINTAR
-                </span>
-
-
-                <h1
-                    data-i18n="heroTitle"
-                >
-                    Cari sistem yang sesuai untuk ruang anda.
-                </h1>
-
-
-                <p
-                    data-i18n="heroDescription"
-                >
-                    Jawab beberapa soalan mudah dan kami akan membantu
-                    mengenal pasti penyelesaian SecurePro yang sesuai untuk
-                    rumah atau perniagaan anda.
-                </p>
-
-
-                <button
-                    class="primary-btn"
-                    id="startButton"
-                    type="button"
-                    data-i18n="startButton"
-                >
-                    Mula Permintaan
-                </button>
-
-
-            </div>
-
-
-            <div
-                class="hero-visual"
-                aria-hidden="true"
-            >
-
-                <div class="scan-frame">
-
-                    <div class="scan-line"></div>
-                    <div class="scan-corner corner-tl"></div>
-                    <div class="scan-corner corner-tr"></div>
-                    <div class="scan-corner corner-bl"></div>
-                    <div class="scan-corner corner-br"></div>
-
-                    <div class="scan-readout">
-                        <span class="status-dot"></span>
-                        <span
-                            data-i18n="heroStatusValue"
-                        >
-                            Sistem aktif
-                        </span>
-                    </div>
-
-                </div>
-
-                <p
-                    class="hero-visual-caption"
-                    data-i18n="heroVisualCaption"
-                >
-                    Pemantauan masa nyata untuk setiap penyelesaian SecurePro.
-                </p>
-
-            </div>
-
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =================================================
-         SERVICES
-         ================================================= -->
-
-    <section
-        class="services-section"
-        id="services"
-    >
-
+    <!-- SIMPLE CUSTOMER GUIDANCE -->
+    <section class="guide" id="guide">
         <div class="container">
-
-
-            <div class="section-heading">
-
-
-                <span class="eyebrow">
-                    SECUREPRO
-                </span>
-
-
-                <h2
-                    data-i18n="servicesTitle"
-                >
-                    Pilih penyelesaian
-                </h2>
-
-
-                <p
-                    data-i18n="servicesDescription"
-                >
-                    Pilih servis yang anda perlukan.
+            <div class="guide-heading">
+                <span class="eyebrow" data-i18n="guideLabel">HOW TO CREATE A SERVICE REQUEST</span>
+                <h1 data-i18n="guideTitle">Buat permintaan servis anda dengan mudah.</h1>
+                <p data-i18n="guideText">
+                    Ikuti 3 langkah mudah di bawah. Pilih servis yang diperlukan untuk memulakan permintaan anda.
                 </p>
-
-
             </div>
 
-
-
-            <!-- =========================================
-                 CUSTOMER GUIDE
-                 ========================================= -->
-
-            <div class="customer-guide-message">
-
-
-                <div class="guide-message-icon">
-                    ?
-                </div>
-
-
-                <div class="guide-message-content">
-
-
-                    <strong
-                        data-i18n="guideTitle"
-                    >
-                        Cara menggunakan SecurePro
-                    </strong>
-
-
-                    <p
-                        data-i18n="guideDescription"
-                    >
-                        Pilih servis yang anda perlukan di bawah.
-                        Anda akan dibimbing melalui beberapa soalan mudah
-                        untuk membantu kami memahami keperluan anda.
-                    </p>
-
-
-                    <div class="guide-message-steps">
-
-
-                        <span>
-
-                            <b>
-                                1
-                            </b>
-
-                            <span
-                                data-i18n="guideStep1"
-                            >
-                                Pilih servis
-                            </span>
-
-                        </span>
-
-
-                        <span class="guide-arrow">
-                            →
-                        </span>
-
-
-                        <span>
-
-                            <b>
-                                2
-                            </b>
-
-                            <span
-                                data-i18n="guideStep2"
-                            >
-                                Jawab soalan
-                            </span>
-
-                        </span>
-
-
-                        <span class="guide-arrow">
-                            →
-                        </span>
-
-
-                        <span>
-
-                            <b>
-                                3
-                            </b>
-
-                            <span
-                                data-i18n="guideStep3"
-                            >
-                                Semak & hantar
-                            </span>
-
-                        </span>
-
-
+            <div class="steps">
+                <article class="step">
+                    <span class="step-number">01</span>
+                    <div class="step-icon">✓</div>
+                    <div>
+                        <h2 data-i18n="stepOneTitle">Pilih Servis</h2>
+                        <p data-i18n="stepOneText">Pilih sistem atau servis yang anda perlukan.</p>
                     </div>
+                </article>
 
+                <article class="step">
+                    <span class="step-number">02</span>
+                    <div class="step-icon">?</div>
+                    <div>
+                        <h2 data-i18n="stepTwoTitle">Jawab Soalan</h2>
+                        <p data-i18n="stepTwoText">Jawab beberapa soalan supaya kami memahami keperluan anda.</p>
+                    </div>
+                </article>
 
-                </div>
-
-
+                <article class="step">
+                    <span class="step-number">03</span>
+                    <div class="step-icon">→</div>
+                    <div>
+                        <h2 data-i18n="stepThreeTitle">Hantar Permintaan</h2>
+                        <p data-i18n="stepThreeText">Semak maklumat anda dan hantar permintaan servis.</p>
+                    </div>
+                </article>
             </div>
 
-
-
-            <!-- =========================================
-                 SERVICE GRID
-                 ========================================= -->
-
-            <div
-                id="servicesGrid"
-                class="services-grid"
-            >
-
-                <div
-                    class="loading"
-                    data-i18n="loadingServices"
-                >
-                    Memuatkan servis...
-                </div>
-
-            </div>
-
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =================================================
-         CONTACT
-         ================================================= -->
-
-    <section class="contact-section">
-
-        <div class="container">
-
-
-            <div class="section-heading">
-
-
-                <span
-                    class="eyebrow"
-                    data-i18n="contactEyebrow"
-                >
-                    HUBUNGI KAMI
-                </span>
-
-
-                <h2
-                    data-i18n="contactTitle"
-                >
-                    Perlukan bantuan?
-                </h2>
-
-
-                <p
-                    data-i18n="contactDescription"
-                >
-                    Untuk pertanyaan mengenai produk, perkhidmatan atau
-                    permintaan servis, sila hubungi Sonic System Solution.
+            <div class="guide-note">
+                <span>i</span>
+                <p data-i18n="guideNote">
+                    Anda boleh pilih satu servis di bawah untuk bermula.
                 </p>
-
-
             </div>
-
-
-
-            <div class="contact-info">
-
-
-                <div>
-
-                    <strong>
-                        SecurePro
-                    </strong>
-
-                    <p
-                        data-i18n="contactSecurePro"
-                    >
-                        Penyelesaian Keselamatan & Sistem Pintar
-                    </p>
-
-                </div>
-
-
-
-                <div>
-
-                    <strong
-                        data-i18n="operatedByLabel"
-                    >
-                        Dikendalikan oleh
-                    </strong>
-
-                    <p>
-                        Sonic System Solution
-                    </p>
-
-                </div>
-
-
-
-                <div>
-
-                    <strong
-                        data-i18n="officialPortalLabel"
-                    >
-                        Portal Servis Rasmi
-                    </strong>
-
-                    <p
-                        data-i18n="officialPortalDescription"
-                    >
-                        Sistem Pengurusan Servis SecurePro
-                    </p>
-
-                </div>
-
-
-            </div>
-
-
         </div>
-
     </section>
 
+    <!-- SERVICE CARDS -->
+    <section class="services-section" id="services">
+        <div class="container">
+            <div class="services-heading">
+                <div>
+                    <span class="eyebrow" data-i18n="servicesLabel">OUR SERVICES</span>
+                    <h2 data-i18n="servicesTitle">Pilih servis yang anda perlukan.</h2>
+                </div>
+                <p data-i18n="servicesText">Klik pada mana-mana kad untuk membuat permintaan.</p>
+            </div>
 
+            <div id="servicesGrid" class="services-grid">
+                <div class="loading" data-i18n="loadingServices">Memuatkan servis...</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="help-strip">
+        <div class="container help-inner">
+            <div>
+                <strong data-i18n="helpTitle">Perlukan bantuan?</strong>
+                <span data-i18n="helpText">Hubungi Sonic System Solution untuk mendapatkan bantuan.</span>
+            </div>
+            <div class="help-phone">
+                <span>013-970 6363</span>
+                <span>/ 018-264 6363</span>
+            </div>
+        </div>
+    </section>
 </main>
 
-
-
-<!-- =====================================================
-     FOOTER
-     ===================================================== -->
-
 <footer class="site-footer">
-
-    <div class="container footer-content">
-
-
-        <div>
-
-
-            <strong>
-                SECUREPRO
-            </strong>
-
-
-            <p
-                data-i18n="footerText"
-            >
-                Penyelesaian keselamatan dan sistem pintar.
-            </p>
-
-
-            <p
-                class="footer-company"
-                data-i18n="footerCompany"
-            >
-                SecurePro dikendalikan oleh Sonic System Solution.
-            </p>
-
-
-        </div>
-
-
-
-        <div class="footer-right">
-
-
+    <div class="container footer-inner">
+        <div class="brand">
+            <span class="brand-mark">S</span>
             <span>
-                © 2026 SecurePro
+                <strong>SECUREPRO</strong>
+                <small>by Sonic System Solution</small>
             </span>
-
-
-            <small
-                data-i18n="officialPlatform"
-            >
-                Platform Servis Rasmi SecurePro
-            </small>
-
-
         </div>
-
-
+        <span data-i18n="footerText">Service Request Platform</span>
     </div>
-
 </footer>
 
-
-
 <script src="js/app.js"></script>
-
-
 </body>
-
 </html>
