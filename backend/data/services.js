@@ -757,6 +757,212 @@ const SERVICES = {
     ]
 },
 
+  troubleshoot_repair: {
+    id: "troubleshoot_repair",
+
+    name: {
+        en: "Troubleshoot & Repair",
+        ms: "Penyelesaian Masalah & Pembaikan"
+    },
+
+    questions: [
+
+        // ==================================================
+        // 1. SYSTEM
+        // ==================================================
+
+        {
+            id: "system",
+            type: "single",
+
+            title: {
+                en: "Which system needs troubleshooting or repair?",
+                ms: "Sistem manakah yang memerlukan pemeriksaan atau pembaikan?"
+            },
+
+            description: {
+                en: "Select the system that is having a problem.",
+                ms: "Pilih sistem yang mengalami masalah."
+            },
+
+            options: [
+
+                {
+                    value: "cctv",
+
+                    label: {
+                        en: "CCTV System",
+                        ms: "Sistem CCTV"
+                    },
+
+                    description: {
+                        en: "Camera, recorder, viewing or network problems.",
+                        ms: "Masalah kamera, perakam, paparan atau rangkaian."
+                    }
+                },
+
+                {
+                    value: "alarm",
+
+                    label: {
+                        en: "Alarm System",
+                        ms: "Sistem Penggera"
+                    },
+
+                    description: {
+                        en: "Alarm, sensor, keypad or siren problems.",
+                        ms: "Masalah penggera, sensor, keypad atau siren."
+                    }
+                },
+
+                {
+                    value: "access",
+
+                    label: {
+                        en: "Door Access",
+                        ms: "Kawalan Akses Pintu"
+                    },
+
+                    description: {
+                        en: "Card, fingerprint, face recognition or door lock problems.",
+                        ms: "Masalah kad, cap jari, pengecaman muka atau kunci pintu."
+                    }
+                },
+
+                {
+                    value: "attendance",
+
+                    label: {
+                        en: "Time Attendance",
+                        ms: "Sistem Kehadiran"
+                    },
+
+                    description: {
+                        en: "Attendance terminal or software problems.",
+                        ms: "Masalah terminal atau perisian kehadiran."
+                    }
+                },
+
+                {
+                    value: "autogate",
+
+                    label: {
+                        en: "Autogate",
+                        ms: "Autogate"
+                    },
+
+                    description: {
+                        en: "Gate motor, remote or control problems.",
+                        ms: "Masalah motor pagar, alat kawalan atau sistem kawalan."
+                    }
+                },
+
+                {
+                    value: "barriergate",
+
+                    label: {
+                        en: "Barrier Gate",
+                        ms: "Palang Automatik"
+                    },
+
+                    description: {
+                        en: "Barrier arm, sensor or access control problems.",
+                        ms: "Masalah palang, sensor atau kawalan akses."
+                    }
+                },
+
+                {
+                    value: "network",
+
+                    label: {
+                        en: "Network Solution",
+                        ms: "Penyelesaian Rangkaian"
+                    },
+
+                    description: {
+                        en: "Network, Wi-Fi, router, switch or connectivity problems.",
+                        ms: "Masalah rangkaian, Wi-Fi, router, switch atau sambungan."
+                    }
+                },
+
+                {
+                    value: "smarthome",
+
+                    label: {
+                        en: "Smart Home",
+                        ms: "Rumah Pintar"
+                    },
+
+                    description: {
+                        en: "Smart devices, automation or home control problems.",
+                        ms: "Masalah peranti pintar, automasi atau kawalan rumah."
+                    }
+                },
+
+                {
+                    value: "audio_visual",
+
+                    label: {
+                        en: "Audio Visual Solution",
+                        ms: "Penyelesaian Audio Visual"
+                    },
+
+                    description: {
+                        en: "Audio, speakers, displays, projectors or visual system problems.",
+                        ms: "Masalah audio, pembesar suara, paparan, projektor atau sistem visual."
+                    }
+                },
+
+                {
+                    value: "pabx_intercom",
+
+                    label: {
+                        en: "PABX System / Intercom",
+                        ms: "Sistem PABX / Interkom"
+                    },
+
+                    description: {
+                        en: "Telephone, extension, PABX or intercom problems.",
+                        ms: "Masalah telefon, sambungan, PABX atau interkom."
+                    }
+                },
+
+                {
+                    value: "solar_cctv",
+
+                    label: {
+                        en: "Solar CCTV",
+                        ms: "Solar CCTV"
+                    },
+
+                    description: {
+                        en: "Solar camera, battery, panel or connectivity problems.",
+                        ms: "Masalah kamera solar, bateri, panel atau sambungan."
+                    }
+                },
+
+                {
+                    value: "solar_pump",
+
+                    label: {
+                        en: "Solar Water Pump",
+                        ms: "Pam Air Solar"
+                    },
+
+                    description: {
+                        en: "Pump, solar power, water flow or controller problems.",
+                        ms: "Masalah pam, kuasa solar, aliran air atau pengawal."
+                    }
+                }
+
+               
+
+            ]
+        }
+
+    ]
+},
+
   alarm: {
     id: "alarm",
 
@@ -3648,211 +3854,7 @@ const SERVICES = {
     ]
 },
 
-    troubleshoot_repair: {
-    id: "troubleshoot_repair",
-
-    name: {
-        en: "Troubleshoot & Repair",
-        ms: "Penyelesaian Masalah & Pembaikan"
-    },
-
-    questions: [
-
-        // ==================================================
-        // 1. SYSTEM
-        // ==================================================
-
-        {
-            id: "system",
-            type: "single",
-
-            title: {
-                en: "Which system needs troubleshooting or repair?",
-                ms: "Sistem manakah yang memerlukan pemeriksaan atau pembaikan?"
-            },
-
-            description: {
-                en: "Select the system that is having a problem.",
-                ms: "Pilih sistem yang mengalami masalah."
-            },
-
-            options: [
-
-                {
-                    value: "cctv",
-
-                    label: {
-                        en: "CCTV System",
-                        ms: "Sistem CCTV"
-                    },
-
-                    description: {
-                        en: "Camera, recorder, viewing or network problems.",
-                        ms: "Masalah kamera, perakam, paparan atau rangkaian."
-                    }
-                },
-
-                {
-                    value: "alarm",
-
-                    label: {
-                        en: "Alarm System",
-                        ms: "Sistem Penggera"
-                    },
-
-                    description: {
-                        en: "Alarm, sensor, keypad or siren problems.",
-                        ms: "Masalah penggera, sensor, keypad atau siren."
-                    }
-                },
-
-                {
-                    value: "access",
-
-                    label: {
-                        en: "Door Access",
-                        ms: "Kawalan Akses Pintu"
-                    },
-
-                    description: {
-                        en: "Card, fingerprint, face recognition or door lock problems.",
-                        ms: "Masalah kad, cap jari, pengecaman muka atau kunci pintu."
-                    }
-                },
-
-                {
-                    value: "attendance",
-
-                    label: {
-                        en: "Time Attendance",
-                        ms: "Sistem Kehadiran"
-                    },
-
-                    description: {
-                        en: "Attendance terminal or software problems.",
-                        ms: "Masalah terminal atau perisian kehadiran."
-                    }
-                },
-
-                {
-                    value: "autogate",
-
-                    label: {
-                        en: "Autogate",
-                        ms: "Autogate"
-                    },
-
-                    description: {
-                        en: "Gate motor, remote or control problems.",
-                        ms: "Masalah motor pagar, alat kawalan atau sistem kawalan."
-                    }
-                },
-
-                {
-                    value: "barriergate",
-
-                    label: {
-                        en: "Barrier Gate",
-                        ms: "Palang Automatik"
-                    },
-
-                    description: {
-                        en: "Barrier arm, sensor or access control problems.",
-                        ms: "Masalah palang, sensor atau kawalan akses."
-                    }
-                },
-
-                {
-                    value: "network",
-
-                    label: {
-                        en: "Network Solution",
-                        ms: "Penyelesaian Rangkaian"
-                    },
-
-                    description: {
-                        en: "Network, Wi-Fi, router, switch or connectivity problems.",
-                        ms: "Masalah rangkaian, Wi-Fi, router, switch atau sambungan."
-                    }
-                },
-
-                {
-                    value: "smarthome",
-
-                    label: {
-                        en: "Smart Home",
-                        ms: "Rumah Pintar"
-                    },
-
-                    description: {
-                        en: "Smart devices, automation or home control problems.",
-                        ms: "Masalah peranti pintar, automasi atau kawalan rumah."
-                    }
-                },
-
-                {
-                    value: "audio_visual",
-
-                    label: {
-                        en: "Audio Visual Solution",
-                        ms: "Penyelesaian Audio Visual"
-                    },
-
-                    description: {
-                        en: "Audio, speakers, displays, projectors or visual system problems.",
-                        ms: "Masalah audio, pembesar suara, paparan, projektor atau sistem visual."
-                    }
-                },
-
-                {
-                    value: "pabx_intercom",
-
-                    label: {
-                        en: "PABX System / Intercom",
-                        ms: "Sistem PABX / Interkom"
-                    },
-
-                    description: {
-                        en: "Telephone, extension, PABX or intercom problems.",
-                        ms: "Masalah telefon, sambungan, PABX atau interkom."
-                    }
-                },
-
-                {
-                    value: "solar_cctv",
-
-                    label: {
-                        en: "Solar CCTV",
-                        ms: "Solar CCTV"
-                    },
-
-                    description: {
-                        en: "Solar camera, battery, panel or connectivity problems.",
-                        ms: "Masalah kamera solar, bateri, panel atau sambungan."
-                    }
-                },
-
-                {
-                    value: "solar_pump",
-
-                    label: {
-                        en: "Solar Water Pump",
-                        ms: "Pam Air Solar"
-                    },
-
-                    description: {
-                        en: "Pump, solar power, water flow or controller problems.",
-                        ms: "Masalah pam, kuasa solar, aliran air atau pengawal."
-                    }
-                }
-
-               
-
-            ]
-        }
-
-    ]
-},
+  
 };
 
 module.exports = SERVICES;

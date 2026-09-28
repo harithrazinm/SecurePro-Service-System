@@ -2667,3 +2667,126 @@ textarea:focus-visible {
     padding: 12px 14px;
     border-radius: 10px;
 }
+
+/* =========================================================
+   REFERRAL REWARD - ADMIN REQUEST DETAIL
+========================================================= */
+
+.referral-admin-panel {
+    margin: 18px 0;
+    padding: 20px;
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    border-radius: 16px;
+    background: #f7fffb;
+}
+
+.referral-admin-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.referral-admin-eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.referral-admin-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.referral-admin-header p {
+    margin: 6px 0 0;
+    line-height: 1.5;
+    opacity: 0.75;
+}
+
+.referral-admin-status {
+    flex: 0 0 auto;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.referral-admin-status.pending {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.referral-admin-status.applied {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.referral-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.referral-admin-grid > div {
+    padding: 13px 14px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 12px;
+}
+
+.referral-admin-grid span {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.58;
+}
+
+.referral-admin-grid strong {
+    display: block;
+    font-size: 14px;
+}
+
+.referral-admin-note {
+    margin-top: 14px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.09);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.referral-admin-note.success {
+    background: rgba(16, 185, 129, 0.09);
+}
+
+.referral-apply-button {
+    margin-top: 12px;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.referral-apply-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+@media (max-width: 700px) {
+    .referral-admin-header {
+        flex-direction: column;
+    }
+
+    .referral-admin-grid {
+        grid-template-columns: 1fr;
+    }
+}

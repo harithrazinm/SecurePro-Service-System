@@ -2797,6 +2797,11 @@ function renderPaymentRow(payment) {
     return `<div class="payment-row"><div class="payment-row-header"><div><strong>Payment Proof</strong>${fileName}</div><span class="payment-${escapeHtml(status)}">${escapeHtml(formatPaymentStatus(status))}</span></div><div class="invoice-meta-grid">${meta}</div>${proofLink}${verifyActions}</div>`;
 }
 
+function loadReferralForRequest() {
+    // Referral rewards are managed from the dedicated Invoices & Payments page.
+    // Intentionally no-op on Service Request detail.
+}
+
 function renderInvoiceSection(data) {
     const container = $("#invoiceHistory");
     const verificationPanel = $("#paymentVerificationPanel");
@@ -3227,176 +3232,6 @@ function addTechnicianOption(select, id, label) {
     select.appendChild(option);
 }
 
-/* =========================================================
-   QUOTATION PAYMENT PROOF CHECK
-========================================================= */
-
-/*
- * Technician assignment is unlocked only after the Admin
- * uploads the customer's INITIAL quotation payment proof.
- *
- * This is NOT the final invoice payment proof.
- */
-function hasQuotationPaymentProof(data) {
-
-    const quotations =
-        data?.quotations || {};
-
-
-    const candidates = [
-
-        quotations.final,
-
-        quotations.original
-
-    ].filter(Boolean);
-
-
-    return candidates.some(
-        quotation => {
-
-            const proofUrl =
-                String(
-                    quotation?.payment_proof_url || ""
-                ).trim();
-
-
-            const paymentStatus =
-                String(
-                    quotation?.payment_status || ""
-                ).trim().toLowerCase();
-
-
-            return (
-                proofUrl !== "" &&
-                paymentStatus === "proof_uploaded"
-            );
-
-        }
-    );
-
-}
-
-/* =========================================================
-   TECHNICIAN ASSIGNMENT LOCK
-========================================================= */
-
-function updateTechnicianAssignmentLock(
-    data = requestData
-) {
-
-    const technicianSelect =
-        $("#technicianSelect");
-
-    const scheduledDate =
-        $("#scheduledDate");
-
-    const scheduledTime =
-        $("#scheduledTime");
-
-    const saveButton =
-        $("#saveTechnicianButton");
-
-    const message =
-        $("#technicianAssignmentMessage");
-
-
-    if (
-        !technicianSelect
-    ) {
-
-        return;
-
-    }
-
-
-    const hasPaymentProof =
-        hasQuotationPaymentProof(
-            data
-        );
-
-
-    /*
-     * -----------------------------------------------------
-     * PAYMENT PROOF NOT UPLOADED
-     * -----------------------------------------------------
-     */
-
-    if (!hasPaymentProof) {
-
-        technicianSelect.disabled = true;
-
-        if (scheduledDate) {
-            scheduledDate.disabled = true;
-        }
-
-        if (scheduledTime) {
-            scheduledTime.disabled = true;
-        }
-
-        if (saveButton) {
-            saveButton.disabled = true;
-            saveButton.textContent =
-                "Payment Proof Required";
-        }
-
-
-        if (message) {
-
-            message.hidden = false;
-
-            message.className =
-                "assignment-message locked";
-
-            message.textContent =
-                "🔒 Technician assignment is locked. " +
-                "Please upload the customer's quotation payment proof first.";
-
-        }
-
-
-        return;
-
-    }
-
-
-    /*
-     * -----------------------------------------------------
-     * PAYMENT PROOF EXISTS
-     * -----------------------------------------------------
-     */
-
-    technicianSelect.disabled = false;
-
-    if (scheduledDate) {
-        scheduledDate.disabled = false;
-    }
-
-    if (scheduledTime) {
-        scheduledTime.disabled = false;
-    }
-
-
-    if (saveButton) {
-
-        saveButton.disabled = false;
-
-        saveButton.textContent =
-            "Assign Technician";
-
-    }
-
-
-    if (message) {
-
-        message.hidden = true;
-
-        message.textContent = "";
-
-    }
-
-}
-
 async function loadTechnicians(data = requestData) {
     const select = $("#technicianSelect");
     if (!select) return;
@@ -3430,15 +3265,10 @@ async function loadTechnicians(data = requestData) {
             );
         }
 
-       select.value = currentId || "";
+        select.value = currentId || "";
+        select.disabled = false;
 
-updateTechnicianDisplay();
-
-/*
- * Technician assignment is controlled by quotation
- * payment proof.
- */
-updateTechnicianAssignmentLock(data);
+        updateTechnicianDisplay();
 
     } catch (error) {
         console.error("Unable to load technicians:", error);
@@ -3486,12 +3316,7 @@ function renderAssignment(data) {
     if (scheduledDate) scheduledDate.value = toDateInputValue(data?.scheduled_date);
     if (scheduledTime) scheduledTime.value = toTimeInputValue(data?.scheduled_time);
 
-    if (techniciansCache) {
-    updateTechnicianDisplay();
-}
-
-updateTechnicianAssignmentLock(data);
-
+    if (techniciansCache) updateTechnicianDisplay();
 }
 
 function showAssignmentMessage(text, type = "") {
@@ -3539,26 +3364,6 @@ async function saveTechnicianAssignment() {
         alert("The technician list has not loaded. Please refresh the page and try again.");
         return;
     }
-    
-
-    /*
- * Technician assignment is not allowed until
- * quotation payment proof has been uploaded.
- */
-if (!hasQuotationPaymentProof(requestData)) {
-
-    showAssignmentMessage(
-        "🔒 Technician assignment is locked. Please upload the customer's quotation payment proof first.",
-        "error"
-    );
-
-    alert(
-        "Technician cannot be assigned yet.\n\n" +
-        "Please upload the customer's quotation payment proof first."
-    );
-
-    return;
-}
 
     const technicianId = technicianSelect.value || null;
     const dateValue = scheduledDate?.value || "";

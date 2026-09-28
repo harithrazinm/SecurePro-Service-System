@@ -61,6 +61,8 @@ const superAdminRoutes =
 const superAdminQuotationRoutes =
     require("./routes/superAdminQuotationRoutes");
 
+    const referralRoutes =
+    require("./routes/referralRoutes");
 // ======================================================
 // CORS
 // ======================================================
@@ -179,6 +181,11 @@ const loginLimiter = rateLimit({
     }
 });
 
+
+
+
+
+    
 // ======================================================
 // SERVICE ROUTES
 // ======================================================
@@ -244,6 +251,18 @@ app.use(
     quotationRoutes
 );
 
+// ======================================================
+// REFERRAL ROUTES
+// ======================================================
+
+app.use(
+    "/api/referrals",
+    referralRoutes
+);
+
+// ======================================================
+// INVOICE ROUTES
+// ======================================================
 app.use(
     "/api/invoices",
     invoiceRoutes

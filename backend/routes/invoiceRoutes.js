@@ -4,6 +4,8 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("../config/cloudinary");
 const authMiddleware = require("../middleware/authMiddleware");
 const { validateUploadFile } = require("../middleware/uploadValidation");
+const invoiceController = require("../controllers/invoiceController");
+
 const {
     getInvoices,
     getInvoiceForRequest,
@@ -12,8 +14,7 @@ const {
     uploadPaymentProof,
     getPaymentProofs,
     verifyPayment
-} = require("../controllers/invoiceController");
-
+} = invoiceController;
 const router = express.Router();
 
 const storage = new CloudinaryStorage({
@@ -80,5 +81,18 @@ router.post("/request/:requestId", upload.single("invoice_file"), createInvoice)
 router.post("/:id/email", sendInvoiceByEmail);
 router.post("/:id/payment-proof", upload.single("payment_proof"), uploadPaymentProof);
 router.post("/payments/:paymentId/verify", verifyPayment);
+router.patch(
+    "/:id/referral-reward",
+    authMiddleware,
+    authMiddleware.requireAdmin,
+    invoiceController.markReferralRewardApplied
+);
+
+
+
+router.patch(
+    "/:id/referral-reward",
+    invoiceController.markReferralRewardApplied
+);
 
 module.exports = router;

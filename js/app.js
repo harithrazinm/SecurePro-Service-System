@@ -36,6 +36,40 @@ const translations = {
         contactText:"Contact Sonic System Solution for product enquiries, services or installation requests.",
         phoneLabel:"CONTACT US", contactButton:"Start Your Request →",
         footerText:"Security and smart system solutions for homes and businesses.",
+        referralEyebrow: "OPTIONAL",
+
+referralTitle: "Referral Reward",
+
+referralDescription:
+    "Have a referral code from a SecurePro customer? Enter it below to claim the available reward.",
+
+referralCode: "Referral Code",
+
+referralPlaceholder: "Enter referral code",
+
+checkReferral: "Check Code",
+
+referralOptional:
+    "Referral code is optional.",
+
+checkingReferral:
+    "Checking...",
+
+referralVerified:
+    "Referral code verified successfully.",
+
+referralAccepted:
+    "Referral code accepted",
+
+invalidReferral:
+    "Invalid referral code.",
+
+referralUnavailable:
+    "Unable to check the referral code. Please try again.",
+
+referralOwnCode:
+    "You cannot use your own referral code.",
+
         footerSolutions:"Solutions", footerServices:"Services", footerContact:"Contact", footerBottom:"Official SecurePro Service Platform"
     },
     ms: {
@@ -68,6 +102,39 @@ const translations = {
         contactText:"Hubungi Sonic System Solution untuk pertanyaan produk, servis atau permintaan pemasangan.",
         phoneLabel:"HUBUNGI KAMI", contactButton:"Mula Permintaan →",
         footerText:"Penyelesaian keselamatan dan sistem pintar untuk rumah dan perniagaan.",
+        referralEyebrow: "PILIHAN",
+
+referralTitle: "Ganjaran Rujukan",
+
+referralDescription:
+    "Mempunyai kod rujukan daripada pelanggan SecurePro? Masukkan kod di bawah untuk mendapatkan ganjaran yang tersedia.",
+
+referralCode: "Kod Rujukan",
+
+referralPlaceholder: "Masukkan kod rujukan",
+
+checkReferral: "Semak Kod",
+
+referralOptional:
+    "Kod rujukan adalah pilihan.",
+
+checkingReferral:
+    "Menyemak...",
+
+referralVerified:
+    "Kod rujukan berjaya disahkan.",
+
+referralAccepted:
+    "Kod rujukan diterima",
+
+invalidReferral:
+    "Kod rujukan tidak sah.",
+
+referralUnavailable:
+    "Tidak dapat menyemak kod rujukan. Sila cuba lagi.",
+
+referralOwnCode:
+    "Anda tidak boleh menggunakan kod rujukan sendiri.",
         footerSolutions:"Penyelesaian", footerServices:"Servis", footerContact:"Hubungi", footerBottom:"Platform Servis Rasmi SecurePro"
     }
 };
@@ -94,6 +161,7 @@ async function loadServices() {
 
     const serviceImages = {
         cctv:"assets/cctvt.png",
+        troubleshoot_repair:"assets/tnr.jpg",
         autogate:"assets/autogatet.png",
         alarm:"assets/alarmt.jpeg",
         barriergate:"assets/barriert.png",
@@ -101,8 +169,8 @@ async function loadServices() {
         attendance:"assets/timet.jpeg",
         access:"assets/doort.jpeg",
         pabx:"assets/pabxt.jpeg",
-        solar_pump:"assets/solarpt.jpeg",
-        troubleshoot_repair:"assets/tnr.jpg"
+        solar_pump:"assets/solarpt.jpeg"
+       
     };
 
     try {

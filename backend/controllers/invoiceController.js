@@ -41,6 +41,52 @@ async function getInvoices(req, res) {
                 r.customer_email,
                 r.status AS request_status,
                 u.name AS created_by_name,
+
+                /* Referral belongs to this exact service request. */
+                (
+                    SELECT ru.id
+                    FROM referral_usages ru
+                    WHERE ru.request_id = i.request_id
+                    ORDER BY ru.used_at DESC
+                    LIMIT 1
+                ) AS referral_usage_id,
+                (
+                    SELECT rc.code
+                    FROM referral_usages ru
+                    INNER JOIN referral_codes rc ON rc.id = ru.referral_code_id
+                    WHERE ru.request_id = i.request_id
+                    ORDER BY ru.used_at DESC
+                    LIMIT 1
+                ) AS referral_code,
+                (
+                    SELECT ru.reward_type
+                    FROM referral_usages ru
+                    WHERE ru.request_id = i.request_id
+                    ORDER BY ru.used_at DESC
+                    LIMIT 1
+                ) AS referral_reward_type,
+                (
+                    SELECT ru.reward_value
+                    FROM referral_usages ru
+                    WHERE ru.request_id = i.request_id
+                    ORDER BY ru.used_at DESC
+                    LIMIT 1
+                ) AS referral_reward_value,
+                (
+                    SELECT ru.reward_amount
+                    FROM referral_usages ru
+                    WHERE ru.request_id = i.request_id
+                    ORDER BY ru.used_at DESC
+                    LIMIT 1
+                ) AS referral_reward_amount,
+                (
+                    SELECT ru.status
+                    FROM referral_usages ru
+                    WHERE ru.request_id = i.request_id
+                    ORDER BY ru.used_at DESC
+                    LIMIT 1
+                ) AS referral_status,
+
                 (
                     SELECT COUNT(*)
                     FROM invoice_payments ip
@@ -772,6 +818,74 @@ async function verifyPayment(req, res) {
     }
 }
 
+async function markReferralRewardApplied(req, res) {
+    try {
+        const invoiceId = req.params.id;
+
+        const [rows] = await pool.query(`
+            SELECT
+                i.id AS invoice_id,
+                i.request_id,
+                ru.id AS referral_usage_id,
+                ru.status AS referral_status
+            FROM invoices i
+            INNER JOIN referral_usages ru
+                ON ru.request_id = i.request_id
+            WHERE i.id = ?
+            ORDER BY ru.used_at DESC
+            LIMIT 1
+        `, [invoiceId]);
+
+        if (!rows.length) {
+            return res.status(404).json({
+                success: false,
+                message: "No referral reward is linked to this invoice."
+            });
+        }
+
+        const referral = rows[0];
+
+        if (referral.referral_status === "rewarded") {
+            return res.json({
+                success: true,
+                message: "Referral reward has already been marked as applied.",
+                data: { status: "rewarded" }
+            });
+        }
+
+        if (!["pending", "qualified"].includes(referral.referral_status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Referral reward cannot be marked as applied from status '${referral.referral_status}'.`
+            });
+        }
+
+        await pool.query(`
+            UPDATE referral_usages
+            SET
+                status = 'rewarded',
+                rewarded_at = NOW(),
+                remarks = COALESCE(NULLIF(remarks, ''), 'Referral reward applied during final invoice preparation.')
+            WHERE id = ?
+        `, [referral.referral_usage_id]);
+
+        return res.json({
+            success: true,
+            message: "Referral reward marked as applied.",
+            data: {
+                referral_usage_id: referral.referral_usage_id,
+                status: "rewarded"
+            }
+        });
+    } catch (error) {
+        console.error("Mark referral reward applied error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to mark referral reward as applied."
+        });
+    }
+}
+
 module.exports = {
     getInvoices,
     getInvoiceForRequest,
@@ -779,5 +893,6 @@ module.exports = {
     sendInvoiceByEmail,
     uploadPaymentProof,
     getPaymentProofs,
-    verifyPayment
+    verifyPayment,
+    markReferralRewardApplied
 };

@@ -335,6 +335,91 @@
             ></div>
 
 
+            <!-- =====================================================
+     REFERRAL REWARD
+===================================================== -->
+
+<section class="referral-section">
+
+    <div class="referral-header">
+
+        <div>
+            <span class="referral-eyebrow">
+                OPTIONAL
+            </span>
+
+            <h3>
+                Referral Reward
+            </h3>
+
+            <p>
+                Have a referral code from a SecurePro customer?
+                Enter it below to claim the available reward.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="referral-form">
+
+        <label for="referralCode">
+            Referral Code
+        </label>
+
+
+        <div class="referral-input-row">
+
+            <input
+                type="text"
+                id="referralCode"
+                name="referral_code"
+                maxlength="50"
+                placeholder="Enter referral code"
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                id="validateReferralButton"
+            ></button>
+
+        </div>
+
+
+        <p
+            id="referralMessage"
+            class="referral-message"
+        ></p>
+
+    </div>
+
+
+    <!-- Referral result -->
+
+    <div
+        id="referralResult"
+        class="referral-result"
+        hidden
+    >
+
+        <div class="referral-result-icon">
+            ✓
+        </div>
+
+
+        <div class="referral-result-content">
+
+            <strong id="referralResultTitle"></strong>
+
+            <p id="referralResultDescription"></p>
+
+        </div>
+
+    </div>
+
+</section>
+
             <div class="customer-navigation">
 
                 <button

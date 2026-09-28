@@ -221,9 +221,17 @@ async function createRequest(
 
 
         const customerNotes =
-            String(
-                req.body.customer_notes || ""
-            ).trim();
+    String(
+        req.body.customer_notes || ""
+    ).trim();
+
+const referralCode =
+    String(
+        req.body.referral_code || ""
+    )
+        .trim()
+        .toUpperCase();
+
 
 
         /*
@@ -415,7 +423,245 @@ async function createRequest(
                 customerNotes || null
             ]
         );
+/*
+ * ==================================================
+ * REFERRAL
+ * ==================================================
+ */
 
+let referralUsage = null;
+
+if (referralCode) {
+    console.log(
+        "Processing referral code:",
+        referralCode
+    );
+
+    /*
+     * Lock the referral code row so two customers
+     * cannot consume the same remaining usage
+     * at the same time.
+     */
+const [
+    referralRows
+] = await connection.query(
+    `
+    SELECT
+        id,
+        source_request_id,
+        code,
+        reward_type,
+        reward_value,
+        minimum_order_amount,
+        usage_limit,
+        usage_count,
+        status
+    FROM referral_codes
+    WHERE UPPER(code) = ?
+    LIMIT 1
+    FOR UPDATE
+    `,
+    [referralCode]
+);
+
+if (referralRows.length === 0) {
+    throw new Error(
+        "Invalid referral code."
+    );
+}
+
+const referral = referralRows[0];
+
+const [
+    sourceRows
+] = await connection.query(
+    `
+    SELECT
+        id,
+        customer_name,
+        customer_phone,
+        customer_email,
+        status
+    FROM service_requests
+    WHERE id = ?
+    LIMIT 1
+    `,
+    [referral.source_request_id]
+);
+
+if (
+    sourceRows.length === 0 ||
+    sourceRows[0].status !== "completed"
+) {
+    throw new Error(
+        "This referral code is not eligible for use."
+    );
+}
+
+const sourceRequest = sourceRows[0];
+
+    /*
+     * Referral must still be active.
+     */
+    if (referral.status !== "active") {
+        throw new Error(
+            "This referral code is no longer active."
+        );
+    }
+
+    /*
+     * Referral source must have completed
+     * their own service.
+     */
+    if (
+        !referral.source_request_id ||
+        sourceRequest.status !== "completed"
+    ) {
+        throw new Error(
+            "This referral code is not eligible for use."
+        );
+    }
+
+    /*
+     * Check usage limit.
+     */
+    if (
+        referral.usage_limit !== null &&
+        Number(referral.usage_count) >=
+            Number(referral.usage_limit)
+    ) {
+        throw new Error(
+            "This referral code has reached its usage limit."
+        );
+    }
+
+    /*
+     * Prevent self-referral using phone/email.
+     *
+     * We do not compare names because names are
+     * not reliable enough for identity checking.
+     */
+    const normalizePhone = value =>
+        String(value || "")
+            .replace(/\D/g, "");
+
+    const normalizeEmail = value =>
+        String(value || "")
+            .trim()
+            .toLowerCase();
+
+    const samePhone =
+        sourceRequest.customer_phone &&
+        normalizePhone(
+            sourceRequest.customer_phone
+        ) ===
+            normalizePhone(
+                customerPhone
+            );
+
+    const sameEmail =
+        sourceRequest.customer_email &&
+        customerEmail &&
+        normalizeEmail(
+            sourceRequest.customer_email
+        ) ===
+            normalizeEmail(
+                customerEmail
+            );
+
+    if (samePhone || sameEmail) {
+        throw new Error(
+            "You cannot use your own referral code."
+        );
+    }
+
+    /*
+     * Fixed reward can be stored immediately.
+     *
+     * Percentage reward will be calculated later
+     * when the final invoice amount is available.
+     */
+    let rewardAmount = 0;
+
+    if (
+        referral.reward_type === "fixed"
+    ) {
+        rewardAmount =
+            Number(
+                referral.reward_value
+            ) || 0;
+    }
+
+    /*
+     * Create referral usage.
+     */
+    const referralUsageId =
+        uuid();
+
+    await connection.query(
+        `
+        INSERT INTO referral_usages (
+            id,
+            referral_code_id,
+            request_id,
+            referrer_customer_id,
+            referred_customer_id,
+            reward_type,
+            reward_value,
+            reward_amount,
+            status,
+            used_at
+        )
+        VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW()
+        )
+        `,
+        [
+            referralUsageId,
+            referral.id,
+            requestId,
+            null,
+            null,
+            referral.reward_type,
+            referral.reward_value,
+            rewardAmount
+        ]
+    );
+
+    /*
+     * Increase usage count only after the usage
+     * record has been successfully created.
+     */
+    await connection.query(
+        `
+        UPDATE referral_codes
+        SET usage_count = usage_count + 1
+        WHERE id = ?
+        `,
+        [referral.id]
+    );
+
+    referralUsage = {
+        id: referralUsageId,
+        code: referral.code,
+        reward_type: referral.reward_type,
+        reward_value:
+            Number(
+                referral.reward_value
+            ) || 0,
+        reward_amount:
+            rewardAmount,
+        minimum_order_amount:
+            Number(
+                referral.minimum_order_amount
+            ) || 0
+    };
+
+    console.log(
+        "Referral usage created:",
+        referralUsage
+    );
+}
 
         /*
          * ==================================================
@@ -813,6 +1059,26 @@ async function createRequest(
                     }
 
                 },
+                referral: referralUsage
+    ? {
+          code:
+              referralUsage.code,
+
+          reward_type:
+              referralUsage.reward_type,
+
+          reward_value:
+              referralUsage.reward_value,
+
+          reward_amount:
+              referralUsage.reward_amount,
+
+          minimum_order_amount:
+              referralUsage.minimum_order_amount,
+
+          status: "pending"
+      }
+    : null,
 
                 customer: {
 
@@ -835,8 +1101,10 @@ async function createRequest(
 
                 photo_count:
                     files.length
+                    
 
             }
+
 
         });
 

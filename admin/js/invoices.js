@@ -10,6 +10,7 @@ const errorBox = $("invoiceError");
 const successBox = $("invoiceSuccess");
 let invoices = [];
 let proofs = [];
+let referralUsages = [];
 
 if (user?.name) $("topbarAdminName").textContent = user.name;
 $("logoutButton").onclick = () => {
@@ -68,8 +69,20 @@ function renderInvoices() {
         return;
     }
 
-    invoiceBody.innerHTML = invoices.map(i => `<tr>
-        <td><strong>${esc(i.invoice_number)}</strong><div class="muted file-name">${esc(i.invoice_file_name)}</div></td>
+    invoiceBody.innerHTML = invoices.map(i => {
+        const referral = referralUsages.find(r => String(r.request_id) === String(i.request_id));
+        const referralHtml = referral
+            ? `<div class="invoice-referral ${referral.status === "rewarded" ? "applied" : "pending"}">
+                    <div><strong>🎁 Referral Reward</strong><span>${esc(referral.referral_code || "—")}</span></div>
+                    <div class="muted">Reward: ${esc(referral.reward_type === "percentage" ? `${Number(referral.reward_value || 0)}%` : `RM ${Number(referral.reward_value || 0).toFixed(2)}`)}</div>
+                    ${referral.status === "rewarded"
+                        ? `<span class="referral-applied">✓ Reward Applied</span>`
+                        : `<button type="button" class="action-button success" data-apply-referral="${esc(referral.id)}">Mark Reward as Applied</button>`}
+               </div>`
+            : "";
+
+        return `<tr>
+        <td><strong>${esc(i.invoice_number)}</strong><div class="muted file-name">${esc(i.invoice_file_name)}</div>${referralHtml}</td>
         <td><strong>${esc(i.customer_name)}</strong><div class="muted">${esc(i.customer_email || i.customer_phone || "No contact")}</div></td>
         <td>${esc(i.request_code)}</td>
         <td>${status(i.status)}</td>
@@ -79,7 +92,8 @@ function renderInvoices() {
             ${i.customer_phone && i.invoice_file_url ? `<button class="action-button" data-wa="${esc(i.id)}">WhatsApp</button>` : ""}
             ${i.customer_email ? `<button class="action-button" data-email="${esc(i.id)}">Email</button>` : ""}
         </div></td>
-    </tr>`).join("");
+    </tr>`;
+    }).join("");
 }
 
 function renderProofs() {
@@ -112,12 +126,14 @@ async function loadInvoiceOptions() {
 async function load() {
     try {
         message(errorBox, "");
-        const [invoiceResult, proofResult] = await Promise.all([
+        const [invoiceResult, proofResult, referralResult] = await Promise.all([
             api("/invoices"),
-            api("/invoices/payments")
+            api("/invoices/payments"),
+            api("/referrals/usages")
         ]);
         invoices = invoiceResult?.data || [];
         proofs = proofResult?.data || [];
+        referralUsages = referralResult?.data || [];
         renderInvoices();
         renderProofs();
         await loadRequests();
@@ -185,6 +201,30 @@ $("proofForm").addEventListener("submit", async e => {
 invoiceBody.addEventListener("click", async e => {
     const wa = e.target.closest("[data-wa]");
     const email = e.target.closest("[data-email]");
+    const applyReferral = e.target.closest("[data-apply-referral]");
+
+    if (applyReferral) {
+        if (!confirm("Mark this referral reward as applied?\n\nMake sure the reward has been considered when preparing the final invoice.")) return;
+        applyReferral.disabled = true;
+        applyReferral.textContent = "Saving...";
+        try {
+            const result = await api(`/referrals/usages/${encodeURIComponent(applyReferral.dataset.applyReferral)}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    status: "rewarded",
+                    remarks: "Referral reward applied during final invoice preparation."
+                })
+            });
+            message(successBox, result.message);
+            await load();
+        } catch (err) {
+            message(errorBox, err.message);
+            applyReferral.disabled = false;
+            applyReferral.textContent = "Mark Reward as Applied";
+        }
+        return;
+    }
     if (wa) {
         const i = invoices.find(x => x.id === wa.dataset.wa);
         if (!i) return;

@@ -1113,3 +1113,382 @@
         animation: none !important;
     }
 }
+
+/* =========================================================
+   POLISHED INVOICE PAGE
+   Content only — NAVBAR IS UNTOUCHED.
+   Designed for the existing invoices(2).html structure.
+   ========================================================= */
+
+/* Overall content rhythm */
+main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-bottom: 48px;
+}
+
+.page-title {
+    color: #172033;
+    font-size: clamp(30px, 3vw, 40px);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+}
+
+.page-subtitle {
+    color: #64748b;
+}
+
+/* Refresh button beside the page heading */
+.invoice-refresh {
+    min-width: 108px;
+}
+
+/* Summary cards — cleaner dashboard style */
+.invoice-summary {
+    gap: 16px;
+    margin: 26px 0 28px;
+}
+
+.invoice-summary .summary-card {
+    min-height: 108px;
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid #e6eaf0;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, .045);
+}
+
+.invoice-summary .summary-card::after {
+    display: none;
+}
+
+.invoice-summary .summary-icon {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.invoice-summary .summary-card:nth-child(2) .summary-icon {
+    background: #f5f3ff;
+    color: #7c3aed;
+}
+
+.invoice-summary .summary-card:nth-child(3) .summary-icon {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.invoice-summary .summary-card:nth-child(4) .summary-icon {
+    background: #ecfdf5;
+    color: #15803d;
+}
+
+.invoice-summary .summary-card > div > span {
+    font-size: 10.5px;
+    letter-spacing: .1em;
+}
+
+.invoice-summary .summary-card strong {
+    margin-top: 5px;
+    font-size: 29px;
+}
+
+/* =========================================================
+   5-STEP WORKFLOW
+   ========================================================= */
+
+.workflow-strip {
+    display: grid;
+    grid-template-columns: 1fr 44px 1fr 44px 1fr 44px 1fr 44px 1fr;
+    align-items: center;
+    gap: 0;
+    margin: 0 0 28px;
+    padding: 18px 20px;
+    border: 1px solid #e3e8ef;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, .04);
+}
+
+.workflow-step {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.workflow-step > span {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.workflow-step.active > span {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 5px 12px rgba(37, 99, 235, .22);
+}
+
+.workflow-step strong {
+    display: block;
+    color: #172033;
+    font-size: 12px;
+    line-height: 1.25;
+}
+
+.workflow-step small {
+    display: block;
+    margin-top: 3px;
+    color: #94a3b8;
+    font-size: 10.5px;
+    line-height: 1.25;
+}
+
+.workflow-line {
+    height: 1px;
+    margin: 0 7px;
+    background: #dfe5ec;
+}
+
+/* Section cards */
+.invoice-section-card {
+    padding: 26px;
+    border: 1px solid #e3e8ef;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 5px 22px rgba(15, 23, 42, .045);
+}
+
+.invoice-section-card::before {
+    width: 3px;
+}
+
+.section-title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    margin-bottom: 22px;
+}
+
+.section-number {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: #172033;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.section-title-row h2 {
+    margin: 1px 0 4px;
+    color: #172033;
+    font-size: 20px;
+    letter-spacing: -.025em;
+}
+
+.section-title-row p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+/* Form becomes a clean "input → upload" block */
+.invoice-section-card .invoice-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    padding-top: 4px;
+}
+
+.invoice-section-card .invoice-form label {
+    color: #334155;
+}
+
+.invoice-section-card .invoice-form select,
+.invoice-section-card .invoice-form input[type="file"] {
+    min-height: 46px;
+    border-color: #d7dee8;
+    border-radius: 9px;
+    background: #fbfcfe;
+}
+
+.invoice-section-card .primary-button {
+    min-height: 46px;
+    border-radius: 9px;
+}
+
+/* Records */
+.invoice-table-card {
+    margin-top: 18px;
+    padding: 24px;
+    border: 1px solid #e3e8ef;
+    border-radius: 14px;
+    box-shadow: 0 5px 22px rgba(15, 23, 42, .04);
+}
+
+.invoice-table-card .section-heading {
+    margin-bottom: 18px;
+}
+
+.invoice-table-card .section-heading h2 {
+    color: #172033;
+    font-size: 20px;
+}
+
+.invoice-table-card .section-heading .eyebrow {
+    color: #2563eb;
+}
+
+.table-wrap {
+    border: 1px solid #e5e9ef;
+    border-radius: 11px;
+    box-shadow: none;
+}
+
+.table-wrap th {
+    padding: 12px 14px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.table-wrap td {
+    padding: 13px 14px;
+    font-size: 13px;
+}
+
+.table-wrap tbody tr:hover {
+    background: #f8fbff;
+}
+
+/* Payment section */
+.payment-section {
+    margin-top: 18px;
+    padding: 24px;
+    border: 1px solid #e3e8ef;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 5px 22px rgba(15, 23, 42, .04);
+}
+
+.payment-section::before {
+    width: 3px;
+    border-radius: 14px 0 0 14px;
+}
+
+.payment-section .section-number {
+    background: #b45309;
+}
+
+.payment-section .primary-button {
+    border-radius: 9px;
+}
+
+/* Make referral indicator fit naturally if rendered by JS */
+.referral-reminder,
+.referral-reward-panel {
+    margin: 16px 0;
+    padding: 15px 16px;
+    border: 1px solid #fde68a;
+    border-radius: 11px;
+    background: #fffbeb;
+}
+
+.referral-reminder strong,
+.referral-reward-panel strong {
+    color: #92400e;
+}
+
+/* Statuses */
+.status-badge {
+    font-size: 10px;
+    padding: 5px 9px;
+}
+
+/* Alerts */
+.invoice-alert {
+    border-radius: 10px;
+}
+
+/* Keep empty states understated */
+.empty-state {
+    min-height: 120px;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    color: #94a3b8;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+    .workflow-strip {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 14px;
+    }
+
+    .workflow-step {
+        padding: 9px 4px;
+    }
+
+    .workflow-line {
+        width: 1px;
+        height: 15px;
+        margin: 0 0 0 19px;
+    }
+
+    .invoice-section-card .invoice-form {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-section-card .invoice-form .primary-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 700px) {
+    main {
+        padding-bottom: 30px;
+    }
+
+    .invoice-summary {
+        margin-top: 20px;
+    }
+
+    .invoice-summary .summary-card {
+        min-height: 82px;
+        padding: 16px;
+    }
+
+    .invoice-section-card,
+    .invoice-table-card,
+    .payment-section {
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .section-title-row {
+        margin-bottom: 18px;
+    }
+}

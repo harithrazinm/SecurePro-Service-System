@@ -1,10 +1,23 @@
+const IS_LOCAL = ["localhost", "127.0.0.1"].includes(
+    window.location.hostname
+);
+
+const BACKEND_BASE = IS_LOCAL
+    ? "http://localhost:5001"
+    : "https://securepro-service-system.onrender.com";
+
+const API_BASE = `${BACKEND_BASE}/api`;
+
 const currentLanguage =
     localStorage.getItem("securepro_language") || "ms";
 
 let selectedFiles = [];
+let validatedReferral = null;
 
 const PHOTO_DB_NAME = "SecureProPhotosDB";
 const PHOTO_STORE_NAME = "photos";
+
+
 
 const translations = {
     en: {
@@ -56,7 +69,28 @@ const translations = {
             "You can upload a maximum of 10 photos.",
 
         photoType:
-            "Only JPG, PNG and WebP images are allowed."
+            "Only JPG, PNG and WebP images are allowed.",
+
+        referralOptional:
+            "Referral code is optional.",
+
+        checkingReferral:
+            "Checking...",
+
+        checkReferral:
+            "Check Code",
+
+        invalidReferral:
+            "Invalid referral code.",
+
+        referralVerified:
+            "Referral code verified successfully.",
+
+        referralAccepted:
+            "Referral code accepted",
+
+        referralUnavailable:
+            "Unable to verify the referral code. Please try again."
     },
 
     ms: {
@@ -108,7 +142,28 @@ const translations = {
             "Anda boleh memuat naik maksimum 10 gambar.",
 
         photoType:
-            "Hanya gambar JPG, PNG dan WebP dibenarkan."
+            "Hanya gambar JPG, PNG dan WebP dibenarkan.",
+
+        referralOptional:
+            "Kod rujukan adalah pilihan.",
+
+        checkingReferral:
+            "Sedang menyemak...",
+
+        checkReferral:
+            "Semak Kod",
+
+        invalidReferral:
+            "Kod rujukan tidak sah.",
+
+        referralVerified:
+            "Kod rujukan berjaya disahkan.",
+
+        referralAccepted:
+            "Kod rujukan diterima",
+
+        referralUnavailable:
+            "Tidak dapat mengesahkan kod rujukan. Sila cuba lagi."
     }
 };
 
@@ -229,6 +284,294 @@ function hideError() {
     error.textContent = "";
 }
 
+/* =====================================================
+   REFERRAL CODE
+===================================================== */
+
+async function validateReferralCode() {
+
+    const input =
+        document.querySelector("#referralCode");
+
+    const button =
+        document.querySelector("#validateReferralButton");
+
+    const message =
+        document.querySelector("#referralMessage");
+
+    const result =
+        document.querySelector("#referralResult");
+
+    const resultTitle =
+        document.querySelector("#referralResultTitle");
+
+    const resultDescription =
+        document.querySelector("#referralResultDescription");
+
+
+    if (!input) {
+        return;
+    }
+
+
+    const code =
+        input.value
+            .trim()
+            .toUpperCase();
+
+
+    /*
+     * Empty referral code
+     */
+
+    if (!code) {
+
+        validatedReferral = null;
+
+        if (result) {
+            result.hidden = true;
+        }
+
+        if (message) {
+
+            message.className =
+                "referral-message";
+
+            message.textContent =
+                t("referralOptional");
+        }
+
+        localStorage.removeItem(
+            "securepro_referral"
+        );
+
+        return;
+    }
+
+
+    /*
+     * Prevent duplicate requests
+     */
+
+    if (button) {
+
+        button.disabled = true;
+
+        button.textContent =
+            t("checkingReferral");
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/referrals/validate`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        code
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        /*
+         * Invalid referral
+         */
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            validatedReferral = null;
+
+            localStorage.removeItem(
+                "securepro_referral"
+            );
+
+
+            if (result) {
+                result.hidden = true;
+            }
+
+
+            if (message) {
+
+                message.className =
+                    "referral-message error";
+
+                message.textContent =
+                    data.message ||
+                    t("invalidReferral");
+            }
+
+
+            return;
+        }
+
+
+        /*
+         * Store validated referral
+         */
+
+        validatedReferral =
+            data.data;
+
+
+        /*
+         * Save for review.html
+         */
+
+        localStorage.setItem(
+            "securepro_referral",
+            JSON.stringify({
+                id:
+                    data.data.id,
+
+                code:
+                    data.data.code,
+
+                reward_type:
+                    data.data.reward_type,
+
+                reward_value:
+                    data.data.reward_value,
+
+                minimum_order_amount:
+                    data.data.minimum_order_amount
+            })
+        );
+
+
+        /*
+         * Success message
+         */
+
+        if (message) {
+
+            message.className =
+                "referral-message success";
+
+            message.textContent =
+                t("referralVerified");
+        }
+
+
+        if (result) {
+            result.hidden = false;
+        }
+
+
+        if (resultTitle) {
+
+            resultTitle.textContent =
+                t("referralAccepted");
+        }
+
+
+        if (resultDescription) {
+
+            const rewardType =
+                data.data.reward_type;
+
+            const rewardValue =
+                Number(
+                    data.data.reward_value || 0
+                );
+
+            const minimumOrder =
+                Number(
+                    data.data.minimum_order_amount || 0
+                );
+
+
+            let rewardText;
+
+
+            if (
+                rewardType ===
+                "percentage"
+            ) {
+
+                rewardText =
+                    `${rewardValue}% reward`;
+
+            } else {
+
+                rewardText =
+                    `RM${rewardValue.toFixed(2)} reward`;
+
+            }
+
+
+            if (minimumOrder > 0) {
+
+                rewardText +=
+                    `. Minimum order RM${minimumOrder.toFixed(2)}.`;
+            }
+
+
+            resultDescription.textContent =
+                rewardText;
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Referral validation error:",
+            error
+        );
+
+
+        validatedReferral = null;
+
+
+        localStorage.removeItem(
+            "securepro_referral"
+        );
+
+
+        if (result) {
+            result.hidden = true;
+        }
+
+
+        if (message) {
+
+            message.className =
+                "referral-message error";
+
+            message.textContent =
+                t("referralUnavailable");
+        }
+
+
+    } finally {
+
+        if (button) {
+
+            button.disabled = false;
+
+            button.textContent =
+                t("checkReferral");
+        }
+
+    }
+}
+
 function validateForm() {
     hideError();
 
@@ -269,7 +612,6 @@ function validateForm() {
 
     return true;
 }
-
 function renderPhotos() {
     const container =
         document.querySelector("#photoPreview");
@@ -473,6 +815,43 @@ async function handlePhotos(event) {
     event.target.value = "";
 }
 
+function handleReferralInputChange() {
+
+    validatedReferral = null;
+
+
+    localStorage.removeItem(
+        "securepro_referral"
+    );
+
+
+    const result =
+        document.querySelector(
+            "#referralResult"
+        );
+
+
+    const message =
+        document.querySelector(
+            "#referralMessage"
+        );
+
+
+    if (result) {
+        result.hidden = true;
+    }
+
+
+    if (message) {
+
+        message.className =
+            "referral-message";
+
+        message.textContent =
+            t("referralOptional");
+    }
+}
+
 function saveCustomerData() {
 
     const customer = {
@@ -558,6 +937,37 @@ function restoreCustomerData() {
 }
 
 
+function initializeReferralMessages() {
+
+    const message =
+        document.querySelector("#referralMessage");
+
+    const resultTitle =
+        document.querySelector("#referralResultTitle");
+
+    const resultDescription =
+        document.querySelector("#referralResultDescription");
+
+    const button =
+        document.querySelector("#validateReferralButton");
+
+    if (message) {
+        message.textContent = t("referralOptional");
+    }
+
+    if (resultTitle) {
+        resultTitle.textContent = t("referralAccepted");
+    }
+
+    if (resultDescription) {
+        resultDescription.textContent = t("referralOptional");
+    }
+
+    if (button) {
+        button.textContent = t("checkReferral");
+    }
+}
+
 function updateLanguageToggleLabel() {
 
     const button =
@@ -578,18 +988,13 @@ function updateLanguageToggleLabel() {
         `Switch language to ${switchTo}`
     );
 }
-
-
 document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        
-        
-
         updateLanguageToggleLabel();
-updateLanguageToggleLabel();
-restoreCustomerData();
+        initializeReferralMessages();
+        restoreCustomerData();
 
         document.querySelector(
             "#customerPhotos"
@@ -597,6 +1002,22 @@ restoreCustomerData();
             "change",
             handlePhotos
         );
+
+        document.querySelector(
+            "#validateReferralButton"
+        )?.addEventListener(
+            "click",
+            validateReferralCode
+        );
+
+
+        document.querySelector(
+            "#referralCode"
+        )?.addEventListener(
+            "input",
+            handleReferralInputChange
+        );
+
 
         document.querySelector(
             "#backButton"
@@ -609,6 +1030,7 @@ restoreCustomerData();
                 window.history.back();
             }
         );
+
 
         document.querySelector(
             "#languageToggle"
@@ -630,55 +1052,154 @@ restoreCustomerData();
             }
         );
 
+
         document.querySelector(
-    "#customerForm"
-)?.addEventListener(
-    "submit",
-    async event => {
+            "#customerForm"
+        )?.addEventListener(
+            "submit",
+            async event => {
 
-        event.preventDefault();
+                event.preventDefault();
 
-        if (!validateForm()) {
-            return;
-        }
+                if (!validateForm()) {
+                    return;
+                }
 
-        saveCustomerData();
 
-        try {
+                /* =========================================
+                   VALIDATE REFERRAL FIRST
+                ========================================= */
 
-            await savePhotosToDatabase(
-                selectedFiles
-            );
+                const referralInput =
+                    document.querySelector(
+                        "#referralCode"
+                    );
 
-            localStorage.setItem(
-                "securepro_photo_count",
-                String(
-                    selectedFiles.length
-                )
-            );
+                const referralCode =
+                    referralInput
+                        ?.value
+                        .trim()
+                        .toUpperCase() || "";
 
-            window.location.href =
-                "review.html";
 
-        } catch (error) {
+                if (referralCode) {
 
-    console.error(
-        "Customer form error:",
-        error,
-        error?.name,
-        error?.message
-    );
+                    /*
+                     * The referral was validated through the API
+                     * and saved to localStorage.
+                     *
+                     * Read the saved referral here instead of relying
+                     * only on the in-memory validatedReferral variable.
+                     */
 
-    showError(
-        error?.message ||
-        (
-            currentLanguage === "en"
-                ? "Unable to prepare your photos. Please try again."
-                : "Tidak dapat menyediakan gambar anda. Sila cuba lagi."
-        )
-    );
-}
-    }
-);
+                    let savedReferral = null;
+
+                    try {
+
+                        const rawReferral =
+                            localStorage.getItem(
+                                "securepro_referral"
+                            );
+
+                        if (rawReferral) {
+                            savedReferral =
+                                JSON.parse(rawReferral);
+                        }
+
+                    } catch (error) {
+
+                        console.error(
+                            "Unable to read saved referral:",
+                            error
+                        );
+
+                        savedReferral = null;
+                    }
+
+
+                    const savedReferralCode =
+                        String(
+                            savedReferral?.code || ""
+                        )
+                            .trim()
+                            .toUpperCase();
+
+
+                    if (
+                        !savedReferral ||
+                        savedReferralCode !== referralCode
+                    ) {
+
+                        showError(
+                            currentLanguage === "en"
+                                ? "Please check your referral code before continuing."
+                                : "Sila semak kod rujukan anda sebelum meneruskan."
+                        );
+
+                        return;
+                    }
+
+
+                    validatedReferral =
+                        savedReferral;
+
+                } else {
+
+                    validatedReferral = null;
+
+                    localStorage.removeItem(
+                        "securepro_referral"
+                    );
+                }
+
+
+                /* =========================================
+                   SAVE CUSTOMER DATA
+                ========================================= */
+
+                saveCustomerData();
+
+
+                try {
+
+                    await savePhotosToDatabase(
+                        selectedFiles
+                    );
+
+
+                    localStorage.setItem(
+                        "securepro_photo_count",
+                        String(
+                            selectedFiles.length
+                        )
+                    );
+
+
+                    window.location.href =
+                        "review.html";
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Customer form error:",
+                        error,
+                        error?.name,
+                        error?.message
+                    );
+
+
+                    showError(
+                        error?.message ||
+                        (
+                            currentLanguage === "en"
+                                ? "Unable to prepare your photos. Please try again."
+                                : "Tidak dapat menyediakan gambar anda. Sila cuba lagi."
+                        )
+                    );
+                }
+
+            }
+        );
     }
 );

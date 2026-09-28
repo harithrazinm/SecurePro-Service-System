@@ -1,5 +1,14 @@
+const IS_LOCAL =
+    ["localhost", "127.0.0.1"]
+        .includes(window.location.hostname);
+
+const BACKEND_BASE =
+    IS_LOCAL
+        ? "http://localhost:5001"
+        : "https://securepro-service-system.onrender.com";
+
 const API_BASE =
-    "https://securepro-service-system.onrender.com/api";
+    `${BACKEND_BASE}/api`;
 
 let currentLanguage =
     localStorage.getItem("securepro_language") || "ms";
@@ -217,6 +226,40 @@ function getServiceId() {
 
 }
 
+function getSavedReferral() {
+    try {
+        const saved =
+            localStorage.getItem(
+                "securepro_referral"
+            );
+
+        if (!saved) {
+            return null;
+        }
+
+        const referral =
+            JSON.parse(saved);
+
+        if (
+            !referral ||
+            !referral.code
+        ) {
+            return null;
+        }
+
+        return referral;
+
+    } catch (error) {
+
+        console.error(
+            "Unable to read saved referral:",
+            error
+        );
+
+        return null;
+    }
+}
+
 
 /*
  * ==========================================================
@@ -424,6 +467,148 @@ async function clearPhotoDatabase() {
 }
 
 
+function renderReferral() {
+
+    const referral =
+        getSavedReferral();
+
+    const container =
+        document.querySelector(
+            "#referralInfo"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    if (!referral) {
+
+        container.hidden = true;
+
+        return;
+    }
+
+
+    const rewardType =
+        referral.reward_type;
+
+    const rewardValue =
+        Number(
+            referral.reward_value || 0
+        );
+
+    const minimumOrder =
+        Number(
+            referral.minimum_order_amount || 0
+        );
+
+
+    let rewardText;
+
+
+    if (
+        rewardType ===
+        "percentage"
+    ) {
+
+        rewardText =
+            `${rewardValue}%`;
+
+    } else {
+
+        rewardText =
+            `RM${rewardValue.toFixed(2)}`;
+    }
+
+
+    const minimumText =
+        minimumOrder > 0
+            ? `RM${minimumOrder.toFixed(2)}`
+            : "No minimum order";
+
+
+    container.innerHTML = `
+        <div class="referral-review-card">
+
+            <div class="referral-review-header">
+                <span class="referral-review-icon">
+                    🎁
+                </span>
+
+                <div>
+                    <strong>
+                        ${
+                            currentLanguage === "en"
+                                ? "Referral Reward"
+                                : "Ganjaran Rujukan"
+                        }
+                    </strong>
+
+                    <small>
+                        ${
+                            currentLanguage === "en"
+                                ? "Referral code applied to this request"
+                                : "Kod rujukan digunakan untuk permintaan ini"
+                        }
+                    </small>
+                </div>
+            </div>
+
+
+            <div class="referral-review-details">
+
+                <div>
+                    <span>
+                        ${
+                            currentLanguage === "en"
+                                ? "Referral Code"
+                                : "Kod Rujukan"
+                        }
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(referral.code)}
+                    </strong>
+                </div>
+
+
+                <div>
+                    <span>
+                        ${
+                            currentLanguage === "en"
+                                ? "Reward"
+                                : "Ganjaran"
+                        }
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(rewardText)}
+                    </strong>
+                </div>
+
+
+                <div>
+                    <span>
+                        ${
+                            currentLanguage === "en"
+                                ? "Minimum Order"
+                                : "Pesanan Minimum"
+                        }
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(minimumText)}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+    `;
+
+    container.hidden = false;
+}
+
 /*
  * ==========================================================
  * LOAD SERVICE
@@ -507,7 +692,6 @@ function renderReview() {
     document.title =
         `SecurePro | ${getLanguageText(service.name)}`;
 
-
     document.querySelector(
         "#serviceName"
     ).textContent =
@@ -515,13 +699,13 @@ function renderReview() {
             service.name
         );
 
-
     renderAnswers();
 
     renderCustomer();
 
     renderPhotos();
 
+    renderReferral();
 }
 
 
@@ -1045,7 +1229,16 @@ async function submitRequest() {
 
         const formData =
             new FormData();
+const referral =
+    getSavedReferral();
 
+if (referral?.code) {
+
+    formData.append(
+        "referral_code",
+        referral.code
+    );
+}
 
         /*
          * CUSTOMER INFORMATION
@@ -1389,6 +1582,10 @@ async function submitRequest() {
             "securepro_photo_count"
         );
 
+        localStorage.removeItem(
+    "securepro_referral"
+);
+
 
         await clearPhotoDatabase();
 
@@ -1503,7 +1700,6 @@ document.addEventListener(
         
 
         updateLanguageToggleLabel();
-updateLanguageToggleLabel();
 getSavedData();
 
 

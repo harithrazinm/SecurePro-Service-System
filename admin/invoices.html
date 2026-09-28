@@ -1,189 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecurePro | Invoice & Payment Management</title>
-    <link rel="stylesheet" href="css/admin.css">
+   <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/admin-theme.css">
     <link rel="stylesheet" href="css/request.css">
     <link rel="stylesheet" href="css/invoices-management.css">
 </head>
 
 <body>
-    <div class="app-shell">
-        <header class="topbar-card">
-            <div class="brand">
-                <div class="brand-mark">S</div>
-                <div class="brand-text"><strong>SECUREPRO</strong><span>System Solutions</span></div>
-            </div>
-            <nav class="top-nav">
+<div class="app-shell">
 
-                <a href="dashboard.html">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="9" rx="1.5" />
-                        <rect x="14" y="3" width="7" height="5" rx="1.5" />
-                        <rect x="14" y="12" width="7" height="9" rx="1.5" />
-                        <rect x="3" y="16" width="7" height="5" rx="1.5" />
-                    </svg>
-                    Dashboard
-                </a>
-
-                <a href="quotations.html">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
-                        <path d="M9 12h6M9 16h4" />
-                    </svg>
-                    Quotations
-                </a>
-
-                <a href="job-pending.html">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M12 7v5l3 3" />
-                    </svg>
-                    Job Pending
-                </a>
-
-                <a href="work-calendar.html">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="17" rx="2" />
-                        <path d="M3 9h18M8 2v4M16 2v4" />
-                        <path d="M8 13h2M14 13h2M8 17h2M14 17h2" />
-                    </svg>
-                    Work Calendar
-                </a>
-
-                <a href="requests.html">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z" />
-                        <rect x="5" y="5" width="14" height="16" rx="2" />
-                        <path d="M9 12h6M9 16h6" />
-                    </svg>
-                    Service Requests
-                </a>
-
-                <a href="invoices.html" class="active">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="5" y="3" width="14" height="18" rx="2" />
-                        <path d="M8 7h8M8 11h8M8 15h5" />
-                        <path d="M16 18h.01" />
-                    </svg>
-                    Invoices & Payments
-                </a>
-
-            </nav>
-        </header>
-        <button type="button" id="logoutButton" class="logout-bar">↪ Logout</button>
-        <main>
-            <div class="eyebrow-row"><span class="eyebrow">SECUREPRO ADMINISTRATION</span><span class="admin-pill"><span
-                        class="dot"></span><span id="topbarAdminName">Admin</span></span></div>
-            <h1 class="page-title">Invoice & Payment Management</h1>
-            <p class="page-subtitle">Manage final invoice PDFs, send invoices to customers, and verify balance payment
-                receipts in one place.</p>
-            <div id="invoiceError" class="invoice-alert error" hidden></div>
-            <div id="invoiceSuccess" class="invoice-alert success" hidden></div>
-
-            <section class="invoice-summary">
-                <div><span>Total Invoices</span><strong id="totalInvoices">0</strong></div>
-                <div><span>Sent</span><strong id="sentInvoices">0</strong></div>
-                <div><span>Payment Submitted</span><strong id="submittedInvoices">0</strong></div>
-                <div><span>Paid</span><strong id="paidInvoices">0</strong></div>
-            </section>
-
-            <section class="invoice-create-card">
-                <div><span class="eyebrow">FINAL INVOICE</span>
-                    <h2>Upload invoice PDF</h2>
-                    <p>Upload the final invoice prepared for the customer. The invoice can then be sent through WhatsApp
-                        or email.</p>
-                </div>
-                <form id="invoiceForm" class="invoice-form">
-                    <label>Service Request<select id="requestId" required>
-                            <option value="">Loading requests...</option>
-                        </select></label>
-                    <label>Invoice PDF<input id="invoiceFile" type="file" accept="application/pdf" required><small>PDF
-                            only, maximum 10 MB.</small></label>
-                    <button class="primary-button" type="submit" id="uploadInvoiceButton">Upload Invoice</button>
-                </form>
-            </section>
-
-            <section class="invoice-table-card">
-                <div class="section-heading">
-                    <div><span class="eyebrow">INVOICE RECORDS</span>
-                        <h2>Final invoices</h2>
-                    </div><button id="refreshButton" class="secondary-button">Refresh</button>
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Invoice</th>
-                                <th>Customer</th>
-                                <th>Request</th>
-                                <th>Status</th>
-                                <th>Uploaded</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="invoiceTableBody">
-                            <tr>
-                                <td colspan="6" class="empty-state">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="invoice-create-card payment-section">
-                <div class="section-heading">
-                    <div><span class="eyebrow">BALANCE PAYMENT</span>
-                        <h2>Upload customer payment proof</h2>
-                        <p>When the customer sends the payment receipt through WhatsApp, email, or another channel,
-                            upload it here for verification.</p>
-                    </div>
-                </div>
-                <form id="proofForm" class="invoice-form">
-                    <label>Invoice<select id="invoiceId" required>
-                            <option value="">Loading invoices...</option>
-                        </select></label>
-                    <label>Payment Proof<input id="proofFile" type="file"
-                            accept="application/pdf,image/jpeg,image/png,image/webp" required><small>PDF, JPG, JPEG, PNG
-                            or WEBP. Maximum 10 MB.</small></label>
-                    <button class="primary-button" type="submit" id="uploadProofButton">Upload Payment Proof</button>
-                </form>
-            </section>
-
-            <section class="invoice-table-card">
-                <div class="section-heading">
-                    <div><span class="eyebrow">PAYMENT VERIFICATION</span>
-                        <h2>Customer payment receipts</h2>
-                    </div>
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Invoice</th>
-                                <th>Proof</th>
-                                <th>Submitted</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="proofTableBody">
-                            <tr>
-                                <td colspan="6" class="empty-state">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
+<header class="topbar-card">
+    <div class="brand">
+        <div class="brand-mark">S</div>
+        <div class="brand-text"><strong>SECUREPRO</strong><span>System Solutions</span></div>
     </div>
-    <script src="js/invoices.js"></script>
-    <script src="js/session-timeout.js"></script>
-</body>
 
+    <nav class="top-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="quotations.html">Quotations</a>
+        <a href="job-pending.html">Job Pending</a>
+        <a href="work-calendar.html">Work Calendar</a>
+        <a href="requests.html">Service Requests</a>
+        <a href="invoices.html" class="active">Invoices & Payments</a>
+    </nav>
+</header>
+
+<button type="button" id="logoutButton" class="logout-bar">↪ Logout</button>
+
+<main class="invoice-page">
+
+    <section class="invoice-page-head">
+        <div>
+            <div class="eyebrow-row">
+                <span class="eyebrow">SECUREPRO ADMINISTRATION</span>
+                <span class="admin-pill"><span class="dot"></span><span id="topbarAdminName">Admin</span></span>
+            </div>
+            <h1 class="page-title">Invoices & Payments</h1>
+            <p class="page-subtitle">
+                Prepare final invoices, send them to customers, and verify payment receipts.
+            </p>
+        </div>
+
+        <button id="refreshButton" class="secondary-button invoice-refresh" type="button">
+            ↻ Refresh
+        </button>
+    </section>
+
+    <div id="invoiceError" class="invoice-alert error" hidden></div>
+    <div id="invoiceSuccess" class="invoice-alert success" hidden></div>
+
+    <section class="invoice-summary" aria-label="Invoice summary">
+        <div class="summary-card">
+            <span class="summary-icon">▤</span>
+            <div><span>Total Invoices</span><strong id="totalInvoices">0</strong></div>
+        </div>
+        <div class="summary-card">
+            <span class="summary-icon">→</span>
+            <div><span>Sent</span><strong id="sentInvoices">0</strong></div>
+        </div>
+        <div class="summary-card">
+            <span class="summary-icon">◷</span>
+            <div><span>Payment Submitted</span><strong id="submittedInvoices">0</strong></div>
+        </div>
+        <div class="summary-card">
+            <span class="summary-icon">✓</span>
+            <div><span>Paid</span><strong id="paidInvoices">0</strong></div>
+        </div>
+    </section>
+
+    <section class="workflow-strip">
+        <div class="workflow-step active"><span>01</span><div><strong>Prepare</strong><small>Upload invoice</small></div></div>
+        <div class="workflow-line"></div>
+        <div class="workflow-step"><span>02</span><div><strong>Send</strong><small>WhatsApp / Email</small></div></div>
+        <div class="workflow-line"></div>
+        <div class="workflow-step"><span>03</span><div><strong>Receipt</strong><small>Customer payment proof</small></div></div>
+        <div class="workflow-line"></div>
+        <div class="workflow-step"><span>04</span><div><strong>Verify</strong><small>Confirm payment</small></div></div>
+        <div class="workflow-line"></div>
+        <div class="workflow-step"><span>05</span><div><strong>Complete</strong><small>Close service request</small></div></div>
+    </section>
+
+    <section class="invoice-create-card invoice-section-card">
+        <div class="section-title-row">
+            <div>
+                <span class="section-number">01</span>
+                <div>
+                    <span class="eyebrow">FINAL INVOICE</span>
+                    <h2>Prepare final invoice</h2>
+                    <p>Upload the prepared PDF for a completed service request.</p>
+                </div>
+            </div>
+        </div>
+
+        <form id="invoiceForm" class="invoice-form">
+            <label>
+                <span>Service Request</span>
+                <select id="requestId" required>
+                    <option value="">Loading requests...</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Invoice PDF</span>
+                <input id="invoiceFile" type="file" accept="application/pdf" required>
+                <small>PDF only · Maximum 10 MB</small>
+            </label>
+
+            <button class="primary-button" type="submit" id="uploadInvoiceButton">
+                Upload Final Invoice
+            </button>
+        </form>
+    </section>
+
+    <section class="invoice-table-card">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">INVOICE RECORDS</span>
+                <h2>Final invoices</h2>
+                <p>Track uploaded invoices and their current payment status.</p>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Customer</th>
+                        <th>Request</th>
+                        <th>Status</th>
+                        <th>Uploaded</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceTableBody">
+                    <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="invoice-create-card payment-section invoice-section-card">
+        <div class="section-title-row">
+            <div>
+                <span class="section-number">02</span>
+                <div>
+                    <span class="eyebrow">CUSTOMER PAYMENT</span>
+                    <h2>Upload payment proof</h2>
+                    <p>Upload the receipt received from the customer for admin verification.</p>
+                </div>
+            </div>
+        </div>
+
+        <form id="proofForm" class="invoice-form">
+            <label>
+                <span>Invoice</span>
+                <select id="invoiceId" required>
+                    <option value="">Loading invoices...</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Payment Proof</span>
+                <input id="proofFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+                <small>PDF, JPG, JPEG, PNG or WEBP · Maximum 10 MB</small>
+            </label>
+
+            <button class="primary-button" type="submit" id="uploadProofButton">
+                Upload Payment Proof
+            </button>
+        </form>
+    </section>
+
+    <section class="invoice-table-card">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">PAYMENT VERIFICATION</span>
+                <h2>Customer payment receipts</h2>
+                <p>Review submitted receipts and verify or reject them.</p>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Invoice</th>
+                        <th>Proof</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="proofTableBody">
+                    <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+</div>
+
+<script src="js/invoices.js?v=20260927-2"></script>
+<script src="js/session-timeout.js?v=20260927-2"></script>
+</body>
 </html>
