@@ -23,23 +23,73 @@ function uuid() {
  * ==========================================================
  */
 
-function generateRequestCode() {
+async function generateRequestCode(connection, serviceCode) {
 
-    const timestamp =
-        Date.now()
-            .toString(36)
-            .toUpperCase();
+    const servicePrefixMap = {
+ cctv: "CT",
+    alarm: "AL",
+    access: "AC",
+    attendance: "TA",
+    autogate: "AG",
+    barriergate: "BG",
+    pabx: "PB",
+    solar_cctv: "SC",
+    solar_pump: "SP",
+    troubleshoot_repair: "TR"
+};
 
+    const prefix =
+        servicePrefixMap[serviceCode] || "SR";
 
-    const random =
-        Math.random()
-            .toString(36)
-            .substring(2, 6)
-            .toUpperCase();
+    const [rows] = await connection.query(
+        `
+        SELECT next_number
+        FROM service_request_sequences
+        WHERE service_code = ?
+        FOR UPDATE
+        `,
+        [serviceCode]
+    );
 
+    if (rows.length === 0) {
+        throw new Error(
+            `No request sequence configured for service: ${serviceCode}`
+        );
+    }
 
-    return `SR-${timestamp}-${random}`;
+    const orderNumber =
+        Number(rows[0].next_number);
 
+    await connection.query(
+        `
+        UPDATE service_request_sequences
+        SET next_number = next_number + 1
+        WHERE service_code = ?
+        `,
+        [serviceCode]
+    );
+
+    const now = new Date();
+
+    const year =
+        now.getFullYear();
+
+    const month =
+        String(now.getMonth() + 1)
+            .padStart(2, "0");
+
+    const day =
+        String(now.getDate())
+            .padStart(2, "0");
+
+    const date =
+        `${year}${month}${day}`;
+
+    const formattedNumber =
+        String(orderNumber)
+            .padStart(4, "0");
+
+    return `${prefix}-${date}-${formattedNumber}`;
 }
 
 
@@ -370,13 +420,18 @@ const referralCode =
          * ==================================================
          */
 
-        const requestId =
-            uuid();
+       const requestId =
+    uuid();
 
+await connection.beginTransaction();
 
-        const requestCode =
-            generateRequestCode();
+transactionStarted = true;
 
+const requestCode =
+    await generateRequestCode(
+        connection,
+        serviceCode
+    );
 
         /*
          * ==================================================
@@ -384,9 +439,7 @@ const referralCode =
          * ==================================================
          */
 
-        await connection.beginTransaction();
-
-        transactionStarted = true;
+       
 
 
         /*

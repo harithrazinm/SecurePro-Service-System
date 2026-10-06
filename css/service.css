@@ -415,16 +415,18 @@
 
 
 /* =========================================================
-   MULTI-SELECT
+   MULTI-SELECT — PREMIUM CHECKBOX LIST
    ========================================================= */
 
 .options > .option > .option-checkbox {
+    position: relative;
+
     display: flex;
+    flex-direction: row;
     align-items: flex-start;
-    gap: 12px;
 
     width: 100%;
-    min-height: 64px;
+    min-height: 76px;
 
     margin: 0;
     padding: 18px 20px;
@@ -432,32 +434,238 @@
     box-sizing: border-box;
 
     background: #ffffff;
+
     cursor: pointer;
+
+    gap: 14px;
 
     transition:
         background .2s ease,
-        padding-left .2s ease;
+        box-shadow .2s ease;
 }
+
+
+/* Divider between options */
+
+.options > .option + .option {
+    border-top: 1px solid #e5e7eb;
+}
+
+
+/* Hover */
 
 @media (hover: hover) {
+
     .options > .option > .option-checkbox:hover {
         background: #f8fafc;
-        padding-left: 24px;
     }
+
 }
 
-.options > .option > .option-checkbox input {
+
+/* =========================================================
+   CHECKBOX
+   ========================================================= */
+
+.options > .option > .option-checkbox input[type="checkbox"] {
+
+    appearance: none;
+    -webkit-appearance: none;
+
     flex: 0 0 auto;
 
-    width: 18px;
-    height: 18px;
-    margin-top: 2px;
+    width: 20px;
+    height: 20px;
 
-    accent-color: var(--accent);
+    margin: 2px 0 0;
 
-    position: static;
-    opacity: 1;
-    pointer-events: auto;
+    border: 1.8px solid #cbd5e1;
+    border-radius: 6px;
+
+    background: #ffffff;
+
+    cursor: pointer;
+
+    position: relative;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease,
+        transform .15s ease;
+}
+
+
+/* Checkbox hover */
+
+.options > .option > .option-checkbox:hover input[type="checkbox"] {
+    border-color: var(--accent);
+}
+
+
+/* Checkbox checked */
+
+.options > .option > .option-checkbox input[type="checkbox"]:checked {
+
+    background: var(--accent);
+
+    border-color: var(--accent);
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, .10);
+}
+
+
+/* Check icon */
+
+.options
+> .option
+> .option-checkbox
+> input[type="checkbox"]:checked::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: 6px;
+    top: 2px;
+
+    width: 5px;
+    height: 10px;
+
+    border: solid #ffffff;
+
+    border-width: 0 2px 2px 0;
+
+    transform: rotate(45deg);
+}
+
+
+/* Checkbox focus */
+
+.options
+> .option
+> .option-checkbox
+> input[type="checkbox"]:focus-visible {
+
+    outline: none;
+
+    box-shadow:
+        0 0 0 4px rgba(37, 99, 235, .15);
+}
+
+
+/* =========================================================
+   TEXT AREA
+   ========================================================= */
+
+.options > .option > .option-checkbox > span {
+
+    display: block;
+
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+/* Title */
+
+.options > .option > .option-checkbox .option-title {
+
+    display: block;
+
+    margin: 0 0 5px;
+
+    color: var(--text);
+
+    font-size: 15px;
+
+    font-weight: 750;
+
+    line-height: 1.4;
+}
+
+
+/* Description */
+
+.options > .option > .option-checkbox .option-description {
+
+    display: block;
+
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   SELECTED OPTION
+   ========================================================= */
+
+.options
+> .option
+> .option-checkbox:has(input[type="checkbox"]:checked) {
+
+    background: #eff6ff;
+
+    box-shadow:
+        inset 4px 0 0 var(--accent);
+}
+
+
+.options
+> .option
+> .option-checkbox:has(input[type="checkbox"]:checked)
+.option-title {
+
+    color: var(--accent);
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .options > .option > .option-checkbox {
+
+        min-height: 70px;
+
+        padding: 16px;
+
+        gap: 12px;
+    }
+
+
+    .options
+    > .option
+    > .option-checkbox
+    input[type="checkbox"] {
+
+        width: 19px;
+        height: 19px;
+    }
+
+
+    .options > .option > .option-checkbox .option-title {
+
+        font-size: 14px;
+    }
+
+
+    .options > .option > .option-checkbox .option-description {
+
+        font-size: 12.5px;
+
+        line-height: 1.5;
+    }
+
 }
 
 
@@ -1541,5 +1749,709 @@
     .question-navigation .primary-btn,
     .secondary-btn {
         min-height: 46px;
+    }
+}
+
+/* =========================================================
+   MULTI-SELECT CHECKBOX FIX
+   Actual HTML structure:
+   .options
+      > .option-checkbox
+   ========================================================= */
+
+.options > .option-checkbox {
+    position: relative;
+
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+
+    width: 100%;
+    min-height: 76px;
+
+    margin: 0;
+    padding: 18px 20px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    cursor: pointer;
+
+    gap: 14px;
+
+    border: 0;
+
+    transition:
+        background .2s ease,
+        padding-left .2s ease,
+        box-shadow .2s ease;
+}
+
+
+/* Divider */
+
+.options > .option-checkbox + .option-checkbox {
+    border-top: 1px solid #e5e7eb;
+}
+
+
+/* Hover */
+
+@media (hover: hover) {
+
+    .options > .option-checkbox:hover {
+        background: #f8fbff;
+        padding-left: 24px;
+    }
+
+}
+
+
+/* =========================================================
+   CHECKBOX
+   ========================================================= */
+
+.options > .option-checkbox input[type="checkbox"] {
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    flex: 0 0 auto;
+
+    width: 20px;
+    height: 20px;
+
+    margin: 2px 0 0;
+
+    padding: 0;
+
+    border: 1.8px solid #cbd5e1;
+    border-radius: 6px;
+
+    background: #ffffff;
+
+    cursor: pointer;
+
+    position: relative;
+
+    box-sizing: border-box;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+
+/* Checkbox hover */
+
+.options > .option-checkbox:hover
+input[type="checkbox"] {
+
+    border-color: #2563eb;
+}
+
+
+/* Checked */
+
+.options > .option-checkbox
+input[type="checkbox"]:checked {
+
+    background: #2563eb;
+
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, .10);
+}
+
+
+/* Check mark */
+
+.options > .option-checkbox
+input[type="checkbox"]:checked::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: 6px;
+    top: 2px;
+
+    width: 5px;
+    height: 10px;
+
+    border: solid #ffffff;
+
+    border-width: 0 2px 2px 0;
+
+    transform: rotate(45deg);
+}
+
+
+/* Focus */
+
+.options > .option-checkbox
+input[type="checkbox"]:focus-visible {
+
+    outline: none;
+
+    box-shadow:
+        0 0 0 4px rgba(37, 99, 235, .15);
+}
+
+
+/* =========================================================
+   TEXT
+   ========================================================= */
+
+.options > .option-checkbox > span {
+
+    display: block;
+
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+.options > .option-checkbox .option-title {
+
+    display: block;
+
+    margin: 0 0 5px;
+
+    color: #111827;
+
+    font-size: 15px;
+
+    font-weight: 750;
+
+    line-height: 1.4;
+}
+
+
+.options > .option-checkbox .option-description {
+
+    display: block;
+
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   SELECTED ROW
+   ========================================================= */
+
+.options > .option-checkbox:has(
+    input[type="checkbox"]:checked
+) {
+
+    background:
+        linear-gradient(
+            90deg,
+            #eff6ff,
+            #f8fbff
+        );
+
+    box-shadow:
+        inset 4px 0 0 #2563eb;
+
+    padding-left: 24px;
+}
+
+
+.options > .option-checkbox:has(
+    input[type="checkbox"]:checked
+) .option-title {
+
+    color: #2563eb;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .options > .option-checkbox {
+
+        min-height: 70px;
+
+        padding: 16px;
+
+        gap: 12px;
+    }
+
+
+    .options > .option-checkbox:hover {
+
+        padding-left: 20px;
+    }
+
+
+    .options > .option-checkbox:has(
+        input[type="checkbox"]:checked
+    ) {
+
+        padding-left: 20px;
+    }
+
+
+    .options > .option-checkbox
+    input[type="checkbox"] {
+
+        width: 19px;
+        height: 19px;
+    }
+
+
+    .options > .option-checkbox
+    .option-title {
+
+        font-size: 14px;
+    }
+
+
+    .options > .option-checkbox
+    .option-description {
+
+        font-size: 12.5px;
+        line-height: 1.5;
+    }
+
+}
+
+/* =========================================================
+   MOBILE PHONE OPTIMIZATION
+   SecurePro Service Question Page
+   Optimized for 360px - 480px screens
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    /* =========================================
+       PAGE
+    ========================================= */
+
+    .question-page {
+        min-height: calc(100vh - 62px);
+        padding: 16px 0 90px;
+    }
+
+    .question-page > .container {
+        width: min(calc(100% - 24px), 820px);
+        max-width: none;
+    }
+
+
+    /* =========================================
+       BACK BUTTON
+    ========================================= */
+
+    .question-top {
+        margin-bottom: 18px;
+    }
+
+    .back-link {
+        padding: 7px 12px 7px 9px;
+        gap: 6px;
+        font-size: 12px;
+        border-radius: 999px;
+    }
+
+
+    /* =========================================
+       SERVICE HEADER
+    ========================================= */
+
+    .question-header {
+        margin-bottom: 20px;
+        max-width: none;
+    }
+
+    .question-header .eyebrow {
+        margin-bottom: 9px;
+        padding: 5px 10px;
+        font-size: 9px;
+    }
+
+    .question-header h1 {
+        max-width: none;
+        margin-bottom: 8px;
+
+        font-size: 29px;
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+    }
+
+    .question-header p {
+        max-width: none;
+
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    .question-header::after {
+        width: 45px;
+        height: 3px;
+        margin-top: 13px;
+    }
+
+
+    /* =========================================
+       PROGRESS
+    ========================================= */
+
+    .progress-area {
+        max-width: none;
+
+        margin-bottom: 16px;
+        padding: 11px 13px 12px;
+
+        border-radius: 11px;
+    }
+
+    .progress-info {
+        margin-bottom: 7px;
+        font-size: 11px;
+    }
+
+    #progressPercent {
+        font-size: 10px;
+    }
+
+    .progress-track {
+        height: 6px;
+    }
+
+
+    /* =========================================
+       QUESTION CONTAINER
+    ========================================= */
+
+    .question-container {
+        max-width: none;
+    }
+
+
+    /* =========================================
+       QUESTION CARD
+    ========================================= */
+
+    .question-card {
+        padding: 17px;
+        border-radius: 16px;
+
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, .03),
+            0 10px 28px rgba(15, 23, 42, .055);
+    }
+
+    .question-card::before {
+        height: 3px;
+    }
+
+
+    /* =========================================
+       QUESTION NUMBER
+    ========================================= */
+
+    .question-number {
+        min-height: 24px;
+
+        margin-bottom: 10px;
+        padding: 4px 8px;
+
+        font-size: 10px;
+    }
+
+
+    /* =========================================
+       QUESTION TITLE
+    ========================================= */
+
+    .question-title {
+        margin-bottom: 7px;
+
+        font-size: 20px;
+        line-height: 1.25;
+        letter-spacing: -0.015em;
+    }
+
+
+    /* =========================================
+       QUESTION DESCRIPTION
+    ========================================= */
+
+    .question-description {
+        margin-bottom: 16px;
+
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+
+    /* =========================================
+       SINGLE SELECT OPTIONS
+    ========================================= */
+
+    .options {
+        border-radius: 11px;
+    }
+
+    .options > .option > .option-label {
+        min-height: 57px;
+        padding: 13px 14px;
+    }
+
+    .options > .option > input:checked + .option-label {
+        padding-left: 18px;
+    }
+
+    .options .option-title {
+        font-size: 13px;
+        line-height: 1.35;
+    }
+
+    .options .option-description {
+        margin-top: 2px;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+
+    /* =========================================
+       MULTI SELECT
+    ========================================= */
+
+    .options > .option-checkbox {
+        min-height: 60px;
+        padding: 13px 14px;
+
+        gap: 10px;
+    }
+
+    .options > .option-checkbox input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+
+        margin-top: 1px;
+    }
+
+    .options > .option-checkbox .option-title {
+        margin-bottom: 3px;
+
+        font-size: 13px;
+        line-height: 1.35;
+    }
+
+    .options > .option-checkbox .option-description {
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .options > .option-checkbox:has(
+        input[type="checkbox"]:checked
+    ) {
+        padding-left: 18px;
+    }
+
+
+    /* =========================================
+       NUMBER INPUT
+    ========================================= */
+
+    .number-input-wrap {
+        gap: 8px;
+    }
+
+    .number-input {
+        min-height: 46px;
+        padding: 12px 13px;
+
+        font-size: 15px;
+        border-radius: 10px;
+    }
+
+    .number-unit {
+        padding: 7px 9px;
+        font-size: 11px;
+    }
+
+
+    /* =========================================
+       COUNTERS
+    ========================================= */
+
+    .counter-list {
+        gap: 9px;
+    }
+
+    .counter-item {
+        padding: 13px;
+        border-radius: 11px;
+    }
+
+    .counter-title {
+        font-size: 13px;
+    }
+
+    .counter-description {
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .counter-control {
+        gap: 7px;
+    }
+
+    .counter-button {
+        width: 36px;
+        height: 36px;
+
+        font-size: 18px;
+        border-radius: 8px;
+    }
+
+    .counter-value {
+        min-width: 28px;
+        font-size: 13px;
+    }
+
+
+    /* =========================================
+       TEXTAREA
+    ========================================= */
+
+    .question-textarea {
+        min-height: 120px;
+
+        padding: 13px;
+
+        font-size: 14px;
+        border-radius: 10px;
+    }
+
+
+    /* =========================================
+       FILE UPLOAD
+    ========================================= */
+
+    .file-upload {
+        padding: 23px 15px;
+        border-radius: 12px;
+    }
+
+    .file-upload strong {
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+
+    .file-upload span {
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+
+    /* =========================================
+       BOTTOM NAVIGATION
+    ========================================= */
+
+    .question-navigation {
+        position: sticky;
+
+        bottom: 0;
+        z-index: 50;
+
+        max-width: none;
+
+        margin-top: 15px;
+
+        padding: 9px 0
+            calc(9px + env(safe-area-inset-bottom));
+
+        gap: 8px;
+
+        background: rgba(247, 248, 250, .94);
+
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .question-navigation .primary-btn,
+    .question-navigation .secondary-btn {
+        flex: 1;
+
+        min-height: 44px;
+
+        padding: 10px 12px;
+
+        font-size: 12px;
+
+        border-radius: 10px;
+    }
+
+    .question-navigation .primary-btn {
+        min-width: 0;
+    }
+
+
+    /* =========================================
+       LOADING
+    ========================================= */
+
+    .question-loading,
+    .question-container > .question-loading {
+        min-height: 190px;
+
+        border-radius: 15px;
+
+        font-size: 12px;
+    }
+
+
+    /* =========================================
+       POPUPS
+    ========================================= */
+
+    .validation-popup,
+    .previous-popup {
+        width: calc(100% - 30px);
+
+        padding: 24px 18px;
+
+        border-radius: 17px;
+    }
+
+    .validation-popup h3,
+    .previous-popup h3 {
+        font-size: 19px;
+    }
+
+    .validation-popup p,
+    .previous-popup p {
+        margin-bottom: 18px;
+
+        font-size: 13px;
+    }
+
+    .previous-popup-actions {
+        gap: 8px;
+    }
+
+    .previous-popup-actions button {
+        padding: 11px 12px;
+        font-size: 12px;
     }
 }

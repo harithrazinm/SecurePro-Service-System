@@ -1,8 +1,9 @@
 const API_BASE =
-    ["localhost", "127.0.0.1"].includes(window.location.hostname)
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
         ? "http://localhost:5001/api"
-        : "https://securepro-service-system.onrender.com/api";
-
+        : "/api";
 
 const token = localStorage.getItem("securepro_admin_token");
 let adminUser = null;
@@ -47,6 +48,9 @@ function formatJobStatus(status) {
 
         awaiting_payment:
             "Awaiting Payment",
+
+        quotation_required:
+            "Quotation Required",
 
         completed:
             "Completed",
@@ -215,12 +219,15 @@ function renderJobs(jobs) {
                             </span>
 
                             <span class="request-date">
-                                Payment proof:
-                                ${escapeHtml(
-                                    formatDate(
-                                        job.payment_proof_uploaded_at
-                                    )
-                                )}
+                                ${
+                                    job.service?.code === "troubleshoot_repair"
+                                        ? "Payment proof: Not required for initial inspection"
+                                        : `Payment proof: ${escapeHtml(
+                                            formatDate(
+                                                job.payment_proof_uploaded_at
+                                            )
+                                        )}`
+                                }
                             </span>
 
                         </td>

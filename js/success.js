@@ -1,5 +1,5 @@
 const WHATSAPP_NUMBER =
-    "60196162487";
+    "60139706363";
 
 
 let currentLanguage =

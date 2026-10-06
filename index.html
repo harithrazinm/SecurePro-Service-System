@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="SecurePro by Sonic System Solution - Service Request Platform">
-    <title>SecurePro | Service Request</title>
+    <meta name="description" content="SOPro SecureOnePro - Platform Permintaan Servis">
+    <title>SOPro | SecureOnePro</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,17 +15,15 @@
 <body>
 <header class="site-header">
     <div class="container navbar">
-        <a href="index.html" class="brand">
-            <span class="brand-mark">S</span>
-            <span>
-                <strong>SECUREPRO</strong>
-                <small>by Sonic System Solution</small>
-            </span>
+        <a href="index.html" class="brand" aria-label="SOPro SecureOnePro">
+            <img src="assets/sopro-logo.png" alt="SOPro SecureOnePro" class="brand-logo">
         </a>
 
-        <nav class="main-nav">
+        <nav class="main-nav" id="mainNav">
+            <a href="#why" data-i18n="navHome">Utama</a>
             <a href="#guide" data-i18n="navGuide">Cara Membuat Permintaan</a>
-            <a href="#services" data-i18n="navServices">Pilih Servis</a>
+            <a href="#services" data-i18n="navServices">Senarai Servis</a>
+            <a href="#help" data-i18n="navContact">Hubungi Kami</a>
         </nav>
 
         <div class="nav-actions">
@@ -38,64 +36,113 @@
 </header>
 
 <main>
-    <!-- SIMPLE CUSTOMER GUIDANCE -->
-    <section class="guide" id="guide">
+    <!-- 1. WHY SOPRO -->
+    <section class="why-section" id="why">
         <div class="container">
-            <div class="guide-heading">
-                <span class="eyebrow" data-i18n="guideLabel">HOW TO CREATE A SERVICE REQUEST</span>
-                <h1 data-i18n="guideTitle">Buat permintaan servis anda dengan mudah.</h1>
-                <p data-i18n="guideText">
-                    Ikuti 3 langkah mudah di bawah. Pilih servis yang diperlukan untuk memulakan permintaan anda.
-                </p>
-            </div>
+            <div class="why-panel">
+                <div class="why-copy">
+                    <span class="eyebrow" data-i18n="whyLabel">KENAPA SOPRO</span>
+                    <h1 data-i18n="whyTitle">Permintaan anda,<br><span>lebih teratur.</span></h1>
+                    <p data-i18n="whyText">
+                        Sistem SOPro membantu pasukan kami menguruskan setiap permintaan dengan lebih cekap
+                        dan memberikan perkhidmatan yang lebih baik kepada anda.
+                    </p>
+                    <a href="#services" class="primary-btn" data-i18n="whyButton">Buat Permintaan Servis →</a>
+                </div>
 
-            <div class="steps">
-                <article class="step">
-                    <span class="step-number">01</span>
-                    <div class="step-icon">✓</div>
-                    <div>
-                        <h2 data-i18n="stepOneTitle">Pilih Servis</h2>
-                        <p data-i18n="stepOneText">Pilih sistem atau servis yang anda perlukan.</p>
-                    </div>
-                </article>
-
-                <article class="step">
-                    <span class="step-number">02</span>
-                    <div class="step-icon">?</div>
-                    <div>
-                        <h2 data-i18n="stepTwoTitle">Jawab Soalan</h2>
-                        <p data-i18n="stepTwoText">Jawab beberapa soalan supaya kami memahami keperluan anda.</p>
-                    </div>
-                </article>
-
-                <article class="step">
-                    <span class="step-number">03</span>
-                    <div class="step-icon">→</div>
-                    <div>
-                        <h2 data-i18n="stepThreeTitle">Hantar Permintaan</h2>
-                        <p data-i18n="stepThreeText">Semak maklumat anda dan hantar permintaan servis.</p>
-                    </div>
-                </article>
-            </div>
-
-            <div class="guide-note">
-                <span>i</span>
-                <p data-i18n="guideNote">
-                    Anda boleh pilih satu servis di bawah untuk bermula.
-                </p>
+                <div class="benefit-grid">
+                    <article class="benefit">
+                        <div class="benefit-icon">▤</div>
+                        <div>
+                            <h3 data-i18n="whyOneTitle">Direkod dalam sistem</h3>
+                            <p data-i18n="whyOneText">Semua maklumat disimpan dengan selamat.</p>
+                        </div>
+                    </article>
+                    <article class="benefit">
+                        <div class="benefit-icon">ϟ</div>
+                        <div>
+                            <h3 data-i18n="whyTwoTitle">Respons lebih cepat</h3>
+                            <p data-i18n="whyTwoText">Pasukan teknikal menerima maklumat lengkap.</p>
+                        </div>
+                    </article>
+                    <article class="benefit">
+                        <div class="benefit-icon">♧</div>
+                        <div>
+                            <h3 data-i18n="whyThreeTitle">Tindakan lebih teratur</h3>
+                            <p data-i18n="whyThreeText">Mudah untuk disusuli dengan setiap peringkat kerja.</p>
+                        </div>
+                    </article>
+                    <article class="benefit">
+                        <div class="benefit-icon">▥</div>
+                        <div>
+                            <h3 data-i18n="whyFourTitle">Rekod servis tersedia</h3>
+                            <p data-i18n="whyFourText">Jejak semua data dan sejarah servis anda.</p>
+                        </div>
+                    </article>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- SERVICE CARDS -->
+    <!-- 2. THREE STEPS -->
+    <section class="guide" id="guide">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow" data-i18n="guideLabel">CARA BERFUNGSI</span>
+                    <h2 data-i18n="guideTitle">Hanya <span>3 Langkah</span> Mudah</h2>
+                    <p data-i18n="guideText">Hantar permintaan servis anda dalam beberapa minit sahaja.</p>
+                </div>
+                <div class="status-card">
+                    <div class="status-card-title" data-i18n="statusTitle">Status Permintaan</div>
+                    <div class="status-item active"><i>✓</i><div><strong data-i18n="statusReceived">Permintaan Diterima</strong><small></small></div></div>
+                    <div class="status-item active"><i>▣</i><div><strong data-i18n="statusAssigned">Juruteknik Ditugaskan</strong><small></small></div></div>
+                    <div class="status-item"><i>◷</i><div><strong data-i18n="statusProgress">Kerja Sedang Dijalankan</strong><small></small></div></div>
+                    <div class="status-item"><i>✓</i><div><strong data-i18n="statusCompleted">Selesai</strong><small></small></div></div>
+                </div>
+            </div>
+
+            <div class="steps">
+                <article class="step">
+                    <div class="step-badge">1</div>
+                    <div class="step-icon">♙</div>
+                    <div>
+                        <h3 data-i18n="stepOneTitle">Pilih Servis</h3>
+                        <p data-i18n="stepOneText">Pilih kategori servis yang anda perlukan.</p>
+                    </div>
+                    <span class="step-arrow">›</span>
+                </article>
+                <article class="step">
+                    <div class="step-badge">2</div>
+                    <div class="step-icon">▤</div>
+                    <div>
+                        <h3 data-i18n="stepTwoTitle">Berikan Maklumat</h3>
+                        <p data-i18n="stepTwoText">Isi maklumat yang diperlukan dengan lengkap.</p>
+                    </div>
+                    <span class="step-arrow">›</span>
+                </article>
+                <article class="step">
+                    <div class="step-badge">3</div>
+                    <div class="step-icon">➤</div>
+                    <div>
+                        <h3 data-i18n="stepThreeTitle">Hantar Permintaan</h3>
+                        <p data-i18n="stepThreeText">Permintaan anda akan direkodkan dalam sistem kami.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. SERVICES -->
     <section class="services-section" id="services">
         <div class="container">
             <div class="services-heading">
                 <div>
-                    <span class="eyebrow" data-i18n="servicesLabel">OUR SERVICES</span>
-                    <h2 data-i18n="servicesTitle">Pilih servis yang anda perlukan.</h2>
+                    <span class="eyebrow" data-i18n="servicesLabel">PERKHIDMATAN KAMI</span>
+                    <h2 data-i18n="servicesTitle">Pilih Servis Yang Anda Perlukan</h2>
+                    <p data-i18n="servicesText">Hantar permintaan servis dengan beberapa klik sahaja.</p>
                 </div>
-                <p data-i18n="servicesText">Klik pada mana-mana kad untuk membuat permintaan.</p>
+                <a href="#services" class="all-services-link" data-i18n="allServices">Lihat semua servis →</a>
             </div>
 
             <div id="servicesGrid" class="services-grid">
@@ -104,32 +151,50 @@
         </div>
     </section>
 
-    <section class="help-strip">
-        <div class="container help-inner">
-            <div>
-                <strong data-i18n="helpTitle">Perlukan bantuan?</strong>
-                <span data-i18n="helpText">Hubungi Sonic System Solution untuk mendapatkan bantuan.</span>
-            </div>
-            <div class="help-phone">
-                <span>013-970 6363</span>
-                <span>/ 018-264 6363</span>
+    <!-- 5. HELP -->
+    <section class="help-section" id="help">
+        <div class="container">
+            <div class="help-banner">
+                <div class="help-copy">
+                    <span class="eyebrow light" data-i18n="helpLabel">BANTUAN & SOKONGAN</span>
+                    <h2 data-i18n="helpTitle">Perlukan Bantuan?</h2>
+                    <p data-i18n="helpText">Hubungi pasukan kami atau buat permintaan servis sekarang.</p>
+                    <div class="help-buttons">
+                        <a href="tel:0139706363">☎ &nbsp;013-970 6363</a>
+                        <a href="tel:0182646363">☎ &nbsp;018-264 6363</a>
+                        <a href="https://wa.me/60139706363" target="_blank" rel="noopener">◔ &nbsp;<span data-i18n="whatsappButton">Chat di WhatsApp →</span></a>
+                    </div>
+                </div>
+                <div class="help-image">
+                    <div class="help-image-overlay"></div>
+                    <div class="technician-placeholder">SOPro<br><small>SecureOnePro</small></div>
+                </div>
             </div>
         </div>
     </section>
-</main>
 
-<footer class="site-footer">
-    <div class="container footer-inner">
-        <div class="brand">
-            <span class="brand-mark">S</span>
-            <span>
-                <strong>SECUREPRO</strong>
-                <small>by Sonic System Solution</small>
-            </span>
+    <!-- 6. OPERATING HOURS / QUESTIONS -->
+    <section class="info-section">
+        <div class="container info-grid">
+            <article class="info-card">
+                <div class="info-icon">◷</div>
+                <div>
+                    <h3 data-i18n="hoursTitle">Waktu Operasi</h3>
+                    <p data-i18n="hoursText">9:00 pagi - 6:00 petang<br>Ahad - Khamis<br>Sabtu (by appointment)<br>Cuti: Jumaat & Cuti Umum</p>
+                </div>
+            </article>
+
+            <article class="info-card">
+                <div class="info-icon">♧</div>
+                <div>
+                    <h3 data-i18n="questionsTitle">Lain-lain Pertanyaan</h3>
+                    <p data-i18n="questionsText">Untuk sebut harga, pertanyaan atau kerjasama, sila hubungi kami melalui telefon atau WhatsApp.</p>
+                </div>
+                <a href="#help" class="round-arrow" aria-label="Contact">→</a>
+            </article>
         </div>
-        <span data-i18n="footerText">Service Request Platform</span>
-    </div>
-</footer>
+    </section>
+</main>
 
 <script src="js/app.js"></script>
 </body>

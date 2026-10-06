@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const dotenv = require("dotenv");
 const rateLimit = require("express-rate-limit");
 
@@ -71,14 +72,20 @@ const superAdminQuotationRoutes =
 // Render frontend
 // Existing SecurePro frontend
 const allowedOrigins = [
+    // Local development
     "http://localhost:5500",
     "http://127.0.0.1:5500",
-
     "http://localhost:5501",
     "http://127.0.0.1:5501",
+    "http://localhost:5001",
 
+    // Existing Render deployment
     "https://securepro-service-system-1.onrender.com",
-    "https://securepro-service-system.onrender.com"
+    "https://securepro-service-system.onrender.com",
+
+    // Production
+   "https://sopro.my",
+"https://www.sopro.my"
 ];
 
 app.use(
@@ -138,6 +145,47 @@ app.use(
         extended: true,
         limit: "1mb"
     })
+);
+
+// ======================================================
+// FRONTEND STATIC FILES
+// ======================================================
+
+const frontendRoot = path.join(__dirname, "..");
+
+app.use(
+    "/css",
+    express.static(path.join(frontendRoot, "css"))
+);
+
+app.use(
+    "/js",
+    express.static(path.join(frontendRoot, "js"))
+);
+
+app.use(
+    "/assets",
+    express.static(path.join(frontendRoot, "assets"))
+);
+
+app.use(
+    "/admin",
+    express.static(path.join(frontendRoot, "admin"))
+);
+
+app.use(
+    "/technician",
+    express.static(path.join(frontendRoot, "technician"))
+);
+
+app.use(
+    "/super-admin",
+    express.static(path.join(frontendRoot, "super-admin"))
+);
+
+app.use(
+    "/pages",
+    express.static(path.join(frontendRoot, "pages"))
 );
 
 // ======================================================
@@ -340,18 +388,15 @@ app.get(
 // ROOT ROUTE
 // ======================================================
 
-app.get(
-    "/",
-    (req, res) => {
+// ======================================================
+// FRONTEND ROOT
+// ======================================================
 
-        res.json({
-            success: true,
-            message:
-                "Welcome to SecurePro Service Management API"
-        });
-
-    }
-);
+app.get("/", (req, res) => {
+    res.sendFile(
+        path.join(__dirname, "..", "index.html")
+    );
+});
 
 // ======================================================
 // 404 HANDLER

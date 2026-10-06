@@ -1,6 +1,10 @@
 const API_BASE =
-    "https://securepro-service-system.onrender.com/api";
-
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
+        ? "http://localhost:5001/api"
+        : "/api";
+        
 let currentLanguage =
     localStorage.getItem("securepro_language") || "ms";
 

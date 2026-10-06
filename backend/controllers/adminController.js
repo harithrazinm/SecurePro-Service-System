@@ -267,6 +267,7 @@ async function getJobPendingRequests(req, res) {
 
                     u.name AS technician_name,
 
+                    s.service_code,
                     s.name_en AS service_name_en,
                     s.name_ms AS service_name_ms,
 
@@ -280,7 +281,7 @@ async function getJobPendingRequests(req, res) {
                 LEFT JOIN users u
                     ON u.id = sr.technician_id
 
-                INNER JOIN quotations q
+                LEFT JOIN quotations q
                     ON q.request_id = sr.id
 
                 WHERE
@@ -294,16 +295,18 @@ async function getJobPendingRequests(req, res) {
                     )
 
                     /*
-                     * Customer must have uploaded
-                     * quotation payment proof.
+                     * Troubleshooting & Repair enters Job Pending
+                     * before any quotation/payment exists.
+                     * Other services keep the existing payment-proof gate.
                      */
-                    AND q.payment_status = 'proof_uploaded'
-
-                    AND q.payment_proof_url IS NOT NULL
-
-                    AND TRIM(
-                        q.payment_proof_url
-                    ) <> ''
+                    AND (
+                        s.service_code = 'troubleshoot_repair'
+                        OR (
+                            q.payment_status = 'proof_uploaded'
+                            AND q.payment_proof_url IS NOT NULL
+                            AND TRIM(q.payment_proof_url) <> ''
+                        )
+                    )
 
                 ORDER BY
 
@@ -321,10 +324,13 @@ async function getJobPendingRequests(req, res) {
                         WHEN 'waiting_parts'
                             THEN 4
 
-                        WHEN 'awaiting_payment'
+                        WHEN 'quotation_required'
                             THEN 5
 
-                        ELSE 6
+                        WHEN 'awaiting_payment'
+                            THEN 6
+
+                        ELSE 7
 
                     END ASC,
 
@@ -365,6 +371,10 @@ async function getJobPendingRequests(req, res) {
 
 
                         service: {
+
+                            code:
+                                request.service_code ||
+                                null,
 
                             name:
                                 request.service_name_en ||
@@ -1418,6 +1428,7 @@ async function updateRequest(req, res) {
                 SELECT
 
                     id,
+                    service_id,
                     status,
                     technician_id,
                     scheduled_date,
@@ -1456,6 +1467,23 @@ async function updateRequest(req, res) {
             requests[0];
 
 
+        const [serviceRows] =
+            await connection.query(
+                `
+                SELECT service_code
+                FROM services
+                WHERE id = ?
+                LIMIT 1
+                `,
+                [request.service_id]
+            );
+
+
+        const serviceCode =
+            serviceRows[0]?.service_code ||
+            null;
+
+
         const allowedStatuses = [
 
             "pending",
@@ -1467,6 +1495,8 @@ async function updateRequest(req, res) {
             "waiting_parts",
 
             "awaiting_payment",
+
+            "quotation_required",
 
             "completed",
 
@@ -1495,60 +1525,55 @@ async function updateRequest(req, res) {
       if (technician_id) {
 
     /*
-     * =====================================================
-     * PAYMENT PROOF CHECK
-     * =====================================================
-     *
-     * A technician may ONLY be assigned after Admin
-     * has uploaded the customer's quotation payment proof.
-     *
-     * This is the INITIAL quotation/customer payment.
-     *
-     * The FINAL INVOICE payment is a separate workflow
-     * and must NOT be used for technician assignment.
+     * Troubleshooting & Repair is technician-first.
+     * It does NOT require a quotation/payment proof before
+     * the initial site inspection. All other services keep
+     * the existing payment-proof requirement.
      */
 
-    const [paymentProofRows] =
-        await connection.query(
-            `
-            SELECT
-                id,
-                payment_proof_url,
-                payment_status,
-                payment_proof_uploaded_at
+    if (serviceCode !== 'troubleshoot_repair') {
 
-            FROM quotations
+        const [paymentProofRows] =
+            await connection.query(
+                `
+                SELECT
+                    id,
+                    payment_proof_url,
+                    payment_status,
+                    payment_proof_uploaded_at
 
-            WHERE
-                request_id = ?
+                FROM quotations
 
-                AND payment_proof_url IS NOT NULL
+                WHERE
+                    request_id = ?
 
-                AND TRIM(payment_proof_url) <> ''
+                    AND payment_proof_url IS NOT NULL
 
-                AND payment_status = 'proof_uploaded'
+                    AND TRIM(payment_proof_url) <> ''
 
-            ORDER BY
-                payment_proof_uploaded_at DESC
+                    AND payment_status = 'proof_uploaded'
 
-            LIMIT 1
-            `,
-            [
-                requestId
-            ]
-        );
+                ORDER BY
+                    payment_proof_uploaded_at DESC
+
+                LIMIT 1
+                `,
+                [requestId]
+            );
 
 
-    if (!paymentProofRows.length) {
+        if (!paymentProofRows.length) {
 
-        return res.status(400).json({
+            return res.status(400).json({
 
-            success: false,
+                success: false,
 
-            message:
-                "Technician cannot be assigned yet. Please upload the customer's quotation payment proof first."
+                message:
+                    "Technician cannot be assigned yet. Please upload the customer's quotation payment proof first."
 
-        });
+            });
+
+        }
 
     }
 
@@ -2074,6 +2099,7 @@ async function reviewTechnicianReport(req, res) {
                 SELECT
 
                     id,
+                    service_id,
                     status,
                     technician_id
 
@@ -2107,6 +2133,23 @@ async function reviewTechnicianReport(req, res) {
 
         const request =
             requests[0];
+
+
+        const [serviceRows] =
+            await connection.query(
+                `
+                SELECT service_code
+                FROM services
+                WHERE id = ?
+                LIMIT 1
+                `,
+                [request.service_id]
+            );
+
+
+        const serviceCode =
+            serviceRows[0]?.service_code ||
+            null;
 
 
         /* ==================================================
@@ -2275,8 +2318,21 @@ async function reviewTechnicianReport(req, res) {
 
 
             /* ----------------------------------------------
-               MOVE REQUEST TO AWAITING PAYMENT
+               MOVE REQUEST TO THE NEXT WORKFLOW STAGE
             ---------------------------------------------- */
+
+            /*
+             * Troubleshooting & Repair skips quotation completely.
+             * Once Admin approves the technician's final inspection
+             * report, the request goes directly to the final invoice
+             * stage.
+             */
+            const nextStatus = 'awaiting_payment';
+
+            const statusRemark =
+                serviceCode === 'troubleshoot_repair'
+                    ? 'Technician inspection report approved. Troubleshooting & Repair skips quotation and is ready for final invoice.'
+                    : 'Technician final report approved. Awaiting final payment.';
 
             await connection.query(
                 `
@@ -2284,8 +2340,7 @@ async function reviewTechnicianReport(req, res) {
 
                 SET
 
-                    status =
-                        'awaiting_payment',
+                    status = ?,
 
                     completed_at =
                         NULL,
@@ -2296,6 +2351,7 @@ async function reviewTechnicianReport(req, res) {
                 WHERE id = ?
                 `,
                 [
+                    nextStatus,
                     requestId
                 ]
             );
@@ -2327,11 +2383,11 @@ async function reviewTechnicianReport(req, res) {
 
                     request.status,
 
-                    "awaiting_payment",
+                    nextStatus,
 
                     adminId,
 
-                    "Technician final report approved. Awaiting final payment."
+                    statusRemark
 
                 ]
             );
@@ -2345,7 +2401,9 @@ async function reviewTechnicianReport(req, res) {
                 success: true,
 
                 message:
-                    "Technician final report approved successfully. The service request is now awaiting payment.",
+                    serviceCode === 'troubleshoot_repair'
+                        ? "Technician inspection report approved successfully. Troubleshooting & Repair skips quotation and is now ready for final invoice upload."
+                        : "Technician final report approved successfully. The service request is now awaiting payment.",
 
                 data: {
 
@@ -2359,7 +2417,7 @@ async function reviewTechnicianReport(req, res) {
                         "approved",
 
                     request_status:
-                        "awaiting_payment"
+                        nextStatus
 
                 }
 

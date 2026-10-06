@@ -2,287 +2,140 @@
 <html lang="ms">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOPro | Review Request</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <title>SecurePro | Review Request</title>
-
-    <link
-        rel="stylesheet"
-        href="../css/style.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="../css/review.css"
-    >
-
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/review.css">
 </head>
 
 <body>
 
 <header class="site-header">
-
     <div class="container navbar">
 
-        <a href="../index.html" class="brand">
-
-            <span class="brand-mark">S</span>
-
-            <span>
-                <strong>SECUREPRO</strong>
-                <small>System Solutions</small>
-            </span>
-
+        <a href="../index.html" class="brand" aria-label="SOPro SecureOnePro">
+            <img src="../assets/sopro-logo.png" alt="SOPro SecureOnePro" class="brand-logo">
         </a>
 
-        <button
-            id="languageToggle"
-            class="language-btn"
-            type="button"
-        >
-            🌐 English
-        </button>
+        <div class="nav-actions" style="margin-left:auto">
+            <button id="languageToggle" class="language-btn" type="button">
+                🌐 English
+            </button>
+        </div>
 
     </div>
-
 </header>
 
 
 <main class="review-page">
-
     <div class="container">
 
         <div class="review-top">
-
-            <a
-                href="customer.html"
-                class="back-link"
-            >
+            <a href="customer.html" class="back-link">
                 ←
-                <span data-i18n="back">
-                    Back
-                </span>
+                <span data-i18n="back">Back</span>
             </a>
-
         </div>
 
 
         <div class="review-header">
+            <span class="eyebrow">SOPRO</span>
 
-            <span class="eyebrow">
-                SECUREPRO
-            </span>
-
-            <h1 data-i18n="title">
-                Review your request
-            </h1>
+            <h1 data-i18n="title">Review your request</h1>
 
             <p data-i18n="description">
                 Please check your information before submitting.
             </p>
-
         </div>
 
 
         <!-- SERVICE -->
-
         <section class="review-card">
-
             <div class="review-card-heading">
-
-                <span class="review-number">
-                    01
-                </span>
-
+                <span class="review-number">01</span>
                 <div>
-
-                    <h2 data-i18n="serviceTitle">
-                        Selected Service
-                    </h2>
-
-                    <p id="serviceName">
-                        Loading...
-                    </p>
-
+                    <h2 data-i18n="serviceTitle">Selected Service</h2>
+                    <p id="serviceName">Loading...</p>
                 </div>
-
             </div>
-
         </section>
 
 
         <!-- QUESTIONS -->
-
         <section class="review-card">
-
             <div class="review-card-heading">
-
-                <span class="review-number">
-                    02
-                </span>
-
+                <span class="review-number">02</span>
                 <div>
-
-                    <h2 data-i18n="answersTitle">
-                        Your Answers
-                    </h2>
-
+                    <h2 data-i18n="answersTitle">Your Answers</h2>
                     <p data-i18n="answersDescription">
                         Information provided for this service.
                     </p>
-
                 </div>
-
             </div>
 
-
-            <div
-                id="answersList"
-                class="answers-list"
-            >
-                Loading...
-            </div>
-
+            <div id="answersList" class="answers-list">Loading...</div>
         </section>
 
 
         <!-- CUSTOMER -->
-
         <section class="review-card">
-
             <div class="review-card-heading">
-
-                <span class="review-number">
-                    03
-                </span>
-
+                <span class="review-number">03</span>
                 <div>
-
-                    <h2 data-i18n="customerTitle">
-                        Customer Information
-                    </h2>
-
+                    <h2 data-i18n="customerTitle">Customer Information</h2>
                 </div>
-
             </div>
 
-
-            <div
-                id="customerInfo"
-                class="customer-review-grid"
-            >
-            </div>
-
+            <div id="customerInfo" class="customer-review-grid"></div>
         </section>
 
 
         <!-- PHOTOS -->
-
         <section class="review-card">
-
             <div class="review-card-heading">
-
-                <span class="review-number">
-                    04
-                </span>
-
+                <span class="review-number">04</span>
                 <div>
-
-                    <h2 data-i18n="photosTitle">
-                        Photos
-                    </h2>
-
-                    <p id="photoCount">
-                        0 photos
-                    </p>
-
+                    <h2 data-i18n="photosTitle">Photos</h2>
+                    <p id="photoCount">0 photos</p>
                 </div>
-
             </div>
 
-
-            <div
-                id="reviewPhotos"
-                class="review-photos"
-            >
-            </div>
-
+            <div id="reviewPhotos" class="review-photos"></div>
         </section>
 
 
         <!-- REFERRAL -->
-
-        <section
-            id="referralInfo"
-            class="review-card referral-review-card"
-            hidden
-        >
+        <section id="referralInfo" class="review-card referral-review-card" hidden>
 
             <div class="review-card-heading">
-
-                <span class="review-number">
-                    05
-                </span>
-
+                <span class="review-number">05</span>
                 <div>
-
-                    <h2>
-                        Referral Reward
-                    </h2>
-
-                    <p>
-                        Your referral code has been successfully validated.
-                    </p>
-
+                    <h2>Referral Reward</h2>
+                    <p>Your referral code has been successfully validated.</p>
                 </div>
-
             </div>
-
 
             <div class="referral-review-content">
 
                 <div class="referral-review-item">
-
-                    <span>
-                        Referral Code
-                    </span>
-
-                    <strong id="reviewReferralCode">
-                        —
-                    </strong>
-
+                    <span>Referral Code</span>
+                    <strong id="reviewReferralCode">—</strong>
                 </div>
 
-
                 <div class="referral-review-item">
-
-                    <span>
-                        Reward
-                    </span>
-
-                    <strong id="reviewReferralReward">
-                        —
-                    </strong>
-
+                    <span>Reward</span>
+                    <strong id="reviewReferralReward">—</strong>
                 </div>
 
-
                 <div class="referral-review-item">
-
-                    <span>
-                        Minimum Order
-                    </span>
-
-                    <strong id="reviewReferralMinimum">
-                        —
-                    </strong>
-
+                    <span>Minimum Order</span>
+                    <strong id="reviewReferralMinimum">—</strong>
                 </div>
 
             </div>
@@ -290,61 +143,35 @@
         </section>
 
 
-        <div
-            id="submitError"
-            class="submit-error"
-            hidden
-        ></div>
+        <div id="submitError" class="submit-error" hidden></div>
 
 
         <!-- ACTION -->
-
         <div class="review-actions">
 
-            <button
-                id="editButton"
-                type="button"
-                class="secondary-btn"
-            >
+            <button id="editButton" type="button" class="secondary-btn">
                 ←
-                <span data-i18n="edit">
-                    Edit Information
-                </span>
+                <span data-i18n="edit">Edit Information</span>
             </button>
 
-
-            <button
-                id="submitButton"
-                type="button"
-                class="primary-btn"
-            >
-
-                <span data-i18n="submit">
-                    Submit Request
-                </span>
-
+            <button id="submitButton" type="button" class="primary-btn">
+                <span data-i18n="submit">Submit Request</span>
                 →
-
             </button>
 
         </div>
 
 
-        <p
-            class="privacy-note"
-            data-i18n="privacy"
-        >
+        <p class="privacy-note" data-i18n="privacy">
             Your information will only be used to process your
             service request.
         </p>
 
     </div>
-
 </main>
 
 
 <script src="../js/review.js?v=20260924-1"></script>
 
 </body>
-
 </html>

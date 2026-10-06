@@ -1,4 +1,9 @@
-const API_BASE = ["localhost", "127.0.0.1"].includes(window.location.hostname) ? "http://localhost:5001/api" : "https://securepro-service-system.onrender.com/api";
+const API_BASE =
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
+        ? "http://localhost:5001/api"
+        : "/api";
 const token = localStorage.getItem("securepro_admin_token");
 const user = JSON.parse(localStorage.getItem("securepro_admin_user") || "null");
 if (!token || !user || user.role !== "admin") window.location.href = "login.html";
@@ -46,6 +51,13 @@ async function loadRequests() {
     select.innerHTML = `<option value="">Select a service request</option>`;
     const existing = new Set(invoices.map(i => i.request_id));
     (result?.data || []).forEach(r => {
+        /*
+         * Only requests that have reached the final invoice stage
+         * should appear here. Troubleshooting & Repair reaches this
+         * stage directly after Admin approves the technician report.
+         */
+        if (r.status !== "awaiting_payment") return;
+
         const name = r.customer?.name || r.customer_name || "Unknown customer";
         const opt = document.createElement("option");
         opt.value = r.id;
@@ -76,8 +88,8 @@ function renderInvoices() {
                     <div><strong>🎁 Referral Reward</strong><span>${esc(referral.referral_code || "—")}</span></div>
                     <div class="muted">Reward: ${esc(referral.reward_type === "percentage" ? `${Number(referral.reward_value || 0)}%` : `RM ${Number(referral.reward_value || 0).toFixed(2)}`)}</div>
                     ${referral.status === "rewarded"
-                        ? `<span class="referral-applied">✓ Reward Applied</span>`
-                        : `<button type="button" class="action-button success" data-apply-referral="${esc(referral.id)}">Mark Reward as Applied</button>`}
+                ? `<span class="referral-applied">✓ Reward Applied</span>`
+                : `<button type="button" class="action-button success" data-apply-referral="${esc(referral.id)}">Mark Reward as Applied</button>`}
                </div>`
             : "";
 

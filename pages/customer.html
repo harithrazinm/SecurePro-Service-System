@@ -3,142 +3,80 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOPro | Customer Details</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <title>SecurePro | Customer Details</title>
-
-    <link
-        rel="stylesheet"
-        href="../css/style.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="../css/service.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="../css/customer.css"
-    >
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/service.css">
+    <link rel="stylesheet" href="../css/customer.css">
 </head>
 
 <body>
 
 <header class="site-header">
-
     <div class="container navbar">
 
-        <a href="../index.html" class="brand">
-
-            <span class="brand-mark">S</span>
-
-            <span>
-                <strong>SECUREPRO</strong>
-                <small>System Solutions</small>
-            </span>
-
+        <a href="../index.html" class="brand" aria-label="SOPro SecureOnePro">
+            <img src="../assets/sopro-logo.png" alt="SOPro SecureOnePro" class="brand-logo">
         </a>
 
-        <button
-            id="languageToggle"
-            class="language-btn"
-            type="button"
-        >
+        <div class="nav-actions" style="margin-left:auto">
+            <button id="languageToggle" class="language-btn" type="button">
                 🌐 English
             </button>
+        </div>
 
     </div>
-
 </header>
 
 
 <main class="customer-page">
-
     <div class="container">
 
         <div class="customer-top">
-
-            <a
-                href="javascript:history.back()"
-                class="back-link"
-            >
+            <a href="javascript:history.back()" class="back-link">
                 ←
-                <span data-i18n="back">
-                    Back
-                </span>
+                <span data-i18n="back">Back</span>
             </a>
-
         </div>
 
 
         <div class="customer-header">
+            <span class="eyebrow">SOPRO</span>
 
-            <span class="eyebrow">
-                SECUREPRO
-            </span>
-
-            <h1 data-i18n="title">
-                Tell us about yourself
-            </h1>
+            <h1 data-i18n="title">Tell us about yourself</h1>
 
             <p data-i18n="description">
                 Provide your contact details so our team can
                 prepare your service request.
             </p>
-
         </div>
 
 
-        <form
-            id="customerForm"
-            class="customer-form"
-            novalidate
-        >
+        <form id="customerForm" class="customer-form" novalidate>
 
             <!-- CUSTOMER INFORMATION -->
-
             <section class="form-card">
 
                 <div class="form-card-header">
-
-                    <span class="form-number">
-                        01
-                    </span>
-
+                    <span class="form-number">01</span>
                     <div>
-
-                        <h2 data-i18n="contactTitle">
-                            Contact Information
-                        </h2>
-
-                        <p data-i18n="contactDescription">
-                            How can we contact you?
-                        </p>
-
+                        <h2 data-i18n="contactTitle">Contact Information</h2>
+                        <p data-i18n="contactDescription">How can we contact you?</p>
                     </div>
-
                 </div>
-
 
                 <div class="form-grid">
 
                     <div class="form-field full">
-
                         <label for="customerName">
-
-                            <span data-i18n="name">
-                                Full Name
-                            </span>
-
+                            <span data-i18n="name">Full Name</span>
                             <span class="required">*</span>
-
                         </label>
-
                         <input
                             id="customerName"
                             name="customer_name"
@@ -147,22 +85,13 @@
                             placeholder="Your full name"
                             required
                         >
-
                     </div>
 
-
                     <div class="form-field">
-
                         <label for="customerPhone">
-
-                            <span data-i18n="phone">
-                                Phone Number
-                            </span>
-
+                            <span data-i18n="phone">Phone Number</span>
                             <span class="required">*</span>
-
                         </label>
-
                         <input
                             id="customerPhone"
                             name="customer_phone"
@@ -171,24 +100,13 @@
                             placeholder="0123456789"
                             required
                         >
-
                     </div>
 
-
                     <div class="form-field">
-
                         <label for="customerEmail">
-
-                            <span data-i18n="email">
-                                Email Address
-                            </span>
-
-                            <span class="optional">
-                                Optional
-                            </span>
-
+                            <span data-i18n="email">Email Address</span>
+                            <span class="optional">Optional</span>
                         </label>
-
                         <input
                             id="customerEmail"
                             name="customer_email"
@@ -196,22 +114,13 @@
                             autocomplete="email"
                             placeholder="you@example.com"
                         >
-
                     </div>
 
-
                     <div class="form-field full">
-
                         <label for="customerAddress">
-
-                            <span data-i18n="address">
-                                Address
-                            </span>
-
+                            <span data-i18n="address">Address Link</span>
                             <span class="required">*</span>
-
                         </label>
-
                         <textarea
                             id="customerAddress"
                             name="customer_address"
@@ -219,7 +128,6 @@
                             placeholder="Your property / installation address"
                             required
                         ></textarea>
-
                     </div>
 
                 </div>
@@ -228,42 +136,20 @@
 
 
             <!-- PHOTO UPLOAD -->
-
             <section class="form-card">
 
                 <div class="form-card-header">
-
-                    <span class="form-number">
-                        02
-                    </span>
-
+                    <span class="form-number">02</span>
                     <div>
-
-                        <h2 data-i18n="photoTitle">
-                            Photos
-                        </h2>
-
-                        <p data-i18n="photoDescription">
-                            Upload photos of the installation area.
-                        </p>
-
+                        <h2 data-i18n="photoTitle">Photos</h2>
+                        <p data-i18n="photoDescription">Upload photos of the installation area.</p>
                     </div>
-
                 </div>
 
+                <label for="customerPhotos" class="photo-dropzone">
+                    <div class="upload-icon">+</div>
 
-                <label
-                    for="customerPhotos"
-                    class="photo-dropzone"
-                >
-
-                    <div class="upload-icon">
-                        +
-                    </div>
-
-                    <strong data-i18n="uploadTitle">
-                        Add Photos
-                    </strong>
+                    <strong data-i18n="uploadTitle">Add Photos</strong>
 
                     <span data-i18n="uploadDescription">
                         Click here to select photos from your device.
@@ -274,48 +160,31 @@
                     </small>
 
                     <input
-    id="customerPhotos"
-    name="customer_photos"
-    type="file"
-    accept="image/*"
-    multiple
->
-
+                        id="customerPhotos"
+                        name="customer_photos"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                    >
                 </label>
 
-
-                <div
-                    id="photoPreview"
-                    class="photo-preview"
-                ></div>
+                <div id="photoPreview" class="photo-preview"></div>
 
             </section>
 
 
             <!-- NOTES -->
-
             <section class="form-card">
 
                 <div class="form-card-header">
-
-                    <span class="form-number">
-                        03
-                    </span>
-
+                    <span class="form-number">03</span>
                     <div>
-
-                        <h2 data-i18n="notesTitle">
-                            Additional Notes
-                        </h2>
-
+                        <h2 data-i18n="notesTitle">Additional Notes</h2>
                         <p data-i18n="notesDescription">
                             Tell us anything else that may help our team.
                         </p>
-
                     </div>
-
                 </div>
-
 
                 <textarea
                     id="customerNotes"
@@ -328,124 +197,69 @@
             </section>
 
 
-            <div
-                id="formError"
-                class="form-error"
-                hidden
-            ></div>
+            <div id="formError" class="form-error" hidden></div>
 
 
-            <!-- =====================================================
-     REFERRAL REWARD
-===================================================== -->
+            <!-- REFERRAL REWARD -->
+            <section class="referral-section">
 
-<section class="referral-section">
+                <div class="referral-header">
+                    <div>
+                        <span class="referral-eyebrow">OPTIONAL</span>
 
-    <div class="referral-header">
+                        <h3>Referral Reward</h3>
 
-        <div>
-            <span class="referral-eyebrow">
-                OPTIONAL
-            </span>
+                        <p>
+                            Have a referral code from a SecurePro customer?
+                            Enter it below to claim the available reward.
+                        </p>
+                    </div>
+                </div>
 
-            <h3>
-                Referral Reward
-            </h3>
+                <div class="referral-form">
 
-            <p>
-                Have a referral code from a SecurePro customer?
-                Enter it below to claim the available reward.
-            </p>
-        </div>
+                    <label for="referralCode">Referral Code</label>
 
-    </div>
+                    <div class="referral-input-row">
+                        <input
+                            type="text"
+                            id="referralCode"
+                            name="referral_code"
+                            maxlength="50"
+                            placeholder="Enter referral code"
+                            autocomplete="off"
+                        >
 
+                        <button type="button" id="validateReferralButton"></button>
+                    </div>
 
-    <div class="referral-form">
+                    <p id="referralMessage" class="referral-message"></p>
 
-        <label for="referralCode">
-            Referral Code
-        </label>
+                </div>
 
+                <!-- Referral result -->
+                <div id="referralResult" class="referral-result" hidden>
+                    <div class="referral-result-icon">✓</div>
 
-        <div class="referral-input-row">
+                    <div class="referral-result-content">
+                        <strong id="referralResultTitle"></strong>
+                        <p id="referralResultDescription"></p>
+                    </div>
+                </div>
 
-            <input
-                type="text"
-                id="referralCode"
-                name="referral_code"
-                maxlength="50"
-                placeholder="Enter referral code"
-                autocomplete="off"
-            >
+            </section>
 
-            <button
-                type="button"
-                id="validateReferralButton"
-            ></button>
-
-        </div>
-
-
-        <p
-            id="referralMessage"
-            class="referral-message"
-        ></p>
-
-    </div>
-
-
-    <!-- Referral result -->
-
-    <div
-        id="referralResult"
-        class="referral-result"
-        hidden
-    >
-
-        <div class="referral-result-icon">
-            ✓
-        </div>
-
-
-        <div class="referral-result-content">
-
-            <strong id="referralResultTitle"></strong>
-
-            <p id="referralResultDescription"></p>
-
-        </div>
-
-    </div>
-
-</section>
 
             <div class="customer-navigation">
 
-                <button
-                    type="button"
-                    id="backButton"
-                    class="secondary-btn"
-                >
+                <button type="button" id="backButton" class="secondary-btn">
                     ←
-                    <span data-i18n="previous">
-                        Previous
-                    </span>
+                    <span data-i18n="previous">Previous</span>
                 </button>
 
-
-                <button
-                    type="submit"
-                    id="continueButton"
-                    class="primary-btn"
-                >
-
-                    <span data-i18n="continue">
-                        Review Request
-                    </span>
-
+                <button type="submit" id="continueButton" class="primary-btn">
+                    <span data-i18n="continue">Review Request</span>
                     →
-
                 </button>
 
             </div>
@@ -453,12 +267,10 @@
         </form>
 
     </div>
-
 </main>
 
 
 <script src="../js/customer.js"></script>
 
 </body>
-
 </html>

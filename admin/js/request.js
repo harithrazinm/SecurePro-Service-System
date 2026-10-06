@@ -8,15 +8,14 @@
    API CONFIGURATION
 ========================================================= */
 
-const IS_LOCAL = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const API_BASE =
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
+        ? "http://localhost:5001/api"
+        : "/api";
 
-const BACKEND_BASE = IS_LOCAL
-    ? "http://localhost:5001"
-    : "https://securepro-service-system.onrender.com";
-
-const API_BASE = `${BACKEND_BASE}/api`;
-
-
+        const BACKEND_BASE = "";
 /* =========================================================
    GLOBAL DATA
 ========================================================= */
@@ -172,7 +171,7 @@ function metaItem(label, value) {
 
 const REQUEST_STATUSES = [
     "pending", "assigned", "in_progress",
-    "waiting_parts", "awaiting_payment", "completed", "cancelled"
+    "waiting_parts", "awaiting_payment", "quotation_required", "completed", "cancelled"
 ];
 
 function formatStatus(status) {

@@ -1,150 +1,194 @@
 const API_BASE =
     /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
         ? "http://localhost:5001/api"
-        : "https://securepro-service-system.onrender.com/api";
+        : "/api";
 
 let currentLanguage = "ms";
 
 const translations = {
     en: {
-        navHome:"Home", navSolutions:"Solutions", navServices:"Services", navWhy:"Why Us", navContact:"Contact", navQuote:"Get a Quote", navGuide:"How to Create a Request",
-        heroKicker:"SMART SECURITY SOLUTIONS",
-        heroTitle:"Your safety.<br><span>Our priority.</span>",
-        heroDescription:"CCTV, access control, alarm, autogate and smart-system solutions for homes, businesses and professional premises.",
-        heroPrimary:"Explore Solutions", heroSecondary:"Request a Quote",
-        trustOne:"Quality Products", trustTwo:"Professional Installation", trustThree:"After-Sales Support",
-        heroBadgeTitle:"SECURE YOUR SPACE", heroBadgeText:"Smart security solutions",
-        statusTitle:"System Active", statusText:"Protection around the clock",
-        introLabel:"SONIC SYSTEM SOLUTION",
-        introTitle:"One place for all your security needs.",
-        introText:"From consultation and installation to maintenance and troubleshooting, SecurePro helps you manage your service needs more easily.",
-        solutionsLabel:"OUR SOLUTIONS", solutionsTitle:"Complete solutions for every space.",
-        solutionsText:"Choose the system you need and we will guide you through the request process.",
-        loadingServices:"Loading services...", unableToLoadServices:"Unable to load services.", questions:"questions",
-        processLabel:"OUR SERVICES", processTitle:"More than installation. We support you throughout the journey.",
-        processText:"Get support from initial consultation through post-installation service.",
-        processOne:"Product & service consultation", processTwo:"Professional installation", processThree:"Maintenance & wiring", processFour:"Troubleshooting & upgrade",
-        statExperience:"Years of experience", statProjects:"Projects completed", statSupport:"Commitment to quality", statProtection:"Solution support",
-        whyLabel:"WHY CHOOSE SONIC", whyTitle:"Technology that helps you feel safer.",
-        whyText:"We combine the right products, neat installation and after-sales support to create practical security solutions.",
-        whyButton:"Talk to us ↗",
-        whyOneTitle:"Quality Products", whyOneText:"Choose equipment that fits your project requirements and budget.",
-        whyTwoTitle:"Professional Team", whyTwoText:"Installation and configuration are handled carefully.",
-        whyThreeTitle:"After-Sales Support", whyThreeText:"Support for maintenance, troubleshooting and upgrades.",
-        whyFourTitle:"Site Visit", whyFourText:"Get assessment and recommendations based on the actual location.",
-        contactLabel:"LET'S SECURE YOUR PROPERTY", contactTitle:"Get your site visit and quotation.",
-        contactText:"Contact Sonic System Solution for product enquiries, services or installation requests.",
-        phoneLabel:"CONTACT US", contactButton:"Start Your Request →",
-        footerText:"Security and smart system solutions for homes and businesses.",
+        // ---- Navigation ----
+        navHome: "Home",
+        navGuide: "How to Create a Request",
+        navServices: "Service List",
+        navContact: "Contact Us",
+        navSolutions: "Solutions",
+        navWhy: "Why Us",
+        navQuote: "Get a Quote",
+
+        // ---- Why SOPro ----
+        whyLabel: "WHY SOPRO",
+        whyTitle: "Your requests,<br><span>better organized.</span>",
+        whyText: "The SOPro system helps our team manage every request more efficiently and give you better service.",
+        whyButton: "Create a Service Request →",
+        whyOneTitle: "Recorded in the system",
+        whyOneText: "All information is stored securely.",
+        whyTwoTitle: "Faster response",
+        whyTwoText: "The technical team receives complete information.",
+        whyThreeTitle: "More organized action",
+        whyThreeText: "Easy to follow up at every stage of work.",
+        whyFourTitle: "Service records available",
+        whyFourText: "Track all your data and service history.",
+
+        // ---- How it works ----
+        guideLabel: "HOW IT WORKS",
+        guideTitle: "Just <span>3 Easy Steps</span>",
+        guideText: "Submit your service request in just a few minutes.",
+        guideNote: "You can choose one service below to get started.",
+        statusTitle: "Request Status",
+        statusReceived: "Request Received",
+        statusAssigned: "Technician Assigned",
+        statusProgress: "Work In Progress",
+        statusCompleted: "Completed",
+        stepOneTitle: "Choose a Service",
+        stepOneText: "Select the service category you need.",
+        stepTwoTitle: "Provide Information",
+        stepTwoText: "Fill in the required information completely.",
+        stepThreeTitle: "Submit Request",
+        stepThreeText: "Your request will be recorded in our system.",
+
+        // ---- Services ----
+        servicesLabel: "OUR SERVICES",
+        servicesTitle: "Choose the Service You Need",
+        servicesText: "Submit a service request in just a few clicks.",
+        allServices: "View all services →",
+        loadingServices: "Loading services...",
+        unableToLoadServices: "Unable to load services.",
+        questions: "questions",
+
+        // ---- Help ----
+        helpLabel: "HELP & SUPPORT",
+        helpTitle: "Need Help?",
+        helpText: "Contact our team or create a service request now.",
+        whatsappButton: "Chat on WhatsApp →",
+
+        // ---- Info cards ----
+        hoursTitle: "Operating Hours",
+        hoursText: "9:00 AM - 6:00 PM<br>Sunday - Thursday<br>Saturday (by appointment)<br>Closed: Friday & Public Holidays",
+        questionsTitle: "Other Enquiries",
+        questionsText: "For quotations, enquiries or partnerships, please contact us by phone or WhatsApp.",
+
+        // ---- Footer ----
+        footerText: "Service Request Platform.",
+        footerSolutions: "Solutions",
+        footerServices: "Services",
+        footerContact: "Contact",
+        footerBottom: "Official SecurePro Service Platform",
+
+        // ---- Referral (used on service page) ----
         referralEyebrow: "OPTIONAL",
-
-referralTitle: "Referral Reward",
-
-referralDescription:
-    "Have a referral code from a SecurePro customer? Enter it below to claim the available reward.",
-
-referralCode: "Referral Code",
-
-referralPlaceholder: "Enter referral code",
-
-checkReferral: "Check Code",
-
-referralOptional:
-    "Referral code is optional.",
-
-checkingReferral:
-    "Checking...",
-
-referralVerified:
-    "Referral code verified successfully.",
-
-referralAccepted:
-    "Referral code accepted",
-
-invalidReferral:
-    "Invalid referral code.",
-
-referralUnavailable:
-    "Unable to check the referral code. Please try again.",
-
-referralOwnCode:
-    "You cannot use your own referral code.",
-
-        footerSolutions:"Solutions", footerServices:"Services", footerContact:"Contact", footerBottom:"Official SecurePro Service Platform"
+        referralTitle: "Referral Reward",
+        referralDescription: "Have a referral code from a SecurePro customer? Enter it below to claim the available reward.",
+        referralCode: "Referral Code",
+        referralPlaceholder: "Enter referral code",
+        checkReferral: "Check Code",
+        referralOptional: "Referral code is optional.",
+        checkingReferral: "Checking...",
+        referralVerified: "Referral code verified successfully.",
+        referralAccepted: "Referral code accepted",
+        invalidReferral: "Invalid referral code.",
+        referralUnavailable: "Unable to check the referral code. Please try again.",
+        referralOwnCode: "You cannot use your own referral code."
     },
+
     ms: {
-        navHome:"Utama", navSolutions:"Penyelesaian", navServices:"Servis", navWhy:"Kenapa Kami", navContact:"Hubungi", navQuote:"Dapatkan Sebut Harga", navGuide:"Cara Membuat Permintaan",
-        heroKicker:"PENYELESAIAN KESELAMATAN PINTAR",
-        heroTitle:"Keselamatan anda.<br><span>Keutamaan kami.</span>",
-        heroDescription:"Penyelesaian CCTV, akses kawalan, alarm, autogate dan sistem pintar untuk rumah, perniagaan dan premis profesional.",
-        heroPrimary:"Terokai Penyelesaian", heroSecondary:"Minta Sebut Harga",
-        trustOne:"Produk Berkualiti", trustTwo:"Pemasangan Profesional", trustThree:"Sokongan Selepas Jualan",
-        heroBadgeTitle:"SECURE YOUR SPACE", heroBadgeText:"Penyelesaian keselamatan pintar",
-        statusTitle:"Sistem Aktif", statusText:"Perlindungan sepanjang masa",
-        introLabel:"SONIC SYSTEM SOLUTION",
-        introTitle:"Satu tempat untuk semua keperluan keselamatan anda.",
-        introText:"Daripada konsultasi dan pemasangan sehingga penyelenggaraan dan troubleshooting, SecurePro membantu anda mengurus keperluan servis dengan lebih mudah.",
-        solutionsLabel:"OUR SOLUTIONS", solutionsTitle:"Penyelesaian lengkap untuk setiap ruang.",
-        solutionsText:"Pilih sistem yang diperlukan dan kami akan membimbing anda melalui proses permintaan.",
-        loadingServices:"Memuatkan servis...", unableToLoadServices:"Tidak dapat memuatkan servis.", questions:"soalan",
-        processLabel:"OUR SERVICES", processTitle:"Lebih daripada pemasangan. Kami sokong anda sepanjang perjalanan.",
-        processText:"Dapatkan bantuan daripada konsultasi awal sehingga servis selepas pemasangan.",
-        processOne:"Konsultasi produk & servis", processTwo:"Pemasangan profesional", processThree:"Penyelenggaraan & wiring", processFour:"Troubleshooting & upgrade",
-        statExperience:"Tahun pengalaman", statProjects:"Projek disiapkan", statSupport:"Komitmen kepada kualiti", statProtection:"Sokongan penyelesaian",
-        whyLabel:"WHY CHOOSE SONIC", whyTitle:"Teknologi yang membantu anda rasa lebih selamat.",
-        whyText:"Kami menggabungkan produk yang sesuai, pemasangan kemas dan sokongan selepas jualan untuk menghasilkan penyelesaian yang praktikal.",
-        whyButton:"Bercakap dengan kami ↗",
-        whyOneTitle:"Produk Berkualiti", whyOneText:"Pilih peralatan yang sesuai dengan keperluan dan bajet projek.",
-        whyTwoTitle:"Pasukan Profesional", whyTwoText:"Pemasangan dan konfigurasi dilaksanakan dengan teliti.",
-        whyThreeTitle:"Sokongan Selepas Jualan", whyThreeText:"Bantuan untuk penyelenggaraan, troubleshooting dan upgrade.",
-        whyFourTitle:"Site Visit", whyFourText:"Dapatkan penilaian dan cadangan berdasarkan lokasi sebenar.",
-        contactLabel:"LET'S SECURE YOUR PROPERTY", contactTitle:"Dapatkan site visit dan sebut harga anda.",
-        contactText:"Hubungi Sonic System Solution untuk pertanyaan produk, servis atau permintaan pemasangan.",
-        phoneLabel:"HUBUNGI KAMI", contactButton:"Mula Permintaan →",
-        footerText:"Penyelesaian keselamatan dan sistem pintar untuk rumah dan perniagaan.",
+        // ---- Navigation ----
+        navHome: "Utama",
+        navGuide: "Cara Membuat Permintaan",
+        navServices: "Senarai Servis",
+        navContact: "Hubungi Kami",
+        navSolutions: "Penyelesaian",
+        navWhy: "Kenapa Kami",
+        navQuote: "Dapatkan Sebut Harga",
+
+        // ---- Why SOPro ----
+        whyLabel: "KENAPA SOPRO",
+        whyTitle: "Permintaan anda,<br><span>lebih teratur.</span>",
+        whyText: "Sistem SOPro membantu pasukan kami menguruskan setiap permintaan dengan lebih cekap dan memberikan perkhidmatan yang lebih baik kepada anda.",
+        whyButton: "Buat Permintaan Servis →",
+        whyOneTitle: "Direkod dalam sistem",
+        whyOneText: "Semua maklumat disimpan dengan selamat.",
+        whyTwoTitle: "Respons lebih cepat",
+        whyTwoText: "Pasukan teknikal menerima maklumat lengkap.",
+        whyThreeTitle: "Tindakan lebih teratur",
+        whyThreeText: "Mudah untuk disusuli dengan setiap peringkat kerja.",
+        whyFourTitle: "Rekod servis tersedia",
+        whyFourText: "Jejak semua data dan sejarah servis anda.",
+
+        // ---- How it works ----
+        guideLabel: "CARA BERFUNGSI",
+        guideTitle: "Hanya <span>3 Langkah</span> Mudah",
+        guideText: "Hantar permintaan servis anda dalam beberapa minit sahaja.",
+        guideNote: "Anda boleh pilih satu servis di bawah untuk bermula.",
+        statusTitle: "Status Permintaan",
+        statusReceived: "Permintaan Diterima",
+        statusAssigned: "Juruteknik Ditugaskan",
+        statusProgress: "Kerja Sedang Dijalankan",
+        statusCompleted: "Selesai",
+        stepOneTitle: "Pilih Servis",
+        stepOneText: "Pilih kategori servis yang anda perlukan.",
+        stepTwoTitle: "Berikan Maklumat",
+        stepTwoText: "Isi maklumat yang diperlukan dengan lengkap.",
+        stepThreeTitle: "Hantar Permintaan",
+        stepThreeText: "Permintaan anda akan direkodkan dalam sistem kami.",
+
+        // ---- Services ----
+        servicesLabel: "PERKHIDMATAN KAMI",
+        servicesTitle: "Pilih Servis Yang Anda Perlukan",
+        servicesText: "Hantar permintaan servis dengan beberapa klik sahaja.",
+        allServices: "Lihat semua servis →",
+        loadingServices: "Memuatkan servis...",
+        unableToLoadServices: "Tidak dapat memuatkan servis.",
+        questions: "soalan",
+
+        // ---- Help ----
+        helpLabel: "BANTUAN & SOKONGAN",
+        helpTitle: "Perlukan Bantuan?",
+        helpText: "Hubungi pasukan kami atau buat permintaan servis sekarang.",
+        whatsappButton: "Chat di WhatsApp →",
+
+        // ---- Info cards ----
+        hoursTitle: "Waktu Operasi",
+        hoursText: "9:00 pagi - 6:00 petang<br>Ahad - Khamis<br>Selasa (by appointment)<br>Cuti: Jumaat & Cuti Umum",
+        questionsTitle: "Lain-lain Pertanyaan",
+        questionsText: "Untuk sebut harga, pertanyaan atau kerjasama, sila hubungi kami melalui telefon atau WhatsApp.",
+
+        // ---- Footer ----
+        footerText: "Platform Permintaan Servis.",
+        footerSolutions: "Penyelesaian",
+        footerServices: "Servis",
+        footerContact: "Hubungi",
+        footerBottom: "Platform Servis Rasmi SecurePro",
+
+        // ---- Referral (used on service page) ----
         referralEyebrow: "PILIHAN",
-
-referralTitle: "Ganjaran Rujukan",
-
-referralDescription:
-    "Mempunyai kod rujukan daripada pelanggan SecurePro? Masukkan kod di bawah untuk mendapatkan ganjaran yang tersedia.",
-
-referralCode: "Kod Rujukan",
-
-referralPlaceholder: "Masukkan kod rujukan",
-
-checkReferral: "Semak Kod",
-
-referralOptional:
-    "Kod rujukan adalah pilihan.",
-
-checkingReferral:
-    "Menyemak...",
-
-referralVerified:
-    "Kod rujukan berjaya disahkan.",
-
-referralAccepted:
-    "Kod rujukan diterima",
-
-invalidReferral:
-    "Kod rujukan tidak sah.",
-
-referralUnavailable:
-    "Tidak dapat menyemak kod rujukan. Sila cuba lagi.",
-
-referralOwnCode:
-    "Anda tidak boleh menggunakan kod rujukan sendiri.",
-        footerSolutions:"Penyelesaian", footerServices:"Servis", footerContact:"Hubungi", footerBottom:"Platform Servis Rasmi SecurePro"
+        referralTitle: "Ganjaran Rujukan",
+        referralDescription: "Mempunyai kod rujukan daripada pelanggan SecurePro? Masukkan kod di bawah untuk mendapatkan ganjaran yang tersedia.",
+        referralCode: "Kod Rujukan",
+        referralPlaceholder: "Masukkan kod rujukan",
+        checkReferral: "Semak Kod",
+        referralOptional: "Kod rujukan adalah pilihan.",
+        checkingReferral: "Menyemak...",
+        referralVerified: "Kod rujukan berjaya disahkan.",
+        referralAccepted: "Kod rujukan diterima",
+        invalidReferral: "Kod rujukan tidak sah.",
+        referralUnavailable: "Tidak dapat menyemak kod rujukan. Sila cuba lagi.",
+        referralOwnCode: "Anda tidak boleh menggunakan kod rujukan sendiri."
     }
 };
 
 function applyLanguage() {
     document.documentElement.lang = currentLanguage;
+
     document.querySelectorAll("[data-i18n]").forEach(element => {
         const key = element.dataset.i18n;
         const translation = translations[currentLanguage][key];
-        if (translation) element.innerHTML = translation;
+
+        if (translation) {
+            element.innerHTML = translation;
+        } else {
+            console.warn(`Missing translation: "${key}" for "${currentLanguage}"`);
+        }
     });
 
     const button = document.querySelector("#languageToggle");
@@ -160,21 +204,21 @@ async function loadServices() {
     if (!grid) return;
 
     const serviceImages = {
-        cctv:"assets/cctvt.png",
-        troubleshoot_repair:"assets/tnr.jpg",
-        autogate:"assets/autogatet.png",
-        alarm:"assets/alarmt.jpeg",
-        barriergate:"assets/barriert.png",
-        solar_cctv:"assets/solarcctvt.jpg",
-        attendance:"assets/timet.jpeg",
-        access:"assets/doort.jpeg",
-        pabx:"assets/pabxt.jpeg",
-        solar_pump:"assets/solarpt.jpeg"
-       
+        cctv: "assets/cctvt.png",
+        troubleshoot_repair: "assets/tnr.jpg",
+        autogate: "assets/autogatet.png",
+        alarm: "assets/alarmt.jpeg",
+        barriergate: "assets/barriert.png",
+        solar_cctv: "assets/solarcctvt.jpg",
+        attendance: "assets/timet.jpeg",
+        access: "assets/doort.jpeg",
+        pabx: "assets/pabxt.jpeg",
+        solar_pump: "assets/solarpt.jpeg"
     };
 
     try {
         grid.innerHTML = `<div class="loading">${escapeHtml(translations[currentLanguage].loadingServices)}</div>`;
+
         const response = await fetch(`${API_BASE}/services`);
         if (!response.ok) throw new Error(translations[currentLanguage].unableToLoadServices);
 
@@ -226,11 +270,11 @@ async function loadServices() {
 
 function escapeHtml(value) {
     return String(value ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 document.addEventListener("DOMContentLoaded", () => {

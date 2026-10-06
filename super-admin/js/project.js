@@ -34,7 +34,7 @@ const API_BASE =
 
         ? "http://localhost:5001/api"
 
-        : "https://securepro-service-system.onrender.com/api";
+        : "/api";
 
 
 const TOKEN_KEY =

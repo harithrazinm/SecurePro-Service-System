@@ -6,8 +6,13 @@
 // const API_BASE = "http://localhost:5001/api";
 
 // Production API
-const API_BASE = "https://securepro-service-system.onrender.com/api";
-
+const API_BASE =
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
+        ? "http://localhost:5001/api"
+        : "/api";
+        
 const TOKEN_KEY = "securepro_super_admin_token";
 const USER_KEY = "securepro_super_admin_user";
 

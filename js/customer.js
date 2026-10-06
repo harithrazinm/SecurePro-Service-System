@@ -2,11 +2,12 @@ const IS_LOCAL = ["localhost", "127.0.0.1"].includes(
     window.location.hostname
 );
 
-const BACKEND_BASE = IS_LOCAL
-    ? "http://localhost:5001"
-    : "https://securepro-service-system.onrender.com";
-
-const API_BASE = `${BACKEND_BASE}/api`;
+const API_BASE =
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
+        ? "http://localhost:5001/api"
+        : "/api";
 
 const currentLanguage =
     localStorage.getItem("securepro_language") || "ms";

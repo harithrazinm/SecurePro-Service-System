@@ -193,7 +193,9 @@ async function createQuotation(req, res) {
                 SELECT
                     id,
                     request_code,
-                    customer_name
+                    customer_name,
+                    service_id,
+                    status
                 FROM service_requests
                 WHERE id = ?
                 LIMIT 1
@@ -214,6 +216,82 @@ async function createQuotation(req, res) {
                     "Service request not found."
 
             });
+
+        }
+
+
+        const request =
+            requests[0];
+
+
+        /* ================================================
+           TROUBLESHOOTING & REPAIR GATE
+
+           This service is technician-first. Admin may only
+           create its quotation after the technician's final
+           inspection report has been approved.
+        ================================================= */
+
+        const [serviceRows] =
+            await connection.query(
+                `
+                SELECT service_code
+                FROM services
+                WHERE id = ?
+                LIMIT 1
+                `,
+                [request.service_id]
+            );
+
+
+        const serviceCode =
+            serviceRows[0]?.service_code ||
+            null;
+
+
+        if (serviceCode === 'troubleshoot_repair') {
+
+            if (request.status !== 'quotation_required') {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Troubleshooting & Repair does not require a quotation. After the technician final report is approved, upload the final invoice instead."
+
+                });
+
+            }
+
+
+            const [approvedReports] =
+                await connection.query(
+                    `
+                    SELECT id
+                    FROM service_reports
+                    WHERE request_id = ?
+                      AND report_type = 'final'
+                      AND status = 'approved'
+                    ORDER BY reviewed_at DESC, created_at DESC
+                    LIMIT 1
+                    `,
+                    [requestId]
+                );
+
+
+            if (!approvedReports.length) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "The technician inspection report must be approved before creating a Troubleshooting & Repair quotation."
+
+                });
+
+            }
 
         }
 
@@ -1188,27 +1266,35 @@ LIMIT 1
 
 
         /*
-         * Payment proof moves an unassigned
-         * request into Job Pending.
+         * Payment proof completes the quotation/payment gate.
+         *
+         * Troubleshooting & Repair is different from normal services:
+         * the technician was assigned earlier for the inspection. After
+         * the customer pays, keep that assignment and return the request
+         * to `assigned` so the technician can continue the actual repair.
+         * Do NOT move it directly to `in_progress`; the technician still
+         * has to explicitly start the job.
+         *
+         * Normal services keep the existing behaviour: an unassigned
+         * request becomes Job Pending (`pending`).
          */
         await connection.query(
             `
-            UPDATE service_requests
-
+            UPDATE service_requests sr
+            INNER JOIN services s ON s.id = sr.service_id
             SET
-
-                status = 'pending',
-
-                updated_at = NOW()
-
-            WHERE id = ?
-
-              AND technician_id IS NULL
-
+                sr.status = CASE
+                    WHEN s.service_code = 'troubleshoot_repair'
+                         AND sr.technician_id IS NOT NULL
+                    THEN 'assigned'
+                    WHEN sr.technician_id IS NULL
+                    THEN 'pending'
+                    ELSE sr.status
+                END,
+                sr.updated_at = NOW()
+            WHERE sr.id = ?
             `,
-            [
-                requestId
-            ]
+            [requestId]
         );
 
 
@@ -1220,7 +1306,7 @@ LIMIT 1
             success: true,
 
             message:
-                "Payment proof uploaded. The job is now ready for technician assignment.",
+                "Payment proof uploaded successfully. The job can now continue.",
 
             data: {
 

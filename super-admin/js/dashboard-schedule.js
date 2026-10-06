@@ -8,10 +8,12 @@
 
 (function () {
 
-    const API =
-        /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
-            ? "http://localhost:5001/api"
-            : "https://securepro-service-system.onrender.com/api";
+   const API =
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
+        ? "http://localhost:5001/api"
+        : "/api";
 
     const q = selector => document.querySelector(selector);
 

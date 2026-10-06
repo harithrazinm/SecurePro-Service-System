@@ -1,4 +1,9 @@
-const API_BASE = "https://securepro-service-system.onrender.com/api";
+const API_BASE =
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
+        ? "http://localhost:5001/api"
+        : "/api";
 
 //const API_BASE = "http://localhost:5001/api";
 const form = document.querySelector("#loginForm");

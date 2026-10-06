@@ -24,12 +24,11 @@
 ====================================================== */
 
 const API_BASE =
-    /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
-
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
         ? "http://localhost:5001/api"
-
-        : "https://securepro-service-system.onrender.com/api";
-
+        : "/api";
 
 const TOKEN_KEY =
     "securepro_super_admin_token";

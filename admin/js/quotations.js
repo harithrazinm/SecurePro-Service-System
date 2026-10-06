@@ -3,11 +3,11 @@
 ========================================================= */
 
 const API_BASE =
-    ["localhost", "127.0.0.1"]
-        .includes(window.location.hostname)
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
         ? "http://localhost:5001/api"
-        : "https://securepro-service-system.onrender.com/api";
-
+        : "/api";
 
 /* =========================================================
    AUTH
@@ -1235,14 +1235,61 @@ function getRequestCustomerName(request) {
 }
 
 function getRequestServiceName(request) {
-    return (
-        request?.service_name ||
-        request?.service?.name ||
-        request?.service?.title ||
-        request?.service_type ||
-        request?.serviceType ||
-        "Service request"
-    );
+
+    /*
+     * Current /api/admin/requests response:
+     *
+     * service: {
+     *     code: "cctv",
+     *     name: {
+     *         en: "CCTV System",
+     *         ms: "Sistem CCTV"
+     *     }
+     * }
+     */
+
+    const service =
+        request?.service;
+
+    if (service?.name) {
+
+        if (typeof service.name === "string") {
+            return service.name;
+        }
+
+        if (typeof service.name === "object") {
+
+            return (
+                service.name.en ||
+                service.name.ms ||
+                "Service request"
+            );
+        }
+    }
+
+    /*
+     * Fallbacks for older API formats
+     */
+
+    if (
+        typeof request?.service_name === "string"
+    ) {
+        return request.service_name;
+    }
+
+    if (
+        typeof request?.service_type === "string"
+    ) {
+        return request.service_type;
+    }
+
+    if (
+        typeof request?.serviceType === "string"
+    ) {
+        return request.serviceType;
+    }
+
+    return "Service request";
 }
 
 function getRequestSubmittedDate(request) {
@@ -1265,8 +1312,28 @@ function renderQuotationJobQueue() {
     );
 
     const jobs = serviceRequests.filter(request => {
-        return request?.id &&
-            !existingRequestIds.has(request.id);
+
+        if (!request?.id || existingRequestIds.has(request.id)) {
+            return false;
+        }
+
+        const serviceCode =
+            request?.service?.code ||
+            request?.service_code ||
+            request?.service_type ||
+            null;
+
+        /*
+         * Troubleshooting & Repair skips quotation completely.
+         * After Admin approves the technician final report, it moves
+         * directly to awaiting_payment for final invoice upload.
+         */
+        if (serviceCode === "troubleshoot_repair") {
+            return false;
+        }
+
+        /* All other services keep the existing queue behaviour. */
+        return true;
     });
 
     if (quotationJobCount) {
@@ -1320,6 +1387,17 @@ function renderQuotationJobQueue() {
                 getRequestSubmittedDate(request)
             );
 
+        const serviceCode =
+            request?.service?.code ||
+            request?.service_code ||
+            request?.service_type ||
+            null;
+
+        const readiness =
+            serviceCode === "troubleshoot_repair"
+                ? "Inspection approved — quotation can be prepared"
+                : null;
+
         return `
             <article class="quotation-job-item">
 
@@ -1342,6 +1420,12 @@ function renderQuotationJobQueue() {
                         <span>
                             Submitted: ${escapeHtml(submitted)}
                         </span>
+
+                        ${
+                            readiness
+                                ? `<span>${escapeHtml(readiness)}</span>`
+                                : ""
+                        }
 
                     </div>
 
@@ -2327,19 +2411,14 @@ async function sendFollowUp(
         }
 
 
-        const customer =
-            quotation.customer_name ||
-            "Pelanggan";
+        const customer = quotation.customer_name || "Pelanggan";
 
+const message =
+  number === 1
+    ? `Hi ${customer}, nak follow up sikit berkenaan quotation yang saya hantar sebelum ni. Dah sempat tengok ke? Kalau ada apa-apa yang nak ditanya atau nak kami explain lebih lanjut, boleh terus bagitahu ya. Terima kasih!`
+    : `Hi ${customer}, saya nak follow up sekali lagi berkenaan quotation untuk ${quotation.service_name || "perkhidmatan kami"}. Kalau masih berminat untuk proceed, boleh maklumkan kepada saya ya. Nanti kami bantu uruskan langkah seterusnya. Terima kasih kerana memilih Sonic System Solutions.`;
 
-        const message =
-            number === 1
-
-                ? `Hi ${customer}, kami ingin membuat susulan mengenai harga yang kami hantar sebelum ini. Adakah anda sudah berkesempatan untuk menyemaknya? Sila maklumkan jika anda mempunyai sebarang pertanyaan atau memerlukan penjelasan. Terima kasih!`
-
-                : `Hi ${customer}, kami ingin membuat susulan sekali lagi mengenai harga anda untuk ${quotation.service_name || "perkhidmatan kami"}. Jika anda berminat untuk meneruskan, sila maklumkan kepada kami dan kami boleh mengatur langkah seterusnya. Terima kasih kerana memilih SecurePro System Solutions.`;
-
-
+    
         window.open(
             `https://wa.me/${phone}?text=${encodeURIComponent(
                 message

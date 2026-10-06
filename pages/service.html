@@ -2,184 +2,88 @@
 <html lang="ms">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOPro | Service Selection</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <title>SecurePro | Service Selection</title>
-
-    <link
-        rel="stylesheet"
-        href="../css/style.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="../css/service.css"
-    >
-
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/service.css">
 </head>
 
 <body>
 
 <header class="site-header">
-
     <div class="container navbar">
 
-        <a href="../index.html" class="brand">
-
-            <span class="brand-mark">
-                S
-            </span>
-
-            <span>
-                <strong>SECUREPRO</strong>
-                <small>by Sonic System Solutions</small>
-            </span>
-
+        <a href="../index.html" class="brand" aria-label="SOPro SecureOnePro">
+            <img src="../assets/sopro-logo.png" alt="SOPro SecureOnePro" class="brand-logo">
         </a>
 
-        <div class="nav-actions">
-
-            <button
-                id="languageToggle"
-                class="language-btn"
-                type="button"
-            >
+        <div class="nav-actions" style="margin-left:auto">
+            <button id="languageToggle" class="language-btn" type="button">
                 🌐 English
             </button>
-
         </div>
 
     </div>
-
 </header>
 
 
 <main class="question-page">
-
     <div class="container">
 
         <!-- TOP -->
-
         <div class="question-top">
-
-            <a
-                href="../index.html"
-                class="back-link"
-            >
+            <a href="../index.html" class="back-link">
                 ←
-                <span data-i18n="back">
-                    Back to services
-                </span>
+                <span data-i18n="back">Back to services</span>
             </a>
-
         </div>
-
 
         <!-- SERVICE HEADER -->
-
         <section class="question-header">
-
-            <span
-                class="eyebrow"
-                id="serviceEyebrow"
-            >
-                SECUREPRO
-            </span>
-
-            <h1 id="serviceTitle">
-                Loading...
-            </h1>
-
-            <p id="serviceDescription">
-                Please wait while we load the questions.
-            </p>
-
+            <span class="eyebrow" id="serviceEyebrow">SOPRO</span>
+            <h1 id="serviceTitle">Loading...</h1>
+            <p id="serviceDescription">Please wait while we load the questions.</p>
         </section>
-
 
         <!-- PROGRESS -->
-
         <div class="progress-area">
-
             <div class="progress-info">
-
-                <span id="progressText">
-                    Question 1 of 1
-                </span>
-
-                <span id="progressPercent">
-                    0%
-                </span>
-
+                <span id="progressText">Question 1 of 1</span>
+                <span id="progressPercent">0%</span>
             </div>
-
             <div class="progress-track">
-
-                <div
-                    id="progressBar"
-                    class="progress-bar"
-                ></div>
-
+                <div id="progressBar" class="progress-bar"></div>
             </div>
-
         </div>
 
-
         <!-- QUESTION -->
-
-        <section
-            id="questionContainer"
-            class="question-container"
-        >
-
-            <div class="question-loading">
-                Loading questions...
-            </div>
-
+        <section id="questionContainer" class="question-container">
+            <div class="question-loading">Loading questions...</div>
         </section>
 
-
         <!-- NAVIGATION -->
-
         <div class="question-navigation">
-
-            <button
-                id="previousButton"
-                class="secondary-btn"
-                type="button"
-            >
+            <button id="previousButton" class="secondary-btn" type="button">
                 ←
-                <span data-i18n="previous">
-                    Previous
-                </span>
+                <span data-i18n="previous">Previous</span>
             </button>
 
-            <button
-                id="nextButton"
-                class="primary-btn"
-                type="button"
-            >
-                <span data-i18n="next">
-                    Next
-                </span>
+            <button id="nextButton" class="primary-btn" type="button">
+                <span data-i18n="next">Next</span>
                 →
             </button>
-
         </div>
 
     </div>
-
 </main>
-
 
 <script src="../js/service.js"></script>
 
 </body>
-
 </html>
