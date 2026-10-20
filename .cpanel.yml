@@ -2,9 +2,10 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/sonicxco/securepro
-    - /bin/cp -R admin assets css js pages super-admin technician "$DEPLOYPATH/"
-    - /bin/cp index.html "$DEPLOYPATH/"
-    - /bin/cp -R backend/config backend/controllers backend/middleware backend/routes "$DEPLOYPATH/backend/"
-    - /bin/cp backend/server.js backend/package.json backend/package-lock.json "$DEPLOYPATH/backend/"
-    - /bin/cp backend/data/services.js "$DEPLOYPATH/backend/data/"
+    - export FRONTENDPATH=/home/sonicxco/public_html/sopro.my
+    - export APPPATH=/home/sonicxco/securepro
+    - /bin/cp -R admin assets css js pages super-admin technician "$FRONTENDPATH/"
+    - /bin/cp index.html "$FRONTENDPATH/"
+    - /bin/cp -R backend/config backend/controllers backend/middleware backend/routes "$APPPATH/backend/"
+    - /bin/cp backend/server.js backend/package.json backend/package-lock.json "$APPPATH/backend/"
+    - /bin/cp backend/data/services.js "$APPPATH/backend/data/"
