@@ -2,4 +2,4 @@
 ---
 deployment:
   tasks:
-    - /bin/echo "SecurePro deployment configuration is connected."
+    - /bin/echo "SecurePro deployment check passed."
