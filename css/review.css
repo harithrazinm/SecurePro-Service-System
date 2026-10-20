@@ -1244,3 +1244,169 @@
     }
 
 }
+
+/* =========================================================
+   COMPACT LAYOUT OVERRIDES — REVIEW PAGE
+   Reduce oversized headings, cards, and vertical whitespace.
+   ========================================================= */
+.review-page { padding: 28px 0 56px; }
+.review-page > .container { max-width: 900px; }
+.review-top { margin-bottom: 20px; }
+.review-header { max-width: 700px; margin-bottom: 22px; }
+.review-header h1 { font-size: clamp(30px, 3.8vw, 42px); line-height: 1.1; margin-bottom: 8px; }
+.review-header p { font-size: 14px; line-height: 1.55; }
+.review-header .eyebrow { margin-bottom: 9px; }
+.review-card { max-width: 800px; padding: 21px; margin-bottom: 12px; border-radius: 16px; }
+.review-card-heading { gap: 11px; padding-bottom: 14px; margin-bottom: 14px; }
+.review-number { width: 34px; height: 34px; flex-basis: 34px; border-radius: 9px; }
+.review-card-heading h2 { font-size: 17px; }
+.review-card-heading p { font-size: 12px; }
+#serviceName { min-height: 34px; padding: 7px 11px; font-size: 13px; }
+.answers-list { gap: 7px; }
+.answer-row { padding: 11px 13px; border-radius: 10px; }
+.answer-question { font-size: 9px; margin-bottom: 4px; }
+.answer-value, .customer-value { font-size: 13px; line-height: 1.5; }
+.customer-review-grid { gap: 8px; }
+.customer-review-item { padding: 12px 13px; border-radius: 10px; }
+.customer-label { font-size: 9px; margin-bottom: 4px; }
+.review-photos { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.review-photos:empty::after { padding: 18px; }
+.referral-review-content { gap: 8px; }
+.referral-review-item { padding: 12px; }
+.review-actions { max-width: 800px; margin-top: 18px; }
+.review-actions button { min-height: 44px; padding: 0 17px; border-radius: 10px; font-size: 13px; }
+.review-actions .secondary-btn { min-width: 160px; }
+.review-actions .primary-btn { min-width: 175px; }
+.privacy-note { margin-top: 12px; font-size: 10px; }
+@media (max-width: 850px) {
+  .review-photos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 650px) {
+  .review-page { padding: 20px 0 74px; }
+  .review-top { margin-bottom: 16px; }
+  .review-header { margin-bottom: 18px; }
+  .review-header h1 { font-size: 28px; }
+  .review-header p { font-size: 13px; }
+  .review-card { padding: 16px; margin-bottom: 10px; border-radius: 14px; }
+  .review-card-heading { gap: 9px; padding-bottom: 12px; margin-bottom: 12px; }
+  .review-number { width: 30px; height: 30px; flex-basis: 30px; }
+  .review-card-heading h2 { font-size: 16px; }
+  .review-card-heading p { font-size: 11px; }
+  .answer-row { padding: 10px 11px; }
+  .answer-value, .customer-value { font-size: 12px; }
+  .customer-review-item { padding: 10px 11px; }
+  .review-photos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  .review-actions { margin-top: 14px; gap: 7px; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .review-actions button, .review-actions .secondary-btn, .review-actions .primary-btn { min-height: 42px; font-size: 12px; }
+}
+
+
+
+/* Data presentation refinements: make collected answers readable at a glance. */
+.answers-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.answer-row {
+    min-width: 0;
+    min-height: 98px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 17px 18px;
+    border: 1px solid #dce6f5;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #f8faff 0%, #ffffff 82%);
+    box-shadow: 0 3px 9px rgba(21, 46, 89, .035);
+}
+
+.answer-question {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 10px;
+    color: #5e7392;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .075em;
+    line-height: 1.45;
+}
+
+.answer-question::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+    border-radius: 50%;
+    background: #3475f6;
+    box-shadow: 0 0 0 4px #eaf1ff;
+}
+
+.answer-value {
+    color: #18243a;
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.customer-review-grid {
+    gap: 12px;
+}
+
+.customer-review-item {
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #f8faff, #ffffff 85%);
+    border-color: #dce6f5;
+}
+
+.customer-label {
+    color: #5e7392;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .075em;
+}
+
+.customer-value {
+    color: #18243a;
+    font-size: 14px;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.review-photos {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 850px) {
+    .answers-list,
+    .customer-review-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+    .answers-list,
+    .customer-review-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .answer-row,
+    .customer-review-item {
+        min-height: 0;
+        padding: 13px 14px;
+    }
+
+    .answer-value {
+        font-size: 14px;
+    }
+
+    .review-photos {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}

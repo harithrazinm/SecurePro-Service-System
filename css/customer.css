@@ -1464,3 +1464,125 @@
     }
 
 }
+/* =========================================================
+   PREMISE LOCATION
+========================================================= */
+.location-field {
+    position: relative;
+}
+
+.location-actions {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.location-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 11px 16px;
+    border: 1px solid #dbe3ef;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #1d4ed8;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.location-button:hover:not(:disabled) {
+    border-color: #2563eb;
+    background: #eff6ff;
+    transform: translateY(-1px);
+}
+
+.location-button:disabled {
+    opacity: .65;
+    cursor: wait;
+}
+
+.location-button-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.location-status {
+    min-height: 20px;
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.location-status.success {
+    color: #15803d;
+}
+
+.location-status.error {
+    color: #dc2626;
+}
+
+.field-help {
+    display: block;
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   COMPACT LAYOUT OVERRIDES — CUSTOMER PAGE
+   Reduce oversized spacing and controls without changing IDs.
+   ========================================================= */
+.customer-page { padding: 28px 0 54px; }
+.customer-page > .container { max-width: 900px; }
+.customer-top { margin-bottom: 20px; }
+.customer-header { max-width: 700px; margin-bottom: 24px; }
+.customer-header h1 { font-size: clamp(30px, 3.8vw, 42px); line-height: 1.1; margin-bottom: 9px; }
+.customer-header p { font-size: 15px; line-height: 1.5; }
+.customer-header .eyebrow { margin-bottom: 10px; }
+.customer-form { max-width: 760px; }
+.form-card { padding: 22px; margin-bottom: 14px; border-radius: 16px; }
+.form-card-header { gap: 12px; margin-bottom: 19px; }
+.form-number { width: 34px; height: 34px; border-radius: 9px; }
+.form-card-header h2 { font-size: 19px; }
+.form-card-header p { font-size: 12px; }
+.form-grid { gap: 15px; }
+.form-field { gap: 6px; }
+.form-field label, .referral-form label { font-size: 13px; }
+.form-field input, .form-field textarea, .large-textarea { padding: 11px 12px; font-size: 14px; border-radius: 9px; }
+.form-field textarea { min-height: 86px; }
+.photo-dropzone { min-height: 145px; padding: 20px; border-radius: 13px; }
+.upload-icon { width: 40px; height: 40px; font-size: 23px; }
+.photo-dropzone strong { font-size: 14px; }
+.photo-preview { gap: 8px; margin-top: 10px; }
+.large-textarea { min-height: 100px; }
+.referral-section { margin-top: 18px; padding: 19px; border-radius: 14px; }
+.referral-header { margin-bottom: 13px; }
+.referral-header h3 { font-size: 18px; }
+.referral-header p { font-size: 13px; }
+.referral-input-row input { height: 42px; font-size: 13px; }
+#validateReferralButton { min-width: 118px; height: 43px; font-size: 13px; }
+.customer-navigation { gap: 12px; }
+.customer-navigation .primary-btn, .customer-navigation .secondary-btn { min-height: 44px; padding: 0 18px; border-radius: 10px; font-size: 13px; }
+.location-button { min-height: 40px; padding: 9px 13px; font-size: 13px; border-radius: 10px; }
+.location-status, .field-help { font-size: 11px; }
+@media (max-width: 650px) {
+  .customer-page { padding: 22px 0 44px; }
+  .customer-header { margin-bottom: 18px; }
+  .customer-header h1 { font-size: 28px; }
+  .customer-header p { font-size: 13px; }
+  .form-card { padding: 16px; margin-bottom: 12px; }
+  .form-card-header { margin-bottom: 14px; }
+  .form-card-header h2 { font-size: 17px; }
+  .form-grid { gap: 12px; }
+  .form-field input, .form-field textarea, .large-textarea { padding: 11px 12px; }
+  .photo-dropzone { min-height: 130px; padding: 17px 12px; }
+  .referral-section { margin-top: 12px; padding: 15px; }
+  .customer-navigation { margin: 0 -12px; padding: 9px 12px calc(9px + env(safe-area-inset-bottom)); gap: 7px; }
+  .customer-navigation .primary-btn, .customer-navigation .secondary-btn { min-height: 42px; padding: 8px 9px; font-size: 12px; }
+}

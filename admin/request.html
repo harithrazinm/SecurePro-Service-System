@@ -8,7 +8,7 @@
     <title>Job Details - SecurePro Admin</title>
 
     <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/request.css?v=20260921-2">
+    <link rel="stylesheet" href="css/request.css?v=20261019-4">
 </head>
 
 <body>
@@ -801,7 +801,40 @@
 
 
                     <!-- =================================================
-                         07 FINAL INVOICE & PAYMENT
+                         ORIGINAL QUOTATION HISTORY
+                    ================================================== -->
+
+                    <section class="detail-card">
+                        <div class="section-header">
+                            <div>
+                                <span class="section-number">07</span>
+                                <div>
+                                    <h2 class="section-title">Original Quotation</h2>
+                                    <p class="section-description">
+                                        Upload a quotation at any workflow stage. Each upload is saved as a separate history record and does not change the request status or technician progress.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="quotationHistory" class="invoice-history">
+                            <div class="empty-state">Loading quotation history...</div>
+                        </div>
+
+                        <div class="invoice-panel">
+                            <div class="invoice-panel-title">Upload New Quotation / Revision</div>
+                            <p class="invoice-help">PDF only, maximum 10 MB. A new record is created for every upload; previous quotations remain in the history below.</p>
+                            <label for="originalQuotationFile" class="form-label">Quotation PDF</label>
+                            <input type="file" id="originalQuotationFile" accept="application/pdf,.pdf">
+                            <label for="originalQuotationNotes" class="form-label" style="display:block;margin-top:12px;">Notes (optional)</label>
+                            <textarea id="originalQuotationNotes" rows="3" placeholder="Add a note about this quotation or revision..."></textarea>
+                            <button type="button" id="uploadOriginalQuotationButton" class="primary-button" style="margin-top:14px;">Upload Quotation</button>
+                            <div id="originalQuotationMessage" class="invoice-message" hidden></div>
+                        </div>
+                    </section>
+
+                    <!-- =================================================
+                         08 FINAL INVOICE & PAYMENT
                     ================================================== -->
 
                     <section class="detail-card">
@@ -956,7 +989,50 @@
 
 
                     <!-- =================================================
-                         08 REQUEST STATUS
+                         08 CATEGORY WORKFLOW
+                    ================================================== -->
+
+                    <section id="categoryWorkflowCard"
+                             class="detail-card"
+                             hidden>
+
+                        <div class="section-header">
+
+                            <div>
+
+                                <span class="section-number">
+                                    08
+                                </span>
+
+                                <div>
+                                    <h2 id="categoryWorkflowTitle" class="section-title">
+                                        Category Workflow
+                                    </h2>
+
+                                    <p id="categoryWorkflowDescription" class="section-description">
+                                        Follow the workflow for this request category.
+                                    </p>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div id="categoryWorkflowSteps"
+                             class="answers-grid"
+                             style="margin-top:18px;">
+                        </div>
+
+                        <div id="categoryWorkflowNext"
+                             class="customer-notes-content"
+                             style="margin-top:18px;">
+                        </div>
+
+                    </section>
+
+
+                    <!-- =================================================
+                         09 REQUEST STATUS
                     ================================================== -->
 
                     <section class="detail-card">
@@ -966,7 +1042,7 @@
                             <div>
 
                                 <span class="section-number">
-                                    08
+                                    09
                                 </span>
 
                                 <div>
@@ -1033,10 +1109,6 @@
                                         Awaiting Payment
                                     </option>
 
-                                    <option value="quotation_required">
-                                        Quotation Required
-                                    </option>
-
                                     <option value="completed">
                                         Completed
                                     </option>
@@ -1068,7 +1140,7 @@
 
 
                     <!-- =================================================
-                         09 TECHNICIAN ASSIGNMENT
+                         10 TECHNICIAN ASSIGNMENT
                     ================================================== -->
 
                     <section class="detail-card">
@@ -1078,7 +1150,7 @@
                             <div>
 
                                 <span class="section-number">
-                                    09
+                                    10
                                 </span>
 
                                 <div>
@@ -1225,7 +1297,7 @@
 
 
                     <!-- =================================================
-                         10 REQUEST INFORMATION
+                         11 REQUEST INFORMATION
                     ================================================== -->
 
                     <section class="detail-card">
@@ -1235,7 +1307,7 @@
                             <div>
 
                                 <span class="section-number">
-                                    10
+                                    11
                                 </span>
 
                                 <div>
@@ -1316,8 +1388,12 @@
          SCRIPTS
     ====================================================== -->
 
-    <script src="js/request.js?v=20260921-2"></script>
-    <script src="js/session-timeout.js?v=20260921-2"></script>
+  <!-- Load the shared service catalog first -->
+<script src="../technician/js/services.js?v=20261019-3"></script>
+
+<!-- Then load Admin request details -->
+<script src="js/request.js?v=20261019-4"></script>
+<script src="js/session-timeout.js?v=20261019-3"></script>
 
 </body>
 

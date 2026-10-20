@@ -1425,8 +1425,8 @@ const SERVICES = {
     id: "access",
 
     name: {
-        en: "Door Access",
-        ms: "Door Access"
+        en: "Access Control",
+        ms: "Kawalan Akses"
     },
 
     questions: [
@@ -1813,6 +1813,17 @@ const SERVICES = {
                         ms: "Buka kunci menggunakan telefon"
                     }
                 },
+                {
+    value: "staff_only",
+    label: {
+        en: "Staff-Only Access",
+        ms: "Akses Staf Sahaja"
+    },
+    description: {
+        en: "Allow entry only to registered staff",
+        ms: "Benarkan akses hanya kepada staf yang berdaftar"
+    }
+},
                 {
                     value: "integration",
                     label: {

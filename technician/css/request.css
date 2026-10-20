@@ -2363,3 +2363,31 @@ textarea {
     }
 
 }
+
+/* Customer premise location */
+.customer-location-link-item {
+    gap: 8px;
+}
+
+.customer-location-link {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 700;
+    text-decoration: none;
+    transition: .2s ease;
+}
+
+.customer-location-link:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+}
+
+.location-not-available {
+    margin: 0;
+    color: #64748b;
+}

@@ -198,6 +198,8 @@ async function getAssignedRequests(req, res) {
 
                     sr.customer_address,
 
+                    sr.customer_location_link,
+
                     sr.status,
 
                     sr.admin_notes,
@@ -322,6 +324,8 @@ async function getAssignedRequestById(req, res) {
                     sr.customer_email,
 
                     sr.customer_address,
+
+                    sr.customer_location_link,
 
                     sr.customer_notes,
 

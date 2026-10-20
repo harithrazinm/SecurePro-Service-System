@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/service.css">
     <link rel="stylesheet" href="../css/customer.css">
+    <link rel="stylesheet" href="../css/request-progress.css">
 </head>
 
 <body>
@@ -37,8 +38,27 @@
 <main class="customer-page">
     <div class="container">
 
+        <div class="request-progress" aria-label="Request progress">
+            <div class="request-progress-step done">
+                <span class="request-progress-dot">01</span>
+                <span data-request-progress-label="questions">Questions</span>
+            </div>
+            <div class="request-progress-step active">
+                <span class="request-progress-dot">02</span>
+                <span data-request-progress-label="customer">Customer Details</span>
+            </div>
+            <div class="request-progress-step ">
+                <span class="request-progress-dot">03</span>
+                <span data-request-progress-label="review">Review</span>
+            </div>
+            <div class="request-progress-step ">
+                <span class="request-progress-dot">04</span>
+                <span data-request-progress-label="submit">Submit</span>
+            </div>
+        </div>
+
         <div class="customer-top">
-            <a href="javascript:history.back()" class="back-link">
+            <a href="#" id="topBackLink" class="back-link">
                 ←
                 <span data-i18n="back">Back</span>
             </a>
@@ -118,7 +138,7 @@
 
                     <div class="form-field full">
                         <label for="customerAddress">
-                            <span data-i18n="address">Address Link</span>
+                            <span data-i18n="address">Premise Address</span>
                             <span class="required">*</span>
                         </label>
                         <textarea
@@ -128,6 +148,38 @@
                             placeholder="Your property / installation address"
                             required
                         ></textarea>
+                    </div>
+
+                    <div class="form-field full location-field">
+                        <label for="customerLocationLink">
+                            <span data-i18n="locationLink">Premise Location</span>
+                            <span class="optional" data-i18n="locationOptional">Optional</span>
+                        </label>
+
+                        <div class="location-actions">
+                            <button
+                                type="button"
+                                id="shareLocationButton"
+                                class="location-button"
+                            >
+                                <span class="location-button-icon">⌖</span>
+                                <span data-i18n="shareLocation">Share My Location</span>
+                            </button>
+                        </div>
+
+                        <input
+                            id="customerLocationLink"
+                            name="customer_location_link"
+                            type="url"
+                            placeholder="Google Maps location link"
+                            autocomplete="off"
+                        >
+
+                        <div id="locationStatus" class="location-status" aria-live="polite"></div>
+
+                        <small class="field-help" data-i18n="locationHelp">
+                            You can share your property location using your device GPS. The address above is still required.
+                        </small>
                     </div>
 
                 </div>
@@ -272,5 +324,6 @@
 
 <script src="../js/customer.js"></script>
 
+    <script src="../js/request-progress.js"></script>
 </body>
 </html>

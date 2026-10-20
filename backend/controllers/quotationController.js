@@ -224,127 +224,24 @@ async function createQuotation(req, res) {
             requests[0];
 
 
-        /* ================================================
-           TROUBLESHOOTING & REPAIR GATE
-
-           This service is technician-first. Admin may only
-           create its quotation after the technician's final
-           inspection report has been approved.
-        ================================================= */
-
-        const [serviceRows] =
-            await connection.query(
-                `
-                SELECT service_code
-                FROM services
-                WHERE id = ?
-                LIMIT 1
-                `,
-                [request.service_id]
-            );
-
-
-        const serviceCode =
-            serviceRows[0]?.service_code ||
-            null;
-
-
-        if (serviceCode === 'troubleshoot_repair') {
-
-            if (request.status !== 'quotation_required') {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Troubleshooting & Repair does not require a quotation. After the technician final report is approved, upload the final invoice instead."
-
-                });
-
-            }
-
-
-            const [approvedReports] =
-                await connection.query(
-                    `
-                    SELECT id
-                    FROM service_reports
-                    WHERE request_id = ?
-                      AND report_type = 'final'
-                      AND status = 'approved'
-                    ORDER BY reviewed_at DESC, created_at DESC
-                    LIMIT 1
-                    `,
-                    [requestId]
-                );
-
-
-            if (!approvedReports.length) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "The technician inspection report must be approved before creating a Troubleshooting & Repair quotation."
-
-                });
-
-            }
-
-        }
-
+        const [revisionRows] = await connection.query(
+            `SELECT COALESCE(MAX(revision_number), 0) AS latest_revision
+             FROM quotations
+             WHERE request_id = ?
+               AND (quotation_type = 'original' OR quotation_type IS NULL)`,
+            [requestId]
+        );
+        const nextRevision = Number(revisionRows[0]?.latest_revision || 0) + 1;
 
         /* ================================================
-           CHECK EXISTING ORIGINAL QUOTATION
+           ORIGINAL QUOTATION HISTORY
+
+           Quotations are allowed at any workflow stage.
+           Each upload creates a new quotation record so the
+           previous PDF and approval history remain available.
+           This endpoint deliberately does not update the
+           service request status or technician progress.
         ================================================= */
-
-        const [existing] =
-            await connection.query(
-                `
-                SELECT
-                    id,
-                    quotation_number,
-                    status
-                FROM quotations
-                WHERE request_id = ?
-                  AND (
-                        quotation_type = 'original'
-                        OR quotation_type IS NULL
-                      )
-                LIMIT 1
-                `,
-                [
-                    requestId
-                ]
-            );
-
-
-        if (existing.length) {
-
-            return res.status(409).json({
-
-                success: false,
-
-                message:
-                    `This request already has quotation ${existing[0].quotation_number}. ` +
-                    `Use Edit to replace or update the existing quotation.`,
-
-                data: {
-
-                    quotation_id:
-                        existing[0].id,
-
-                    quotation_number:
-                        existing[0].quotation_number
-
-                }
-
-            });
-
-        }
-
 
         /* ================================================
            UPLOAD
@@ -371,10 +268,11 @@ async function createQuotation(req, res) {
         ================================================= */
 
         await connection.query(
-    `INSERT INTO quotations (
+            `INSERT INTO quotations (
         id,
         quotation_number,
         request_id,
+        quotation_type,
         notes,
         status,
         approval_status,
@@ -391,42 +289,44 @@ async function createQuotation(req, res) {
         ?,
         ?,
         ?,
+        'original',
         ?,
         'draft',
         'pending_approval',
         NULL,
         NULL,
         NULL,
-        1,
+        ?,
         NULL,
         ?,
         ?,
         ?
     )`,
-    [
-        id,
-        quotationNumber,
-        requestId,
-        notes || null,
-        req.user.id,
-        file.url,
-        file.name
-    ]
-);
+            [
+                id,
+                quotationNumber,
+                requestId,
+                notes || null,
+                nextRevision,
+                req.user.id,
+                file.url,
+                file.name
+            ]
+        );
 
 
         return res.status(201).json({
-    success: true,
-    message:
-        "Quotation uploaded successfully and submitted for Super Admin approval.",
-    data: {
-        id,
-        quotation_number: quotationNumber,
-        status: "draft",
-        approval_status: "pending_approval",
-        revision_number: 1
-    }
-});
+            success: true,
+            message:
+                "Quotation uploaded successfully and submitted for Super Admin approval.",
+            data: {
+                id,
+                quotation_number: quotationNumber,
+                status: "draft",
+                approval_status: "pending_approval",
+                revision_number: nextRevision
+            }
+        });
 
     } catch (error) {
 
@@ -1048,21 +948,21 @@ async function sendQuotationByEmail(
             });
 
         }
-if (
-    quotation.approval_status !==
-    "approved"
-) {
+        if (
+            quotation.approval_status !==
+            "approved"
+        ) {
 
-    return res.status(403).json({
+            return res.status(403).json({
 
-        success: false,
+                success: false,
 
-        message:
-            "Quotation must be approved by Super Admin before it can be sent by email."
+                message:
+                    "Quotation must be approved by Super Admin before it can be sent by email."
 
-    });
+            });
 
-}
+        }
 
 
         await sendQuotationEmail({
@@ -1213,22 +1113,22 @@ LIMIT 1
         }
 
         if (
-    quotationRows[0].approval_status !==
-    "approved"
-) {
+            quotationRows[0].approval_status !==
+            "approved"
+        ) {
 
-    await connection.rollback();
+            await connection.rollback();
 
-    return res.status(403).json({
+            return res.status(403).json({
 
-        success: false,
+                success: false,
 
-        message:
-            "Payment proof can only be uploaded after Super Admin approves the quotation."
+                message:
+                    "Payment proof can only be uploaded after Super Admin approves the quotation."
 
-    });
+            });
 
-}
+        }
 
         const requestId =
             quotationRows[0].request_id;

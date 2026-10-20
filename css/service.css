@@ -14,7 +14,9 @@
     --accent-soft: #eff6ff;
 
     position: relative;
-    overflow: hidden;
+    /* clip (not hidden): hidden makes this a scroll container and breaks
+       the sticky bottom navigation on mobile */
+    overflow: clip;
 
     min-height: calc(100vh - 76px);
     padding: 42px 0 80px;
@@ -2453,5 +2455,129 @@ input[type="checkbox"]:focus-visible {
     .previous-popup-actions button {
         padding: 11px 12px;
         font-size: 12px;
+    }
+}
+
+/* =========================================================
+   LAYOUT SYNC WITH AUDIO & VISUAL
+   - 4-step request bar (Questions / Customer / Review / Submit)
+   - content centred inside the 900px container
+   ========================================================= */
+
+.category-progress {
+    max-width: 820px;
+    margin: 0 0 24px;
+    padding: 14px 16px;
+
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 10px 28px rgba(16, 24, 40, .05);
+
+    animation: service-rise .6s .1s ease both;
+}
+
+.category-progress .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding: 9px 10px;
+    border-radius: 12px;
+
+    color: #7b8794;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.category-progress .progress-step.active {
+    background: var(--accent-soft);
+    color: var(--accent-dark, #1d4ed8);
+}
+
+.category-progress .progress-step.done {
+    color: #475467;
+}
+
+.category-progress .progress-dot {
+    flex: 0 0 auto;
+
+    width: 27px;
+    height: 27px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+    background: #eef1f5;
+    color: #667085;
+
+    font-size: 11px;
+}
+
+.category-progress .progress-step.active .progress-dot {
+    background: var(--accent);
+    color: #ffffff;
+}
+
+.category-progress .progress-step.done .progress-dot {
+    background: #dbeafe;
+    color: var(--accent-dark, #1d4ed8);
+}
+
+@media (min-width: 761px) {
+
+    .question-header,
+    .category-progress,
+    .progress-area,
+    .question-container,
+    .question-navigation {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 760px) {
+
+    .category-progress {
+        grid-template-columns: 1fr 1fr;
+        padding: 10px;
+    }
+
+    .category-progress .progress-step {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .category-progress {
+        max-width: none;
+        margin-bottom: 14px;
+        padding: 8px;
+        border-radius: 13px;
+    }
+
+    .category-progress .progress-step {
+        padding: 7px 8px;
+        gap: 7px;
+        font-size: 10px;
+    }
+
+    .category-progress .progress-dot {
+        width: 22px;
+        height: 22px;
+        font-size: 9px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .category-progress {
+        animation: none;
     }
 }

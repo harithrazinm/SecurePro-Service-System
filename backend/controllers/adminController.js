@@ -27,6 +27,7 @@ async function getRequests(req, res) {
                 sr.customer_phone,
                 sr.customer_email,
                 sr.customer_address,
+                sr.customer_location_link,
                 sr.admin_notes,
                 sr.status,
                 sr.technician_id,
@@ -172,7 +173,10 @@ async function getRequests(req, res) {
                                 request.customer_email,
 
                             address:
-                                request.customer_address
+                                request.customer_address,
+
+                            location_link:
+                                request.customer_location_link || null
 
                         },
 
@@ -283,60 +287,37 @@ async function getJobPendingRequests(req, res) {
 
                 LEFT JOIN quotations q
                     ON q.request_id = sr.id
+WHERE
+    sr.status NOT IN (
+        'completed',
+        'cancelled'
+    )
+    AND (
+        s.service_code IN (
+            'troubleshoot_repair',
+            'maintenance_service',
+            'inspection'
+        )
+        OR (
+            q.payment_status = 'proof_uploaded'
+            AND q.payment_proof_url IS NOT NULL
+            AND TRIM(q.payment_proof_url) <> ''
+        )
+    )
 
-                WHERE
+ORDER BY
+    CASE sr.status
+        WHEN 'pending' THEN 1
+        WHEN 'assigned' THEN 2
+        WHEN 'in_progress' THEN 3
+        WHEN 'waiting_parts' THEN 4
+        WHEN 'quotation_required' THEN 5
+        WHEN 'awaiting_payment' THEN 6
+        ELSE 7
+    END ASC,
+    q.payment_proof_uploaded_at DESC,
+    sr.created_at DESC
 
-                    /*
-                     * Only active jobs remain in Job Pending.
-                     */
-                    sr.status NOT IN (
-                        'completed',
-                        'cancelled'
-                    )
-
-                    /*
-                     * Troubleshooting & Repair enters Job Pending
-                     * before any quotation/payment exists.
-                     * Other services keep the existing payment-proof gate.
-                     */
-                    AND (
-                        s.service_code = 'troubleshoot_repair'
-                        OR (
-                            q.payment_status = 'proof_uploaded'
-                            AND q.payment_proof_url IS NOT NULL
-                            AND TRIM(q.payment_proof_url) <> ''
-                        )
-                    )
-
-                ORDER BY
-
-                    CASE sr.status
-
-                        WHEN 'pending'
-                            THEN 1
-
-                        WHEN 'assigned'
-                            THEN 2
-
-                        WHEN 'in_progress'
-                            THEN 3
-
-                        WHEN 'waiting_parts'
-                            THEN 4
-
-                        WHEN 'quotation_required'
-                            THEN 5
-
-                        WHEN 'awaiting_payment'
-                            THEN 6
-
-                        ELSE 7
-
-                    END ASC,
-
-                    q.payment_proof_uploaded_at DESC,
-
-                    sr.created_at DESC
                 `
             );
 
@@ -1085,6 +1066,9 @@ async function getRequestById(req, res) {
                     address:
                         request.customer_address,
 
+                    location_link:
+                        request.customer_location_link || null,
+
                     notes:
                         request.customer_notes
 
@@ -1522,20 +1506,27 @@ async function updateRequest(req, res) {
         }
 
 
-      if (technician_id) {
+        if (technician_id) {
 
-    /*
-     * Troubleshooting & Repair is technician-first.
-     * It does NOT require a quotation/payment proof before
-     * the initial site inspection. All other services keep
-     * the existing payment-proof requirement.
-     */
+            /*
+             * Troubleshooting & Repair is technician-first.
+             * It does NOT require a quotation/payment proof before
+             * the initial site inspection. All other services keep
+             * the existing payment-proof requirement.
+             */
 
-    if (serviceCode !== 'troubleshoot_repair') {
+            if (
+                technician_id &&
+                ![
+                    'troubleshoot_repair',
+                    'maintenance_service',
+                    'inspection'
+                ].includes(serviceCode)
+            ) {
 
-        const [paymentProofRows] =
-            await connection.query(
-                `
+                const [paymentProofRows] =
+                    await connection.query(
+                        `
                 SELECT
                     id,
                     payment_proof_url,
@@ -1558,35 +1549,35 @@ async function updateRequest(req, res) {
 
                 LIMIT 1
                 `,
-                [requestId]
-            );
+                        [requestId]
+                    );
 
 
-        if (!paymentProofRows.length) {
+                if (!paymentProofRows.length) {
 
-            return res.status(400).json({
+                    return res.status(400).json({
 
-                success: false,
+                        success: false,
 
-                message:
-                    "Technician cannot be assigned yet. Please upload the customer's quotation payment proof first."
+                        message:
+                            "Technician cannot be assigned yet. Please upload the customer's quotation payment proof first."
 
-            });
+                    });
 
-        }
+                }
 
-    }
+            }
 
 
-    /*
-     * =====================================================
-     * TECHNICIAN VALIDATION
-     * =====================================================
-     */
+            /*
+             * =====================================================
+             * TECHNICIAN VALIDATION
+             * =====================================================
+             */
 
-    const [technicians] =
-        await connection.query(
-            `
+            const [technicians] =
+                await connection.query(
+                    `
             SELECT
                 id,
                 name,
@@ -1603,33 +1594,33 @@ async function updateRequest(req, res) {
 
             LIMIT 1
             `,
-            [
-                technician_id
-            ]
-        );
+                    [
+                        technician_id
+                    ]
+                );
 
 
-    if (
-        technicians.length === 0
-    ) {
+            if (
+                technicians.length === 0
+            ) {
 
-        return res.status(400).json({
+                return res.status(400).json({
 
-            success: false,
+                    success: false,
 
-            message:
-                "Selected technician is not valid or inactive."
+                    message:
+                        "Selected technician is not valid or inactive."
 
-        });
+                });
 
-    }
+            }
 
-}
+        }
 
         let finalStatus =
             status !== undefined &&
-            status !== null &&
-            status !== ""
+                status !== null &&
+                status !== ""
                 ? status
                 : request.status;
 
@@ -1959,7 +1950,7 @@ async function updateRequest(req, res) {
             await connection.rollback();
 
         } catch (
-            rollbackError
+        rollbackError
         ) {
 
             console.error(
@@ -2035,8 +2026,8 @@ async function reviewTechnicianReport(req, res) {
                 req.body.action ||
                 ""
             )
-            .trim()
-            .toLowerCase();
+                .trim()
+                .toLowerCase();
 
 
         const reason =
@@ -2044,7 +2035,7 @@ async function reviewTechnicianReport(req, res) {
                 req.body.reason ||
                 ""
             )
-            .trim();
+                .trim();
 
 
         /* ==================================================
@@ -2468,11 +2459,11 @@ async function reviewTechnicianReport(req, res) {
 
         /* ==================================================
            RETURN REQUEST TO IN PROGRESS
-           
+
            IMPORTANT:
-           
+
            DO NOT USE "pending" HERE.
-           
+
            Technician resubmission requires the request
            to remain in_progress.
         ================================================== */
@@ -2575,7 +2566,7 @@ async function reviewTechnicianReport(req, res) {
             await connection.rollback();
 
         } catch (
-            rollbackError
+        rollbackError
         ) {
 
             console.error(

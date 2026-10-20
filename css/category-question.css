@@ -1,0 +1,694 @@
+/* ==========================================================
+   CATEGORY QUESTION FORMS
+   Shared by every category form page (maintenance, inspection, ...).
+   Colours come from style.css variables (--blue, --blue-dark, --navy);
+   the fallbacks keep this file usable on its own.
+   ========================================================== */
+:root {
+    --cq-blue: var(--blue, #1268f3);
+    --cq-blue-dark: var(--blue-dark, #0a3e9b);
+    --cq-blue-soft: #eff6ff;
+    --cq-blue-line: #dbeafe;
+    --cq-ink: var(--navy, #0d1b35);
+    --cq-text: #101828;
+    --cq-muted: #667085;
+    --cq-line: #d0d5dd;
+    --cq-danger: #b42318;
+
+    --cq-radius-lg: 22px;   /* cards, pager */
+    --cq-radius-md: 14px;   /* progress bar, options */
+    --cq-radius-sm: 12px;   /* inputs, notes, steps */
+}
+
+.category-question-page {
+    padding: 48px 0 90px;
+    background: radial-gradient(circle at 8% 4%, rgba(18, 104, 243, .09), transparent 25%), linear-gradient(180deg, #f7f9fc 0%, #fff 55%)
+}
+
+.category-question-header {
+    max-width: 900px;
+    margin: 0 auto 24px;
+    text-align: center
+}
+
+.category-question-header .eyebrow {
+    display: inline-flex;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: var(--cq-blue-soft);
+    border: 1px solid var(--cq-blue-line);
+    color: var(--cq-blue-dark);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .12em
+}
+
+/* the site-wide eyebrow adds a decorative dash; not wanted inside the chip */
+.category-question-header .eyebrow:before {
+    display: none
+}
+
+.category-question-header h1 {
+    margin: 14px 0 10px;
+    font-size: clamp(30px, 5vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -.035em;
+    color: var(--cq-ink)
+}
+
+.category-question-header p {
+    margin: 0;
+    color: var(--cq-muted);
+    line-height: 1.7
+}
+
+/* ---------- Progress ---------- */
+.category-progress {
+    max-width: 900px;
+    margin: 0 auto 28px;
+    padding: 14px 16px;
+    border: 1px solid #e4e7ec;
+    border-radius: var(--cq-radius-md);
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 10px 28px rgba(16, 24, 40, .05);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px
+}
+
+.progress-step {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+    border-radius: var(--cq-radius-sm);
+    color: var(--cq-muted);
+    font-size: 12px;
+    font-weight: 800
+}
+
+.progress-step.active {
+    background: var(--cq-blue-soft);
+    color: var(--cq-blue-dark)
+}
+
+.progress-step.done {
+    color: #475467
+}
+
+.progress-dot {
+    width: 27px;
+    height: 27px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #eef1f5;
+    color: var(--cq-muted);
+    font-size: 11px;
+    flex: 0 0 auto
+}
+
+.progress-step.active .progress-dot {
+    background: var(--cq-blue);
+    color: #fff
+}
+
+.progress-step.done .progress-dot {
+    background: var(--cq-blue-line);
+    color: var(--cq-blue-dark)
+}
+
+/* ---------- Cards ---------- */
+.question-form {
+    max-width: 900px;
+    margin: 0 auto
+}
+
+.question-card {
+    position: relative;
+    background: rgba(255, 255, 255, .96);
+    border: 1px solid #e4e7ec;
+    border-radius: var(--cq-radius-lg);
+    padding: 28px;
+    margin-bottom: 18px;
+    box-shadow: 0 12px 30px rgba(16, 24, 40, .05);
+    transition: box-shadow .2s ease, border-color .2s ease
+}
+
+/* no lift on hover: the card must stay still while options inside it are clicked */
+.question-card:hover {
+    box-shadow: 0 18px 38px rgba(16, 24, 40, .08);
+    border-color: var(--cq-blue-line)
+}
+
+.question-card h2 {
+    display: flex;
+    align-items: center;
+    margin: 0 0 7px;
+    font-size: 20px;
+    color: var(--cq-text)
+}
+
+.question-card>p {
+    margin: 0 0 18px;
+    color: var(--cq-muted);
+    line-height: 1.55
+}
+
+.question-number {
+    display: inline-flex;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: var(--cq-ink);
+    color: #fff;
+    font-weight: 800;
+    margin-right: 11px;
+    font-size: 12px;
+    flex: 0 0 auto
+}
+
+/* ---------- Options (radio / checkbox cards) ---------- */
+.option-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px
+}
+
+.option {
+    position: relative;
+    display: flex;
+    flex-direction: column
+}
+
+/* Only the option's own radio / checkbox is hidden. Direct-child selectors keep the
+   "Other" text field (nested inside the option) visible and styled as a normal field. */
+.option>input[type="radio"],
+.option>input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none
+}
+
+.option>label {
+    position: relative;
+    display: block;
+    flex: 1 1 auto;
+    box-sizing: border-box;
+    padding: 14px 44px 14px 15px;
+    border: 1px solid var(--cq-line);
+    border-radius: var(--cq-radius-md);
+    cursor: pointer;
+    background: #fff;
+    transition: .18s
+}
+
+.option>label:hover {
+    border-color: #98a2b3;
+    background: #f9fafb
+}
+
+/* selection indicator, so state never relies on colour alone */
+.option>label::after {
+    content: "";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 20px;
+    height: 20px;
+    box-sizing: border-box;
+    border: 2px solid var(--cq-line);
+    border-radius: 50%;
+    background: #fff;
+    transition: .18s
+}
+
+.option>input[type="checkbox"]+label::after {
+    border-radius: 6px
+}
+
+.option>input:checked+label::after {
+    border-color: var(--cq-blue);
+    background: var(--cq-blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 6.8' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat
+}
+
+.option>input:focus-visible+label {
+    outline: 3px solid rgba(18, 104, 243, .28);
+    outline-offset: 2px
+}
+
+.option>input:checked+label {
+    border-color: var(--cq-blue);
+    background: var(--cq-blue-soft);
+    box-shadow: 0 0 0 2px rgba(18, 104, 243, .08)
+}
+
+.option>label strong {
+    display: block;
+    color: var(--cq-text);
+    font-size: 14px
+}
+
+.option>label span {
+    display: block;
+    color: var(--cq-muted);
+    font-size: 13px;
+    margin-top: 4px;
+    line-height: 1.45
+}
+
+/* ---------- "Other - please specify" field nested inside an option ---------- */
+.option>*:not(input):not(label) {
+    margin-top: 10px
+}
+
+.option>*:not(input):not(label) label {
+    display: block;
+    margin-bottom: 7px;
+    color: #344054;
+    font-size: 14px;
+    font-weight: 700
+}
+
+.option>*:not(input):not(label) input,
+.option>*:not(input):not(label) textarea,
+.option>*:not(input):not(label) select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--cq-line);
+    border-radius: var(--cq-radius-sm);
+    padding: 12px 13px;
+    font: inherit;
+    color: var(--cq-text);
+    background: #fff;
+    opacity: 1;
+    pointer-events: auto;
+    position: static;
+    transition: border-color .18s, box-shadow .18s
+}
+
+.option>*:not(input):not(label) textarea {
+    min-height: 96px;
+    resize: vertical
+}
+
+.option>*:not(input):not(label) input:focus,
+.option>*:not(input):not(label) textarea:focus,
+.option>*:not(input):not(label) select:focus {
+    outline: none;
+    border-color: var(--cq-blue);
+    box-shadow: 0 0 0 3px rgba(18, 104, 243, .12)
+}
+
+.option>*:not(input):not(label) .required {
+    color: var(--cq-danger)
+}
+
+/* The renderer's real markup: .option.option-has-other-input > input + label + .inline-other-field.
+   Whatever grid/flex layout a page applies to .option, the field spans the full card width. */
+.option-has-other-input>.inline-other-field,
+.option>.inline-other-field {
+    display: block;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    margin: 10px 0 0;
+    padding: 14px;
+    border: 1px solid var(--cq-blue-line);
+    border-radius: var(--cq-radius-md);
+    background: var(--cq-blue-soft);
+    cursor: auto
+}
+
+.inline-other-field[hidden] {
+    display: none !important
+}
+
+.inline-other-field label {
+    display: block;
+    margin: 0 0 7px;
+    color: var(--cq-blue-dark);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: auto
+}
+
+.inline-other-field input,
+.inline-other-field textarea {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 12px 13px;
+    border: 1px solid var(--cq-line);
+    border-radius: var(--cq-radius-sm);
+    background: #fff;
+    color: var(--cq-text);
+    font: inherit;
+    opacity: 1;
+    position: static;
+    pointer-events: auto
+}
+
+.inline-other-field textarea {
+    min-height: 96px;
+    resize: vertical
+}
+
+.inline-other-field input:focus,
+.inline-other-field textarea:focus {
+    outline: none;
+    border-color: var(--cq-blue);
+    box-shadow: 0 0 0 3px rgba(18, 104, 243, .12)
+}
+
+.inline-other-invalid input,
+.inline-other-invalid textarea {
+    border-color: var(--cq-danger)
+}
+
+/* ---------- Fields ---------- */
+.field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px
+}
+
+.field.full {
+    grid-column: 1/-1
+}
+
+.field label {
+    display: block;
+    font-weight: 700;
+    color: #344054;
+    margin-bottom: 7px;
+    font-size: 14px
+}
+
+.field input,
+.field textarea,
+.field select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--cq-line);
+    border-radius: var(--cq-radius-sm);
+    padding: 12px 13px;
+    font: inherit;
+    color: var(--cq-text);
+    background: #fff;
+    transition: border-color .18s, box-shadow .18s
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+    outline: none;
+    border-color: var(--cq-blue);
+    box-shadow: 0 0 0 3px rgba(18, 104, 243, .12)
+}
+
+.field textarea {
+    min-height: 120px;
+    resize: vertical
+}
+
+/* ---------- Legacy action row (Back / Continue buttons from the renderer) ---------- */
+.question-actions {
+    max-width: 900px;
+    margin: 24px auto 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px
+}
+
+.question-actions a,
+.question-actions button {
+    border: 0;
+    border-radius: 999px;
+    padding: 14px 22px;
+    text-decoration: none;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+    transition: .2s
+}
+
+.question-actions .secondary {
+    background: #fff;
+    border: 1px solid #cbd9eb;
+    color: #173454
+}
+
+.question-actions .secondary:hover {
+    color: var(--cq-blue-dark);
+    background: #f2f7ff;
+    border-color: #9fc5f5
+}
+
+.question-actions .primary {
+    color: #fff;
+    border: 1px solid var(--cq-blue);
+    background: linear-gradient(180deg, #2f8cff 0%, #1268f3 100%);
+    box-shadow: 0 10px 24px rgba(18, 104, 243, .25)
+}
+
+.question-actions .primary:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(180deg, #197bfa 0%, #0757d8 100%);
+    box-shadow: 0 14px 30px rgba(18, 104, 243, .32)
+}
+
+/* ---------- Misc ---------- */
+.required {
+    color: var(--cq-danger)
+}
+
+.field-error,
+.question-error {
+    margin-top: 12px;
+    color: var(--cq-danger);
+    font-size: 13px;
+    font-weight: 600
+}
+
+.conditional-note {
+    padding: 13px 15px;
+    border-radius: var(--cq-radius-sm);
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+    font-size: 13px;
+    margin-top: 14px
+}
+
+.hidden {
+    display: none !important
+}
+
+@media(max-width:700px) {
+    .category-question-page {
+        padding-top: 32px
+    }
+
+    .category-progress {
+        grid-template-columns: 1fr 1fr;
+        padding: 10px
+    }
+
+    .progress-step {
+        font-size: 12px
+    }
+
+    .question-card {
+        padding: 20px;
+        border-radius: var(--cq-radius-md)
+    }
+
+    .option-grid,
+    .field-grid {
+        grid-template-columns: 1fr
+    }
+
+    .question-actions {
+        flex-direction: column-reverse
+    }
+
+    .question-actions a,
+    .question-actions button {
+        text-align: center
+    }
+
+    .field.full {
+        grid-column: auto
+    }
+}
+
+/* ==========================================================
+   QUESTION PAGER (counter + Back / Next)
+   Generated by the per-category page scripts (maintenance.js, ...).
+   The old .electrical-* class names are kept as aliases so pages that
+   have not been migrated yet keep working; new code uses .question-pager-*.
+   ========================================================== */
+.question-pager,
+.electrical-question-pager {
+    max-width: 900px;
+    margin: 24px auto 0;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    border: 1px solid #dce8f7;
+    border-radius: var(--cq-radius-lg);
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 14px 34px rgba(18, 60, 120, .08);
+}
+
+.question-pager-counter,
+.electrical-question-counter {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    color: #526277;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.question-pager-counter span:first-child,
+.electrical-question-counter span:first-child {
+    color: #102846;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.question-pager-actions,
+.electrical-question-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.question-pager-actions button,
+.electrical-question-actions button {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 23px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease,
+        border-color .2s ease, color .2s ease;
+}
+
+.question-pager-actions .question-pager-back,
+.electrical-question-actions .electrical-back-button {
+    color: #173454;
+    background: #fff;
+    border: 1px solid #cbd9eb;
+    box-shadow: 0 5px 14px rgba(16, 40, 70, .05);
+}
+
+.question-pager-actions .question-pager-back:hover,
+.electrical-question-actions .electrical-back-button:hover {
+    color: var(--cq-blue-dark);
+    background: #f2f7ff;
+    border-color: #9fc5f5;
+    transform: translateY(-2px);
+    box-shadow: 0 9px 20px rgba(18, 104, 243, .10);
+}
+
+.question-pager-actions .question-pager-next,
+.electrical-question-actions .electrical-next-button {
+    color: #fff;
+    border: 1px solid var(--cq-blue);
+    background: linear-gradient(180deg, #2f8cff 0%, #1268f3 100%);
+    box-shadow: 0 10px 24px rgba(18, 104, 243, .25);
+}
+
+.question-pager-actions .question-pager-next:hover:not(:disabled),
+.electrical-question-actions .electrical-next-button:hover:not(:disabled) {
+    background: linear-gradient(180deg, #197bfa 0%, #0757d8 100%);
+    border-color: #0757d8;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(18, 104, 243, .32);
+}
+
+.question-pager-actions button:active:not(:disabled),
+.electrical-question-actions button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.question-pager-actions button:focus-visible,
+.electrical-question-actions button:focus-visible {
+    outline: 3px solid rgba(55, 169, 255, .45);
+    outline-offset: 3px;
+}
+
+.question-pager-actions button:disabled,
+.electrical-question-actions button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+@media (max-width: 700px) {
+
+    /* keep Next within thumb reach on long option lists */
+    .question-pager,
+    .electrical-question-pager {
+        position: sticky;
+        bottom: 12px;
+        z-index: 20;
+        align-items: stretch;
+        flex-direction: column;
+        padding: 14px;
+        gap: 10px;
+        box-shadow: 0 -6px 26px rgba(18, 60, 120, .14), 0 14px 34px rgba(18, 60, 120, .08);
+    }
+
+    .question-pager-counter,
+    .electrical-question-counter {
+        justify-content: center;
+    }
+
+    .question-pager-actions,
+    .electrical-question-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+        gap: 10px;
+    }
+
+    .question-pager-actions button,
+    .electrical-question-actions button {
+        width: 100%;
+        min-height: 46px;
+        padding: 0 12px;
+        font-size: 13px;
+        white-space: normal;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .question-card,
+    .option>label,
+    .option>label::after,
+    .question-pager-actions button,
+    .electrical-question-actions button {
+        transition: none;
+    }
+}

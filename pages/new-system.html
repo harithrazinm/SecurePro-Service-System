@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New System | SecurePro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/category-page.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container navbar">
+            <a href="../index.html" class="brand"><img src="../assets/sopro-logo.png" alt="SOPro SecureOnePro"
+                    class="brand-logo"></a>
+            <nav class="main-nav" id="mainNav"><a href="../index.html#why" data-i18n="navHome">Utama</a><a
+                    href="../index.html#services" data-i18n="navServices">Senarai Servis</a><a href="../index.html#help"
+                    data-i18n="navContact">Hubungi Kami</a></nav>
+            <div class="nav-actions"><button id="languageToggle" class="language-btn" type="button">🌐
+                    English</button><button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu"
+                    aria-expanded="false"><span></span><span></span><span></span></button></div>
+        </div>
+    </header>
+    <main class="category-page">
+        <div class="container">
+            <div class="category-page-header">
+                <span class="eyebrow">NEW SYSTEM</span>
+                <h1 data-i18n="pageTitle">Pilih Sistem Yang Anda Perlukan</h1>
+                <p data-i18n="pageText">Pilih sistem di bawah untuk meneruskan permintaan menggunakan aliran sedia ada.
+                </p>
+                <div class="category-page-actions"><a class="category-back-link" href="../index.html#services"
+                        data-i18n="back">← Kembali ke kategori</a></div>
+            </div>
+            <div class="category-progress" aria-label="Request progress">
+                <div class="progress-step active"><span class="progress-dot">01</span><span
+                        data-progress-label="system">Choose System</span></div>
+                <div class="progress-step"><span class="progress-dot">02</span><span>Questions</span></div>
+                <div class="progress-step"><span class="progress-dot">03</span><span>Customer Details</span></div>
+                <div class="progress-step"><span class="progress-dot">04</span><span>Submit</span></div>
+            </div>
+            <section class="category-page-card">
+                <h2 data-i18n="servicesTitle">Senarai Sistem</h2>
+                <p data-i18n="servicesText">Pilih mana-mana sistem untuk membuka proses permintaan sedia ada.</p>
+                <div id="servicesGrid" class="services-grid category-service-grid">
+                    <div class="loading" data-i18n="loading">Memuatkan servis...</div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script src="../js/new-system.js"></script>
+</body>
+
+</html>

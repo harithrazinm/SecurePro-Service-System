@@ -6,6 +6,7 @@
     <meta name="description" content="SOPro SecureOnePro - Platform Permintaan Servis">
     <title>SOPro | SecureOnePro</title>
 
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%268%27 fill=%27%231268f3%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2716%27 font-weight=%27800%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27%3ES%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -86,6 +87,7 @@
 
     <!-- 2. THREE STEPS -->
     <section class="guide" id="guide">
+
         <div class="container">
             <div class="section-heading">
                 <div>
@@ -133,20 +135,61 @@
         </div>
     </section>
 
-    <!-- 3. SERVICES -->
+    <!-- 3. SERVICE CATEGORIES -->
     <section class="services-section" id="services">
         <div class="container">
             <div class="services-heading">
                 <div>
                     <span class="eyebrow" data-i18n="servicesLabel">PERKHIDMATAN KAMI</span>
-                    <h2 data-i18n="servicesTitle">Pilih Servis Yang Anda Perlukan</h2>
-                    <p data-i18n="servicesText">Hantar permintaan servis dengan beberapa klik sahaja.</p>
+                    <h2 data-i18n="servicesTitle">Pilih Kategori Servis</h2>
+                    <p data-i18n="servicesText">Pilih kategori yang paling sesuai dengan keperluan anda.</p>
                 </div>
-                <a href="#services" class="all-services-link" data-i18n="allServices">Lihat semua servis →</a>
             </div>
 
-            <div id="servicesGrid" class="services-grid">
-                <div class="loading" data-i18n="loadingServices">Memuatkan servis...</div>
+            <div class="service-category-grid" id="serviceCategoryGrid">
+                <a class="service-category-card" href="pages/inspection.html" data-category="inspection">
+                    <div class="service-category-icon"><span>⌖</span></div>
+                    <div class="service-category-copy">
+                        <span class="service-category-kicker" data-i18n="categoryInspectionKicker">ASSESSMENT</span>
+                        <span class="service-category-number">01</span>
+                        <h3 data-i18n="categoryInspectionTitle">Inspection</h3>
+                        <p data-i18n="categoryInspectionText">Pemeriksaan dan penilaian keadaan sistem atau lokasi.</p>
+                    </div>
+                    <span class="service-category-arrow">→</span>
+                </a>
+
+                <a class="service-category-card" href="pages/maintenance.html" data-category="maintenance">
+                    <div class="service-category-icon"><span>↻</span></div>
+                    <div class="service-category-copy">
+                        <span class="service-category-kicker" data-i18n="categoryMaintenanceKicker">CARE &amp; SERVICE</span>
+                        <span class="service-category-number">02</span>
+                        <h3 data-i18n="categoryMaintenanceTitle">Maintenance &amp; Service</h3>
+                        <p data-i18n="categoryMaintenanceText">Penyelenggaraan, servis dan sokongan sistem sedia ada.</p>
+                    </div>
+                    <span class="service-category-arrow">→</span>
+                </a>
+
+                <a class="service-category-card" href="pages/troubleshooting.html" data-category="troubleshooting">
+                    <div class="service-category-icon"><span>⌁</span></div>
+                    <div class="service-category-copy">
+                        <span class="service-category-kicker" data-i18n="categoryTroubleshootingKicker">DIAGNOSE &amp; FIX</span>
+                        <span class="service-category-number">03</span>
+                        <h3 data-i18n="categoryTroubleshootingTitle">Troubleshooting / Repair</h3>
+                        <p data-i18n="categoryTroubleshootingText">Pemeriksaan masalah, diagnosis dan pembaikan sistem.</p>
+                    </div>
+                    <span class="service-category-arrow">→</span>
+                </a>
+
+                <a class="service-category-card" href="pages/new-system.html" data-category="new-system">
+                    <div class="service-category-icon"><span>＋</span></div>
+                    <div class="service-category-copy">
+                        <span class="service-category-kicker" data-i18n="categoryNewSystemKicker">NEW INSTALLATION</span>
+                        <span class="service-category-number">04</span>
+                        <h3 data-i18n="categoryNewSystemTitle">New System</h3>
+                        <p data-i18n="categoryNewSystemText">Pemasangan sistem baharu mengikut keperluan anda.</p>
+                    </div>
+                    <span class="service-category-arrow">→</span>
+                </a>
             </div>
         </div>
     </section>

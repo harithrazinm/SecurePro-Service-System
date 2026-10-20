@@ -1,0 +1,215 @@
+.category-page {
+    min-height: 70vh;
+    padding: 64px 0 96px;
+    background: radial-gradient(circle at 90% 5%, rgba(37, 99, 235, .10), transparent 28%), linear-gradient(180deg, #f7f9fc 0%, #fff 58%)
+}
+
+.category-page .container {
+    position: relative
+}
+
+.category-page-header {
+    max-width: 900px;
+    margin: 0 auto 34px;
+    text-align: center;
+    position: relative
+}
+
+.category-page-header .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border: 1px solid rgba(37, 99, 235, .16);
+    border-radius: 999px;
+    background: rgba(239, 246, 255, .85);
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em
+}
+
+.category-page-header h1 {
+    margin: 14px 0 12px;
+    font-size: clamp(2.15rem, 5vw, 3.65rem);
+    line-height: 1.05;
+    letter-spacing: -.04em;
+    color: #0f172a
+}
+
+.category-page-header p {
+    max-width: 720px;
+    margin: 0 auto;
+    color: #64748b;
+    font-size: 1.04rem;
+    line-height: 1.75
+}
+
+.category-page-actions {
+    margin-top: 22px
+}
+
+.category-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 800;
+    color: #1d4ed8;
+    padding: 10px 14px;
+    border-radius: 12px;
+    transition: .2s
+}
+
+.category-back-link:hover {
+    background: #eff6ff;
+    transform: translateX(-2px)
+}
+
+.category-page-card {
+    border: 1px solid rgba(148, 163, 184, .25);
+    border-radius: 26px;
+    padding: 30px;
+    background: rgba(255, 255, 255, .92);
+    box-shadow: 0 22px 60px rgba(15, 23, 42, .08);
+    backdrop-filter: blur(8px)
+}
+
+.category-page-card h2 {
+    margin: 0 0 8px;
+    color: #0f172a;
+    font-size: 1.35rem
+}
+
+.category-page-card>p {
+    color: #64748b;
+    line-height: 1.7;
+    margin: 0 0 22px
+}
+
+.category-service-grid {
+    margin-top: 24px
+}
+
+.category-page .services-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px
+}
+
+.category-page .service-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    background: #fff;
+    padding: 16px;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease
+}
+
+.category-page .service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, .10);
+    border-color: #bfdbfe
+}
+
+.category-page .service-image {
+    height: 170px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #f8fafc
+}
+
+.category-page .service-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover
+}
+
+.category-page .service-card h3 {
+    margin: 15px 4px 5px;
+    color: #0f172a;
+    font-size: 1rem
+}
+
+.category-page .service-card p {
+    margin: 0 4px;
+    color: #64748b;
+    font-size: .86rem
+}
+
+@media(max-width:900px) {
+    .category-page .services-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+}
+
+@media(max-width:600px) {
+    .category-page {
+        padding: 42px 0 70px
+    }
+
+    .category-page-card {
+        padding: 20px;
+        border-radius: 20px
+    }
+
+    .category-page .services-grid {
+        grid-template-columns: 1fr
+    }
+
+    .category-page .service-image {
+        height: 190px
+    }
+}
+
+.category-page .category-progress {
+    max-width: 900px;
+    margin: 0 auto 26px;
+    padding: 14px 16px;
+    border: 1px solid #e4e7ec;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 10px 28px rgba(16, 24, 40, .05);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px
+}
+
+.category-page .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+    border-radius: 12px;
+    color: #98a2b3;
+    font-size: 12px;
+    font-weight: 800
+}
+
+.category-page .progress-step.active {
+    background: #eff6ff;
+    color: #1d4ed8
+}
+
+.category-page .progress-dot {
+    width: 27px;
+    height: 27px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #eef1f5;
+    color: #667085;
+    font-size: 11px;
+    flex: 0 0 auto
+}
+
+.category-page .progress-step.active .progress-dot {
+    background: #2563eb;
+    color: #fff
+}
+
+@media(max-width:600px) {
+    .category-page .category-progress {
+        grid-template-columns: 1fr 1fr
+    }
+}
+

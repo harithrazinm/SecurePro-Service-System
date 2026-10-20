@@ -1,5 +1,10 @@
 
-const API_BASE = "/api";
+const API_BASE =
+    /^(localhost|127\.0\.0\.1)$/.test(
+        location.hostname
+    )
+        ? "http://localhost:5001/api"
+        : "/api";
 
 const BACKEND_BASE = "";
 
@@ -635,6 +640,33 @@ function renderCustomer(data) {
                     "—"
                 )}
             </p>
+
+        </div>
+
+
+        <div class="info-item full customer-location-link-item">
+
+            <span>
+                Premise Location
+            </span>
+
+            ${data.customer_location_link
+                ? `
+                    <a
+                        class="customer-location-link"
+                        href="${escapeHtml(data.customer_location_link)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        📍 Open Location in Google Maps
+                    </a>
+                `
+                : `
+                    <p class="location-not-available">
+                        No location link provided by customer.
+                    </p>
+                `
+            }
 
         </div>
 
@@ -1982,8 +2014,52 @@ function getAnswerDisplayValue(
 
 
 /* =========================================================
-   CUSTOMER ANSWERS
+   MERGE CONDITIONAL "OTHER" TEXT INTO ITS PARENT ANSWER
 ========================================================= */
+
+function getAnswerQuestionCode(answer, questionDef = null) {
+    const code =
+        questionDef?.id ||
+        answer?.question_code ||
+        answer?.code ||
+        "";
+
+    if (String(code).trim()) {
+        return String(code).trim().toLowerCase();
+    }
+
+    // The technician API may return question titles and IDs, but not codes.
+    const title = String(
+        answer?.question_en ||
+        answer?.question?.en ||
+        answer?.title_en ||
+        ""
+    ).trim().toLowerCase();
+
+    const titleToCode = {
+        "other inspection purpose": "inspection_purpose_other_text",
+        "other system or service": "inspection_systems_other_text",
+        "other inspection area": "inspection_targets_other_text",
+        "other premise type": "premise_type_other_text"
+    };
+
+    return titleToCode[title] || "";
+}
+
+function getRawAnswerValues(answer) {
+    const raw = answer?.text_value ?? answer?.answer;
+    if (raw === null || raw === undefined) return [];
+
+    const parsed = parseJsonValue(raw);
+    if (Array.isArray(parsed)) return parsed.map(value => String(value).toLowerCase());
+    if (parsed && typeof parsed === "object") return Object.values(parsed).map(value => String(value).toLowerCase());
+    return [String(parsed ?? raw).trim().toLowerCase()];
+}
+
+function isOtherTextAnswer(answer, questionDef = null) {
+    const code = getAnswerQuestionCode(answer, questionDef);
+    return code.endsWith("_other_text");
+}
 
 function renderAnswers(data) {
 
@@ -2042,17 +2118,36 @@ function renderAnswers(data) {
         );
 
 
+    const answerEntries = answers.map(answer => {
+        const questionDef = findQuestionDefinition(serviceDef, answer);
+        return {
+            answer,
+            questionDef,
+            code: getAnswerQuestionCode(answer, questionDef)
+        };
+    });
+
+    // Build a lookup for extra text fields (e.g. inspection_purpose_other_text).
+    const otherTextByParent = new Map();
+    answerEntries.forEach(entry => {
+        if (!entry.code.endsWith("_other_text")) return;
+        const text = String(entry.answer?.text_value ?? entry.answer?.answer ?? "").trim();
+        if (!text) return;
+        const parentCode = entry.code.slice(0, -"_other_text".length);
+        otherTextByParent.set(parentCode, text);
+    });
+
     container.innerHTML =
-        answers
+        answerEntries
+            .filter(entry => {
+                // Hide the standalone card when the matching parent question exists.
+                if (!entry.code.endsWith("_other_text")) return true;
+                const parentCode = entry.code.slice(0, -"_other_text".length);
+                return !answerEntries.some(parent => parent.code === parentCode);
+            })
             .map(
-                (answer, index) => {
-
-                    const questionDef =
-                        findQuestionDefinition(
-                            serviceDef,
-                            answer
-                        );
-
+                (entry, index) => {
+                    const { answer, questionDef, code } = entry;
 
                     const question =
                         getQuestionDisplayLabel(
@@ -2060,12 +2155,21 @@ function renderAnswers(data) {
                             questionDef
                         );
 
-
-                    const value =
+                    let value =
                         getAnswerDisplayValue(
                             answer,
                             questionDef
                         );
+
+                    // Add the typed explanation only when the parent answer selected "other".
+                    const otherText = otherTextByParent.get(code);
+                    const rawValues = getRawAnswerValues(answer);
+                    const selectedOther = rawValues.includes("other");
+                    if (otherText && selectedOther) {
+                        value = value && value !== "Not specified"
+                            ? `${value} — ${otherText}`
+                            : otherText;
+                    }
 
 
                     const formattedValue =

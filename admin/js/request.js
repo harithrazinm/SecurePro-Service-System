@@ -15,7 +15,7 @@ const API_BASE =
         ? "http://localhost:5001/api"
         : "/api";
 
-        const BACKEND_BASE = "";
+const BACKEND_BASE = "";
 /* =========================================================
    GLOBAL DATA
 ========================================================= */
@@ -171,7 +171,7 @@ function metaItem(label, value) {
 
 const REQUEST_STATUSES = [
     "pending", "assigned", "in_progress",
-    "waiting_parts", "awaiting_payment", "quotation_required", "completed", "cancelled"
+    "waiting_parts", "awaiting_payment", "completed", "cancelled"
 ];
 
 function formatStatus(status) {
@@ -360,6 +360,7 @@ function renderRequest(data) {
     renderProgressReports(data);
     renderTechnicianReport(data);
     renderInvoiceSection(data);
+    loadOriginalQuotationHistory();
     renderStatus(data);
     renderAssignment(data);
     renderMeta(data);
@@ -1010,7 +1011,7 @@ function formatConfiguredCounterValues(
 
                 if (
                     typeof counterDefinition.label ===
-                        "object"
+                    "object"
                 ) {
 
                     label =
@@ -1182,15 +1183,15 @@ function getAnswerDisplayHtml(answer) {
                                                 </span>
 
                                                 ${escapeHtml(
-                                                    formatAnswerLabel(key)
-                                                )}
+                                        formatAnswerLabel(key)
+                                    )}
 
                                             </span>
 
                                             <strong class="answer-counter-value">
                                                 ${escapeHtml(
-                                                    String(value)
-                                                )}
+                                        String(value)
+                                    )}
                                             </strong>
 
                                         </div>
@@ -1258,10 +1259,10 @@ function getAnswerDisplayHtml(answer) {
                     option => `
                         <span class="answer-chip answer-chip-modern">
                             ${escapeHtml(
-                                formatAnswerText(
-                                    option
-                                )
-                            )}
+                        formatAnswerText(
+                            option
+                        )
+                    )}
                         </span>
                     `
                 )
@@ -1418,10 +1419,10 @@ function getAnswerDisplayHtml(answer) {
         return `
             <span class="answer-chip answer-chip-modern">
                 ${escapeHtml(
-                    unit
-                        ? `${numberValue} ${unit}`
-                        : numberValue
-                )}
+            unit
+                ? `${numberValue} ${unit}`
+                : numberValue
+        )}
             </span>
         `;
 
@@ -1549,15 +1550,15 @@ function renderObjectAnswer(values) {
                             </span>
 
                             ${escapeHtml(
-                                formatAnswerLabel(key)
-                            )}
+                    formatAnswerLabel(key)
+                )}
 
                         </span>
 
                         <strong class="answer-counter-value">
                             ${escapeHtml(
-                                formatCounterValue(value)
-                            )}
+                    formatCounterValue(value)
+                )}
                         </strong>
 
                     </div>
@@ -1616,10 +1617,10 @@ function renderTextAnswer(value) {
                 part => `
                     <span class="answer-chip answer-chip-modern">
                         ${escapeHtml(
-                            formatAnswerText(
-                                part
-                            )
-                        )}
+                    formatAnswerText(
+                        part
+                    )
+                )}
                     </span>
                 `
             )
@@ -1630,10 +1631,10 @@ function renderTextAnswer(value) {
     return `
         <span class="answer-chip answer-chip-modern">
             ${escapeHtml(
-                formatAnswerText(
-                    unique[0] || value
-                )
-            )}
+        formatAnswerText(
+            unique[0] || value
+        )
+    )}
         </span>
     `;
 
@@ -1972,7 +1973,7 @@ function formatConfiguredAnswer(
 
     if (
         questionDefinition?.type ===
-            "counter"
+        "counter"
     ) {
 
         const counters =
@@ -1996,7 +1997,7 @@ function formatConfiguredAnswer(
 
     if (
         questionDefinition?.type ===
-            "number"
+        "number"
     ) {
 
         return formatConfiguredNumber(
@@ -2013,7 +2014,7 @@ function formatConfiguredAnswer(
 
     if (
         questionDefinition?.type ===
-            "multi" ||
+        "multi" ||
         Array.isArray(rawValue)
     ) {
 
@@ -2045,7 +2046,7 @@ function formatConfiguredAnswer(
 
     if (
         questionDefinition?.type ===
-            "single"
+        "single"
     ) {
 
         return (
@@ -2067,7 +2068,7 @@ function formatConfiguredAnswer(
 
     if (
         typeof rawValue ===
-            "object"
+        "object"
     ) {
 
         return Object.entries(
@@ -2092,113 +2093,73 @@ function formatConfiguredAnswer(
 ========================================================= */
 
 function renderAnswers(data) {
+    const container = document.querySelector("#answersGrid");
+    if (!container) return;
 
-    const container =
-        document.querySelector(
-            "#answersGrid"
-        );
-
-    if (!container) {
-        return;
-    }
-
-    const answers =
-        Array.isArray(data.answers)
-            ? data.answers
-            : [];
-
+    const answers = Array.isArray(data?.answers) ? data.answers : [];
     if (!answers.length) {
-
-        container.innerHTML = `
-            <div class="empty-state">
-
-                <strong>
-                    No customer requirements found
-                </strong>
-
-                <span>
-                    This request does not contain any service answers.
-                </span>
-
-            </div>
-        `;
-
+        container.innerHTML = `<div class="empty-state"><strong>No customer requirements found</strong><span>This request does not contain any service answers.</span></div>`;
         return;
     }
 
-    container.innerHTML =
-        answers
-            .map(
-                (answer, index) => {
+    const extraDefinitions = [
+        { code: "inspection_purpose_other_text", title: "other inspection purpose", parentCode: "inspection_purpose", parentTitle: "inspection purpose" },
+        { code: "inspection_systems_other_text", title: "other system or service", parentCode: "inspection_systems", parentTitle: "system / service" },
+        { code: "inspection_targets_other_text", title: "other inspection area", parentCode: "inspection_targets", parentTitle: "what needs to be inspected?" },
+        { code: "premise_type_other_text", title: "other premise type", parentCode: "site_details_premise_type", parentTitle: "premise type" }
+    ];
+    const codeOf = a => String(a?.question_code || a?.code || "").trim().toLowerCase();
+    const titleOf = a => String(a?.question?.en || a?.question_en || a?.question || a?.question_code || "").trim().toLowerCase();
+    const rawValues = a => {
+        const raw = a?.text_value ?? a?.answer ?? "";
+        try {
+            const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+            if (Array.isArray(parsed)) return parsed.map(v => String(v).toLowerCase());
+            if (parsed && typeof parsed === "object") return Object.values(parsed).map(v => String(v).toLowerCase());
+        } catch (_) { }
+        return [String(raw).trim().toLowerCase()];
+    };
+    const extraTextByParent = new Map();
+    const extraAnswers = new Set();
+    answers.forEach(a => {
+        const code = codeOf(a), title = titleOf(a);
+        const def = extraDefinitions.find(d => code === d.code || title === d.title);
+        if (!def) return;
+        extraAnswers.add(a);
+        const value = String(a?.text_value ?? a?.answer ?? "").trim();
+        if (value) extraTextByParent.set(def.parentCode, value);
+    });
+    const parentCodeFor = a => {
+        const code = codeOf(a), title = titleOf(a);
+        const def = extraDefinitions.find(d => code === d.parentCode || title === d.parentTitle);
+        return def?.parentCode || "";
+    };
 
-                    const question =
-                        answer.question?.en ||
-                        answer.question_code ||
-                        "Customer Requirement";
-
-                    const answerHtml =
-                        getAnswerDisplayHtml(answer);
-
-                    return `
-                        <article class="answer-item">
-
-                            <div class="answer-index">
-                                ${String(
-                                    index + 1
-                                ).padStart(2, "0")}
-                            </div>
-
-                            <div class="answer-content">
-
-                                <div class="answer-question">
-                                    ${escapeHtml(
-                                        question
-                                    )}
-                                </div>
-
-                                ${
-                                    answer.description?.en
-                                        ? `
-                                            <div class="answer-description">
-                                                ${escapeHtml(
-                                                    answer.description.en
-                                                )}
-                                            </div>
-                                        `
-                                        : ""
-                                }
-
-                                <div class="answer-value answer-value-modern">
-
-                                    ${answerHtml}
-
-                                </div>
-
-                                ${
-                                    answer.unit
-                                        ? `
-                                            <div class="answer-unit">
-                                                ${escapeHtml(
-                                                    formatUnit(
-                                                        answer.unit
-                                                    )
-                                                )}
-                                            </div>
-                                        `
-                                        : ""
-                                }
-
-                            </div>
-
-                        </article>
-                    `;
-
-                }
-            )
-            .join("");
-
+    container.innerHTML = answers.filter(a => {
+        if (!extraAnswers.has(a)) return true;
+        const code = codeOf(a), title = titleOf(a);
+        const def = extraDefinitions.find(d => code === d.code || title === d.title);
+        return !answers.some(parent => parent !== a && parentCodeFor(parent) === def?.parentCode);
+    }).map((answer, index) => {
+        const question = answer.question?.en || answer.question_en || answer.question_code || "Customer Requirement";
+        let answerHtml = getAnswerDisplayHtml(answer);
+        const parentCode = parentCodeFor(answer);
+        const otherText = parentCode ? extraTextByParent.get(parentCode) : "";
+        if (otherText && rawValues(answer).includes("other")) {
+            answerHtml = `${answerHtml || ""}${answerHtml ? " — " : ""}${escapeHtml(otherText)}`;
+        }
+        return `
+            <article class="answer-item">
+                <div class="answer-index">${String(index + 1).padStart(2, "0")}</div>
+                <div class="answer-content">
+                    <div class="answer-question">${escapeHtml(question)}</div>
+                    ${answer.description?.en ? `<div class="answer-description">${escapeHtml(answer.description.en)}</div>` : ""}
+                    <div class="answer-value answer-value-modern">${answerHtml || "Not specified"}</div>
+                    ${answer.unit ? `<div class="answer-unit">${escapeHtml(formatUnit(answer.unit))}</div>` : ""}
+                </div>
+            </article>`;
+    }).join("");
 }
-
 
 /* =========================================================
    FALLBACK ONLY
@@ -2256,7 +2217,7 @@ function getQuestionDisplayLabel(
         if (
             text &&
             text.toLowerCase() !==
-                "customer requirement"
+            "customer requirement"
         ) {
 
             return text;
@@ -2881,6 +2842,106 @@ function showInvoiceMessage(id, message, error = false) {
     element.hidden = false;
 }
 
+
+
+/* =========================================================
+   ORIGINAL QUOTATION HISTORY
+   Each upload creates a new record and never changes the
+   request status, assignment, or technician progress.
+========================================================= */
+
+function showOriginalQuotationMessage(message, error = false) {
+    const element = $("#originalQuotationMessage");
+    if (!element) return;
+    element.textContent = message;
+    element.className = `invoice-message ${error ? "error" : "success"}`;
+    element.hidden = false;
+}
+
+async function loadOriginalQuotationHistory() {
+    const container = $("#quotationHistory");
+    const requestId = getRequestId();
+    if (!container || !requestId || !getToken()) return;
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/quotations/request/${encodeURIComponent(requestId)}`,
+            { headers: { Authorization: `Bearer ${getToken()}` } }
+        );
+        const result = await parseResponse(response);
+        const quotations = Array.isArray(result.data) ? result.data : [];
+
+        if (!quotations.length) {
+            container.innerHTML = `<div class="empty-state">No original quotation has been uploaded for this request.</div>`;
+            return;
+        }
+
+        container.innerHTML = quotations.map((quotation, index) => {
+            const fileUrl = resolveFileUrl(quotation.quotation_file_url);
+            const link = fileUrl
+                ? `<div class="invoice-actions"><a class="invoice-link" href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer">View Quotation PDF</a></div>`
+                : `<div class="empty-state">No PDF link is available for this record.</div>`;
+            const metadata = [
+                metaItem("Uploaded", formatDate(quotation.created_at)),
+                metaItem("Uploaded By", quotation.created_by_name || "—"),
+                metaItem("Approval", formatLabel(quotation.approval_status || quotation.status || "draft")),
+                metaItem("Revision", quotation.revision_number || (quotations.length - index))
+            ].join("");
+            const notes = quotation.notes
+                ? `<p class="invoice-help">${escapeHtml(quotation.notes)}</p>`
+                : "";
+            return `<div class="invoice-card"><div class="invoice-card-header"><div><h3>${escapeHtml(quotation.quotation_number || "Original Quotation")}</h3><small>Quotation history record ${quotations.length - index}</small></div><span class="invoice-status">${escapeHtml(formatLabel(quotation.status || "draft"))}</span></div><div class="invoice-meta-grid">${metadata}</div>${notes}${link}</div>`;
+        }).join("");
+    } catch (error) {
+        console.error("Load quotation history error:", error);
+        container.innerHTML = `<div class="empty-state">${escapeHtml(error.message || "Unable to load quotation history.")}</div>`;
+        if (handleAuthError(error)) return;
+    }
+}
+
+async function uploadOriginalQuotation() {
+    const requestId = getRequestId();
+    const fileInput = $("#originalQuotationFile");
+    const notesInput = $("#originalQuotationNotes");
+    const button = $("#uploadOriginalQuotationButton");
+    const file = fileInput?.files?.[0];
+
+    if (!requestId) return showOriginalQuotationMessage("Request ID is missing.", true);
+    if (!file) return showOriginalQuotationMessage("Please select a quotation PDF.", true);
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        return showOriginalQuotationMessage("Quotation must be a PDF file.", true);
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        return showOriginalQuotationMessage("File is too large. Maximum size is 10 MB.", true);
+    }
+    if (!window.confirm("Upload this quotation as a new history record?\n\nThe request status and technician progress will not be changed.")) return;
+
+    const form = new FormData();
+    form.append("request_id", requestId);
+    form.append("notes", notesInput?.value?.trim() || "");
+    form.append("quotation_file", file);
+
+    if (button) button.disabled = true;
+    showOriginalQuotationMessage("Uploading quotation...");
+    try {
+        const response = await fetch(`${API_BASE}/quotations`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${getToken()}` },
+            body: form
+        });
+        const result = await parseResponse(response);
+        if (fileInput) fileInput.value = "";
+        if (notesInput) notesInput.value = "";
+        await loadOriginalQuotationHistory();
+        showOriginalQuotationMessage(result.message || "Quotation uploaded and added to history.");
+    } catch (error) {
+        console.error("Upload original quotation error:", error);
+        showOriginalQuotationMessage(error.message || "Unable to upload quotation.", true);
+        if (handleAuthError(error)) return;
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
 
 /* =========================================================
    UPLOAD FINAL INVOICE
@@ -3605,6 +3666,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#saveButton")?.addEventListener("click", saveChanges);
     $("#logoutButton")?.addEventListener("click", logout);
     $("#uploadInvoiceButton")?.addEventListener("click", uploadInvoice);
+    $("#uploadOriginalQuotationButton")?.addEventListener("click", uploadOriginalQuotation);
     $("#uploadPaymentProofButton")?.addEventListener("click", uploadInvoicePaymentProof);
     $("#saveTechnicianButton")?.addEventListener("click", saveTechnicianAssignment);
     $("#technicianSelect")?.addEventListener("change", updateTechnicianDisplay);

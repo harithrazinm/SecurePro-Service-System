@@ -1,0 +1,635 @@
+/* =========================================================
+   SOPro — SERVICE PAGE ENHANCEMENT
+   Load LAST, after style.css and service.css.
+   Visual only: no HTML or JS changes needed.
+   Palette follows style.css (--blue, --navy, --accent).
+   ========================================================= */
+
+main.question-page {
+    --sp-blue: #1268f3;
+    --sp-blue-dark: #0a3e9b;
+    --sp-sky: #37a9ff;
+    --sp-navy: #0b1f3d;
+    --sp-line: #dde6f2;
+    --sp-soft: #eef5ff;
+    --sp-muted: #5f6f86;
+    --sp-w: 860px;
+
+    padding: 36px 0 90px;
+    background:
+        radial-gradient(800px 420px at 100% 0%, rgba(55, 169, 255, .14), transparent 60%),
+        radial-gradient(700px 460px at 0% 40%, rgba(18, 104, 243, .07), transparent 62%),
+        linear-gradient(180deg, #f4f8fe 0%, #f7f9fc 100%);
+}
+
+main.question-page > .container {
+    max-width: calc(var(--sp-w) + 48px);
+}
+
+/* Shared width + centering for every block */
+main.question-page .question-top,
+main.question-page .question-header,
+main.question-page .category-progress,
+main.question-page .progress-area,
+main.question-page .question-container,
+main.question-page .question-navigation {
+    max-width: var(--sp-w);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ---------------------------------------------------------
+   HEADER — dark hero card matching the site header/hero
+   --------------------------------------------------------- */
+main.question-page .question-header {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    margin-bottom: 22px;
+    padding: 38px 40px 40px;
+    border-radius: 28px;
+    border: 1px solid rgba(110, 195, 255, .22);
+    background:
+        radial-gradient(circle at 88% 10%, rgba(55, 169, 255, .34), transparent 42%),
+        radial-gradient(circle at 0% 110%, rgba(18, 104, 243, .38), transparent 45%),
+        linear-gradient(120deg, #04172f 0%, #082d57 60%, #0b4585 100%);
+    box-shadow: 0 26px 60px rgba(5, 35, 75, .24);
+}
+
+main.question-page .question-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(rgba(255, 255, 255, .08) 1px, transparent 1.5px);
+    background-size: 24px 24px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 25%, #000);
+    mask-image: linear-gradient(90deg, transparent 25%, #000);
+}
+
+main.question-page .question-header::after {
+    /* decorative ring instead of the accent underline */
+    content: "";
+    position: absolute;
+    z-index: -1;
+    right: -90px;
+    bottom: -150px;
+    width: 340px;
+    height: 340px;
+    margin: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(104, 199, 255, .22);
+    background: none;
+    box-shadow: 0 0 0 34px rgba(104, 199, 255, .035), 0 0 0 68px rgba(104, 199, 255, .02);
+    animation: none;
+}
+
+main.question-page .question-header .eyebrow {
+    margin-bottom: 14px;
+    padding: 6px 13px;
+    border: 1px solid rgba(127, 208, 255, .35);
+    background: rgba(255, 255, 255, .08);
+    color: #9be0ff;
+    letter-spacing: .16em;
+    box-shadow: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+main.question-page .question-header .eyebrow::before { display: none; }
+
+main.question-page .question-header h1 {
+    max-width: 640px;
+    margin-bottom: 12px;
+    color: #fff;
+    font-size: clamp(32px, 4.6vw, 48px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -.04em;
+}
+
+main.question-page .question-header p {
+    max-width: 600px;
+    color: rgba(232, 244, 255, .8);
+    font-size: 15.5px;
+    line-height: 1.75;
+}
+
+/* ---------------------------------------------------------
+   STEP BAR — connected stepper
+   --------------------------------------------------------- */
+main.question-page .category-progress {
+    position: relative;
+    margin-bottom: 18px;
+    padding: 12px;
+    gap: 6px;
+    border: 1px solid var(--sp-line);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .92);
+    box-shadow: 0 10px 30px rgba(18, 50, 100, .06);
+}
+
+main.question-page .category-progress .progress-step {
+    position: relative;
+    min-height: 54px;
+    padding: 8px 12px;
+    border-radius: 14px;
+    color: #7a889d;
+    font-size: 12.5px;
+    font-weight: 750;
+    transition: background .25s ease, color .25s ease;
+}
+
+main.question-page .category-progress .progress-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    width: 6px;
+    height: 2px;
+    background: var(--sp-line);
+}
+
+main.question-page .category-progress .progress-dot {
+    width: 30px;
+    height: 30px;
+    background: #eef2f8;
+    color: #6b7a90;
+    font-size: 11px;
+    font-weight: 800;
+    transition: background .25s ease, color .25s ease, box-shadow .25s ease;
+}
+
+main.question-page .category-progress .progress-step.active {
+    background: linear-gradient(135deg, #eaf3ff, #f4f9ff);
+    color: var(--sp-blue-dark);
+    box-shadow: inset 0 0 0 1px #cfe2fb;
+}
+
+main.question-page .category-progress .progress-step.active .progress-dot {
+    background: linear-gradient(145deg, var(--sp-sky), var(--sp-blue));
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(18, 104, 243, .35);
+}
+
+/* ---------------------------------------------------------
+   QUESTION PROGRESS BAR
+   --------------------------------------------------------- */
+main.question-page .progress-area {
+    margin-bottom: 18px;
+    padding: 14px 18px 16px;
+    border: 1px solid var(--sp-line);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .85);
+    box-shadow: 0 6px 20px rgba(18, 50, 100, .04);
+}
+
+main.question-page .progress-info {
+    font-size: 13px;
+    color: var(--sp-muted);
+}
+
+main.question-page #progressPercent {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--sp-soft);
+    color: var(--sp-blue-dark);
+    font-weight: 800;
+}
+
+main.question-page .progress-track {
+    height: 10px;
+    background: #e6edf6;
+}
+
+main.question-page .progress-bar {
+    background: linear-gradient(90deg, var(--sp-blue), var(--sp-sky));
+    box-shadow: 0 3px 12px rgba(18, 104, 243, .35);
+}
+
+/* ---------------------------------------------------------
+   QUESTION CARD
+   --------------------------------------------------------- */
+main.question-page .question-card {
+    padding: 34px 34px 32px;
+    border: 1px solid #dbe6f4;
+    border-radius: 26px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(15, 40, 80, .03), 0 22px 50px rgba(15, 40, 80, .07);
+}
+
+main.question-page .question-card::before {
+    height: 5px;
+    background: linear-gradient(90deg, var(--sp-blue), var(--sp-sky) 60%, rgba(55, 169, 255, .08));
+}
+
+main.question-page .question-card:hover {
+    transform: none;
+    border-color: #cfe0f5;
+    box-shadow: 0 2px 4px rgba(15, 40, 80, .03), 0 26px 56px rgba(18, 104, 243, .10);
+}
+
+main.question-page .question-number {
+    margin-bottom: 14px;
+    padding: 6px 12px;
+    border: 0;
+    background: var(--sp-navy);
+    color: #fff;
+    letter-spacing: .14em;
+}
+
+main.question-page .question-title {
+    margin-bottom: 10px;
+    color: var(--sp-navy);
+    font-size: clamp(23px, 3vw, 30px);
+    font-weight: 800;
+    line-height: 1.18;
+    letter-spacing: -.03em;
+}
+
+main.question-page .question-description {
+    margin-bottom: 24px;
+    color: var(--sp-muted);
+    font-size: 14.5px;
+    line-height: 1.7;
+}
+
+/* ---------------------------------------------------------
+   OPTIONS — separate selectable cards
+   Covers: .option > label, .option-checkbox direct,
+   and .option > .option-checkbox structures.
+   --------------------------------------------------------- */
+main.question-page .options {
+    display: grid;
+    gap: 12px;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* card shell: wrapper for radio, label for direct checkbox */
+main.question-page .options > .option,
+main.question-page .options > .option-checkbox {
+    position: relative;
+    overflow: hidden;
+    border: 1.5px solid #d9e3f0;
+    border-top: 1.5px solid #d9e3f0;
+    border-radius: 16px;
+    background: #fff;
+    transition: border-color .2s ease, background .2s ease,
+                box-shadow .2s ease, transform .2s ease;
+}
+
+main.question-page .options > .option + .option,
+main.question-page .options > .option-checkbox + .option-checkbox {
+    border-top: 1.5px solid #d9e3f0;
+}
+
+@media (hover: hover) {
+    main.question-page .options > .option:hover,
+    main.question-page .options > .option-checkbox:hover {
+        transform: translateY(-2px);
+        border-color: #8fc0fb;
+        background: #fafcff;
+        box-shadow: 0 12px 26px rgba(18, 104, 243, .09);
+    }
+}
+
+/* ----- single select: custom radio indicator ----- */
+main.question-page .options > .option > .option-label {
+    position: relative;
+    min-height: 74px;
+    padding: 18px 20px 18px 62px;
+    background: transparent;
+    box-shadow: none;
+}
+
+main.question-page .options > .option > .option-label:hover,
+main.question-page .options > .option > input:checked + .option-label {
+    padding-left: 62px;
+    background: transparent;
+    box-shadow: none;
+}
+
+main.question-page .options > .option > .option-label::before {
+    content: "";
+    position: absolute;
+    left: 22px;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    transform: translateY(-50%);
+    border: 2px solid #b9c7da;
+    border-radius: 50%;
+    background: #fff;
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+main.question-page .options > .option > input:checked + .option-label::before {
+    border-color: var(--sp-blue);
+    background: var(--sp-blue);
+    box-shadow: inset 0 0 0 4px #fff, 0 0 0 4px rgba(18, 104, 243, .14);
+}
+
+main.question-page .options .option-title {
+    margin-bottom: 4px;
+    color: var(--sp-navy);
+    font-size: 15.5px;
+    font-weight: 800;
+}
+
+main.question-page .options .option-description {
+    color: var(--sp-muted);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+/* ----- multi select: checkbox rows ----- */
+main.question-page .options > .option-checkbox,
+main.question-page .options > .option > .option-checkbox {
+    min-height: 74px;
+    padding: 18px 20px;
+    gap: 15px;
+    box-shadow: none;
+}
+
+main.question-page .options > .option > .option-checkbox:hover,
+main.question-page .options > .option-checkbox:hover {
+    padding-left: 20px;
+    background: transparent;
+}
+
+main.question-page .options > .option-checkbox input[type="checkbox"],
+main.question-page .options > .option > .option-checkbox input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    border: 2px solid #b9c7da;
+    border-radius: 7px;
+}
+
+main.question-page .options > .option-checkbox input[type="checkbox"]:checked::after,
+main.question-page .options > .option > .option-checkbox input[type="checkbox"]:checked::after {
+    left: 7px;
+    top: 3px;
+}
+
+main.question-page .options > .option-checkbox input[type="checkbox"]:checked,
+main.question-page .options > .option > .option-checkbox input[type="checkbox"]:checked {
+    background: var(--sp-blue);
+    border-color: var(--sp-blue);
+    box-shadow: 0 0 0 4px rgba(18, 104, 243, .14);
+}
+
+/* ----- selected card state ----- */
+main.question-page .options > .option:has(input:checked),
+main.question-page .options > .option-checkbox:has(input:checked) {
+    border-color: var(--sp-blue);
+    background: linear-gradient(135deg, #eef5ff, #f8fbff);
+    box-shadow: 0 0 0 3px rgba(18, 104, 243, .10), 0 12px 26px rgba(18, 104, 243, .10);
+}
+
+main.question-page .options > .option:has(input:checked) .option-title,
+main.question-page .options > .option-checkbox:has(input:checked) .option-title {
+    color: var(--sp-blue-dark);
+}
+
+/* ---------------------------------------------------------
+   INPUTS, COUNTERS, TEXTAREA, UPLOAD
+   --------------------------------------------------------- */
+main.question-page .number-input,
+main.question-page .question-textarea {
+    border: 1.5px solid #d9e3f0;
+    border-radius: 14px;
+    background: #fbfdff;
+}
+
+main.question-page .number-input:focus,
+main.question-page .question-textarea:focus {
+    border-color: var(--sp-blue);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(18, 104, 243, .12);
+}
+
+main.question-page .number-unit {
+    border-radius: 10px;
+    background: var(--sp-soft);
+    border: 1px solid #d6e5fa;
+    color: var(--sp-blue-dark);
+}
+
+main.question-page .counter-list { gap: 12px; }
+
+main.question-page .counter-item {
+    padding: 18px 20px;
+    border: 1.5px solid #d9e3f0;
+    border-radius: 16px;
+}
+
+main.question-page .counter-control {
+    padding: 4px;
+    border-radius: 14px;
+    background: #f1f6fd;
+}
+
+main.question-page .counter-button {
+    border: 0;
+    border-radius: 11px;
+    background: #fff;
+    color: var(--sp-blue);
+    box-shadow: 0 2px 6px rgba(18, 50, 100, .10);
+}
+
+main.question-page .counter-button:hover {
+    background: var(--sp-blue);
+    color: #fff;
+}
+
+main.question-page .counter-value { color: var(--sp-navy); font-size: 15px; }
+
+main.question-page .file-upload {
+    padding: 38px 24px;
+    border: 2px dashed #b9d3f3;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fbfdff, #f1f7ff);
+}
+
+main.question-page .file-upload strong { color: var(--sp-navy); font-size: 16px; }
+
+/* ---------------------------------------------------------
+   NAVIGATION — floating action bar
+   --------------------------------------------------------- */
+main.question-page .question-navigation {
+    margin-top: 20px;
+    padding: 14px 16px;
+    align-items: center;
+    border: 1px solid var(--sp-line);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 10px 30px rgba(18, 50, 100, .07);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+main.question-page .question-navigation .secondary-btn,
+main.question-page .question-navigation .primary-btn {
+    min-height: 50px;
+    margin: 0;
+    padding: 0 26px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+main.question-page .question-navigation .secondary-btn {
+    border: 1.5px solid #cfdcee;
+    background: #fff;
+    color: #17365d;
+    box-shadow: none;
+}
+
+main.question-page .question-navigation .primary-btn {
+    min-width: 140px;
+    border: 0;
+    background: linear-gradient(180deg, #3aa9ff, var(--sp-blue));
+    color: #fff;
+    box-shadow: 0 12px 26px rgba(18, 104, 243, .30);
+}
+
+main.question-page .question-navigation .primary-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, #2f9cf7, #0a5be0);
+    box-shadow: 0 16px 32px rgba(18, 104, 243, .38);
+}
+
+main.question-page .question-navigation .secondary-btn:hover:not(:disabled) {
+    border-color: #8fc0fb;
+    background: var(--sp-soft);
+    color: var(--sp-blue-dark);
+}
+
+/* ---------------------------------------------------------
+   POPUPS
+   --------------------------------------------------------- */
+.validation-popup,
+.previous-popup {
+    border: 0;
+    border-radius: 26px;
+    box-shadow: 0 34px 80px rgba(7, 30, 70, .30);
+}
+
+#validationPopupButton,
+.previous-popup-confirm {
+    background: linear-gradient(180deg, #3aa9ff, #1268f3);
+    border-radius: 999px;
+    box-shadow: 0 10px 22px rgba(18, 104, 243, .30);
+}
+
+.previous-popup-actions button { border-radius: 999px; }
+
+/* ---------------------------------------------------------
+   LOAD-IN
+   --------------------------------------------------------- */
+@keyframes sp-pop {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+
+main.question-page .question-card { animation: sp-pop .4s ease both; }
+main.question-page .options > * { animation: sp-pop .4s ease both; }
+main.question-page .options > *:nth-child(2) { animation-delay: .05s; }
+main.question-page .options > *:nth-child(3) { animation-delay: .10s; }
+main.question-page .options > *:nth-child(4) { animation-delay: .15s; }
+main.question-page .options > *:nth-child(n+5) { animation-delay: .20s; }
+
+/* ---------------------------------------------------------
+   TABLET / MOBILE
+   --------------------------------------------------------- */
+@media (max-width: 760px) {
+    main.question-page { padding: 22px 0 100px; }
+
+    main.question-page .question-header {
+        padding: 28px 24px 30px;
+        border-radius: 22px;
+    }
+
+    main.question-page .category-progress { padding: 8px; gap: 5px; }
+
+    main.question-page .category-progress .progress-step:not(:last-child)::after { display: none; }
+
+    main.question-page .question-card { padding: 26px 22px; border-radius: 22px; }
+
+    /* sticky bar on phones: flatten so it docks to the bottom edge */
+    main.question-page .question-navigation {
+        position: sticky;
+        bottom: 0;
+        z-index: 50;
+        margin-left: -4px;
+        margin-right: -4px;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        border-radius: 20px 20px 0 0;
+        border-bottom: 0;
+        box-shadow: 0 -10px 30px rgba(18, 50, 100, .10);
+    }
+
+    main.question-page .question-navigation .secondary-btn,
+    main.question-page .question-navigation .primary-btn { flex: 1; min-width: 0; padding: 0 14px; }
+}
+
+@media (max-width: 480px) {
+    main.question-page > .container { width: min(calc(100% - 24px), 860px); }
+
+    main.question-page .question-header { padding: 24px 20px 26px; border-radius: 20px; }
+
+    main.question-page .question-header h1 { font-size: 29px; }
+
+    main.question-page .question-header p { font-size: 13.5px; line-height: 1.6; }
+
+    main.question-page .category-progress .progress-step {
+        flex-direction: row;
+        min-height: 46px;
+        padding: 6px 8px;
+        font-size: 10.5px;
+        text-align: left;
+    }
+
+    main.question-page .category-progress .progress-dot { width: 24px; height: 24px; font-size: 9px; }
+
+    main.question-page .progress-area { padding: 11px 14px 13px; }
+
+    main.question-page .question-card { padding: 20px 16px; border-radius: 18px; }
+
+    main.question-page .question-title { font-size: 21px; }
+
+    main.question-page .question-description { font-size: 13px; margin-bottom: 16px; }
+
+    main.question-page .options { gap: 10px; }
+
+    main.question-page .options > .option > .option-label,
+    main.question-page .options > .option > .option-label:hover,
+    main.question-page .options > .option > input:checked + .option-label {
+        min-height: 62px;
+        padding: 14px 14px 14px 52px;
+    }
+
+    main.question-page .options > .option > .option-label::before { left: 16px; width: 20px; height: 20px; }
+
+    main.question-page .options > .option-checkbox,
+    main.question-page .options > .option > .option-checkbox {
+        min-height: 62px;
+        padding: 14px;
+        gap: 12px;
+    }
+
+    main.question-page .options .option-title { font-size: 14px; }
+
+    main.question-page .options .option-description { font-size: 12px; }
+
+    main.question-page .counter-item { padding: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    main.question-page .question-card,
+    main.question-page .options > * { animation: none; }
+}

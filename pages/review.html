@@ -12,6 +12,7 @@
 
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/review.css">
+    <link rel="stylesheet" href="../css/request-progress.css">
 </head>
 
 <body>
@@ -35,6 +36,25 @@
 
 <main class="review-page">
     <div class="container">
+
+        <div class="request-progress" aria-label="Request progress">
+            <div class="request-progress-step done">
+                <span class="request-progress-dot">01</span>
+                <span data-request-progress-label="questions">Questions</span>
+            </div>
+            <div class="request-progress-step done">
+                <span class="request-progress-dot">02</span>
+                <span data-request-progress-label="customer">Customer Details</span>
+            </div>
+            <div class="request-progress-step active">
+                <span class="request-progress-dot">03</span>
+                <span data-request-progress-label="review">Review</span>
+            </div>
+            <div class="request-progress-step ">
+                <span class="request-progress-dot">04</span>
+                <span data-request-progress-label="submit">Submit</span>
+            </div>
+        </div>
 
         <div class="review-top">
             <a href="customer.html" class="back-link">
@@ -173,5 +193,6 @@
 
 <script src="../js/review.js?v=20260924-1"></script>
 
+    <script src="../js/request-progress.js"></script>
 </body>
 </html>

@@ -26,6 +26,10 @@ const translations = {
         previous: "Previous",
         next: "Next",
         finish: "Continue",
+        stepQuestions: "Questions",
+        stepCustomer: "Customer Details",
+        stepReview: "Review",
+        stepSubmit: "Submit",
         required: "Please answer this question.",
         question: "Question",
         upload: "Click to upload photos",
@@ -37,6 +41,10 @@ const translations = {
         previous: "Sebelum",
         next: "Seterusnya",
         finish: "Teruskan",
+        stepQuestions: "Soalan",
+        stepCustomer: "Maklumat Pelanggan",
+        stepReview: "Semak",
+        stepSubmit: "Hantar",
         required: "Sila jawab soalan ini.",
         question: "Soalan",
         upload: "Klik untuk muat naik gambar",
@@ -104,13 +112,78 @@ function getVisibleQuestions() {
             return true;
         }
 
-        const condition =
-            question.showIf;
-
-        return answers[condition.question] ===
-            condition.equals;
+        return matchesCondition(question.showIf);
 
     });
+}
+
+
+/*
+   Works for single answers (string) and multi answers (array).
+   Supports:  equals: "x"   |   includes: "x"   |   in: ["x", "y"]
+*/
+function matchesCondition(condition) {
+
+    const answer =
+        answers[condition.question];
+
+    if (answer === undefined || answer === null) {
+        return false;
+    }
+
+    const selected =
+        Array.isArray(answer)
+            ? answer
+            : [answer];
+
+    if (condition.in) {
+        return condition.in.some(
+            value => selected.includes(value)
+        );
+    }
+
+    const expected =
+        condition.equals !== undefined
+            ? condition.equals
+            : condition.includes;
+
+    return selected.includes(expected);
+}
+
+
+/*
+   Answers belonging to questions that are no longer visible
+   (the person changed an earlier answer) must not be submitted.
+*/
+function pruneHiddenAnswers() {
+
+    if (!service) {
+        return;
+    }
+
+    let changed = true;
+
+    // Repeat: removing one answer can hide a question that depended on it
+    while (changed) {
+
+        changed = false;
+
+        const visibleIds =
+            new Set(
+                getVisibleQuestions().map(
+                    question => question.id
+                )
+            );
+
+        Object.keys(answers).forEach(id => {
+
+            if (!visibleIds.has(id)) {
+                delete answers[id];
+                changed = true;
+            }
+
+        });
+    }
 }
 
 
@@ -225,6 +298,18 @@ function renderService() {
 
         title.textContent =
             getLanguageText(service.name);
+
+    }
+
+
+    const eyebrow =
+        document.querySelector("#serviceEyebrow");
+
+    if (eyebrow) {
+
+        eyebrow.textContent =
+            `SOPRO · ${getLanguageText(service.name)}`
+                .toUpperCase();
 
     }
 
@@ -1397,19 +1482,61 @@ function saveCurrentAnswer() {
     const answer =
         collectCurrentAnswer();
 
+    /*
+       A question with  required: false  may be skipped.
+       Skipped questions are simply not stored.
+    */
+    if (
+        question.required === false &&
+        isEmptyAnswer(answer)
+    ) {
+
+        delete answers[question.id];
+
+        pruneHiddenAnswers();
+
+        return true;
+    }
+
     if (!validateAnswer(question, answer)) {
 
-    showValidationPopup(
-        translations[currentLanguage].required
-    );
+        showValidationPopup(
+            translations[currentLanguage].required
+        );
 
-    return false;
-}
+        return false;
+    }
 
     answers[question.id] =
         answer;
 
+    // This answer may have hidden questions that were answered before
+    pruneHiddenAnswers();
+
     return true;
+}
+
+
+function isEmptyAnswer(answer) {
+
+    if (answer === null || answer === undefined) {
+        return true;
+    }
+
+    if (typeof answer === "string") {
+        return answer.trim() === "";
+    }
+
+    if (Array.isArray(answer)) {
+        return answer.length === 0;
+    }
+
+    if (typeof answer === "object") {
+        return Object.values(answer)
+            .every(value => !Number(value));
+    }
+
+    return false;
 }
 
 
@@ -1531,6 +1658,8 @@ function goNext() {
         return;
     }
 
+
+    pruneHiddenAnswers();
 
     localStorage.setItem(
         "securepro_answers",
@@ -1913,6 +2042,29 @@ function escapeHtml(value) {
 ========================================================= */
 
 
+/*
+   Elements in service.html marked  data-i18n="back|previous|next"
+   were never translated. Apply the translations table to them.
+*/
+function applyStaticTranslations() {
+
+    document
+        .querySelectorAll("[data-i18n]")
+        .forEach(element => {
+
+            const text =
+                translations[currentLanguage][
+                    element.dataset.i18n
+                ];
+
+            if (text) {
+                element.textContent = text;
+            }
+
+        });
+}
+
+
 function updateLanguageToggleLabel() {
 
     const button =
@@ -1943,8 +2095,9 @@ document.addEventListener(
         
 
         updateLanguageToggleLabel();
-updateLanguageToggleLabel();
-document.querySelector(
+        applyStaticTranslations();
+
+        document.querySelector(
             "#languageToggle"
         )?.addEventListener(
             "click",

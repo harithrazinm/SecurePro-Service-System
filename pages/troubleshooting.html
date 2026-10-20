@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/category-question.css">
+    <link rel="stylesheet" href="../css/category-enhance.css">
+    <title>SecurePro | Troubleshooting / Repair</title>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container navbar"><a href="../index.html" class="brand"><img src="../assets/sopro-logo.png"
+                    alt="SOPro SecureOnePro" class="brand-logo"></a>
+            <nav class="main-nav" id="mainNav"><a href="../index.html#why">Utama</a><a
+                    href="../index.html#services">Senarai Servis</a><a href="../index.html#help">Hubungi Kami</a></nav>
+            <div class="nav-actions"><button id="languageToggle" class="language-btn" type="button">🌐
+                    English</button><button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu"
+                    aria-expanded="false"><span></span><span></span><span></span></button></div>
+        </div>
+    </header>
+    <main class="category-question-page">
+        <div class="container">
+            <div class="category-question-header"><span class="eyebrow">TROUBLESHOOTING / REPAIR</span>
+                <h1>Troubleshooting / Repair</h1>
+                <p data-i18n="intro">Tell us what system is affected and what problem you are experiencing.</p>
+            </div>
+            <div class="category-progress" aria-label="Request progress">
+                <div class="progress-step active"><span class="progress-dot">01</span><span
+                        data-progress-label="questions">Questions</span></div>
+                <div class="progress-step"><span class="progress-dot">02</span><span
+                        data-progress-label="customer">Customer Details</span></div>
+                <div class="progress-step"><span class="progress-dot">03</span><span
+                        data-progress-label="review">Review</span></div>
+                <div class="progress-step"><span class="progress-dot">04</span><span
+                        data-progress-label="submit">Submit</span></div>
+            </div>
+            <form id="questionForm" class="question-form">
+                <div id="categoryQuestions"></div>
+            </form>
+        </div>
+    </main>
+    <script src="../js/category-form.js"></script>
+    <script src="../js/troubleshooting.js"></script>
+</body>
+
+</html>

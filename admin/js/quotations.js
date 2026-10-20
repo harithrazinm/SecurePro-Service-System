@@ -1305,144 +1305,75 @@ function getRequestSubmittedDate(request) {
 function renderQuotationJobQueue() {
     if (!quotationJobList) return;
 
-    const existingRequestIds = new Set(
-        quotations
-            .map(quotation => quotation?.request_id)
-            .filter(Boolean)
-    );
-
-    const jobs = serviceRequests.filter(request => {
-
-        if (!request?.id || existingRequestIds.has(request.id)) {
-            return false;
-        }
-
-        const serviceCode =
-            request?.service?.code ||
-            request?.service_code ||
-            request?.service_type ||
-            null;
-
-        /*
-         * Troubleshooting & Repair skips quotation completely.
-         * After Admin approves the technician final report, it moves
-         * directly to awaiting_payment for final invoice upload.
-         */
-        if (serviceCode === "troubleshoot_repair") {
-            return false;
-        }
-
-        /* All other services keep the existing queue behaviour. */
-        return true;
+    // Show every service request, regardless of its current workflow status
+    // or service category. Existing quotations remain in the table as history;
+    // this queue lets admin upload another revision for the same request.
+    const quotationCountByRequest = new Map();
+    quotations.forEach(quotation => {
+        const key = String(quotation?.request_id ?? '');
+        if (key) quotationCountByRequest.set(key, (quotationCountByRequest.get(key) || 0) + 1);
     });
 
-    if (quotationJobCount) {
-        quotationJobCount.textContent =
-            String(jobs.length);
-    }
+    const jobs = serviceRequests
+        .filter(request => {
+            if (!request?.id) return false;
+
+            // Completed or cancelled jobs no longer need to appear in the
+            // action queue. Their quotation records remain available below
+            // in the All Quotations table as history.
+            const status = String(request.status || "pending")
+                .trim()
+                .toLowerCase()
+                .replace(/[ -]+/g, "_");
+
+            return !["completed", "cancelled", "canceled"].includes(status);
+        })
+        .slice()
+        .sort((a, b) => {
+            const aDate = new Date(getRequestSubmittedDate(a) || 0).getTime();
+            const bDate = new Date(getRequestSubmittedDate(b) || 0).getTime();
+            return bDate - aDate;
+        });
+
+    if (quotationJobCount) quotationJobCount.textContent = String(jobs.length);
 
     if (!jobs.length) {
         quotationJobList.innerHTML = `
             <div class="quotation-job-empty">
                 <div class="quotation-job-empty-icon">✓</div>
-
-                <strong>
-                    All quotation jobs are up to date
-                </strong>
-
-                <p>
-                    There are currently no service
-                    requests waiting for a quotation.
-                </p>
-            </div>
-        `;
-
+                <strong>No service requests found</strong>
+                <p>Service requests will appear here when they are available.</p>
+            </div>`;
         return;
     }
 
     quotationJobList.innerHTML = jobs.map(request => {
-
-        const requestId =
-            escapeHtml(request.id);
-
-        const requestCode =
-            escapeHtml(
-                request.request_code ||
-                request.code ||
-                "Service Request"
-            );
-
-        const customer =
-            escapeHtml(
-                getRequestCustomerName(request)
-            );
-
-        const service =
-            escapeHtml(
-                getRequestServiceName(request)
-            );
-
-        const submitted =
-            formatDate(
-                getRequestSubmittedDate(request)
-            );
-
-        const serviceCode =
-            request?.service?.code ||
-            request?.service_code ||
-            request?.service_type ||
-            null;
-
-        const readiness =
-            serviceCode === "troubleshoot_repair"
-                ? "Inspection approved — quotation can be prepared"
-                : null;
+        const requestId = escapeHtml(request.id);
+        const requestKey = String(request.id);
+        const count = quotationCountByRequest.get(requestKey) || 0;
+        const requestCode = escapeHtml(request.request_code || request.code || 'Service Request');
+        const customer = escapeHtml(getRequestCustomerName(request));
+        const service = escapeHtml(getRequestServiceName(request));
+        const status = escapeHtml(formatStatus(request.status || 'pending'));
+        const submitted = escapeHtml(formatDate(getRequestSubmittedDate(request)));
 
         return `
             <article class="quotation-job-item">
-
                 <div class="quotation-job-main">
-
-                    <span class="quotation-job-code">
-                        ${requestCode}
-                    </span>
-
-                    <strong class="quotation-job-customer">
-                        ${customer}
-                    </strong>
-
+                    <span class="quotation-job-code">${requestCode}</span>
+                    <strong class="quotation-job-customer">${customer}</strong>
                     <div class="quotation-job-meta">
-
-                        <span>
-                            ${service}
-                        </span>
-
-                        <span>
-                            Submitted: ${escapeHtml(submitted)}
-                        </span>
-
-                        ${
-                            readiness
-                                ? `<span>${escapeHtml(readiness)}</span>`
-                                : ""
-                        }
-
+                        <span>${service}</span>
+                        <span>Status: ${status}</span>
+                        <span>Submitted: ${submitted}</span>
+                        <span>${count ? `${count} quotation record(s) in history` : 'No quotation uploaded yet'}</span>
                     </div>
-
                 </div>
-
-                <button
-                    type="button"
-                    class="quotation-job-upload"
-                    data-upload-quotation="${requestId}"
-                >
-                    Upload Quotation
+                <button type="button" class="quotation-job-upload" data-upload-quotation="${requestId}">
+                    ${count ? 'Upload New Revision' : 'Upload Quotation'}
                 </button>
-
-            </article>
-        `;
-
-    }).join("");
+            </article>`;
+    }).join('');
 }
 
 /* =========================================================
@@ -1468,68 +1399,26 @@ async function loadRequests() {
         : [];
         
 
-        const existingRequestIds =
-            new Set(
-                quotations.map(
-                    quotation =>
-                        quotation.request_id
-                )
-            );
-
-
         requestSelect.innerHTML = `
-            <option value="">
-                Select a service request
-            </option>
+            <option value="">Select a service request</option>
         `;
 
+        // Admin may upload a quotation/revision for any service type and at
+        // any workflow stage. Existing quotations do not disable the request.
+        (serviceRequests || []).forEach(request => {
+            const option = document.createElement("option");
+            option.value = request.id;
+            const customer = getRequestCustomerName(request);
+            const code = request.request_code || request.code || `Request ${request.id}`;
+            const status = formatStatus(request.status || "pending");
+            const existingCount = quotations.filter(
+                quotation => String(quotation?.request_id ?? "") === String(request.id)
+            ).length;
+            option.textContent = `${code} — ${customer} — ${status}${existingCount ? ` — ${existingCount} quotation(s)` : " — No quotation yet"}`;
+            requestSelect.appendChild(option);
+        });
 
-        (
-            result.data || []
-        ).forEach(
-            request => {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    request.id;
-
-
-                const customer =
-                    request.customer?.name ||
-                    request.customer_name ||
-                    "Unknown customer";
-
-
-                const alreadyHasQuotation =
-                    existingRequestIds.has(
-                        request.id
-                    );
-
-
-                option.textContent =
-                    alreadyHasQuotation
-
-                        ? `${request.request_code} — ${customer} — Already has quotation`
-
-                        : `${request.request_code} — ${customer}`;
-
-
-                option.disabled =
-                    alreadyHasQuotation;
-
-
-                requestSelect.appendChild(
-                    option
-                );
-
-            }
-        );
-renderQuotationJobQueue();
+        renderQuotationJobQueue();
 
     } catch (error) {
 

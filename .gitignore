@@ -32,3 +32,10 @@ database/securepro-data.sql
 .DS_Store
 *.zip
 *_backup_*.sql
+
+# Local database backups - never push to GitHub
+backups/
+*.sql
+!database/
+!database/*.sql
+database/securepro-data.sql

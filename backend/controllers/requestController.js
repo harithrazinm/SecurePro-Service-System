@@ -25,8 +25,9 @@ function uuid() {
 
 async function generateRequestCode(connection, serviceCode) {
 
-    const servicePrefixMap = {
- cctv: "CT",
+
+const servicePrefixMap = {
+    cctv: "CT",
     alarm: "AL",
     access: "AC",
     attendance: "TA",
@@ -35,8 +36,13 @@ async function generateRequestCode(connection, serviceCode) {
     pabx: "PB",
     solar_cctv: "SC",
     solar_pump: "SP",
-    troubleshoot_repair: "TR"
+    troubleshoot_repair: "TR",
+    maintenance_service: "MS",
+    inspection: "INS",
+    electrical_service: "EL",
+    audio_visual: "AV"
 };
+
 
     const prefix =
         servicePrefixMap[serviceCode] || "SR";
@@ -269,6 +275,11 @@ async function createRequest(
                 req.body.customer_address || ""
             ).trim();
 
+        const customerLocationLink =
+            String(
+                req.body.customer_location_link || ""
+            ).trim();
+
 
         const customerNotes =
     String(
@@ -331,6 +342,33 @@ const referralCode =
                 message:
                     "Customer address is required."
             });
+
+        }
+
+
+        if (customerLocationLink) {
+
+            try {
+                const locationUrl =
+                    new URL(customerLocationLink);
+
+                if (
+                    !["http:", "https:"].includes(
+                        locationUrl.protocol
+                    )
+                ) {
+                    throw new Error("Invalid protocol");
+                }
+
+            } catch (error) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Customer location link must be a valid URL."
+                });
+
+            }
 
         }
 
@@ -439,7 +477,7 @@ const requestCode =
          * ==================================================
          */
 
-       
+
 
 
         /*
@@ -458,11 +496,12 @@ const requestCode =
                 customer_phone,
                 customer_email,
                 customer_address,
+                customer_location_link,
                 customer_notes,
                 status
             )
             VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, 'pending'
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending'
             )
             `,
             [
@@ -473,6 +512,7 @@ const requestCode =
                 customerPhone,
                 customerEmail || null,
                 customerAddress,
+                customerLocationLink || null,
                 customerNotes || null
             ]
         );
@@ -718,10 +758,66 @@ const sourceRequest = sourceRows[0];
 
         /*
          * ==================================================
+         * FRONTEND QUESTION ALIASES
+         * ==================================================
+         * The frontend uses short field IDs, while the
+         * database stores fully-qualified question_code values.
+         */
+        const inspectionQuestionAliases = {
+            premise_type: "site_details_premise_type",
+            brand: "existing_details_brand",
+            model: "existing_details_model",
+            quantity: "existing_details_quantity",
+            age: "existing_details_age",
+            installed_by: "existing_details_installed_by",
+            last_service_date: "existing_details_last_service_date",
+            inspection_description:
+                "inspection_description_inspection_description",
+            site_address: "site_details_site_address",
+            site_contact: "site_details_contact_person",
+            site_contact_number: "site_details_contact_number",
+            site_access_notes: "site_details_site_access_notes",
+            preferred_date: "appointment_preferred_date",
+            preferred_time: "appointment_preferred_time",
+            inspection_purpose_other_text: "inspection_purpose_other_text",
+            alternative_date: "appointment_alternative_date"
+        };
+
+        const troubleshootingQuestionAliases = {
+            problem_description: "problem_problem_description",
+            installed_by: "system_information_installed_by",
+            brand: "system_information_brand",
+            model: "system_information_model",
+            quantity: "system_information_quantity",
+            system_age: "system_information_system_age",
+            problem_started: "system_information_problem_started",
+            priority: "support_priority",
+            premise_type: "site_contact_premise_type"
+        };
+
+        const maintenanceQuestionAliases = {
+    installed_by: "system_information_installed_by",
+    system_age: "system_information_system_age",
+    quantity: "system_information_quantity",
+    last_service_date: "system_information_last_service_date",
+    system_status: "system_information_system_status",
+    premise_type: "site_appointment_premise_type"
+};
+
+        // These keys describe uploaded attachments. Actual file records
+        // are handled by the separate uploaded-files/media logic below.
+        const attachmentAnswerKeys = new Set([
+            "supporting_photos",
+            "supporting_videos",
+            "supporting_floor_plan",
+            "supporting_previous_documents"
+        ]);
+
+        /*
+         * ==================================================
          * SAVE ANSWERS
          * ==================================================
- */
-
+         */
         for (
             const [
                 questionCode,
@@ -729,6 +825,23 @@ const sourceRequest = sourceRows[0];
             ]
             of Object.entries(answers)
         ) {
+
+            if (attachmentAnswerKeys.has(questionCode)) {
+                continue;
+            }
+
+            let resolvedQuestionCode = questionCode;
+
+            if (serviceCode === "inspection") {
+                resolvedQuestionCode =
+                    inspectionQuestionAliases[questionCode] || questionCode;
+            } else if (serviceCode === "troubleshoot_repair") {
+    resolvedQuestionCode =
+        troubleshootingQuestionAliases[questionCode] || questionCode;
+} else if (serviceCode === "maintenance_service") {
+    resolvedQuestionCode =
+        maintenanceQuestionAliases[questionCode] || questionCode;
+}
 
             const [
                 questions
@@ -747,7 +860,7 @@ const sourceRequest = sourceRows[0];
                     `,
                     [
                         service.id,
-                        questionCode
+                        resolvedQuestionCode
                     ]
                 );
 
@@ -1145,7 +1258,10 @@ const sourceRequest = sourceRows[0];
                         customerEmail,
 
                     address:
-                        customerAddress
+                        customerAddress,
+
+                    location_link:
+                        customerLocationLink || null
 
                 },
 
@@ -1154,7 +1270,7 @@ const sourceRequest = sourceRows[0];
 
                 photo_count:
                     files.length
-                    
+
 
             }
 

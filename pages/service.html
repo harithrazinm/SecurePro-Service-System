@@ -11,7 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/service.css">
+<link rel="stylesheet" href="../css/service.css">
+<link rel="stylesheet" href="../css/service-enhance.css">
 </head>
 
 <body>
@@ -23,9 +24,16 @@
             <img src="../assets/sopro-logo.png" alt="SOPro SecureOnePro" class="brand-logo">
         </a>
 
-        <div class="nav-actions" style="margin-left:auto">
-            <button id="languageToggle" class="language-btn" type="button">
-                🌐 English
+        <nav class="main-nav" id="mainNav">
+            <a href="../index.html#why">Utama</a>
+            <a href="../index.html#services">Senarai Servis</a>
+            <a href="../index.html#help">Hubungi Kami</a>
+        </nav>
+
+        <div class="nav-actions">
+            <button id="languageToggle" class="language-btn" type="button">🌐 English</button>
+            <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu" aria-expanded="false">
+                <span></span><span></span><span></span>
             </button>
         </div>
 
@@ -36,20 +44,20 @@
 <main class="question-page">
     <div class="container">
 
-        <!-- TOP -->
-        <div class="question-top">
-            <a href="../index.html" class="back-link">
-                ←
-                <span data-i18n="back">Back to services</span>
-            </a>
-        </div>
-
         <!-- SERVICE HEADER -->
         <section class="question-header">
             <span class="eyebrow" id="serviceEyebrow">SOPRO</span>
             <h1 id="serviceTitle">Loading...</h1>
             <p id="serviceDescription">Please wait while we load the questions.</p>
         </section>
+
+        <!-- REQUEST STEPS (same as the other category pages) -->
+        <div class="category-progress" aria-label="Request progress">
+            <div class="progress-step active"><span class="progress-dot">01</span><span data-i18n="stepQuestions">Questions</span></div>
+            <div class="progress-step"><span class="progress-dot">02</span><span data-i18n="stepCustomer">Customer Details</span></div>
+            <div class="progress-step"><span class="progress-dot">03</span><span data-i18n="stepReview">Review</span></div>
+            <div class="progress-step"><span class="progress-dot">04</span><span data-i18n="stepSubmit">Submit</span></div>
+        </div>
 
         <!-- PROGRESS -->
         <div class="progress-area">

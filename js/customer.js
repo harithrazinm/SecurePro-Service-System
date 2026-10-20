@@ -34,7 +34,17 @@ const translations = {
         name: "Full Name",
         phone: "Phone Number",
         email: "Email Address",
-        address: "Address",
+        address: "Premise Address",
+        locationLink: "Premise Location",
+        locationOptional: "Optional",
+        shareLocation: "Share My Location",
+        locationHelp: "You can share your property location using your device GPS. The address above is still required.",
+        locationGetting: "Getting your location...",
+        locationSuccess: "Location captured. You can open this link in Google Maps.",
+        locationDenied: "Location access was denied. Please allow location access or paste a Google Maps link manually.",
+        locationUnavailable: "Your location is unavailable. Please try again or paste a Google Maps link manually.",
+        locationUnsupported: "Location sharing is not supported by this browser.",
+        locationError: "Unable to get your location. Please try again.",
 
         photoTitle: "Photos",
         photoDescription:
@@ -107,7 +117,17 @@ const translations = {
         name: "Nama Penuh",
         phone: "Nombor Telefon",
         email: "Alamat Emel",
-        address: "Alamat",
+        address: "Alamat Premis",
+        locationLink: "Lokasi Premis",
+        locationOptional: "Pilihan",
+        shareLocation: "Kongsi Lokasi Saya",
+        locationHelp: "Anda boleh berkongsi lokasi premis menggunakan GPS peranti. Alamat di atas masih diperlukan.",
+        locationGetting: "Mendapatkan lokasi anda...",
+        locationSuccess: "Lokasi berjaya diperoleh. Anda boleh membuka pautan ini dalam Google Maps.",
+        locationDenied: "Akses lokasi ditolak. Sila benarkan akses lokasi atau tampal pautan Google Maps secara manual.",
+        locationUnavailable: "Lokasi anda tidak tersedia. Sila cuba lagi atau tampal pautan Google Maps secara manual.",
+        locationUnsupported: "Perkongsian lokasi tidak disokong oleh pelayar ini.",
+        locationError: "Tidak dapat mendapatkan lokasi anda. Sila cuba lagi.",
 
         photoTitle: "Gambar",
         photoDescription:
@@ -260,6 +280,27 @@ async function savePhotosToDatabase(files) {
                 };
         }
     );
+}
+
+async function loadInspectionFiles() {
+    try {
+        const db = await openPhotoDatabase();
+        const records = await new Promise((resolve, reject) => {
+            const tx = db.transaction(PHOTO_STORE_NAME, "readonly");
+            const request = tx.objectStore(PHOTO_STORE_NAME).getAll();
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => reject(request.error);
+        });
+        db.close();
+        selectedFiles = records
+            .filter(item => item.source === "inspection" && item.file instanceof Blob && item.file.size > 0)
+            .map(item => new File([item.file], item.name || "supporting-file", {
+                type: item.type || item.file.type || "application/octet-stream"
+            }));
+        if (selectedFiles.length) renderPhotos();
+    } catch (error) {
+        console.error("Unable to restore Inspection supporting files:", error);
+    }
 }
 
 function t(key) {
@@ -573,6 +614,79 @@ async function validateReferralCode() {
     }
 }
 
+function setLocationStatus(message, type = "") {
+    const status = document.querySelector("#locationStatus");
+    if (!status) return;
+
+    status.className = `location-status${type ? ` ${type}` : ""}`;
+    status.textContent = message || "";
+}
+
+function shareCurrentLocation() {
+    if (!navigator.geolocation) {
+        setLocationStatus(t("locationUnsupported"), "error");
+        return;
+    }
+
+    const button = document.querySelector("#shareLocationButton");
+    if (button) {
+        button.disabled = true;
+    }
+
+    setLocationStatus(t("locationGetting"));
+
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            const latitude = Number(position.coords.latitude).toFixed(6);
+            const longitude = Number(position.coords.longitude).toFixed(6);
+            const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+            const input = document.querySelector("#customerLocationLink");
+            if (input) {
+                input.value = mapsLink;
+            }
+
+            saveCustomerData();
+            setLocationStatus(t("locationSuccess"), "success");
+
+            if (button) {
+                button.disabled = false;
+            }
+        },
+        error => {
+            let message = t("locationError");
+
+            if (error.code === error.PERMISSION_DENIED) {
+                message = t("locationDenied");
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                message = t("locationUnavailable");
+            }
+
+            setLocationStatus(message, "error");
+
+            if (button) {
+                button.disabled = false;
+            }
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        }
+    );
+}
+
+function validateLocationLink(value) {
+    if (!value) return true;
+
+    try {
+        const url = new URL(value);
+        return url.protocol === "https:" || url.protocol === "http:";
+    } catch {
+        return false;
+    }
+}
+
 function validateForm() {
     hideError();
 
@@ -587,6 +701,9 @@ function validateForm() {
 
     const address =
         document.querySelector("#customerAddress").value.trim();
+
+    const locationLink =
+        document.querySelector("#customerLocationLink")?.value.trim() || "";
 
     if (!name) {
         showError(t("nameRequired"));
@@ -611,6 +728,15 @@ function validateForm() {
         return false;
     }
 
+    if (!validateLocationLink(locationLink)) {
+        showError(
+            currentLanguage === "en"
+                ? "Please enter a valid location link."
+                : "Sila masukkan pautan lokasi yang sah."
+        );
+        return false;
+    }
+
     return true;
 }
 function renderPhotos() {
@@ -626,19 +752,20 @@ function renderPhotos() {
 
         item.className = "photo-item";
 
-        const image =
-            document.createElement("img");
-
-        image.alt = file.name;
-
-        const reader =
-            new FileReader();
-
-        reader.onload = event => {
-            image.src = event.target.result;
-        };
-
-        reader.readAsDataURL(file);
+        const isImage = (file.type || "").startsWith("image/");
+        const preview = isImage
+            ? document.createElement("img")
+            : document.createElement("div");
+        if (isImage) {
+            preview.alt = file.name;
+            const reader = new FileReader();
+            reader.onload = event => { preview.src = event.target.result; };
+            reader.readAsDataURL(file);
+        } else {
+            preview.className = "attachment-preview";
+            preview.textContent = (file.type || "").startsWith("video/") ? "VIDEO" : "PDF / FILE";
+            preview.style.cssText = "display:flex;align-items:center;justify-content:center;min-height:90px;font-weight:700;font-size:12px;color:#174ea6;background:#eef4ff;padding:12px;text-align:center;overflow-wrap:anywhere";
+        }
 
         const remove =
             document.createElement("button");
@@ -654,7 +781,11 @@ function renderPhotos() {
             renderPhotos();
         });
 
-        item.appendChild(image);
+        item.appendChild(preview);
+        const filename = document.createElement("small");
+        filename.textContent = file.name;
+        filename.style.cssText = "display:block;max-width:140px;overflow-wrap:anywhere";
+        item.appendChild(filename);
         item.appendChild(remove);
 
         container.appendChild(item);
@@ -877,6 +1008,11 @@ function saveCustomerData() {
                 "#customerAddress"
             ).value.trim(),
 
+        customer_location_link:
+            document.querySelector(
+                "#customerLocationLink"
+            )?.value.trim() || "",
+
         customer_notes:
             document.querySelector(
                 "#customerNotes"
@@ -922,6 +1058,11 @@ function restoreCustomerData() {
             "#customerAddress"
         ).value =
             customer.customer_address || "";
+
+        document.querySelector(
+            "#customerLocationLink"
+        ).value =
+            customer.customer_location_link || "";
 
         document.querySelector(
             "#customerNotes"
@@ -996,6 +1137,7 @@ document.addEventListener(
         updateLanguageToggleLabel();
         initializeReferralMessages();
         restoreCustomerData();
+        loadInspectionFiles();
 
         document.querySelector(
             "#customerPhotos"
@@ -1011,6 +1153,13 @@ document.addEventListener(
             validateReferralCode
         );
 
+        document.querySelector(
+            "#shareLocationButton"
+        )?.addEventListener(
+            "click",
+            shareCurrentLocation
+        );
+
 
         document.querySelector(
             "#referralCode"
@@ -1020,17 +1169,23 @@ document.addEventListener(
         );
 
 
-        document.querySelector(
-            "#backButton"
-        )?.addEventListener(
-            "click",
-            () => {
+       document.querySelector("#backButton")?.addEventListener(
+    "click",
+    () => {
+        saveCustomerData();
 
-                saveCustomerData();
-
-                window.history.back();
-            }
+        const previousPage = localStorage.getItem(
+            "securepro_previous_question_page"
         );
+
+        if (previousPage) {
+            window.location.href = previousPage;
+        } else {
+            // Fallback if no question page was saved
+            window.location.href = "../index.html";
+        }
+    }
+);
 
 
         document.querySelector(

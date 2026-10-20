@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/category-question.css">
+    <link rel="stylesheet" href="../css/audio-visual-wizard.css">
+    <title>SOPro | Audio & Visual</title>
+    <style>
+        .av-note {
+            margin: 18px 0;
+            padding: 14px 16px;
+            border: 1px solid #dbe7f5;
+            border-radius: 14px;
+            background: #f7fbff;
+            color: #52657d;
+            font-size: 13px
+        }
+
+        .conditional-question[hidden] {
+            display: none !important
+        }
+        .av-inline-other {
+            margin-top: 16px;
+            padding: 16px;
+            border: 1px solid #cbdcf2;
+            border-radius: 12px;
+            background: #f7fbff;
+        }
+        .av-inline-other[hidden] { display: none !important; }
+        .av-inline-other label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #183b65;
+        }
+        .av-inline-other textarea {
+            display: block;
+            width: 100%;
+            min-height: 90px;
+            padding: 12px;
+            border: 1px solid #c5d2e2;
+            border-radius: 8px;
+            font: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container navbar"><a href="../index.html" class="brand"><img src="../assets/sopro-logo.png"
+                    alt="SOPro SecureOnePro" class="brand-logo"></a>
+            <nav class="main-nav" id="mainNav"><a href="../index.html#why">Utama</a><a
+                    href="../index.html#services">Senarai Servis</a><a href="../index.html#help">Hubungi Kami</a></nav>
+            <div class="nav-actions"><button id="languageToggle" class="language-btn" type="button">🌐
+                    English</button><button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu"
+                    aria-expanded="false"><span></span><span></span><span></span></button></div>
+        </div>
+    </header>
+    <main class="category-question-page">
+        <div class="container">
+            <div class="category-question-header"><span class="eyebrow">NEW SYSTEM · AUDIO &amp; VISUAL</span>
+                <h1>Audio &amp; Visual</h1>
+                <p data-i18n="intro">Beritahu kami keperluan sistem Audio &amp; Visual anda.</p>
+                <div class="av-note">Soalan tambahan akan dipaparkan berdasarkan jenis sistem yang dipilih.</div>
+            </div>
+            <div class="category-progress" aria-label="Request progress">
+                <div class="progress-step active"><span class="progress-dot">01</span><span
+                        data-progress-label="questions">Questions</span></div>
+                <div class="progress-step"><span class="progress-dot">02</span><span
+                        data-progress-label="customer">Customer Details</span></div>
+                <div class="progress-step"><span class="progress-dot">03</span><span
+                        data-progress-label="review">Review</span></div>
+                <div class="progress-step"><span class="progress-dot">04</span><span
+                        data-progress-label="submit">Submit</span></div>
+            </div>
+            <form id="questionForm" class="question-form">
+                <div id="categoryQuestions"></div>
+            </form>
+        </div>
+    </main>
+    <script src="../js/category-form.js"></script>
+    <script src="../js/audio-visual.js"></script>
+</body>
+
+</html>

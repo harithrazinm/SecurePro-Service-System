@@ -16,6 +16,7 @@ let service = null;
 let answers = {};
 let customer = {};
 let selectedFiles = [];
+let category = null;
 
 
 const PHOTO_DB_NAME =
@@ -212,6 +213,13 @@ function getSavedData() {
 
         customer = {};
 
+    }
+
+
+    try {
+        category = JSON.parse(localStorage.getItem("securepro_category") || "null");
+    } catch {
+        category = null;
     }
 
 }
@@ -615,70 +623,25 @@ function renderReferral() {
  */
 
 async function loadService() {
-
-    const serviceId =
-        getServiceId();
-
-
-    if (!serviceId) {
-
-        showSubmitError(
-            "No service selected."
-        );
-
-        return;
-
-    }
-
-
+    const serviceId = getServiceId();
     try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/services/${encodeURIComponent(serviceId)}`
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !result.success
-        ) {
-
-            throw new Error(
-                "Unable to load service."
-            );
-
-        }
-
-
-        service =
-            result.data;
-
-
         await loadPhotosFromDatabase();
-
+        if (category && !serviceId) {
+            service = { id: category.code, name: { en: category.reviewTitle || category.name, ms: category.reviewTitle || category.name }, questions: [] };
+            renderReview();
+            return;
+        }
+        if (!serviceId) throw new Error("No service selected.");
+        const response = await fetch(`${API_BASE}/services/${encodeURIComponent(serviceId)}`);
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error("Unable to load service.");
+        service = result.data;
         renderReview();
-
     } catch (error) {
-
-        console.error(
-            "Load service error:",
-            error
-        );
-
-
-        showSubmitError(
-            t("submitError")
-        );
-
+        console.error("Load service error:", error);
+        showSubmitError(t("submitError"));
     }
-
 }
-
 
 /*
  * ==========================================================
@@ -842,93 +805,108 @@ function formatAnswer(
 }
 
 
-function renderAnswers() {
 
-    const container =
-        document.querySelector(
-            "#answersList"
-        );
+function formatCollectedValue(value, key = "") {
+    if (value === null || value === undefined || value === "") {
+        return t("noAnswer");
+    }
 
+    if (Array.isArray(value)) {
+        return value.map(item => formatCollectedValue(item, key)).join(", ");
+    }
 
-    container.innerHTML = "";
+    if (typeof value === "object") {
+        return Object.entries(value)
+            .map(([itemKey, itemValue]) =>
+                `${formatReadableToken(itemKey)}: ${formatCollectedValue(itemValue, key)}`
+            )
+            .join("\n");
+    }
 
+    const raw = String(value).trim();
 
-    service.questions.forEach(
-        question => {
+    // Render ISO date-only values as a readable date without changing stored data.
+    const dateMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateMatch) {
+        const [, year, month, day] = dateMatch;
+        const date = new Date(Number(year), Number(month) - 1, Number(day));
+        return new Intl.DateTimeFormat(
+            currentLanguage === "ms" ? "ms-MY" : "en-GB",
+            { day: "numeric", month: "short", year: "numeric" }
+        ).format(date);
+    }
 
-            const answer =
-                answers[question.id];
+    // Make enum-like values readable, e.g. smart_home -> Smart Home.
+    if (raw.includes("_") && /^[a-zA-Z0-9_-]+$/.test(raw)) {
+        return formatReadableToken(raw);
+    }
 
-
-            if (
-                question.type === "file"
-            ) {
-
-                return;
-
-            }
-
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-
-            row.className =
-                "answer-row";
-
-
-            const label =
-                document.createElement(
-                    "div"
-                );
-
-
-            label.className =
-                "answer-question";
-
-
-            label.textContent =
-                getLanguageText(
-                    question.title
-                );
-
-
-            const value =
-                document.createElement(
-                    "div"
-                );
-
-
-            value.className =
-                "answer-value";
-
-
-            value.textContent =
-                formatAnswer(
-                    question,
-                    answer
-                );
-
-
-            row.appendChild(
-                label
-            );
-
-            row.appendChild(
-                value
-            );
-
-            container.appendChild(
-                row
-            );
-
-        }
-    );
-
+    return raw;
 }
 
+function formatReadableToken(value) {
+    const raw = String(value ?? "").trim();
+
+    // Friendly labels for common enum values.
+    const known = {
+        "1_3_days": currentLanguage === "ms" ? "1–3 hari" : "1–3 days",
+        "4_7_days": currentLanguage === "ms" ? "4–7 hari" : "4–7 days",
+        "more_than_7_days": currentLanguage === "ms" ? "Lebih daripada 7 hari" : "More than 7 days",
+        "upgrade_possibility": currentLanguage === "ms" ? "Potensi naik taraf" : "Upgrade possibility",
+        "expansion_possibility": currentLanguage === "ms" ? "Potensi pengembangan" : "Expansion possibility",
+        "smart_home": currentLanguage === "ms" ? "Rumah Pintar" : "Smart Home",
+        "power": currentLanguage === "ms" ? "Kuasa" : "Power",
+        "normal": currentLanguage === "ms" ? "Biasa" : "Normal",
+        "high": currentLanguage === "ms" ? "Tinggi" : "High",
+        "urgent": currentLanguage === "ms" ? "Segera" : "Urgent",
+        "other": currentLanguage === "ms" ? "Lain-lain" : "Other",
+        "shop": currentLanguage === "ms" ? "Kedai" : "Shop"
+    };
+
+    if (known[raw.toLowerCase()]) {
+        return known[raw.toLowerCase()];
+    }
+
+    return raw
+        .replace(/_/g, " ")
+        .replace(/\s+/g, " ")
+        .replace(/\b[a-z]/g, letter => letter.toUpperCase());
+}
+
+function renderAnswers() {
+    const container = document.querySelector("#answersList");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (category && !getServiceId()) {
+        const labels = {
+            en: { inspection_purpose:"Inspection Purpose", inspection_systems:"Systems / Services", current_condition:"Current Condition", brand:"Brand", model:"Model", quantity:"Quantity / Points", age:"Approx. System Age", installed_by:"Installed By", last_service_date:"Last Service Date", inspection_targets:"Inspection Areas", inspection_description:"Inspection Request", premise_type:"Premise Type", site_contact:"Contact Person", site_address:"Site Address", site_access_notes:"Site Access Notes", preferred_date:"Preferred Date", preferred_time:"Preferred Time", alternative_date:"Alternative Date", maintenance_type:"Service Type", maintenance_systems:"Systems", system_age:"System Age", system_status:"System Status", access_instructions:"Access Instructions", maintenance_notes:"Additional Notes", troubleshooting_system:"System", issue_type:"Issue Type", problem_description:"Problem Description", problem_started:"Problem Started", diagnostic_notes:"Diagnostic Notes", priority:"Priority", site_contact_number:"Contact Number", additional_notes:"Additional Notes" },
+            ms: { inspection_purpose:"Tujuan Pemeriksaan", inspection_systems:"Sistem / Servis", current_condition:"Keadaan Semasa", brand:"Jenama", model:"Model", quantity:"Kuantiti / Point", age:"Anggaran Umur Sistem", installed_by:"Dipasang Oleh", last_service_date:"Tarikh Servis Terakhir", inspection_targets:"Bahagian Pemeriksaan", inspection_description:"Permintaan Pemeriksaan", premise_type:"Jenis Premis", site_contact:"Contact Person", site_address:"Alamat Tapak", site_access_notes:"Nota Akses Tapak", preferred_date:"Tarikh Pilihan", preferred_time:"Masa Pilihan", alternative_date:"Tarikh Alternatif", maintenance_type:"Jenis Servis", maintenance_systems:"Sistem", system_age:"Umur Sistem", system_status:"Status Sistem", access_instructions:"Arahan Akses", maintenance_notes:"Nota Tambahan", troubleshooting_system:"Sistem", issue_type:"Jenis Masalah", problem_description:"Penerangan Masalah", problem_started:"Masalah Bermula", diagnostic_notes:"Nota Diagnosis", priority:"Keutamaan", site_contact_number:"Nombor Telefon", additional_notes:"Nota Tambahan" }
+        };
+        const map=labels[currentLanguage]||labels.ms;
+        Object.entries(answers).forEach(([key,value])=>{
+            if(value === "" || value === null || (Array.isArray(value)&&!value.length)) return;
+            const row=document.createElement("div"); row.className="answer-row";
+            const q=document.createElement("div"); q.className="answer-question"; q.textContent=map[key]||key.replaceAll("_"," ");
+            const a=document.createElement("div"); a.className="answer-value"; a.textContent=formatCollectedValue(value, key);
+            row.append(q,a); container.appendChild(row);
+        });
+        return;
+    }
+
+    service.questions.forEach(question=>{
+        const answer=answers[question.id];
+        if(question.type === "file") return;
+        const row=document.createElement("div"); row.className="answer-row";
+        const label=document.createElement("div"); label.className="answer-question"; label.textContent=getLanguageText(question.title);
+        const value=document.createElement("div"); value.className="answer-value"; const formattedAnswer = formatAnswer(question, answer);
+        value.textContent = (
+            typeof answer === "string" &&
+            /^\d{4}-\d{2}-\d{2}$/.test(answer.trim())
+        ) ? formatCollectedValue(answer, question.id) : formattedAnswer;
+        row.append(label,value); container.appendChild(row);
+    });
+}
 
 /*
  * ==========================================================
@@ -982,11 +960,23 @@ function renderCustomer() {
     addCustomerItem(
         container,
         currentLanguage === "en"
-            ? "Address"
-            : "Alamat",
+            ? "Premise Address"
+            : "Alamat Premis",
         customer.customer_address,
         true
     );
+
+    if (customer.customer_location_link) {
+        addCustomerItem(
+            container,
+            currentLanguage === "en"
+                ? "Premise Location"
+                : "Lokasi Premis",
+            customer.customer_location_link,
+            true,
+            true
+        );
+    }
 
 
     if (
@@ -1011,7 +1001,8 @@ function addCustomerItem(
     container,
     label,
     value,
-    full = false
+    full = false,
+    isLocationLink = false
 ) {
 
     const item =
@@ -1035,7 +1026,9 @@ function addCustomerItem(
         </span>
 
         <span class="customer-value">
-            ${escapeHtml(value || "-")}
+            ${isLocationLink && value
+                ? `<a href="${escapeHtml(value)}" target="_blank" rel="noopener noreferrer">📍 ${escapeHtml(value)}</a>`
+                : escapeHtml(value || "-")}
         </span>
     `;
 
@@ -1261,6 +1254,11 @@ if (referral?.code) {
         formData.append(
             "customer_address",
             customer.customer_address || ""
+        );
+
+        formData.append(
+            "customer_location_link",
+            customer.customer_location_link || ""
         );
 
 
@@ -1575,6 +1573,10 @@ if (referral?.code) {
 
         localStorage.removeItem(
             "securepro_service"
+        );
+
+        localStorage.removeItem(
+            "securepro_category"
         );
 
         localStorage.removeItem(

@@ -1,0 +1,100 @@
+/* =========================================================
+   SOPRO REQUEST PROGRESS
+   Shared by Questions, Customer Details, Review and Submit
+   ========================================================= */
+
+.request-progress {
+    width: 100%;
+    margin: 0 auto 32px;
+    padding: 14px 16px;
+    border: 1px solid #e4e7ec;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 10px 28px rgba(16, 24, 40, 0.05);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.request-progress-step {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: 22px;
+    color: #98a2b3;
+    font-size: 20px;
+    line-height: 1.2;
+    font-weight: 800;
+    transition: background .2s ease, color .2s ease;
+}
+
+.request-progress-step.active {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.request-progress-step.done {
+    color: #475467;
+}
+
+.request-progress-dot {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 52px;
+    border-radius: 50%;
+    background: #eef1f5;
+    color: #667085;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.request-progress-step.active .request-progress-dot {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.request-progress-step.done .request-progress-dot {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+@media (max-width: 900px) {
+    .request-progress-step {
+        padding: 12px 10px;
+        gap: 8px;
+        font-size: 15px;
+    }
+
+    .request-progress-dot {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 620px) {
+    .request-progress {
+        grid-template-columns: 1fr 1fr;
+        padding: 10px;
+        border-radius: 20px;
+    }
+
+    .request-progress-step {
+        padding: 10px;
+        border-radius: 15px;
+        font-size: 12px;
+    }
+
+    .request-progress-dot {
+        width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+        font-size: 11px;
+    }
+}

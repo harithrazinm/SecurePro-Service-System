@@ -50,8 +50,25 @@ const translations = {
         // ---- Services ----
         servicesLabel: "OUR SERVICES",
         servicesTitle: "Choose the Service You Need",
-        servicesText: "Submit a service request in just a few clicks.",
+        servicesText: "Choose the category that best matches your needs.",
         allServices: "View all services →",
+        categoryInspectionTitle: "Inspection",
+        categoryInspectionKicker: "ASSESSMENT",
+        categoryInspectionText: "Inspection and assessment of your system or site.",
+        categoryMaintenanceTitle: "Maintenance & Service",
+        categoryMaintenanceKicker: "CARE & SERVICE",
+        categoryMaintenanceText: "Maintenance, servicing and support for existing systems.",
+        categoryTroubleshootingTitle: "Troubleshooting / Repair",
+        categoryTroubleshootingKicker: "DIAGNOSE & FIX",
+        categoryTroubleshootingText: "Problem inspection, diagnosis and system repair.",
+        categoryNewSystemTitle: "New System",
+        categoryNewSystemKicker: "NEW INSTALLATION",
+        categoryNewSystemText: "New system installation based on your requirements.",
+        newSystemLabel: "NEW SYSTEM",
+        newSystemTitle: "Choose the System You Need",
+        newSystemText: "Choose a system below to continue with the existing request process.",
+        categoryBack: "← Back",
+        categoryFlowNext: "This category will use its own dedicated request flow. We will build this flow next.",
         loadingServices: "Loading services...",
         unableToLoadServices: "Unable to load services.",
         questions: "questions",
@@ -64,7 +81,7 @@ const translations = {
 
         // ---- Info cards ----
         hoursTitle: "Operating Hours",
-        hoursText: "9:00 AM - 6:00 PM<br>Sunday - Thursday<br>Saturday (by appointment)<br>Closed: Friday & Public Holidays",
+        hoursText: "9:00 AM - 6:00 PM<br>Sunday - Thursday<br>Saturday(By Appointment)<br>Closed: Friday & Public Holidays",
         questionsTitle: "Other Enquiries",
         questionsText: "For quotations, enquiries or partnerships, please contact us by phone or WhatsApp.",
 
@@ -135,8 +152,25 @@ const translations = {
         // ---- Services ----
         servicesLabel: "PERKHIDMATAN KAMI",
         servicesTitle: "Pilih Servis Yang Anda Perlukan",
-        servicesText: "Hantar permintaan servis dengan beberapa klik sahaja.",
+        servicesText: "Pilih kategori yang paling sesuai dengan keperluan anda.",
         allServices: "Lihat semua servis →",
+        categoryInspectionTitle: "Inspection",
+        categoryInspectionKicker: "PEMERIKSAAN",
+        categoryInspectionText: "Pemeriksaan dan penilaian keadaan sistem atau lokasi.",
+        categoryMaintenanceTitle: "Maintenance & Service",
+        categoryMaintenanceKicker: "PENYELENGGARAAN",
+        categoryMaintenanceText: "Penyelenggaraan, servis dan sokongan sistem sedia ada.",
+        categoryTroubleshootingTitle: "Troubleshooting / Repair",
+        categoryTroubleshootingKicker: "DIAGNOSIS & BAIKI",
+        categoryTroubleshootingText: "Pemeriksaan masalah, diagnosis dan pembaikan sistem.",
+        categoryNewSystemTitle: "New System",
+        categoryNewSystemKicker: "PEMASANGAN BAHARU",
+        categoryNewSystemText: "Pemasangan sistem baharu mengikut keperluan anda.",
+        newSystemLabel: "NEW SYSTEM",
+        newSystemTitle: "Pilih Sistem Yang Anda Perlukan",
+        newSystemText: "Pilih sistem di bawah untuk meneruskan permintaan seperti biasa.",
+        categoryBack: "← Kembali",
+        categoryFlowNext: "Kategori ini akan menggunakan aliran permintaan khususnya. Kami akan bina aliran ini seterusnya.",
         loadingServices: "Memuatkan servis...",
         unableToLoadServices: "Tidak dapat memuatkan servis.",
         questions: "soalan",
@@ -149,7 +183,7 @@ const translations = {
 
         // ---- Info cards ----
         hoursTitle: "Waktu Operasi",
-        hoursText: "9:00 pagi - 6:00 petang<br>Ahad - Khamis<br>Selasa (by appointment)<br>Cuti: Jumaat & Cuti Umum",
+        hoursText: "9:00 pagi - 6:00 petang<br>Ahad - Khamis<br>Sabtu(Temu Janji)<br>Cuti: Jumaat & Cuti Umum",
         questionsTitle: "Lain-lain Pertanyaan",
         questionsText: "Untuk sebut harga, pertanyaan atau kerjasama, sila hubungi kami melalui telefon atau WhatsApp.",
 
@@ -277,19 +311,28 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
+function setupServiceCategories() {
+    // Category cards now open dedicated pages.
+    // New System keeps the existing service-card workflow on pages/new-system.html.
+    document.querySelectorAll(".service-category-card").forEach(card => {
+        card.addEventListener("click", () => {
+            localStorage.setItem("securepro_language", currentLanguage);
+        });
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const savedLanguage = localStorage.getItem("securepro_language");
     currentLanguage = savedLanguage === "en" || savedLanguage === "ms" ? savedLanguage : "ms";
     localStorage.setItem("securepro_language", currentLanguage);
 
     applyLanguage();
-    loadServices();
+    setupServiceCategories();
 
     document.querySelector("#languageToggle")?.addEventListener("click", () => {
         currentLanguage = currentLanguage === "en" ? "ms" : "en";
         localStorage.setItem("securepro_language", currentLanguage);
         applyLanguage();
-        loadServices();
     });
 
     const menuToggle = document.querySelector("#menuToggle");
