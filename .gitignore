@@ -39,3 +39,16 @@ backups/
 !database/
 !database/*.sql
 database/securepro-data.sql
+
+# Dependencies - install separately
+node_modules/
+**/node_modules/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Local backups and archives
+backups/
+*.zip
