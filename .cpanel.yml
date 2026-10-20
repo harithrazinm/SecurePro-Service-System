@@ -1,0 +1,5 @@
+
+---
+deployment:
+  tasks:
+    - /bin/echo "SecurePro deployment configuration is connected."
