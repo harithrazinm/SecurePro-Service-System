@@ -110,11 +110,21 @@ window.CATEGORY_FORM_CONFIG = {
                 ms: "Bantu juruteknik kami memahami tapak dengan lebih baik. Semua item di bawah adalah pilihan."
             },
             fields: [
-                { id: "supporting_photos", type: "file", label: { en: "Upload Photos", ms: "Muat Naik Foto" }, accept: ["image/jpeg", "image/png", "image/webp"], multiple: true },
-                { id: "supporting_videos", type: "file", label: { en: "Upload Videos", ms: "Muat Naik Video" }, accept: ["video/mp4", "video/quicktime", "video/webm"], multiple: true },
-                { id: "supporting_floor_plan", type: "file", label: { en: "Upload Floor Plan or Drawing", ms: "Muat Naik Pelan Lantai atau Lukisan" }, accept: ["application/pdf", "image/jpeg", "image/png", "image/webp"], multiple: true },
-                { id: "supporting_previous_documents", type: "file", label: { en: "Upload Previous Quotation or Report", ms: "Muat Naik Sebut Harga atau Laporan Terdahulu" }, accept: ["application/pdf", "image/jpeg", "image/png", "image/webp"], multiple: true }
-            ]
+    {
+        id: "supporting_photos",
+        type: "file",
+        label: {
+            en: "Upload Photos",
+            ms: "Muat Naik Gambar"
+        },
+        accept: [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ],
+        multiple: true
+    }
+]
         },
         {
             id: "appointment", type: "fields",
@@ -139,10 +149,10 @@ window.CATEGORY_FORM_CONFIG = {
     const MAX_FILES = 10;
     const MAX_SIZE = 20 * 1024 * 1024;
     const ALLOWED = new Set([
-        "image/jpeg", "image/png", "image/webp",
-        "video/mp4", "video/quicktime", "video/webm",
-        "application/pdf"
-    ]);
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+]);
     let replaySubmit = false;
     let submitting = false;
 
@@ -170,7 +180,7 @@ window.CATEGORY_FORM_CONFIG = {
         for (const item of items) {
             const file = item.file;
             if (file.size > MAX_SIZE) throw new Error(`${file.name}: maximum file size is 20 MB.`);
-            if (!ALLOWED.has(file.type)) throw new Error(`${file.name}: unsupported file type. Use JPG, PNG, WEBP, MP4, MOV, WEBM or PDF.`);
+            if (!ALLOWED.has(file.type)) throw new Error(`${file.name}: unsupported file type. Use JPG, PNG or WEBP.`);
         }
         const db = await openDB();
         try {

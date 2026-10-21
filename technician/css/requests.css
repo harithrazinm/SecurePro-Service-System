@@ -141,6 +141,21 @@
     padding-bottom: 10px
 }
 
+/* Match the technician portal's refreshed visual system. */
+.work-header { margin-bottom: 24px; }
+.work-header h2 { color: #10233f; font-size: 25px; letter-spacing: -.6px; }
+.filter-card { border-color: #e1e8f0; border-radius: 15px; box-shadow: 0 8px 26px rgba(20,45,76,.045); }
+.filter-field label { color: #587087; font-size: 10px; letter-spacing: .09em; }
+.filter-field input, .filter-field select { min-height: 43px; border-color: #dce6ee; border-radius: 9px; }
+.filter-field input:focus, .filter-field select:focus { border-color: #087e8b; box-shadow: 0 0 0 3px rgba(8,126,139,.12); }
+.clear-filter-button { color: #087e8b; }
+.work-tab { border-color: #dce6ee; transition: .18s ease; }
+.work-tab:hover { border-color: #8fcac7; color: #087e8b; }
+.work-tab.active { background: #10233f; border-color: #10233f; }
+.work-tab span { background: #edf3f7; }
+.work-tab.active span { background: rgba(255,255,255,.18); }
+.work-customer { flex-wrap: wrap; }
+
 @media(max-width:1200px) {
     .filter-grid {
         grid-template-columns: repeat(3, 1fr)

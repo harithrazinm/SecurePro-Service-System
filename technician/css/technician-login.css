@@ -338,3 +338,18 @@ body {
     }
 
 }
+
+/* SecurePro visual refresh */
+:root { --bg: #edf3f8; --primary: #10233f; --blue: #087e8b; --border: #dce6ee; }
+body { background: radial-gradient(ellipse at 15% 12%, #d6efec 0, transparent 35%), linear-gradient(145deg, #eef4f8, #f8fafc); }
+.login-card { max-width: 440px; padding: 42px; border-radius: 22px; border-color: rgba(255,255,255,.85); box-shadow: 0 28px 75px rgba(16,35,63,.13); }
+.brand-mark { border-radius: 13px; background: #22b8a7; color: #10233f; box-shadow: 0 7px 18px rgba(34,184,167,.24); }
+.login-heading span { color: #087e8b; }
+.login-heading h1 { font-size: 30px; letter-spacing: -1px; }
+.form-group label { font-size: 12px; }
+.form-group input { height: 49px; border-radius: 10px; background: #fbfdff; }
+#loginButton { height: 48px; border-radius: 10px; background: linear-gradient(110deg, #10233f, #17476a); box-shadow: 0 8px 18px rgba(16,35,63,.17); }
+#loginButton:hover { opacity: 1; background: #087e8b; }
+.authorized-access { margin-top: 17px; color: #748397; font-size: 11px; text-align: center; }
+.login-footer { font-size: 10px; }
+@media (max-width: 450px) { .login-card { padding: 30px 23px; } }

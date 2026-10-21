@@ -102,6 +102,47 @@ body {
 
 }
 
+.technician-brand { height: 84px; }
+.technician-brand-mark { border-radius: 12px; background: #22b8a7; color: #10233f; box-shadow: 0 6px 16px rgba(34,184,167,.22); }
+.technician-nav { padding-top: 30px; }
+.technician-nav-item { border-radius: 10px; }
+.technician-nav-item.active { background: rgba(34,184,167,.16); color: #fff; box-shadow: inset 3px 0 #35c9b4; }
+.technician-nav-item.active .nav-icon { color: #5ee0cc; }
+.technician-topbar { height: 84px; padding: 0 clamp(22px, 4vw, 52px); background: rgba(255,255,255,.94); }
+.topbar-label, .eyebrow { color: #087e8b; }
+.technician-topbar h1 { font-size: 23px; letter-spacing: -.6px; }
+.topbar-user { padding: 9px 13px; border: 1px solid var(--tech-border); border-radius: 999px; background: #fff; }
+.online-dot { box-shadow: 0 0 0 4px #e8f8ef; }
+.technician-content { padding-top: 32px; }
+.welcome-card { background: radial-gradient(circle at 83% 12%, rgba(42,174,166,.28), transparent 28%), linear-gradient(120deg, #10233f, #183a5b); box-shadow: 0 18px 40px rgba(16,35,63,.12); }
+.welcome-card .eyebrow { color: #58d9c8; }
+.welcome-card h2 { font-size: clamp(23px, 2.2vw, 29px); }
+.welcome-icon { color: #73e4d4; border-color: rgba(94,224,204,.24); background: rgba(94,224,204,.1); }
+.summary-card, .request-card, .filter-card, .empty-state { box-shadow: 0 8px 26px rgba(20,45,76,.045); }
+.summary-card { border-radius: 15px; transition: transform .18s ease, box-shadow .18s ease; }
+.summary-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(20,45,76,.09); }
+.summary-icon { background: #e3f4f4; color: #087e8b; }
+.requests-section { margin-top: 36px; }
+.section-heading h2 { letter-spacing: -.6px; }
+.refresh-button, .view-button, .clear-filter-button { transition: .18s ease; }
+.refresh-button:hover, .clear-filter-button:hover { border-color: #91c9c9; background: #effafa; color: #086c77; }
+.view-button { border-radius: 9px; background: #087e8b; }
+.view-button:hover { background: #066b76; }
+.request-card { border-radius: 15px; }
+.request-card:hover { border-color: #9dd5d2; box-shadow: 0 12px 28px rgba(20,45,76,.09); }
+.loading-spinner { border-color: #d8eeee; border-top-color: #087e8b; }
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(8,126,139,.28); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+    .technician-topbar { height: 74px; }
+    .technician-content { width: calc(100% - 32px); padding-top: 22px; }
+    .welcome-card { min-height: 150px; padding: 25px 23px; }
+    .summary-grid { gap: 10px; }
+    .summary-card { padding: 14px; }
+    .summary-icon { width: 36px; height: 36px; }
+}
+
 
 .technician-brand {
 
@@ -1721,4 +1762,19 @@ body {
         padding: 13px;
     }
 
+}
+
+/* SecurePro visual refresh */
+:root {
+    --tech-bg: #f3f6fb;
+    --tech-primary: #10233f;
+    --tech-accent: #087e8b;
+    --tech-accent-soft: #e3f4f4;
+    --tech-border: #e1e8f0;
+}
+
+body { background: var(--tech-bg); }
+.technician-sidebar {
+    background: linear-gradient(180deg, #10233f 0%, #142d4c 100%);
+    box-shadow: 8px 0 30px rgba(16, 35, 63, .08);
 }

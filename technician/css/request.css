@@ -2391,3 +2391,22 @@ textarea {
     margin: 0;
     color: #64748b;
 }
+
+/* Match the technician portal's refreshed visual system. */
+:root { --background: #f3f6fb; --primary: #10233f; --border: #e1e8f0; }
+body { background: #f3f6fb; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.page-header { padding: 26px clamp(20px, 5vw, 60px); background: #fff; box-shadow: 0 5px 20px rgba(16,35,63,.035); }
+.back-link { color: #087e8b; }
+.back-link:hover { color: #065d68; }
+.page-header h1 { color: #10233f; font-size: 29px; letter-spacing: -.8px; }
+.request-content { padding-top: 26px; }
+.detail-card { border-color: #e1e8f0; border-radius: 15px; box-shadow: 0 8px 26px rgba(20,45,76,.045); }
+.request-summary > div, .info-item { border-color: #e5edf3; border-radius: 11px; background: #f8fbfd; }
+.label, .info-item span { color: #718397; }
+.section-number { background: #e3f4f4; color: #087e8b; border-radius: 11px; }
+.section-heading h2 { color: #10233f; letter-spacing: -.45px; }
+.primary-button { background: #087e8b; border-radius: 10px; transition: .18s ease; }
+.primary-button:hover { background: #066b76; }
+.customer-location-link { background: #e3f4f4; color: #087e8b; }
+.customer-location-link:hover { background: #d1eeeb; }
+button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid rgba(8,126,139,.28); outline-offset: 2px; }
