@@ -5,6 +5,33 @@
    Palette follows style.css (--blue, --navy, --accent).
    ========================================================= */
 
+.service-selection-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 auto 14px;
+    padding: 10px 15px;
+    border: 1px solid #d5e1ef;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .82);
+    color: #244666;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.service-selection-back:hover {
+    border-color: #a9c8e8;
+    background: #fff;
+    color: #1268f3;
+}
+
+.service-selection-back:focus-visible {
+    outline: 3px solid rgba(18, 104, 243, .24);
+    outline-offset: 3px;
+}
+
 main.question-page {
     --sp-blue: #1268f3;
     --sp-blue-dark: #0a3e9b;

@@ -12,7 +12,21 @@ window.CATEGORY_FORM_CONFIG = {
             id: "system", type: "radio", required: true,
             title: { en: "Select System", ms: "Pilih Sistem" },
             description: { en: "Which system has an issue?", ms: "Sistem manakah yang mengalami masalah?" },
-            options: ["CCTV", "Alarm System", "Door Access", "Barrier Gate / LPR", "Electrical", "Network / WiFi", "Intercom", "PA / Audio Visual", "Attendance System", "Smart Home", "Other"].map(x => ({ value: x.toLowerCase().replace(/[^a-z0-9]+/g, "_"), label: { en: x, ms: x } }))
+            options: ["CCTV", "Alarm System", "Door Access", "Barrier Gate / LPR", "Electrical", "Network / WiFi", "Intercom", "PA / Audio Visual", "Attendance System", "Smart Home", "Other"].map(x => {
+                const value = x.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+                return {
+                    value,
+                    label: { en: x, ms: x },
+                    ...(x === "Other" ? {
+                        otherInput: {
+                            id: "system_other_text",
+                            required: true,
+                            label: { en: "Please specify the system", ms: "Sila nyatakan sistem" },
+                            placeholder: { en: "Enter the system", ms: "Masukkan nama sistem" }
+                        }
+                    } : {})
+                };
+            })
         },
         {
             id: "issue_type", type: "radio", required: true,
@@ -42,7 +56,17 @@ window.CATEGORY_FORM_CONFIG = {
             fields: [
                 { id: "installed_by", type: "select", label: { en: "Installed By", ms: "Dipasang Oleh" }, options: [
                     { value: "sonic", label: { en: "Sonic", ms: "Sonic" } },
-                    { value: "other", label: { en: "Other Contractor", ms: "Kontraktor Lain" } },
+                    {
+                        value: "other",
+                        label: { en: "Other Contractor", ms: "Kontraktor Lain" },
+                        otherInput: {
+                            id: "installed_by_other_text",
+                            value: "other",
+                            required: true,
+                            label: { en: "Please specify contractor", ms: "Sila nyatakan kontraktor" },
+                            placeholder: { en: "Enter the contractor name", ms: "Masukkan nama kontraktor" }
+                        }
+                    },
                     { value: "unknown", label: { en: "Not Sure", ms: "Tidak Pasti" } }
                 ] },
                 { id: "brand", type: "text", label: { en: "Brand", ms: "Jenama" } },
@@ -68,7 +92,18 @@ window.CATEGORY_FORM_CONFIG = {
             id: "premise", type: "fields",
             title: { en: "Premise Type", ms: "Jenis Premis" },
             fields: [
-                { id: "premise_type", type: "select", required: true, label: { en: "Premise Type", ms: "Jenis Premis" }, options: ["Residential", "Shop", "Office", "Factory", "Warehouse", "School", "Mosque", "Government", "Other"].map(x => ({ value: x.toLowerCase(), label: { en: x, ms: x } })) }
+                {
+                    id: "premise_type", type: "select", required: true,
+                    label: { en: "Premise Type", ms: "Jenis Premis" },
+                    options: ["Residential", "Shop", "Office", "Factory", "Warehouse", "School", "Mosque", "Government", "Other"].map(x => ({ value: x.toLowerCase(), label: { en: x, ms: x } })),
+                    otherInput: {
+                        id: "premise_type_other_text",
+                        value: "other",
+                        required: true,
+                        label: { en: "Please specify premise type", ms: "Sila nyatakan jenis premis" },
+                        placeholder: { en: "Enter the premise type", ms: "Masukkan jenis premis" }
+                    }
+                }
             ]
         }
     ]

@@ -150,6 +150,11 @@
                         <option value="">${escapeHtml(text(field.placeholder || { en: "Select", ms: "Pilih" }))}</option>
                         ${(field.options || []).map(option => `<option value="${escapeHtml(option.value)}">${escapeHtml(text(option.label))}</option>`).join("")}
                     </select>
+                    ${field.otherInput ? `
+                        <div class="inline-other-field" data-inline-other-for="${escapeHtml(field.id)}" data-inline-other-value="${escapeHtml(field.otherInput.value || "other")}" hidden>
+                            <label for="${escapeHtml(field.otherInput.id)}">${escapeHtml(text(field.otherInput.label || { en: "Please specify", ms: "Sila nyatakan" }))}${field.otherInput.required ? ' <span class="required">*</span>' : ""}</label>
+                            <input id="${escapeHtml(field.otherInput.id)}" type="text" data-answer="${escapeHtml(field.otherInput.id)}" placeholder="${escapeHtml(text(field.otherInput.placeholder || ""))}" ${field.otherInput.required ? "required" : ""} disabled>
+                        </div>` : ""}
                 </div>
             `;
         }
@@ -334,6 +339,13 @@ function collectAnswers() {
             if (el.type === "file") return;
 
             answers[field.id] = el.value.trim();
+
+            if (field.otherInput && el.value === (field.otherInput.value || "other")) {
+                const otherField = document.querySelector(
+                    `[data-answer="${CSS.escape(field.otherInput.id)}"]`
+                );
+                answers[field.otherInput.id] = otherField?.value.trim() || "";
+            }
         });
     });
 
@@ -415,12 +427,23 @@ if (isChoice(question)) {
 
 
             for (const field of fieldsOf(question)) {
-                if (!field.required) continue;
                 const el = document.querySelector(`[data-answer="${CSS.escape(field.id)}"]`);
-                if (!el || !el.value.trim()) {
+                if (field.required && (!el || !el.value.trim())) {
                     el?.closest(".question-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
                     el?.focus();
                     return false;
+                }
+
+                if (field.otherInput?.required && el?.value === (field.otherInput.value || "other")) {
+                    const otherField = document.querySelector(
+                        `[data-answer="${CSS.escape(field.otherInput.id)}"]`
+                    );
+                    if (!otherField || !otherField.value.trim()) {
+                        otherField?.closest(".inline-other-field")?.classList.add("inline-other-invalid");
+                        otherField?.focus();
+                        otherField?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        return false;
+                    }
                 }
             }
         }
@@ -481,8 +504,13 @@ function saveAndContinue() {
         function updateInlineOtherFields() {
             document.querySelectorAll("[data-inline-other-for]").forEach(wrapper => {
                 const option = document.getElementById(wrapper.dataset.inlineOtherFor);
+                const select = document.querySelector(
+                    `select[data-answer="${CSS.escape(wrapper.dataset.inlineOtherFor)}"]`
+                );
                 const input = wrapper.querySelector("input,textarea");
-                const visible = !!option?.checked;
+                const visible = option
+                    ? !!option.checked
+                    : !!select && select.value === wrapper.dataset.inlineOtherValue;
                 wrapper.hidden = !visible;
                 if (input) {
                     input.disabled = !visible;
@@ -493,7 +521,7 @@ function saveAndContinue() {
         }
 
         document.addEventListener("change", event => {
-            if (event.target.matches('input[type="radio"],input[type="checkbox"]')) {
+            if (event.target.matches('input[type="radio"],input[type="checkbox"],select')) {
                 updateInlineOtherFields();
             }
         });

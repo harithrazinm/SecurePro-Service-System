@@ -79,7 +79,17 @@ window.CATEGORY_FORM_CONFIG = {
                 { id: "age", type: "text", label: { en: "Approx. System Age", ms: "Anggaran Umur Sistem" } },
                 { id: "installed_by", type: "select", label: { en: "Installed By", ms: "Dipasang Oleh" }, options: [
                     { value: "sonic", label: { en: "Sonic", ms: "Sonic" } },
-                    { value: "other", label: { en: "Other Contractor", ms: "Kontraktor Lain" } },
+                    {
+                        value: "other",
+                        label: { en: "Other Contractor", ms: "Kontraktor Lain" },
+                        otherInput: {
+                            id: "installed_by_other_text",
+                            value: "other",
+                            required: true,
+                            label: { en: "Please specify contractor", ms: "Sila nyatakan kontraktor" },
+                            placeholder: { en: "Enter the contractor name", ms: "Masukkan nama kontraktor" }
+                        }
+                    },
                     { value: "unknown", label: { en: "Unknown", ms: "Tidak Pasti" } }
                 ] },
                 { id: "last_service_date", type: "date", label: { en: "Last Service Date", ms: "Tarikh Servis Terakhir" } }
