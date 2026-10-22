@@ -275,6 +275,74 @@ body {
 .stat-card-progress .stat-icon { background: #eef0fe; color: var(--dashboard-indigo); }
 .stat-card-success .stat-icon { background: #e8f6ec; color: var(--dashboard-green); }
 
+.intake-overview-panel {
+    margin: 0 0 22px;
+}
+
+.intake-overview-panel .panel-heading {
+    align-items: center;
+}
+
+.intake-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 18px 22px 22px;
+}
+
+.intake-overview-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 88px;
+    padding: 17px 19px;
+    border: 1px solid var(--dashboard-border);
+    border-radius: 13px;
+    background: #fbfcff;
+}
+
+.intake-entry-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.customer-entry .intake-entry-icon {
+    background: #eaf0ff;
+    color: var(--dashboard-blue);
+}
+
+.admin-entry .intake-entry-icon {
+    background: #e8f6ec;
+    color: var(--dashboard-green);
+}
+
+.intake-entry-copy {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.intake-entry-copy > span {
+    color: var(--dashboard-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.intake-entry-copy strong {
+    color: var(--dashboard-ink);
+    font-family: var(--font-mono);
+    font-size: 25px;
+    line-height: 1;
+}
+
 .stat-card-warning::after,
 .stat-card-info::after,
 .stat-card-progress::after,
@@ -844,6 +912,14 @@ button:focus-visible {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
     }
+
+    .intake-overview-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 13px;
+    }
+
+    .hero-actions { flex-wrap: wrap; }
 
     .stat-card {
         min-height: 125px;

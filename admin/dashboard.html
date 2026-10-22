@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/dashboard.css?v=20261022-2">
 <link rel="stylesheet" href="css/request.css">
 </head>
 <body>
@@ -122,6 +122,33 @@
             </article>
         </section>
 
+        <section class="dashboard-panel intake-overview-panel" aria-label="Overall request form entries">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">ALL-TIME OVERVIEW</span>
+                    <h2>Form Entry Summary</h2>
+                    <p>Overall number of requests entered by customers and admins.</p>
+                </div>
+                <span class="panel-count">All requests</span>
+            </div>
+            <div class="intake-overview-grid">
+                <article class="intake-overview-item customer-entry">
+                    <span class="intake-entry-icon" aria-hidden="true">C</span>
+                    <div class="intake-entry-copy">
+                        <span>Customer-filled</span>
+                        <strong id="customerFilledTotal">—</strong>
+                    </div>
+                </article>
+                <article class="intake-overview-item admin-entry">
+                    <span class="intake-entry-icon" aria-hidden="true">A</span>
+                    <div class="intake-entry-copy">
+                        <span>Admin-filled</span>
+                        <strong id="adminFilledTotal">—</strong>
+                    </div>
+                </article>
+            </div>
+        </section>
+
         <!-- JOB PENDING -->
         <section class="dashboard-panel job-pending-panel" id="jobPendingSection">
             <div class="panel-heading">
@@ -219,7 +246,7 @@
     </main>
 </div>
 
-<script src="js/dashboard.js?v=20260924-1"></script>
+<script src="js/dashboard.js?v=20261022-2"></script>
 <script src="js/session-timeout.js"></script>
 </body>
 </html>

@@ -385,6 +385,8 @@ async function loadDashboard() {
         const completed =
             $("#completedCount");
 
+        const customerFilledTotal = $("#customerFilledTotal");
+        const adminFilledTotal = $("#adminFilledTotal");
 
         if (total) {
 
@@ -430,6 +432,13 @@ async function loadDashboard() {
                 );
         }
 
+        if (customerFilledTotal) {
+            customerFilledTotal.textContent = Number(data.customer_filled_total || 0);
+        }
+
+        if (adminFilledTotal) {
+            adminFilledTotal.textContent = Number(data.admin_filled_total || 0);
+        }
 
     } catch (error) {
 

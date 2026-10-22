@@ -8,7 +8,7 @@
     <title>Job Details - SOPro Admin</title>
 
     <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/request.css?v=20261019-4">
+    <link rel="stylesheet" href="css/request.css?v=20261022-3">
 </head>
 
 <body>
@@ -355,6 +355,32 @@
                              class="customer-grid">
                         </div>
 
+                    </section>
+
+
+                    <section class="detail-card intake-source-card">
+                        <div class="section-header">
+                            <div>
+                                <span class="section-number">A</span>
+                                <div>
+                                    <h2 class="section-title">Form Filled By</h2>
+                                    <p class="section-description">Choose who provided the information for this request.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="intake-source-status-row">
+                            <span class="intake-source-status-label">Current status</span>
+                            <span id="filledByStatus" class="intake-source-status customer">Filled by Customer</span>
+                        </div>
+                        <div class="intake-source-controls">
+                            <label class="intake-source-label" for="filledBySelect">This request was filled by</label>
+                            <select id="filledBySelect" class="intake-source-select">
+                                <option value="customer">Customer</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <button id="saveFilledByButton" class="primary-button" type="button">Save</button>
+                            <span id="filledByMessage" role="status" aria-live="polite"></span>
+                        </div>
                     </section>
 
 
@@ -1392,7 +1418,7 @@
 <script src="../technician/js/services.js?v=20261019-3"></script>
 
 <!-- Then load Admin request details -->
-<script src="js/request.js?v=20261019-4"></script>
+<script src="js/request.js?v=20261022-4"></script>
 <script src="js/session-timeout.js?v=20261019-3"></script>
 
 </body>

@@ -286,6 +286,10 @@ async function createRequest(
         req.body.customer_notes || ""
     ).trim();
 
+        // Requests submitted through the shared customer form start as customer-filled.
+        // Admins can reclassify the individual request from its admin details page.
+        const filledBy = "customer";
+
 const referralCode =
     String(
         req.body.referral_code || ""
@@ -498,10 +502,11 @@ const requestCode =
                 customer_address,
                 customer_location_link,
                 customer_notes,
+                filled_by,
                 status
             )
             VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending'
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending'
             )
             `,
             [
@@ -513,7 +518,8 @@ const requestCode =
                 customerEmail || null,
                 customerAddress,
                 customerLocationLink || null,
-                customerNotes || null
+                customerNotes || null,
+                filledBy
             ]
         );
 /*

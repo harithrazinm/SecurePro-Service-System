@@ -428,6 +428,68 @@ main {
     gap: 14px;
 }
 
+.intake-source-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.intake-source-status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: -8px 0 18px;
+}
+
+.intake-source-status-label {
+    color: var(--slate);
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.intake-source-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 27px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.intake-source-status.customer {
+    background: #eaf0ff;
+    color: #2454e0;
+}
+
+.intake-source-status.admin {
+    background: #e8f6ec;
+    color: #16803d;
+}
+
+.intake-source-label {
+    color: var(--navy);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.intake-source-select {
+    min-width: 180px;
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--navy);
+    font: inherit;
+}
+
+#filledByMessage {
+    color: var(--slate);
+    font-size: 13px;
+}
+
 .customer-field {
     min-width: 0;
     padding: 18px 20px;

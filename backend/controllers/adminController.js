@@ -1030,6 +1030,9 @@ async function getRequestById(req, res) {
                 request_code:
                     request.request_code,
 
+                filled_by:
+                    request.filled_by || "customer",
+
 
                 service: {
 
@@ -1271,7 +1274,15 @@ async function getDashboardSummary(req, res) {
 
                     SUM(
                         status = 'cancelled'
-                    ) AS cancelled
+                    ) AS cancelled,
+
+                    SUM(
+                        filled_by = 'customer'
+                    ) AS customer_filled_total,
+
+                    SUM(
+                        filled_by = 'admin'
+                    ) AS admin_filled_total
 
                 FROM service_requests
                 `
@@ -1402,7 +1413,8 @@ async function updateRequest(req, res) {
             technician_id,
             scheduled_date,
             scheduled_time,
-            admin_notes
+            admin_notes,
+            filled_by
         } = req.body;
 
 
@@ -1414,6 +1426,7 @@ async function updateRequest(req, res) {
                     id,
                     service_id,
                     status,
+                    filled_by,
                     technician_id,
                     scheduled_date,
                     scheduled_time,
@@ -1449,6 +1462,16 @@ async function updateRequest(req, res) {
 
         const request =
             requests[0];
+
+        if (
+            filled_by !== undefined &&
+            !["customer", "admin"].includes(filled_by)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Form source must be customer or admin."
+            });
+        }
 
 
         const [serviceRows] =
@@ -1706,6 +1729,11 @@ async function updateRequest(req, res) {
                 )
                 : request.admin_notes;
 
+        const finalFilledBy =
+            filled_by !== undefined
+                ? filled_by
+                : request.filled_by;
+
 
         if (
             finalTechnician &&
@@ -1759,6 +1787,8 @@ async function updateRequest(req, res) {
 
                 admin_notes = ?,
 
+                filled_by = ?,
+
                 admin_notes_updated_at =
                     CASE
 
@@ -1800,6 +1830,8 @@ async function updateRequest(req, res) {
                 finalTechnician,
 
                 finalAdminNotes,
+
+                finalFilledBy,
 
                 admin_notes !== undefined
                     ? finalAdminNotes
@@ -1906,6 +1938,9 @@ async function updateRequest(req, res) {
 
                 request_code:
                     updated.request_code,
+
+                filled_by:
+                    updated.filled_by || "customer",
 
                 status:
                     updated.status,

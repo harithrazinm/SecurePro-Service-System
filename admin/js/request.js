@@ -353,6 +353,7 @@ function renderRequest(data) {
 
     renderHeader(data);
     renderCustomer(data);
+    renderFilledBy(data);
     renderService(data);
     renderAnswers(data);
     renderNotes(data);
@@ -369,6 +370,59 @@ function renderRequest(data) {
     if (details) details.hidden = false;
 
     loadTechnicians(data);
+}
+
+function renderFilledBy(data) {
+    const filledByAdmin = data.filled_by === "admin";
+    const select = $("#filledBySelect");
+    const status = $("#filledByStatus");
+
+    if (select) select.value = filledByAdmin ? "admin" : "customer";
+    if (status) {
+        status.textContent = filledByAdmin ? "Filled by Admin" : "Filled by Customer";
+        status.className = `intake-source-status ${filledByAdmin ? "admin" : "customer"}`;
+    }
+}
+
+async function saveFilledBy() {
+    if (!requestData || !getRequestId()) return;
+
+    const select = $("#filledBySelect");
+    const button = $("#saveFilledByButton");
+    const message = $("#filledByMessage");
+    if (!select) return;
+
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Saving...";
+    }
+    if (message) message.textContent = "";
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/admin/requests/${encodeURIComponent(getRequestId())}`,
+            {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${getToken()}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ filled_by: select.value })
+            }
+        );
+        await parseResponse(response);
+        await loadRequest({ silent: true });
+        if (message) message.textContent = "Saved.";
+    } catch (error) {
+        console.error("Save form source error:", error);
+        if (handleAuthError(error)) return;
+        if (message) message.textContent = error.message || "Unable to save.";
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Save";
+        }
+    }
 }
 
 
@@ -3664,6 +3718,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupStatusSelect();
 
     $("#saveButton")?.addEventListener("click", saveChanges);
+    $("#saveFilledByButton")?.addEventListener("click", saveFilledBy);
     $("#logoutButton")?.addEventListener("click", logout);
     $("#uploadInvoiceButton")?.addEventListener("click", uploadInvoice);
     $("#uploadOriginalQuotationButton")?.addEventListener("click", uploadOriginalQuotation);
