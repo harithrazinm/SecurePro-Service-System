@@ -1,4 +1,6 @@
-const API_BASE = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "http://localhost:5001/api" : "/api";
+const API_BASE = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+  ? "http://localhost:5001/api"
+  : "https://securepro-service-system.onrender.com/api";
 const destinations = {
   admin: { token: "securepro_admin_token", user: "securepro_admin_user", path: "admin/dashboard.html" },
   super_admin: { token: "securepro_super_admin_token", user: "securepro_super_admin_user", path: "super-admin/dashboard.html" },
