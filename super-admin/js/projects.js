@@ -247,7 +247,7 @@ async function load() {
 
     // Loading state
 
-    projectTable.innerHTML = `
+            projectTable.innerHTML = `
         <tr>
             <td colspan="9" class="empty">
                 Loading projects...
@@ -380,7 +380,7 @@ function render() {
     if (countLabel) {
 
         countLabel.textContent =
-            `${rows.length} Project${rows.length === 1 ? "" : "s"}`;
+            `${rows.length} Request${rows.length === 1 ? "" : "s"} / Projects`;
 
     }
 

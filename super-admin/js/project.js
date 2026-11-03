@@ -1039,6 +1039,10 @@ function render(data) {
             ? data.customer_photos
             : [];
 
+    const serviceAnswers = Array.isArray(data.service_answers)
+        ? data.service_answers
+        : [];
+
 
     const invoices =
         Array.isArray(
@@ -2227,6 +2231,28 @@ function render(data) {
 
         </section>
 
+
+
+        <section class="panel service-order-panel">
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">CUSTOMER ORDER</span>
+                    <h2>Service Order Details</h2>
+                </div>
+                <span class="answer-count">${serviceAnswers.length} ${serviceAnswers.length === 1 ? "detail" : "details"}</span>
+            </div>
+            ${serviceAnswers.length
+                ? `<div class="service-answer-grid">${serviceAnswers.map((answer, index) => {
+                    const selectedOptions = (answer.options || [])
+                        .map(option => option.label_en || option.option_value || option.label_ms)
+                        .filter(Boolean);
+                    const answerValue = selectedOptions.length
+                        ? selectedOptions.join(", ")
+                        : (answer.text_value ?? answer.number_value ?? "—");
+                    return `<article class="service-answer-card"><span class="answer-index">${String(index + 1).padStart(2, "0")}</span><div class="answer-copy"><span class="answer-label">${esc(answer.title_en || answer.question_code || "Answer")}</span><strong class="answer-value">${esc(answerValue)}${answer.unit ? ` ${esc(answer.unit)}` : ""}</strong>${answer.description_en ? `<small>${esc(answer.description_en)}</small>` : ""}</div></article>`;
+                }).join("")}</div>`
+                : `<div class="service-answer-empty"><span>ⓘ</span><div><strong>No service configuration details</strong><p>No additional answers were saved with this request.</p></div></div>`}
+        </section>
 
 
         <!-- =========================================

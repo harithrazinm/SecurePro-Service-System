@@ -435,6 +435,122 @@ textarea {
     overflow-wrap: anywhere;
 }
 
+/* Customer supplied service configuration */
+.service-order-panel .panel-head {
+    align-items: center;
+}
+
+.answer-count {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 11px;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.service-answer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 13px;
+    padding: 20px;
+    background: linear-gradient(180deg, #fff, #fbfcfe);
+}
+
+.service-answer-card {
+    display: flex;
+    gap: 13px;
+    min-width: 0;
+    padding: 17px;
+    border: 1px solid #e8edf4;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(16, 24, 40, .035);
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.service-answer-card:hover {
+    border-color: #c8dcfb;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, .08);
+    transform: translateY(-2px);
+}
+
+.answer-index {
+    display: grid;
+    flex: 0 0 31px;
+    width: 31px;
+    height: 31px;
+    place-items: center;
+    border-radius: 9px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.answer-copy {
+    min-width: 0;
+}
+
+.answer-label {
+    display: block;
+    margin: 1px 0 7px;
+    color: #718096;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.answer-value {
+    display: block;
+    color: #172b43;
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.answer-copy small {
+    display: block;
+    margin-top: 5px;
+    color: #8592a3;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.service-answer-empty {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 20px;
+    padding: 16px;
+    border: 1px dashed #d7e0e9;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #526277;
+}
+
+.service-answer-empty > span {
+    color: #3b82f6;
+    font-size: 18px;
+}
+
+.service-answer-empty strong {
+    font-size: 12px;
+}
+
+.service-answer-empty p {
+    margin: 4px 0 0;
+    color: #78879a;
+    font-size: 11px;
+}
+
 /* ======================================================
    DOCUMENT GRID
 ====================================================== */

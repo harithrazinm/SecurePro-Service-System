@@ -768,6 +768,42 @@ async function getProjectById(req, res) {
         const project =
             requests[0];
 
+        const [serviceAnswers] = await pool.query(`
+            SELECT
+                ra.id,
+                ra.question_id,
+                ra.text_value,
+                ra.number_value,
+                ra.unit,
+                sq.question_code,
+                sq.title_en,
+                sq.title_ms,
+                sq.description_en,
+                sq.description_ms
+            FROM request_answers ra
+            INNER JOIN service_questions sq ON sq.id = ra.question_id
+            WHERE ra.request_id = ?
+            ORDER BY ra.id ASC
+        `, [req.params.id]);
+
+        const [answerOptions] = await pool.query(`
+            SELECT
+                rao.answer_id,
+                qo.label_en,
+                qo.label_ms,
+                qo.option_value
+            FROM request_answer_options rao
+            INNER JOIN question_options qo ON qo.id = rao.option_id
+            INNER JOIN request_answers ra ON ra.id = rao.answer_id
+            WHERE ra.request_id = ?
+            ORDER BY rao.answer_id ASC
+        `, [req.params.id]);
+
+        const answers = serviceAnswers.map(answer => ({
+            ...answer,
+            options: answerOptions.filter(option => option.answer_id === answer.id)
+        }));
+
 
         /*
          * --------------------------------------------------
@@ -1098,6 +1134,8 @@ async function getProjectById(req, res) {
             data: {
 
                 project,
+
+                service_answers: answers,
 
                 invoices,
 
