@@ -83,6 +83,18 @@ async function getDashboard(req, res) {
 
                 COUNT(*) AS total_projects,
 
+                (
+                    SELECT COUNT(*)
+                    FROM service_requests
+                    WHERE filled_by = 'customer'
+                ) AS customer_filled_total,
+
+                (
+                    SELECT COUNT(*)
+                    FROM service_requests
+                    WHERE filled_by = 'admin'
+                ) AS admin_filled_total,
+
 
                 /* QUOTATIONS UPLOADED */
 

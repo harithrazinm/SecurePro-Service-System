@@ -14,6 +14,9 @@ const tableBody = document.querySelector("#requestsTableBody");
 const totalLabel = document.querySelector("#requestTotalLabel");
 const errorBox = document.querySelector("#dashboardError");
 const searchInput = document.querySelector("#searchInput");
+const overdueJobCount = document.querySelector("#overdueJobCount");
+const OVERDUE_AFTER_MS = 48 * 60 * 60 * 1000;
+const CLOSED_STATUSES = new Set(["completed", "cancelled", "canceled"]);
 
 ["#sidebarAdminName", "#topbarAdminName"].forEach(selector => {
     const element = document.querySelector(selector);
@@ -28,6 +31,18 @@ function formatDate(value) {
     if (!value) return "—";
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("en-MY", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function getLastActivity(job) {
+    const date = new Date(job.updated_at || job.created_at || "");
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function overdueAge(milliseconds) {
+    const hours = Math.floor(milliseconds / (60 * 60 * 1000));
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+    return days ? `${days}d ${remainingHours}h` : `${hours}h`;
 }
 
 function formatJobStatus(status) {
@@ -114,6 +129,29 @@ function renderJobs(jobs) {
                     .includes(term)
         );
 
+    const now = Date.now();
+    const overdueIds = new Set(jobs.filter(job => {
+        const lastActivity = getLastActivity(job);
+        return !CLOSED_STATUSES.has(String(job.status || "").toLowerCase()) &&
+            lastActivity && now - lastActivity.getTime() >= OVERDUE_AFTER_MS;
+    }).map(job => String(job.id)));
+    if (overdueJobCount) {
+        overdueJobCount.hidden = overdueIds.size === 0;
+        overdueJobCount.textContent = overdueIds.size
+            ? `⚠ ${overdueIds.size} overdue — untouched for 48h+`
+            : "";
+    }
+
+    filtered.sort((first, second) => {
+        const firstActivity = getLastActivity(first);
+        const secondActivity = getLastActivity(second);
+        const firstOverdue = firstActivity && now - firstActivity.getTime() >= OVERDUE_AFTER_MS;
+        const secondOverdue = secondActivity && now - secondActivity.getTime() >= OVERDUE_AFTER_MS;
+        if (firstOverdue !== secondOverdue) return firstOverdue ? -1 : 1;
+        if (firstOverdue && secondOverdue) return firstActivity - secondActivity;
+        return 0;
+    });
+
 
     totalLabel.textContent =
         `${filtered.length} job${filtered.length === 1 ? "" : "s"}`;
@@ -151,6 +189,11 @@ function renderJobs(jobs) {
                     formatJobStatus(
                         job.status
                     );
+                const lastActivity = getLastActivity(job);
+                const inactivity = lastActivity ? now - lastActivity.getTime() : 0;
+                const isOverdue =
+                    inactivity >= OVERDUE_AFTER_MS &&
+                    !CLOSED_STATUSES.has(String(job.status || "").toLowerCase());
 
 
                 const actionLabel =
@@ -212,11 +255,13 @@ function renderJobs(jobs) {
 
                         <td>
 
-                            <span class="job-status">
+                            <span class="job-status job-status-${escapeHtml(String(job.status || "pending").toLowerCase())}">
                                 ${escapeHtml(
                                     status
                                 )}
                             </span>
+
+                            ${isOverdue ? `<span class="job-overdue-badge">⚠ Overdue · ${escapeHtml(overdueAge(inactivity))}</span>` : ""}
 
                             <span class="request-date">
                                 ${

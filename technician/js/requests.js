@@ -7,6 +7,8 @@ const API_BASE =
 
 let allRequests = [];
 let activeTab = "";
+const OVERDUE_AFTER_MS = 48 * 60 * 60 * 1000;
+const CLOSED_STATUSES = new Set(["completed", "cancelled", "canceled"]);
 
 function getToken() { return localStorage.getItem("securepro_technician_token"); }
 function requireToken() { if (!getToken()) { window.location.href = "login.html"; return false; } return true; }
@@ -14,6 +16,9 @@ function escapeHtml(v) { return String(v ?? "").replaceAll("&", "&amp;").replace
 function formatStatus(s) { return ({ pending: "Pending", assigned: "Assigned", in_progress: "In Progress", waiting_parts: "Waiting Parts", completed: "Completed", cancelled: "Cancelled" })[s] || s || "Unknown"; }
 function statusClass(s) { return String(s || "").replaceAll("_", "-"); }
 function formatDate(v) { if (!v) return "Not scheduled"; const d = new Date(v); return Number.isNaN(d.getTime()) ? "Not scheduled" : d.toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" }); }
+function getLastActivity(request) { const d = new Date(request.updated_at || request.created_at || ""); return Number.isNaN(d.getTime()) ? null : d; }
+function isOverdue(request, now = Date.now()) { const d = getLastActivity(request); return !CLOSED_STATUSES.has(String(request.status || "").toLowerCase()) && d && now - d.getTime() >= OVERDUE_AFTER_MS; }
+function overdueAgeLabel(request, now = Date.now()) { const d = getLastActivity(request); const hours = d ? Math.floor((now - d.getTime()) / 3600000) : 0; return `${Math.floor(hours / 24)}d ${hours % 24}h`; }
 function loadTechnicianInfo() { try { const u = JSON.parse(localStorage.getItem("securepro_technician_user") || "{}"); const n = u.name || "Technician";["sidebarTechnicianName", "topbarTechnicianName"].forEach(id => { const e = document.getElementById(id); if (e) e.textContent = n; }); } catch (e) { } }
 function logout() { localStorage.removeItem("securepro_technician_token"); localStorage.removeItem("securepro_technician_user"); window.location.href = "login.html"; }
 function showError(m) { const e = document.getElementById("workError"); e.textContent = m || "Unable to load work."; e.hidden = false; }
@@ -54,15 +59,24 @@ function filteredRequests() {
 }
 function renderWork() {
     const rows = filteredRequests(), list = document.getElementById("workList"), empty = document.getElementById("emptyWork");
+    const now = Date.now();
+    const overdueCount = new Set(allRequests.filter(request => isOverdue(request, now)).map(request => String(request.id))).size;
+    const overdueAlert = document.getElementById("overdueWorkAlert");
+    if (overdueAlert) {
+        overdueAlert.hidden = overdueCount === 0;
+        overdueAlert.textContent = overdueCount ? `⚠ ${overdueCount} assigned job${overdueCount === 1 ? "" : "s"} untouched for 48+ hours` : "";
+    }
     document.getElementById("workLoading").style.display = "none";
     document.getElementById("resultCount").textContent = `${rows.length} request${rows.length === 1 ? "" : "s"}`;
     if (!rows.length) { list.hidden = true; empty.hidden = false; return; }
     empty.hidden = true; list.hidden = false;
     list.innerHTML = rows.map(r => {
         const time = r.scheduled_time ? String(r.scheduled_time).slice(0, 5) : "Time not set";
-        return `<article class="request-card work-card">
+        const overdue = isOverdue(r, now);
+        return `<article class="request-card work-card${overdue ? " work-card-overdue" : ""}">
     <div class="request-card-main">
       <div class="request-card-top"><span class="request-code">${escapeHtml(r.request_code)}</span><span class="status-badge status-${escapeHtml(statusClass(r.status))}">${escapeHtml(formatStatus(r.status))}</span></div>
+      ${overdue ? `<span class="work-overdue-badge">⚠ Overdue · ${escapeHtml(overdueAgeLabel(r, now))}</span>` : ""}
       <h3>${escapeHtml(r.service_name || "Service")}</h3>
       <div class="work-customer"><strong>${escapeHtml(r.customer_name || "Customer")}</strong><span>${escapeHtml(r.customer_phone || "")}</span></div>
       <div class="schedule-info">

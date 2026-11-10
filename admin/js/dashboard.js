@@ -294,8 +294,14 @@ function getCustomerName(job) {
 
 function getServiceName(job) {
 
+    const serviceName = job?.service?.name;
+
+    if (serviceName && typeof serviceName === "object") {
+        return serviceName.en || serviceName.ms || "Service";
+    }
+
     return (
-        job?.service?.name ||
+        serviceName ||
         job?.service_name_en ||
         job?.service_name_ms ||
         job?.service_name ||
@@ -451,6 +457,28 @@ async function loadDashboard() {
             error.message ||
             "Unable to load dashboard summary."
         );
+    }
+}
+
+async function loadOverdueSummary() {
+    try {
+        const result = await apiRequest("/admin/requests");
+        if (!result) return;
+        const now = Date.now();
+        const overdueIds = new Set((Array.isArray(result.data) ? result.data : [])
+            .filter(request => {
+                if (["completed", "cancelled", "canceled"].includes(String(request.status || "").toLowerCase())) return false;
+                const activity = new Date(request.updated_at || request.created_at || "");
+                return !Number.isNaN(activity.getTime()) && now - activity.getTime() >= 48 * 60 * 60 * 1000;
+            })
+            .map(request => String(request.id)));
+        const banner = $("#overdueDashboardAlert");
+        const label = $("#overdueDashboardText");
+        if (!banner || !label) return;
+        banner.hidden = overdueIds.size === 0;
+        label.textContent = `⚠ ${overdueIds.size} open request${overdueIds.size === 1 ? "" : "s"} untouched for 48+ hours.`;
+    } catch (error) {
+        console.error("Overdue request summary error:", error);
     }
 }
 
@@ -703,6 +731,82 @@ async function loadJobPending() {
                     )}
                 </span>
 
+            </div>
+        `;
+    }
+}
+
+
+/* =========================================================
+   LOAD ENQUIRIES
+========================================================= */
+
+async function loadEnquiries() {
+    const list = $("#enquiryList");
+    const count = $("#enquiryCount");
+    if (!list) return;
+
+    list.innerHTML = `
+        <div class="job-pending-loading">
+            <span class="loading-dot"></span>
+            Loading enquiries...
+        </div>
+    `;
+
+    try {
+        const result = await apiRequest("/admin/requests");
+        if (!result) return;
+
+        const now = Date.now();
+        const closedStatuses = new Set(["completed", "cancelled", "canceled"]);
+        const enquiries = (Array.isArray(result.data) ? result.data : [])
+            .filter(request => !closedStatuses.has(String(request.status || "pending").toLowerCase()))
+            .sort((first, second) => {
+                const firstDate = new Date(first.updated_at || first.created_at || "");
+                const secondDate = new Date(second.updated_at || second.created_at || "");
+                const firstTime = Number.isNaN(firstDate.getTime()) ? 0 : firstDate.getTime();
+                const secondTime = Number.isNaN(secondDate.getTime()) ? 0 : secondDate.getTime();
+                const firstOverdue = firstTime > 0 && now - firstTime >= 48 * 60 * 60 * 1000;
+                const secondOverdue = secondTime > 0 && now - secondTime >= 48 * 60 * 60 * 1000;
+                if (firstOverdue !== secondOverdue) return firstOverdue ? -1 : 1;
+                if (firstOverdue && secondOverdue) return firstTime - secondTime;
+                return new Date(second.created_at || 0) - new Date(first.created_at || 0);
+            });
+
+        if (count) {
+            count.textContent = `${enquiries.length} ${enquiries.length === 1 ? "enquiry" : "enquiries"}`;
+        }
+
+        if (!enquiries.length) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">✓</div>
+                    <div><strong>No open enquiries</strong><span>New customer requests will appear here.</span></div>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = enquiries.slice(0, 4).map(request => `
+            <article class="enquiry-item">
+                <div class="enquiry-reference">
+                    <strong>${escapeHtml(request.request_code || "Service Request")}</strong>
+                    <small>${escapeHtml(formatDate(request.created_at))}</small>
+                </div>
+                <div class="enquiry-customer">
+                    <strong>${escapeHtml(getCustomerName(request))}</strong>
+                    <span>${escapeHtml(getServiceName(request))}</span>
+                </div>
+                <a class="job-view-button enquiry-view-button" href="request.html?id=${encodeURIComponent(request.id)}">View</a>
+            </article>
+        `).join("");
+    } catch (error) {
+        console.error("Enquiry dashboard error:", error);
+        if (count) count.textContent = "—";
+        list.innerHTML = `
+            <div class="empty-state error-state">
+                <strong>Unable to load enquiries</strong>
+                <span>${escapeHtml(error.message || "Please try again.")}</span>
             </div>
         `;
     }
@@ -1492,6 +1596,8 @@ if (refreshButton) {
                 await Promise.all([
                     loadDashboard(),
                     loadJobPending(),
+                    loadEnquiries(),
+                    loadOverdueSummary(),
                     loadSchedules()
                 ]);
 
@@ -1553,6 +1659,8 @@ async function init() {
     await Promise.all([
         loadDashboard(),
         loadJobPending(),
+        loadEnquiries(),
+        loadOverdueSummary(),
         loadSchedules()
     ]);
 }

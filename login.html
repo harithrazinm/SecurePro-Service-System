@@ -20,11 +20,16 @@
         <span class="eyebrow">STAFF PORTAL</span>
         <h2>Welcome back</h2>
         <p class="intro">Sign in with your SOPro account. We’ll open the workspace assigned to your role.</p>
-        <form id="loginForm">
+        <form id="loginForm" autocomplete="on">
           <label for="email">Email address</label>
           <input id="email" name="email" type="email" autocomplete="username" placeholder="you@securepro.com" required>
           <label for="password">Password</label>
           <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+          <label class="remember-email" for="rememberEmail">
+            <input id="rememberEmail" name="rememberEmail" type="checkbox">
+            <span>Remember email on this device</span>
+          </label>
+          <p class="password-manager-note">Your browser may offer to save your password after sign-in.</p>
           <div id="loginError" class="login-error" role="alert" hidden></div>
           <button id="loginButton" type="submit"><span>Sign in</span><span aria-hidden="true">→</span></button>
         </form>

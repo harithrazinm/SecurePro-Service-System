@@ -1996,6 +1996,7 @@ table tbody tr:last-child td {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 20px;
     padding: 21px 24px 18px;
     border-bottom: 1px solid #edf3fb;
@@ -2106,6 +2107,52 @@ table tbody tr:last-child td {
     border-radius: 7px
 }
 
+.quotation-overdue-count,
+.quotation-overdue-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.quotation-overdue-count {
+    padding: 9px 12px;
+    white-space: nowrap;
+}
+
+.quotation-overdue-count[hidden] {
+    display: none !important;
+}
+
+.quotation-overdue-badge {
+    margin: 0 0 0 8px;
+    padding: 4px 8px;
+    vertical-align: middle;
+}
+
+.quotation-job-item-overdue {
+    border-left: 3px solid #dc2626;
+    background: #fffafa;
+}
+
+.quotation-overdue-review {
+    display: inline-block;
+    margin-top: 9px;
+    color: #b91c1c;
+    font-size: 11px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.quotation-overdue-review:hover {
+    color: #7f1d1d;
+    text-decoration: underline;
+}
+
 .quotation-job-empty {
     display: flex;
     align-items: center;
@@ -2153,6 +2200,10 @@ table tbody tr:last-child td {
         padding: 18px 16px
     }
 
+    .quotation-overdue-count {
+        margin-left: auto;
+    }
+
     .work-queue-header h2 {
         font-size: 18px
     }
@@ -2170,5 +2221,243 @@ table tbody tr:last-child td {
 
     .quotation-job-upload {
         min-height: 40px
+    }
+}
+
+/* Enquiry work queue refinement */
+.quotation-work-queue {
+    margin-bottom: 22px;
+    border-color: #dce6f3;
+    border-radius: 17px;
+    background: #fff;
+    box-shadow: 0 10px 26px rgba(20, 45, 85, .055);
+}
+
+.work-queue-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 18px;
+    padding: 23px 27px 20px;
+    background: linear-gradient(110deg, #f4f8ff 0%, #fbfdff 62%, #fff 100%);
+}
+
+.work-queue-header .eyebrow {
+    color: #4168d7;
+    font-size: 11px;
+    letter-spacing: .13em;
+}
+
+.work-queue-header h2 {
+    margin-top: 7px;
+    color: #162a4a;
+    font-size: clamp(20px, 2vw, 25px);
+    font-weight: 800;
+    letter-spacing: -.035em;
+}
+
+.work-queue-header p {
+    max-width: 650px;
+    margin-top: 7px;
+    color: #6b7e9a;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.work-queue-count {
+    min-width: 88px;
+    padding: 10px 14px;
+    border-color: #c9dcff;
+    border-radius: 13px;
+    background: #f0f6ff;
+    color: #2454d9;
+}
+
+.work-queue-count strong {
+    font-size: 26px;
+    letter-spacing: -.04em;
+}
+
+.work-queue-count span {
+    margin-top: 5px;
+    font-size: 9px;
+    letter-spacing: .11em;
+}
+
+.quotation-overdue-count {
+    min-height: 40px;
+    padding: 0 13px;
+    border: 1px solid #fee0e0;
+    background: #fff5f5;
+    color: #bd2929;
+    font-size: 11px;
+}
+
+.quotation-job-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 22px;
+    padding: 20px 26px;
+    border-bottom-color: #edf1f6;
+    transition: background .16s ease, box-shadow .16s ease;
+}
+
+.quotation-job-item:hover {
+    background: #f8fbff;
+}
+
+.quotation-job-item-overdue {
+    border-left: 4px solid #e43b3b;
+    background: #fffafa;
+}
+
+.quotation-job-item-overdue:hover {
+    background: #fff5f5;
+}
+
+.quotation-job-main {
+    display: grid;
+    gap: 9px;
+}
+
+.quotation-job-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+}
+
+.quotation-job-code {
+    display: inline-flex;
+    align-items: center;
+    min-height: 27px;
+    padding: 4px 9px;
+    border: 1px solid #dce8ff;
+    border-radius: 7px;
+    background: #f2f6ff;
+    color: #2454c8;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: .01em;
+}
+
+.quotation-job-customer {
+    margin: 0;
+    color: #1b2e4f;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.quotation-overdue-badge {
+    min-height: 26px;
+    margin: 0;
+    padding: 4px 9px;
+    border: 1px solid #fee0e0;
+    background: #fff1f1;
+    color: #bd2929;
+    font-size: 10px;
+}
+
+.quotation-job-meta {
+    gap: 7px;
+    margin-top: 0;
+    color: #71819a;
+    font-size: 10px;
+}
+
+.quotation-job-meta > span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 25px;
+    padding: 4px 8px;
+    border: 1px solid #edf1f6;
+    border-radius: 7px;
+    background: #f8fafc;
+}
+
+.quotation-overdue-review {
+    width: fit-content;
+    margin-top: 0;
+    color: #bd2929;
+    font-size: 10px;
+}
+
+.quotation-job-upload {
+    min-width: 154px;
+    min-height: 43px;
+    padding: 0 16px;
+    border: 1px solid #214acb;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #3865e8, #2853d4);
+    box-shadow: 0 5px 12px rgba(37, 84, 215, .16);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.quotation-job-upload:hover {
+    filter: brightness(1.04);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(37, 84, 215, .22);
+}
+
+.quotation-job-upload:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, .24);
+    outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+    .work-queue-header {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .quotation-overdue-count {
+        grid-column: 1 / -1;
+        justify-self: start;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 650px) {
+    .work-queue-header {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        padding: 18px 16px;
+    }
+
+    .work-queue-header > div:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .work-queue-count {
+        min-width: 74px;
+    }
+
+    .quotation-job-item {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+        padding: 17px 16px;
+    }
+
+    .quotation-job-heading {
+        align-items: flex-start;
+    }
+
+    .quotation-job-customer {
+        flex-basis: 100%;
+        font-size: 13px;
+    }
+
+    .quotation-job-meta > span {
+        min-height: 23px;
+        font-size: 9px;
+    }
+
+    .quotation-job-upload {
+        width: 100%;
+        min-width: 0;
     }
 }

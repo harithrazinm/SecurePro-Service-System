@@ -15,6 +15,8 @@ const API_BASE =
         
 const TOKEN_KEY = "securepro_super_admin_token";
 const USER_KEY = "securepro_super_admin_user";
+const OVERDUE_AFTER_MS = 48 * 60 * 60 * 1000;
+const CLOSED_STATUSES = new Set(["completed", "cancelled", "canceled"]);
 
 // =========================================================
 // HELPERS
@@ -43,6 +45,23 @@ const date = value => {
         dateStyle: "medium",
         timeStyle: "short"
     });
+};
+
+const lastActivity = request => {
+    const d = new Date(request.updated_at || request.created_at || "");
+    return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const isOverdue = request => {
+    const activity = lastActivity(request);
+    return !CLOSED_STATUSES.has(String(request.status || "").toLowerCase()) &&
+        activity && Date.now() - activity.getTime() >= OVERDUE_AFTER_MS;
+};
+
+const overdueAgeLabel = request => {
+    const activity = lastActivity(request);
+    const hours = activity ? Math.floor((Date.now() - activity.getTime()) / (60 * 60 * 1000)) : 0;
+    return `${Math.floor(hours / 24)}d ${hours % 24}h`;
 };
 
 
@@ -372,6 +391,22 @@ function render() {
 
     });
 
+    const overdueCount = new Set((window.projects || []).filter(isOverdue).map(project => String(project.id))).size;
+    const overdueAlert = $("#overdueProjectAlert");
+    if (overdueAlert) {
+        overdueAlert.hidden = overdueCount === 0;
+        overdueAlert.textContent = overdueCount
+            ? `⚠ ${overdueCount} open request${overdueCount === 1 ? "" : "s"} untouched for 48+ hours — review the oldest items first.`
+            : "";
+    }
+    rows.sort((a, b) => {
+        const aOverdue = isOverdue(a);
+        const bOverdue = isOverdue(b);
+        if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+        if (aOverdue && bOverdue) return lastActivity(a) - lastActivity(b);
+        return 0;
+    });
+
 
     // =====================================================
     // PROJECT COUNT
@@ -519,6 +554,7 @@ function render() {
                     <small>
                         ${esc(date(project.created_at))}
                     </small>
+                    ${isOverdue(project) ? `<span class="project-overdue-badge">⚠ Overdue · ${esc(overdueAgeLabel(project))}</span>` : ""}
                 </td>
 
 

@@ -71,6 +71,9 @@ let proofQuotationId =
 let editingQuotation =
     null;
 
+const REQUEST_OVERDUE_AFTER_MS = 48 * 60 * 60 * 1000;
+const quotationOverdueCount = document.querySelector("#quotationOverdueCount");
+
 
 /* =========================================================
    ERROR
@@ -1302,6 +1305,18 @@ function getRequestSubmittedDate(request) {
     );
 }
 
+function getRequestLastActivity(request) {
+    const date = new Date(request?.updated_at || getRequestSubmittedDate(request) || "");
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getOverdueAgeLabel(milliseconds) {
+    const hours = Math.floor(milliseconds / (60 * 60 * 1000));
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+    return days ? `${days}d ${remainingHours}h` : `${hours}h`;
+}
+
 function renderQuotationJobQueue() {
     if (!quotationJobList) return;
 
@@ -1330,12 +1345,28 @@ function renderQuotationJobQueue() {
         })
         .slice()
         .sort((a, b) => {
+            const aActivity = getRequestLastActivity(a);
+            const bActivity = getRequestLastActivity(b);
+            const aOverdue = aActivity && Date.now() - aActivity.getTime() >= REQUEST_OVERDUE_AFTER_MS;
+            const bOverdue = bActivity && Date.now() - bActivity.getTime() >= REQUEST_OVERDUE_AFTER_MS;
+            if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+            if (aOverdue && bOverdue) return aActivity - bActivity;
             const aDate = new Date(getRequestSubmittedDate(a) || 0).getTime();
             const bDate = new Date(getRequestSubmittedDate(b) || 0).getTime();
             return bDate - aDate;
         });
 
     if (quotationJobCount) quotationJobCount.textContent = String(jobs.length);
+    const overdueJobs = jobs.filter(request => {
+        const activity = getRequestLastActivity(request);
+        return activity && Date.now() - activity.getTime() >= REQUEST_OVERDUE_AFTER_MS;
+    });
+    if (quotationOverdueCount) {
+        quotationOverdueCount.hidden = overdueJobs.length === 0;
+        quotationOverdueCount.textContent = overdueJobs.length
+            ? `⚠ ${overdueJobs.length} need follow-up (48h+)`
+            : "";
+    }
 
     if (!jobs.length) {
         quotationJobList.innerHTML = `
@@ -1356,18 +1387,26 @@ function renderQuotationJobQueue() {
         const service = escapeHtml(getRequestServiceName(request));
         const status = escapeHtml(formatStatus(request.status || 'pending'));
         const submitted = escapeHtml(formatDate(getRequestSubmittedDate(request)));
+        const lastActivity = getRequestLastActivity(request);
+        const overdueAge = lastActivity ? Date.now() - lastActivity.getTime() : 0;
+        const isOverdue = overdueAge >= REQUEST_OVERDUE_AFTER_MS;
 
         return `
-            <article class="quotation-job-item">
+            <article class="quotation-job-item${isOverdue ? ' quotation-job-item-overdue' : ''}">
                 <div class="quotation-job-main">
-                    <span class="quotation-job-code">${requestCode}</span>
-                    <strong class="quotation-job-customer">${customer}</strong>
+                    <div class="quotation-job-heading">
+                        <span class="quotation-job-code">${requestCode}</span>
+                        ${isOverdue ? `<span class="quotation-overdue-badge">⚠ Overdue · ${escapeHtml(getOverdueAgeLabel(overdueAge))}</span>` : ''}
+                        <strong class="quotation-job-customer">${customer}</strong>
+                    </div>
                     <div class="quotation-job-meta">
                         <span>${service}</span>
                         <span>Status: ${status}</span>
                         <span>Submitted: ${submitted}</span>
+                        <span>Last activity: ${escapeHtml(formatDate(request.updated_at || getRequestSubmittedDate(request)))}</span>
                         <span>${count ? `${count} quotation record(s) in history` : 'No quotation uploaded yet'}</span>
                     </div>
+                    ${isOverdue ? `<a class="quotation-overdue-review" href="request.html?id=${encodeURIComponent(request.id)}">Review request →</a>` : ''}
                 </div>
                 <button type="button" class="quotation-job-upload" data-upload-quotation="${requestId}">
                     ${count ? 'Upload New Revision' : 'Upload Quotation'}

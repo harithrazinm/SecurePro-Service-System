@@ -12,6 +12,7 @@ const translations = {
         navGuide: "How to Create a Request",
         navServices: "Service List",
         navContact: "Contact Us",
+        loginButton: "Staff Login",
         navSolutions: "Solutions",
         navWhy: "Why Us",
         navQuote: "Get a Quote",
@@ -91,6 +92,7 @@ const translations = {
         footerServices: "Services",
         footerContact: "Contact",
         footerBottom: "Official SecurePro Service Platform",
+        footerCopyright: "© 2026 SecurePro. All rights reserved.",
 
         // ---- Referral (used on service page) ----
         referralEyebrow: "OPTIONAL",
@@ -114,6 +116,7 @@ const translations = {
         navGuide: "Cara Membuat Permintaan",
         navServices: "Senarai Servis",
         navContact: "Hubungi Kami",
+        loginButton: "Log Masuk Staf",
         navSolutions: "Penyelesaian",
         navWhy: "Kenapa Kami",
         navQuote: "Dapatkan Sebut Harga",
@@ -193,6 +196,7 @@ const translations = {
         footerServices: "Servis",
         footerContact: "Hubungi",
         footerBottom: "Platform Servis Rasmi SecurePro",
+        footerCopyright: "© 2026 SecurePro. Hak cipta terpelihara.",
 
         // ---- Referral (used on service page) ----
         referralEyebrow: "PILIHAN",
@@ -227,9 +231,9 @@ function applyLanguage() {
 
     const button = document.querySelector("#languageToggle");
     if (button) {
-        const switchTo = currentLanguage === "ms" ? "English" : "Bahasa Melayu";
-        button.textContent = `🌐 ${switchTo}`;
-        button.setAttribute("aria-label", `Switch language to ${switchTo}`);
+        const switchTo = currentLanguage === "ms" ? "🇬🇧 EN" : "🇲🇾 BM";
+        button.textContent = switchTo;
+        button.setAttribute("aria-label", currentLanguage === "ms" ? "Switch language to English" : "Tukar bahasa kepada Bahasa Melayu");
     }
 }
 

@@ -1778,3 +1778,42 @@ body { background: var(--tech-bg); }
     background: linear-gradient(180deg, #10233f 0%, #142d4c 100%);
     box-shadow: 8px 0 30px rgba(16, 35, 63, .08);
 }
+.technician-overdue-alert,
+.dashboard-overdue-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    background: #fff1f2;
+    color: #b42318;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.technician-overdue-alert {
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    border: 1px solid #fecaca;
+}
+
+.technician-overdue-alert a {
+    color: #b42318;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.technician-overdue-alert[hidden] {
+    display: none !important;
+}
+
+.dashboard-overdue-badge {
+    margin: 8px 0 0;
+    padding: 5px 8px;
+}
+
+@media(max-width:600px) {
+    .technician-overdue-alert { align-items: flex-start; flex-direction: column; }
+}

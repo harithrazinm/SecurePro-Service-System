@@ -44,6 +44,15 @@ function renderRequests(){
     const loading=document.getElementById("requestLoading");
     const empty=document.getElementById("emptyRequests");
     const list=document.getElementById("requestList");
+    const now=Date.now();
+    const isOverdue=r=>{
+        if(["completed","cancelled","canceled"].includes(String(r.status||"").toLowerCase())) return false;
+        const activity=new Date(r.updated_at||r.created_at||"");
+        return !Number.isNaN(activity.getTime())&&now-activity.getTime()>=48*60*60*1000;
+    };
+    const overdueIds=new Set(requests.filter(isOverdue).map(r=>String(r.id)));
+    const alert=document.getElementById("dashboardOverdueAlert"), alertText=document.getElementById("dashboardOverdueText");
+    if(alert&&alertText){alert.hidden=overdueIds.size===0;alertText.textContent=`⚠ ${overdueIds.size} assigned job${overdueIds.size===1?"":"s"} untouched for 48+ hours.`;}
     loading.style.display="none";
     const active=requests.filter(r=>!["completed","cancelled"].includes(r.status)).sort((a,b)=>requestTimeValue(a)-requestTimeValue(b)).slice(0,5);
     if(!active.length){list.hidden=true;empty.hidden=false;return;}
@@ -51,9 +60,14 @@ function renderRequests(){
     list.innerHTML=active.map(r=>{
         const serviceName=r.service_name || "Service";
         const time=r.scheduled_time ? String(r.scheduled_time).slice(0,5) : "Time not set";
+        const activity=new Date(r.updated_at||r.created_at||"");
+        const overdue=isOverdue(r);
+        const overdueHours=Number.isNaN(activity.getTime())?0:Math.floor((now-activity.getTime())/3600000);
+        const overdueLabel=`${Math.floor(overdueHours/24)}d ${overdueHours%24}h`;
         return `<article class="request-card">
             <div class="request-card-main">
               <div class="request-card-top"><span class="request-code">${escapeHtml(r.request_code)}</span><span class="status-badge status-${escapeHtml(statusClass(r.status))}">${escapeHtml(formatStatus(r.status))}</span></div>
+              ${overdue?`<span class="dashboard-overdue-badge">⚠ Overdue · ${escapeHtml(overdueLabel)}</span>`:""}
               <h3>${escapeHtml(serviceName)}</h3>
               <div class="schedule-info">
                 <div class="schedule-item"><span class="schedule-icon">📅</span><div><small>Scheduled Date</small><strong>${escapeHtml(formatDateOnly(r.scheduled_date))}</strong></div></div>

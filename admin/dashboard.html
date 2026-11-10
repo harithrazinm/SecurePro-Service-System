@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/dashboard.css?v=20261022-2">
+    <link rel="stylesheet" href="css/dashboard.css?v=20261105-3">
 <link rel="stylesheet" href="css/request.css">
 </head>
 <body>
@@ -32,15 +32,11 @@
             </a>
             <a href="quotations.html">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 12h6M9 16h4"/></svg>
-                Quotations
+                Enquiry
             </a>
             <a href="job-pending.html">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
                 Job Pending
-            </a>
-            <a href="work-calendar.html">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8 13h2M14 13h2M8 17h2M14 17h2"/></svg>
-                Work Calendar
             </a>
             <a href="requests.html">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z"/><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 12h6M9 16h6"/></svg>
@@ -86,6 +82,11 @@
             </div>
         </section>
 
+        <aside id="overdueDashboardAlert" class="overdue-dashboard-alert" hidden>
+            <span id="overdueDashboardText"></span>
+            <a href="requests.html">Review requests →</a>
+        </aside>
+
         <!-- ERROR (used by dashboard.js showError/hideError) -->
         <div id="dashboardError" class="dashboard-error" hidden></div>
 
@@ -127,9 +128,8 @@
                 <div>
                     <span class="eyebrow">ALL-TIME OVERVIEW</span>
                     <h2>Form Entry Summary</h2>
-                    <p>Overall number of requests entered by customers and admins.</p>
+                    <p>Requests submitted by customers and admins.</p>
                 </div>
-                <span class="panel-count">All requests</span>
             </div>
             <div class="intake-overview-grid">
                 <article class="intake-overview-item customer-entry">
@@ -174,6 +174,26 @@
             </div>
         </section>
 
+        <section class="dashboard-panel enquiry-panel" id="enquirySection">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">ENQUIRY MANAGEMENT</span>
+                    <h2>Enquiry</h2>
+                    <p>Customer service requests for review, quotation or follow-up.</p>
+                </div>
+                <div class="panel-heading-actions">
+                    <span id="enquiryCount" class="panel-count">Loading...</span>
+                    <a class="panel-link" href="quotations.html">View all <span>→</span></a>
+                </div>
+            </div>
+            <div class="enquiry-list" id="enquiryList">
+                <div class="job-pending-loading">
+                    <span class="loading-dot"></span>
+                    Loading enquiries...
+                </div>
+            </div>
+        </section>
+
         <!-- CALENDAR + UPCOMING JOBS -->
         <section class="dashboard-bottom-grid">
 
@@ -182,13 +202,13 @@
                 <div class="panel-heading compact-heading">
                     <div>
                         <span class="eyebrow">SCHEDULE MANAGEMENT</span>
-                        <h2>Work Calendar</h2>
+                        <h2>Job Schedule</h2>
                         <p>Scheduled technician jobs by date.</p>
                     </div>
 
                     <div class="panel-heading-actions">
-                        <a class="panel-link" href="work-calendar.html">
-                            Open calendar <span>→</span>
+                        <a class="panel-link" href="job-pending.html#scheduleCalendar">
+                            Open schedule <span>→</span>
                         </a>
                     </div>
                 </div>
@@ -246,7 +266,7 @@
     </main>
 </div>
 
-<script src="js/dashboard.js?v=20261022-2"></script>
+<script src="js/dashboard.js?v=20261105-2"></script>
 <script src="js/session-timeout.js"></script>
 </body>
 </html>

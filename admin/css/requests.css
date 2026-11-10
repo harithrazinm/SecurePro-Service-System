@@ -682,6 +682,216 @@
     cursor: pointer;
 }
 
+/* ========================================
+   REQUEST FILTERS
+======================================== */
+.request-filter-panel {
+    margin: 0 25px 18px;
+    padding: 18px;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.request-filter-search,
+.request-filter-field {
+    display: grid;
+    min-width: 0;
+    gap: 7px;
+}
+
+.request-filter-search {
+    max-width: 620px;
+}
+
+.filter-label {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+.request-filter-search .search-box,
+.request-filter-field select,
+.request-filter-field input {
+    width: 100%;
+    max-width: none;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 12px;
+}
+
+.request-filter-search .search-box {
+    padding: 0 12px;
+}
+
+.request-filter-search .search-box:focus-within,
+.request-filter-field select:focus,
+.request-filter-field input:focus {
+    outline: 3px solid rgba(37, 99, 235, .12);
+    border-color: #6b9af3;
+}
+
+.request-filter-field select,
+.request-filter-field input {
+    padding: 0 11px;
+}
+
+.request-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(130px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.request-filter-footer,
+.filter-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.request-filter-footer {
+    margin-top: 15px;
+    padding-top: 13px;
+    border-top: 1px solid var(--border-soft);
+}
+
+.overdue-only-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.overdue-only-toggle input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.toggle-indicator {
+    position: relative;
+    width: 34px;
+    height: 19px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: #cbd5e1;
+    transition: background .18s ease;
+}
+
+.toggle-indicator::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #fff;
+    content: "";
+    transition: transform .18s ease;
+}
+
+.overdue-only-toggle input:checked + .toggle-indicator {
+    background: #dc2626;
+}
+
+.overdue-only-toggle input:checked + .toggle-indicator::after {
+    transform: translateX(15px);
+}
+
+.overdue-only-toggle input:focus-visible + .toggle-indicator {
+    outline: 3px solid rgba(37, 99, 235, .22);
+    outline-offset: 2px;
+}
+
+.overdue-only-toggle small {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.filter-footer-actions {
+    justify-content: flex-end;
+}
+
+.filter-summary {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.clear-filters-button {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.clear-filters-button:hover:not(:disabled) {
+    border-color: #94a3b8;
+    color: var(--text-primary);
+}
+
+.clear-filters-button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+    .request-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .request-filter-panel {
+        margin: 0 16px 16px;
+        padding: 14px;
+    }
+
+    .request-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .request-filter-footer,
+    .filter-footer-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .filter-footer-actions {
+        width: 100%;
+    }
+
+    .filter-summary {
+        white-space: normal;
+    }
+
+    .clear-filters-button {
+        width: 100%;
+    }
+}
+
 
 /* ========================================
    TABLE
@@ -799,6 +1009,29 @@ tbody tr:hover {
     white-space: nowrap;
 }
 
+.overdue-count,
+.request-overdue-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.request-overdue-badge {
+    display: flex;
+    margin-top: 6px;
+}
+
+.overdue-count[hidden] {
+    display: none !important;
+}
+
 
 .technician-empty {
     color: var(--text-faint);
@@ -806,6 +1039,42 @@ tbody tr:hover {
     font-size: 11px;
 
     white-space: nowrap;
+}
+
+.job-intro-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.job-overdue-count,
+.job-overdue-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.job-overdue-count {
+    padding: 9px 12px;
+    white-space: nowrap;
+}
+
+.job-overdue-badge {
+    margin-top: 6px;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+
+.job-overdue-count[hidden],
+.quotation-overdue-count[hidden] {
+    display: none !important;
 }
 
 

@@ -1,0 +1,503 @@
+/* Job Pending page — refined, page-scoped admin styling. */
+.job-pending-page {
+    background:
+        radial-gradient(ellipse at 8% 0%, rgba(219, 234, 254, .55), transparent 32rem),
+        #f4f7fc;
+}
+
+.job-pending-page .app-shell {
+    width: min(1480px, calc(100% - 48px));
+    padding: 20px 0 56px;
+}
+
+.job-pending-page .topbar-card {
+    padding: 15px 20px;
+    border: 1px solid #e4eaf4;
+    border-radius: 17px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 8px 24px rgba(27, 48, 83, .06);
+}
+
+.job-pending-page .top-nav {
+    background: #f3f6fc;
+}
+
+.job-pending-page .top-nav a.active {
+    color: #1d4ed8;
+    box-shadow: 0 3px 10px rgba(31, 77, 155, .12);
+}
+
+.job-pending-page .logout-bar {
+    width: auto;
+    min-height: 38px;
+    margin: 10px 0 24px auto;
+    padding: 0 14px;
+    border: 1px solid #e0e7f1;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 7px rgba(23, 43, 77, .04);
+    color: #53657f;
+    font-size: 12px;
+}
+
+.job-pending-page .logout-bar:hover {
+    border-color: #cbd8ea;
+    background: #f8faff;
+    color: #173b75;
+}
+
+.job-pending-page .eyebrow-row {
+    margin-bottom: 7px;
+}
+
+.job-pending-page .request-header {
+    margin-bottom: 14px;
+}
+
+.job-pending-page .page-title {
+    color: #152b4c;
+    font-size: clamp(29px, 3vw, 36px);
+    letter-spacing: -.04em;
+}
+
+.job-pending-page .dashboard-content {
+    max-width: none;
+    padding: 0;
+}
+
+.job-pending-page .dashboard-intro {
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 23px 26px;
+    border: 1px solid #dce8f7;
+    border-radius: 18px;
+    background: linear-gradient(112deg, #edf5ff 0%, #fff 67%);
+    box-shadow: 0 9px 24px rgba(30, 64, 115, .055);
+}
+
+.job-pending-page .dashboard-intro .eyebrow {
+    color: #3970c4;
+}
+
+.job-pending-page .dashboard-intro h2 {
+    margin: 7px 0 0;
+    color: #172e51;
+    font-size: clamp(21px, 2.2vw, 27px);
+    letter-spacing: -.035em;
+}
+
+.job-pending-page .dashboard-intro p {
+    max-width: 620px;
+    margin: 7px 0 0;
+    color: #657792;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.job-pending-page .job-intro-actions {
+    gap: 8px;
+}
+
+.job-pending-page .job-intro-actions .refresh-button {
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.job-pending-page .job-intro-actions a.refresh-button {
+    border-color: #d7e2f0;
+    background: #fff;
+    box-shadow: none;
+    color: #365579;
+}
+
+.job-pending-page .job-intro-actions a.refresh-button:hover {
+    border-color: #aec6e7;
+    background: #f7faff;
+}
+
+.job-pending-page .job-overdue-count {
+    padding: 9px 11px;
+    border: 1px solid #fecaca;
+    font-size: 10px;
+}
+
+.job-pending-page .calendar-page {
+    max-width: none;
+    padding: 10px 0 22px;
+}
+
+.job-pending-page .calendar-header {
+    align-items: center;
+    margin: 0 2px 14px;
+}
+
+.job-pending-page .calendar-header .eyebrow {
+    color: #4777bc;
+}
+
+.job-pending-page .calendar-header h2 {
+    margin: 5px 0;
+    color: #172e51;
+    font-size: 23px;
+    letter-spacing: -.035em;
+}
+
+.job-pending-page .calendar-header p {
+    color: #71819a;
+    font-size: 12px;
+}
+
+.job-pending-page .calendar-header .back-button {
+    margin: 0;
+    padding: 9px 12px;
+    border: 1px solid #dce5f1;
+    border-radius: 9px;
+    background: #fff;
+    color: #476181 !important;
+    font-size: 11px;
+}
+
+.job-pending-page .summary-grid {
+    gap: 12px;
+    margin-bottom: 13px;
+}
+
+.job-pending-page .summary-card {
+    padding: 12px 16px;
+    border-color: #e4eaf3;
+    border-radius: 13px;
+    box-shadow: 0 4px 14px rgba(24, 48, 84, .045);
+}
+
+.job-pending-page .summary-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(24, 48, 84, .08);
+}
+
+.job-pending-page .summary-card span {
+    font-size: 10px;
+    letter-spacing: .07em;
+}
+
+.job-pending-page .summary-card strong {
+    margin-top: 2px;
+    color: #182f52;
+    font-size: 25px;
+}
+
+.job-pending-page .calendar-card,
+.job-pending-page .workload-card {
+    border-color: #e2e9f3;
+    border-radius: 16px;
+    box-shadow: 0 7px 22px rgba(24, 48, 84, .05);
+}
+
+.job-pending-page .calendar-card {
+    padding: 18px;
+}
+
+.job-pending-page .calendar-toolbar {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+}
+
+.job-pending-page .calendar-toolbar h2 {
+    color: #1b3153;
+    font-size: 17px;
+}
+
+.job-pending-page .calendar-toolbar p {
+    font-size: 12px;
+}
+
+.job-pending-page .calendar-legend {
+    gap: 10px 15px;
+    padding-bottom: 11px;
+    font-size: 11px;
+}
+
+.job-pending-page .calendar-tool-button,
+.job-pending-page #technicianFilter {
+    min-height: 38px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 9px;
+    font-size: 11px;
+}
+
+.job-pending-page .fc .fc-toolbar-title {
+    font-size: 16px;
+}
+
+.job-pending-page .fc .fc-col-header-cell {
+    padding: 7px 0;
+}
+
+.job-pending-page .workload-card {
+    margin-top: 13px;
+    padding: 17px 19px;
+}
+
+.job-pending-page .workload-heading {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+}
+
+.job-pending-page .workload-heading h2 {
+    color: #1b3153;
+    font-size: 16px;
+}
+
+.job-pending-page .requests-section {
+    border-color: #e1e8f2;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(24, 48, 84, .055);
+}
+
+.job-pending-page .requests-section .section-heading {
+    align-items: center;
+    padding: 19px 22px 15px;
+}
+
+.job-pending-page .requests-section .section-heading .eyebrow {
+    color: #5276aa;
+}
+
+.job-pending-page .requests-section .section-heading h2 {
+    margin: 5px 0 0;
+    color: #1a3154;
+    font-size: 20px;
+    letter-spacing: -.025em;
+}
+
+.job-pending-page .request-total {
+    padding: 6px 10px;
+    border: 1px solid #e4eaf2;
+    border-radius: 999px;
+    background: #f8faff;
+    color: #5b6f8c;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.job-pending-page .request-toolbar {
+    padding: 0 22px 14px;
+}
+
+.job-pending-page .search-box {
+    max-width: 380px;
+    height: 38px;
+    border-radius: 9px;
+    background: #fbfcfe;
+}
+
+.job-pending-page .search-box input {
+    font-size: 11px;
+}
+
+.job-pending-page .table-wrapper {
+    border-top: 1px solid #edf1f6;
+}
+
+.job-pending-page table {
+    min-width: 900px;
+}
+
+.job-pending-page thead {
+    background: #f7f9fc;
+}
+
+.job-pending-page th {
+    padding: 11px 16px;
+    color: #72839d;
+    font-size: 9px;
+    letter-spacing: .08em;
+}
+
+.job-pending-page td {
+    padding: 15px 16px;
+    border-top-color: #edf1f6;
+    color: #344967;
+    font-size: 11px;
+}
+
+.job-pending-page tbody tr:hover {
+    background: #f8fbff;
+}
+
+.job-pending-page .request-code {
+    color: #234b83;
+    font-size: 11px;
+}
+
+.job-pending-page .request-date {
+    color: #8795a9;
+    font-size: 9px;
+}
+
+.job-pending-page .job-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 25px;
+    padding: 4px 9px;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #275da5;
+    font-size: 9px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.job-pending-page .job-status-pending,
+.job-pending-page .job-status-quotation_required {
+    border-color: #fde2b8;
+    background: #fff7e8;
+    color: #a15c08;
+}
+
+.job-pending-page .job-status-assigned {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.job-pending-page .job-status-in_progress {
+    border-color: #ddd6fe;
+    background: #f5f3ff;
+    color: #6840b8;
+}
+
+.job-pending-page .job-status-waiting_parts {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #9a6a0a;
+}
+
+.job-pending-page .job-status-awaiting_payment {
+    border-color: #fed7aa;
+    background: #fff7ed;
+    color: #b45309;
+}
+
+.job-pending-page .job-status-completed {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.job-pending-page .job-status-cancelled {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.job-pending-page .job-overdue-badge {
+    padding: 4px 8px;
+    background: #fff1f2;
+    font-size: 9px;
+}
+
+.job-pending-page .view-button {
+    padding: 8px 11px;
+    border-color: #d7e3f2;
+    border-radius: 8px;
+    background: #f6f9ff;
+    color: #28558c;
+    font-size: 10px;
+}
+
+.job-pending-page .view-button:hover {
+    border-color: #b8cce8;
+    background: #edf4ff;
+}
+
+@media (max-width: 900px) {
+    .job-pending-page .app-shell {
+        width: calc(100% - 32px);
+    }
+
+    .job-pending-page .dashboard-intro {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .job-pending-page .job-intro-actions {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .job-pending-page .calendar-page {
+        padding-top: 8px;
+    }
+}
+
+@media (max-width: 600px) {
+    .job-pending-page .app-shell {
+        width: calc(100% - 22px);
+        padding-top: 11px;
+    }
+
+    .job-pending-page .topbar-card {
+        padding: 12px;
+        border-radius: 14px;
+    }
+
+    .job-pending-page .logout-bar {
+        margin: 8px 0 17px auto;
+    }
+
+    .job-pending-page .dashboard-intro {
+        gap: 15px;
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .job-pending-page .job-intro-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .job-pending-page .job-overdue-count {
+        grid-column: 1 / -1;
+        white-space: normal;
+    }
+
+    .job-pending-page .calendar-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .job-pending-page .calendar-header .back-button {
+        width: auto;
+    }
+
+    .job-pending-page .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .job-pending-page .summary-card {
+        padding: 11px 13px;
+    }
+
+    .job-pending-page .calendar-card {
+        padding: 12px;
+    }
+
+    .job-pending-page .requests-section .section-heading {
+        padding: 16px;
+    }
+
+    .job-pending-page .request-toolbar {
+        padding: 0 16px 13px;
+    }
+
+    .job-pending-page .workload-card {
+        padding: 15px;
+    }
+}

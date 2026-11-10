@@ -128,6 +128,15 @@ section[id]{scroll-margin-top:92px}
   background:rgba(30,126,243,.20);
   transform:translateY(-1px);
 }
+.login-btn{
+  min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:0 8px;border:1px solid transparent;border-radius:999px;
+  color:rgba(255,255,255,.58);background:transparent;
+  font-size:11px;font-weight:600;white-space:nowrap;
+  transition:color .2s ease,background .2s ease,border-color .2s ease;
+}
+.login-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+.login-btn:hover{color:#fff;border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.06)}
 
 .menu-toggle{
   display:none;
@@ -806,6 +815,7 @@ body{background:#f4f8fe;color:#172b49}
 .main-nav a:hover:after{right:0}
 .language-btn{background:var(--glass);border-color:rgba(255,255,255,.18)}
 .language-btn:hover{background:rgba(55,169,255,.2)}
+.login-btn{min-height:38px}
 
 /* ---------- Hero / Why ---------- */
 .why-section{
@@ -965,6 +975,29 @@ body{background:#f4f8fe;color:#172b49}
 .help-buttons a:hover{transform:translateY(-3px)}
 .help-buttons a:last-child{background:linear-gradient(180deg,#2fbf71,#1a9d55);border:0;color:#fff;box-shadow:0 12px 26px rgba(26,157,85,.35)}
 .help-buttons a:last-child:hover{background:linear-gradient(180deg,#36cc7b,#1fa85c)}
+.help-buttons a:last-child .whatsapp-icon{width:19px;height:19px;flex:0 0 auto;color:#fff}
+.site-footer{padding:20px 0;background:#071a32;color:rgba(255,255,255,.68);border-top:1px solid rgba(255,255,255,.1);font-size:12px}
+
+@media(max-width:780px){
+  .login-btn{min-height:36px;padding:0 6px;font-size:10px}
+}
+
+@media(max-width:520px){
+  .site-header .navbar.container{width:min(calc(100% - 24px),1240px);gap:7px}
+  .site-header .brand-logo{width:108px}
+  .site-header .nav-actions{gap:5px}
+  .site-header .login-btn{min-height:34px;padding:0 4px;font-size:9px;gap:4px}
+  .site-header .login-btn svg{width:12px;height:12px}
+  .site-header .language-btn{min-height:34px;padding:0 7px;font-size:10px}
+  .site-header .menu-toggle{width:34px;height:34px;flex-basis:34px}
+  .site-header .menu-toggle span{width:17px}
+}
+
+@media(max-width:380px){
+  .site-header .brand-logo{width:86px}
+  .site-header .login-btn{padding:0 3px;font-size:8px}
+  .site-header .language-btn{padding:0 5px;font-size:9px}
+}
 .help-image{background:none}
 .help-image:before{background:radial-gradient(circle at 60% 50%,rgba(255,255,255,.18),transparent 55%)}
 .technician-placeholder{

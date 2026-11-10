@@ -62,9 +62,9 @@ h1, h2, h3 { letter-spacing: -0.01em; }
    PAGE LAYOUT
    ========================================================== */
 .calendar-page {
-    max-width: 1500px;
+    max-width: 1240px;
     margin: 0 auto;
-    padding: 28px 20px 36px;
+    padding: 18px 12px 26px;
 }
 
 /* ---------- Header ---------- */
@@ -167,8 +167,8 @@ textarea:focus-visible {
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 22px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .summary-card,
@@ -183,7 +183,7 @@ textarea:focus-visible {
 
 .summary-card {
     position: relative;
-    padding: 20px 22px;
+    padding: 14px 18px;
     overflow: hidden;
     transition: transform .18s ease, box-shadow .18s ease;
 }
@@ -222,8 +222,8 @@ textarea:focus-visible {
 
 .summary-card strong {
     display: block;
-    margin-top: 8px;
-    font-size: 32px;
+    margin-top: 4px;
+    font-size: 26px;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: var(--sp-text);
@@ -238,8 +238,8 @@ textarea:focus-visible {
    CALENDAR CARD
    ========================================================== */
 .calendar-card {
-    padding: 26px;
-    margin-bottom: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
 }
 
 .calendar-toolbar {
@@ -247,8 +247,8 @@ textarea:focus-visible {
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-    margin-bottom: 20px;
-    padding-bottom: 20px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
     border-bottom: 1px solid var(--sp-border);
 }
 
@@ -311,7 +311,7 @@ textarea:focus-visible {
     align-items: center;
     flex-wrap: wrap;
     gap: 18px;
-    padding: 4px 0 20px;
+    padding: 4px 0 14px;
     font-size: 13px;
     font-weight: 600;
     color: var(--sp-text-muted);
@@ -406,7 +406,7 @@ textarea:focus-visible {
     margin: 3px;
 }
 
-.fc .fc-daygrid-day-frame { min-height: 100px; }
+.fc .fc-daygrid-day-frame { min-height: 72px; }
 
 .fc .fc-event {
     cursor: pointer;
@@ -845,15 +845,13 @@ textarea:focus-visible {
     #calendar {
         width: 100%;
         min-width: 0;
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
+        overflow: hidden;
     }
 
-    /* FullCalendar keeps enough width to remain readable, while the
-       calendar card itself stays within the phone viewport. */
+    /* Keep all seven month columns within the phone viewport. */
     #calendar .fc {
-        min-width: 650px;
+        width: 100%;
+        min-width: 0;
     }
 
     #calendar .fc .fc-toolbar {
@@ -872,18 +870,38 @@ textarea:focus-visible {
     }
 
     #calendar .fc .fc-toolbar-title {
-        font-size: 17px;
+        font-size: 15px;
         text-align: center;
     }
 
     #calendar .fc .fc-button {
-        min-height: 38px;
-        padding: 7px 10px;
-        font-size: 12px;
+        min-height: 34px;
+        padding: 6px 8px;
+        font-size: 11px;
     }
 
     #calendar .fc .fc-daygrid-day-frame {
-        min-height: 86px;
+        min-height: 56px;
+    }
+
+    #calendar .fc .fc-col-header-cell {
+        padding: 7px 0;
+        font-size: 10px;
+    }
+
+    #calendar .fc .fc-daygrid-day-number {
+        padding: 4px;
+        font-size: 11px;
+    }
+
+    #calendar .fc .fc-daygrid-event {
+        margin: 1px 2px;
+        font-size: 10px;
+        line-height: 1.2;
+    }
+
+    #calendar .fc .fc-daygrid-more-link {
+        font-size: 10px;
     }
 }
 
@@ -899,6 +917,7 @@ textarea:focus-visible {
     }
 
     #calendar .fc {
-        min-width: 620px;
+        width: 100%;
+        min-width: 0;
     }
 }

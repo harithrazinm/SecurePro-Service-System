@@ -124,11 +124,23 @@ const statusFilter =
         "#statusFilter"
     );
 
+const serviceFilter = document.querySelector("#serviceFilter");
+const dateFromFilter = document.querySelector("#dateFromFilter");
+const dateToFilter = document.querySelector("#dateToFilter");
+const overdueOnlyFilter = document.querySelector("#overdueOnlyFilter");
+const clearFiltersButton = document.querySelector("#clearFiltersButton");
+const filterSummary = document.querySelector("#filterSummary");
+let allRequests = [];
+
 
 const refreshButton =
     document.querySelector(
         "#refreshButton"
     );
+
+const overdueRequestCount = document.querySelector("#overdueRequestCount");
+const REQUEST_OVERDUE_AFTER_MS = 48 * 60 * 60 * 1000;
+const CLOSED_REQUEST_STATUSES = new Set(["completed", "cancelled", "canceled"]);
 
 
 const logoutButton =
@@ -365,52 +377,6 @@ async function loadRequests() {
 
         /*
          * ====================================
-         * SEARCH + STATUS
-         * ====================================
-         */
-
-        const params =
-            new URLSearchParams();
-
-
-        const search =
-            searchInput
-                ? searchInput.value.trim()
-                : "";
-
-
-        const status =
-            statusFilter
-                ? statusFilter.value
-                : "";
-
-
-        if (search) {
-
-            params.set(
-                "search",
-                search
-            );
-
-        }
-
-
-        if (status) {
-
-            params.set(
-                "status",
-                status
-            );
-
-        }
-
-
-        const query =
-            params.toString();
-
-
-        /*
-         * ====================================
          * GET ALL REQUESTS
          * ====================================
          *
@@ -425,18 +391,12 @@ async function loadRequests() {
          * pagination
          *
          *
-         * The API returns all requests.
+         * Fetch the complete list once. Search and filters run locally so
+         * changing a filter feels immediate and can be combined freely.
          *
          */
 
-        const result =
-            await apiRequest(
-                `/admin/requests${
-                    query
-                        ? `?${query}`
-                        : ""
-                }`
-            );
+        const result = await apiRequest("/admin/requests");
 
 
         if (!result) {
@@ -450,8 +410,7 @@ async function loadRequests() {
          * ====================================
          */
 
-        let requests =
-            result.data;
+        let requests = result.data;
 
 
         /*
@@ -467,21 +426,9 @@ async function loadRequests() {
         }
 
 
-        console.log(
-            "Service requests received:",
-            requests.length
-        );
-
-
-        /*
-         * ====================================
-         * RENDER ALL REQUESTS
-         * ====================================
-         */
-
-        renderRequests(
-            requests
-        );
+        allRequests = requests;
+        populateServiceFilter(allRequests);
+        applyRequestFilters();
 
 
     } catch (error) {
@@ -518,6 +465,102 @@ async function loadRequests() {
 }
 
 
+function getRequestService(request) {
+    const service = request.service || {};
+    const names = service.name || {};
+    const name = typeof names === "string"
+        ? names
+        : names.en || names.ms || service.code || "Other service";
+
+    return { code: String(service.code || name), name };
+}
+
+function populateServiceFilter(requests) {
+    if (!serviceFilter) return;
+
+    const selected = serviceFilter.value;
+    const services = new Map();
+    requests.forEach(request => {
+        const service = getRequestService(request);
+        services.set(service.code, service.name);
+    });
+
+    serviceFilter.innerHTML = `<option value="">All services</option>${
+        [...services.entries()]
+            .sort((a, b) => a[1].localeCompare(b[1]))
+            .map(([code, name]) => `<option value="${escapeHtml(code)}">${escapeHtml(name)}</option>`)
+            .join("")
+    }`;
+
+    if (services.has(selected)) serviceFilter.value = selected;
+}
+
+function getRequestDateKey(value) {
+    if (!value) return "";
+    const valueText = String(value);
+    if (/^\d{4}-\d{2}-\d{2}/.test(valueText)) return valueText.slice(0, 10);
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function isRequestOverdue(request, now = Date.now()) {
+    const status = String(request.status || "pending").toLowerCase();
+    const activity = new Date(request.updated_at || request.created_at || "");
+    return !CLOSED_REQUEST_STATUSES.has(status) &&
+        !Number.isNaN(activity.getTime()) &&
+        now - activity.getTime() >= REQUEST_OVERDUE_AFTER_MS;
+}
+
+function applyRequestFilters() {
+    const search = (searchInput?.value || "").trim().toLocaleLowerCase();
+    const status = (statusFilter?.value || "").toLowerCase();
+    const serviceCode = serviceFilter?.value || "";
+    const fromDate = dateFromFilter?.value || "";
+    const toDate = dateToFilter?.value || "";
+    const overdueOnly = Boolean(overdueOnlyFilter?.checked);
+
+    const filtered = allRequests.filter(request => {
+        const requestStatus = String(request.status || "pending").toLowerCase();
+        const service = getRequestService(request);
+        const customer = request.customer || {};
+        const createdDate = getRequestDateKey(request.created_at);
+        const searchable = [
+            request.request_code,
+            request.id,
+            customer.name,
+            customer.phone,
+            customer.email,
+            service.name,
+            service.code,
+            request.technician?.name
+        ].filter(Boolean).join(" ").toLocaleLowerCase();
+
+        if (status && requestStatus !== status) return false;
+        if (serviceCode && service.code !== serviceCode) return false;
+        if (search && !searchable.includes(search)) return false;
+        if (fromDate && (!createdDate || createdDate < fromDate)) return false;
+        if (toDate && (!createdDate || createdDate > toDate)) return false;
+        if (overdueOnly && !isRequestOverdue(request)) return false;
+        return true;
+    });
+
+    if (filterSummary) {
+        filterSummary.textContent = `Showing ${filtered.length} of ${allRequests.length} requests`;
+    }
+
+    if (clearFiltersButton) {
+        clearFiltersButton.disabled = !search && !status && !serviceCode &&
+            !fromDate && !toDate && !overdueOnly;
+    }
+
+    renderRequests(filtered);
+}
+
 /*
  * ========================================
  * RENDER REQUESTS
@@ -538,6 +581,20 @@ function renderRequests(
 
         requests = [];
 
+    }
+
+    const now = Date.now();
+    const overdueRequests = requests.filter(request => {
+        const lastActivity = new Date(request.updated_at || request.created_at || "");
+        return !CLOSED_REQUEST_STATUSES.has(String(request.status || "pending").toLowerCase()) &&
+            !Number.isNaN(lastActivity.getTime()) &&
+            now - lastActivity.getTime() >= REQUEST_OVERDUE_AFTER_MS;
+    });
+    if (overdueRequestCount) {
+        overdueRequestCount.hidden = overdueRequests.length === 0;
+        overdueRequestCount.textContent = overdueRequests.length
+            ? `⚠ ${overdueRequests.length} overdue (48h+)`
+            : "";
     }
 
 
@@ -722,6 +779,16 @@ function renderRequests(
                         request.id ||
                         "";
 
+                    const lastActivity = new Date(request.updated_at || request.created_at || "");
+                    const inactivityMs = Number.isNaN(lastActivity.getTime()) ? 0 : now - lastActivity.getTime();
+                    const isOverdue =
+                        !CLOSED_REQUEST_STATUSES.has(String(status).toLowerCase()) &&
+                        inactivityMs >= REQUEST_OVERDUE_AFTER_MS;
+                    const overdueHours = Math.floor(inactivityMs / (60 * 60 * 1000));
+                    const overdueAge = overdueHours >= 48
+                        ? `${Math.floor(overdueHours / 24)}d ${overdueHours % 24}h`
+                        : "48h+";
+
 
                     /*
                      * ==========================
@@ -849,6 +916,8 @@ function renderRequests(
                                 ${escapeHtml(
                                     date
                                 )}
+
+                                ${isOverdue ? `<span class="request-overdue-badge">⚠ Overdue · ${escapeHtml(overdueAge)}</span>` : ""}
 
                             </td>
 
@@ -1012,60 +1081,25 @@ if (refreshButton) {
 }
 
 
-/*
- * ========================================
- * STATUS FILTER
- * ========================================
- */
+[
+    statusFilter,
+    serviceFilter,
+    dateFromFilter,
+    dateToFilter,
+    overdueOnlyFilter
+].forEach(control => control?.addEventListener("change", applyRequestFilters));
 
-if (statusFilter) {
+searchInput?.addEventListener("input", applyRequestFilters);
 
-    statusFilter.addEventListener(
-        "change",
-        async () => {
-
-            await loadRequests();
-
-        }
-    );
-
-}
-
-
-/*
- * ========================================
- * SEARCH
- * ========================================
- */
-
-let searchTimer = null;
-
-
-if (searchInput) {
-
-    searchInput.addEventListener(
-        "input",
-        () => {
-
-            clearTimeout(
-                searchTimer
-            );
-
-
-            searchTimer =
-                setTimeout(
-                    () => {
-
-                        loadRequests();
-
-                    },
-                    350
-                );
-
-        }
-    );
-
-}
+clearFiltersButton?.addEventListener("click", () => {
+    if (searchInput) searchInput.value = "";
+    if (statusFilter) statusFilter.value = "";
+    if (serviceFilter) serviceFilter.value = "";
+    if (dateFromFilter) dateFromFilter.value = "";
+    if (dateToFilter) dateToFilter.value = "";
+    if (overdueOnlyFilter) overdueOnlyFilter.checked = false;
+    applyRequestFilters();
+});
 
 
 /*

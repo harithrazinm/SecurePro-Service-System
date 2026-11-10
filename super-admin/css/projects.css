@@ -151,6 +151,35 @@ This stylesheet is only for the Projects page.
     font-size: 13px;
 }
 
+.overdue-project-alert,
+.project-overdue-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    background: #fff1f2;
+    color: #b42318;
+    font-weight: 750;
+}
+
+.overdue-project-alert {
+    margin-top: 12px;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+.overdue-project-alert[hidden] {
+    display: none !important;
+}
+
+.project-overdue-badge {
+    display: flex;
+    margin-top: 5px;
+    padding: 4px 7px;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
 
 /* =========================================================
    REFRESH BUTTON

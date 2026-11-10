@@ -268,6 +268,16 @@ async function loadDashboard() {
             summary.total_projects
         );
 
+        setValue(
+            "customerFilledTotal",
+            summary.customer_filled_total
+        );
+
+        setValue(
+            "adminFilledTotal",
+            summary.admin_filled_total
+        );
+
 
         setValue(
             "quotationsUploaded",
@@ -334,6 +344,32 @@ async function loadDashboard() {
  
     }
 
+}
+
+async function loadOverdueSummary() {
+    try {
+        const response = await fetch(`${API_BASE}/super-admin/projects`, {
+            headers: { Authorization: `Bearer ${token()}` },
+            cache: "no-store"
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || "Unable to check overdue requests.");
+        const now = Date.now();
+        const ids = new Set((Array.isArray(result.data) ? result.data : [])
+            .filter(project => {
+                if (["completed", "cancelled", "canceled"].includes(String(project.status || "").toLowerCase())) return false;
+                const activity = new Date(project.updated_at || project.created_at || "");
+                return !Number.isNaN(activity.getTime()) && now - activity.getTime() >= 48 * 60 * 60 * 1000;
+            })
+            .map(project => String(project.id)));
+        const banner = $("#overdueDashboardAlert");
+        const label = $("#overdueDashboardText");
+        if (!banner || !label) return;
+        banner.hidden = ids.size === 0;
+        label.textContent = `⚠ ${ids.size} open request${ids.size === 1 ? "" : "s"} untouched for 48+ hours.`;
+    } catch (error) {
+        console.error("Super Admin overdue request summary error:", error);
+    }
 }
 
 
@@ -1201,8 +1237,10 @@ function setupStatCards() {
 
 function setupRefresh() {
 
-    $("#refreshButton").onclick =
-        loadDashboard;
+    $("#refreshButton").onclick = () => {
+        loadDashboard();
+        loadOverdueSummary();
+    };
 
 }
 
@@ -1227,5 +1265,6 @@ if (!token()) {
     setupRefresh();
 
     loadDashboard();
+    loadOverdueSummary();
 
 }

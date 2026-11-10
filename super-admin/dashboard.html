@@ -92,7 +92,7 @@
                     ✓
 
                     <span>
-                        Quotation Approval
+                        Enquiry
                     </span>
 
                 </a>
@@ -202,6 +202,11 @@
                     </div>
 
                 </section>
+
+                <aside id="overdueDashboardAlert" class="overdue-dashboard-alert" hidden>
+                    <span id="overdueDashboardText"></span>
+                    <a href="projects.html">Review projects →</a>
+                </aside>
 
 
 
@@ -364,6 +369,33 @@
                 </section>
 
 
+
+                <section class="panel form-entry-summary" aria-label="Overall request form entries">
+                    <div class="form-entry-summary-header">
+                        <div>
+                            <span class="eyebrow">ALL-TIME OVERVIEW</span>
+                            <h2>Form Entry Summary</h2>
+                            <p>Service requests grouped by who completed the form.</p>
+                        </div>
+                        <span class="form-entry-summary-total">All requests</span>
+                    </div>
+                    <div class="form-entry-summary-grid">
+                        <article class="form-entry-summary-item customer-entry">
+                            <span class="form-entry-summary-icon" aria-hidden="true">C</span>
+                            <div class="form-entry-summary-copy">
+                                <span>Customer-filled</span>
+                                <strong id="customerFilledTotal">—</strong>
+                            </div>
+                        </article>
+                        <article class="form-entry-summary-item admin-entry">
+                            <span class="form-entry-summary-icon" aria-hidden="true">A</span>
+                            <div class="form-entry-summary-copy">
+                                <span>Admin-filled</span>
+                                <strong id="adminFilledTotal">—</strong>
+                            </div>
+                        </article>
+                    </div>
+                </section>
 
                 <!-- =====================================
                      CALENDAR + UPCOMING JOBS

@@ -59,6 +59,37 @@ body {
     background: linear-gradient(180deg, var(--dashboard-blue), var(--dashboard-indigo));
 }
 
+.overdue-dashboard-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 18px;
+    padding: 14px 18px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fff7f7;
+    color: #991b1b;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.overdue-dashboard-alert a {
+    color: #b91c1c;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.overdue-dashboard-alert[hidden] {
+    display: none !important;
+}
+
+@media(max-width:600px) {
+    .overdue-dashboard-alert { align-items: flex-start; flex-direction: column; }
+}
+
 .eyebrow-row {
     display: flex;
     align-items: center;
@@ -281,34 +312,45 @@ body {
 
 .intake-overview-panel .panel-heading {
     align-items: center;
+    padding: 13px 18px 10px;
+}
+
+.intake-overview-panel .panel-heading h2 {
+    margin-top: 4px;
+    font-size: 16px;
+}
+
+.intake-overview-panel .panel-heading p {
+    margin-top: 4px;
+    font-size: 10px;
 }
 
 .intake-overview-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-    padding: 18px 22px 22px;
+    gap: 10px;
+    padding: 11px 16px 14px;
 }
 
 .intake-overview-item {
     display: flex;
     align-items: center;
-    gap: 14px;
-    min-height: 88px;
-    padding: 17px 19px;
+    gap: 11px;
+    min-height: 58px;
+    padding: 10px 13px;
     border: 1px solid var(--dashboard-border);
-    border-radius: 13px;
+    border-radius: 10px;
     background: #fbfcff;
 }
 
 .intake-entry-icon {
     display: grid;
     place-items: center;
-    flex: 0 0 42px;
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    font-size: 13px;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    font-size: 11px;
     font-weight: 800;
 }
 
@@ -327,19 +369,19 @@ body {
     flex: 1;
     align-items: center;
     justify-content: space-between;
-    gap: 14px;
+    gap: 10px;
 }
 
 .intake-entry-copy > span {
     color: var(--dashboard-muted);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
 }
 
 .intake-entry-copy strong {
     color: var(--dashboard-ink);
     font-family: var(--font-mono);
-    font-size: 25px;
+    font-size: 20px;
     line-height: 1;
 }
 
@@ -430,6 +472,75 @@ body {
 
 .job-pending-list {
     padding: 4px 20px 8px;
+}
+
+.enquiry-panel {
+    margin-top: 18px;
+}
+
+.enquiry-list {
+    padding: 4px 40px 12px;
+}
+
+.enquiry-item {
+    display: grid;
+    grid-template-columns: minmax(230px, .9fr) minmax(260px, 1.25fr) auto;
+    align-items: center;
+    gap: 24px;
+    min-height: 96px;
+    padding: 15px 8px;
+    border-bottom: 1px solid #edf0f5;
+    transition: background .14s ease;
+}
+
+.enquiry-item:hover {
+    background: #fafbfd;
+}
+
+.enquiry-item:last-child {
+    border-bottom: 0;
+}
+
+.enquiry-reference strong,
+.enquiry-reference small,
+.enquiry-customer strong,
+.enquiry-customer span {
+    display: block;
+}
+
+.enquiry-reference strong {
+    color: var(--dashboard-ink);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.enquiry-reference small {
+    margin-top: 7px;
+    color: var(--dashboard-faint);
+    font-size: 10px;
+}
+
+.enquiry-customer strong {
+    overflow: hidden;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.enquiry-customer span {
+    margin-top: 6px;
+    color: var(--dashboard-faint);
+    font-size: 10px;
+}
+
+.enquiry-view-button {
+    min-width: 82px;
+    min-height: 44px;
+    border-radius: 12px;
+    font-size: 11px;
 }
 
 .job-pending-item {
@@ -898,6 +1009,16 @@ button:focus-visible {
         grid-template-columns: 1fr 1.2fr auto;
     }
 
+    .enquiry-list {
+        padding-right: 22px;
+        padding-left: 22px;
+    }
+
+    .enquiry-item {
+        grid-template-columns: minmax(160px, .9fr) minmax(180px, 1.2fr) auto;
+        gap: 15px;
+    }
+
     .job-status {
         display: none;
     }
@@ -942,6 +1063,38 @@ button:focus-visible {
         padding: 5px 15px 8px;
     }
 
+    .enquiry-list {
+        padding: 5px 15px 8px;
+    }
+
+    .enquiry-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 5px 10px;
+        min-height: 88px;
+        padding: 13px 2px;
+    }
+
+    .enquiry-reference {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .enquiry-customer {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .enquiry-view-button {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        min-width: 68px;
+        min-height: 40px;
+    }
+
+    .enquiry-customer strong {
+        white-space: normal;
+    }
+
     .job-pending-item {
         grid-template-columns: 1fr auto;
         gap: 8px;
@@ -981,5 +1134,103 @@ button:focus-visible {
     .panel-heading-actions {
         width: 100%;
         justify-content: space-between;
+    }
+}
+
+/* Compact Form Entry Summary strip */
+.intake-overview-panel {
+    display: grid;
+    grid-template-columns: minmax(190px, .72fr) minmax(0, 1.28fr);
+    align-items: center;
+    margin-bottom: 18px;
+    border-radius: 13px;
+}
+
+.intake-overview-panel .panel-heading {
+    display: block;
+    padding: 12px 16px;
+    border: 0;
+}
+
+.intake-overview-panel .panel-heading .eyebrow {
+    font-size: 8px;
+    letter-spacing: .12em;
+}
+
+.intake-overview-panel .panel-heading h2 {
+    margin: 3px 0 0;
+    font-size: 14px;
+    line-height: 1.2;
+    letter-spacing: -.2px;
+}
+
+.intake-overview-panel .panel-heading p {
+    display: none;
+}
+
+.intake-overview-panel .panel-count {
+    margin-top: 6px;
+    min-height: 19px;
+    padding: 0 7px;
+    font-size: 8px;
+}
+
+.intake-overview-grid {
+    gap: 8px;
+    padding: 9px 12px 9px 0;
+}
+
+.intake-overview-item {
+    min-height: 48px;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 9px;
+}
+
+.intake-entry-icon {
+    flex-basis: 27px;
+    width: 27px;
+    height: 27px;
+    border-radius: 8px;
+    font-size: 9px;
+}
+
+.intake-entry-copy > span {
+    font-size: 9px;
+}
+
+.intake-entry-copy strong {
+    font-size: 17px;
+}
+
+@media (max-width: 650px) {
+    .intake-overview-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .intake-overview-panel .panel-heading {
+        padding: 12px 14px 8px;
+    }
+
+    .intake-overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 7px 12px 12px;
+    }
+}
+
+@media (max-width: 390px) {
+    .intake-overview-grid {
+        gap: 6px;
+        padding-right: 9px;
+        padding-left: 9px;
+    }
+
+    .intake-overview-item {
+        gap: 6px;
+        padding: 7px;
+    }
+
+    .intake-entry-copy > span {
+        font-size: 8px;
     }
 }

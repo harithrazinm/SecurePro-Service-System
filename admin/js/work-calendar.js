@@ -1,3 +1,6 @@
+(function () {
+"use strict";
+
 const API_BASE =
     /^(localhost|127\.0\.0\.1)$/.test(
         location.hostname
@@ -226,6 +229,7 @@ function updateCalendarHeaderToolbar() {
     if (!calendar) return;
 
     calendar.setOption("headerToolbar", getCalendarHeaderToolbar());
+    calendar.setOption("height", window.innerWidth <= 600 ? 460 : 500);
 }
 
 function renderCalendar() {
@@ -267,8 +271,8 @@ function renderCalendar() {
                 document.querySelector("#calendar"),
                 {
                     initialView: "dayGridMonth",
-                    height: "auto",
-                    dayMaxEvents: 4,
+                    height: window.innerWidth <= 600 ? 460 : 500,
+                    dayMaxEvents: 3,
                     eventDisplay: "block",
 
                     headerToolbar: getCalendarHeaderToolbar(),
@@ -692,4 +696,6 @@ window.addEventListener("resize", () => {
         updateCalendarHeaderToolbar();
     }, 150);
 });
+
+})();
 
