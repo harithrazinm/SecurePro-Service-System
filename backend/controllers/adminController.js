@@ -34,12 +34,12 @@ async function getRequests(req, res) {
                 sr.status,
                 sr.technician_id,
 
-                sr.scheduled_date,
-                sr.scheduled_time,
-                sr.assigned_at,
+                DATE_FORMAT(sr.scheduled_date, '%Y-%m-%d') AS scheduled_date,
+                TIME_FORMAT(sr.scheduled_time, '%H:%i:%s') AS scheduled_time,
+                DATE_FORMAT(sr.assigned_at, '%Y-%m-%d %H:%i:%s') AS assigned_at,
 
-                sr.created_at,
-                sr.updated_at,
+                DATE_FORMAT(sr.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+                DATE_FORMAT(sr.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at,
 
                 s.service_code,
                 s.name_en AS service_name_en,
@@ -437,10 +437,10 @@ async function getJobPendingRequests(req, res) {
                     sr.customer_email,
                     sr.status,
                     sr.technician_id,
-                    sr.created_at,
-                    sr.updated_at,
-                    sr.scheduled_date,
-                    sr.scheduled_time,
+                    DATE_FORMAT(sr.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+                    DATE_FORMAT(sr.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at,
+                    DATE_FORMAT(sr.scheduled_date, '%Y-%m-%d') AS scheduled_date,
+                    TIME_FORMAT(sr.scheduled_time, '%H:%i:%s') AS scheduled_time,
 
                     u.name AS technician_name,
 
@@ -448,7 +448,7 @@ async function getJobPendingRequests(req, res) {
                     s.name_en AS service_name_en,
                     s.name_ms AS service_name_ms,
 
-                    q.payment_proof_uploaded_at
+                    DATE_FORMAT(q.payment_proof_uploaded_at, '%Y-%m-%d %H:%i:%s') AS payment_proof_uploaded_at
 
                 FROM service_requests sr
 
@@ -476,6 +476,7 @@ WHERE
             AND q.payment_proof_url IS NOT NULL
             AND TRIM(q.payment_proof_url) <> ''
         )
+            OR COALESCE(sr.updated_at, sr.created_at) <= DATE_SUB(NOW(), INTERVAL 48 HOUR)
     )
 
 ORDER BY
