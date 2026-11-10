@@ -2,11 +2,10 @@ const express = require("express");
 const multer = require("multer");
 
 const {
-    CloudinaryStorage
-} = require("multer-storage-cloudinary");
-
-const cloudinary =
-    require("../config/cloudinary");
+    createLocalStorage,
+    prepareUploadedFiles,
+    cleanupOnControllerFailure
+} = require("../services/mediaStorage");
 
 const {
     validateUploadFile
@@ -34,64 +33,21 @@ const router =
 
 
 // ======================================================
-// CLOUDINARY STORAGE
+// PRIVATE LOCAL STORAGE
 // ======================================================
 
-const storage =
-    new CloudinaryStorage({
-
-        cloudinary,
-
-        params: async (
-            req,
-            file
-        ) => {
-
-            const isImage =
-                file.mimetype.startsWith(
-                    "image/"
-                );
-
-
-            return {
-
-                folder:
-                    "securepro/technician-reports",
-
-
-                resource_type:
-                    isImage
-                        ? "image"
-                        : "video",
-
-
-                use_filename:
-                    true,
-
-
-                unique_filename:
-                    true,
-
-
-                allowed_formats:
-                    isImage
-                        ? [
-                            "jpg",
-                            "jpeg",
-                            "png",
-                            "webp"
-                        ]
-                        : [
-                            "mp4",
-                            "webm",
-                            "mov"
-                        ]
-
-            };
-
-        }
-
-    });
+const serviceReportStorage = createLocalStorage("service-reports");
+const videoStorage = createLocalStorage("videos");
+const storage = {
+    _handleFile(req, file, callback) {
+        const selected = file.mimetype.startsWith("video/") ? videoStorage : serviceReportStorage;
+        selected._handleFile(req, file, callback);
+    },
+    _removeFile(req, file, callback) {
+        const selected = file.mimetype.startsWith("video/") ? videoStorage : serviceReportStorage;
+        selected._removeFile(req, file, callback);
+    }
+};
 
 
 // ======================================================
@@ -266,8 +222,8 @@ router.post(
         "completion_media",
         10
     ),
-
-    submitWorkReport
+    prepareUploadedFiles,
+    cleanupOnControllerFailure(submitWorkReport)
 
 );
 

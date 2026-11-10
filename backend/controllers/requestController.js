@@ -2,6 +2,7 @@ const crypto = require("crypto");
 
 const pool =
     require("../config/db");
+const { createSignedMediaUrl } = require("../services/mediaStorage");
 
 
 /*
@@ -1136,16 +1137,13 @@ const sourceRequest = sourceRows[0];
         ) {
 
             console.log(
-                "Saving Cloudinary customer photo:",
+                "Saving private customer photo:",
                 {
                     originalName:
                         file.originalname,
 
-                    cloudinaryUrl:
+                    storageReference:
                         file.path,
-
-                    publicId:
-                        file.filename,
 
                     mimeType:
                         file.mimetype,
@@ -1275,7 +1273,17 @@ const sourceRequest = sourceRows[0];
                     "pending",
 
                 photo_count:
-                    files.length
+                    files.length,
+
+                customer_media: files.map(file => ({
+                    file_name: file.originalname,
+                    url: createSignedMediaUrl(
+                        file.path,
+                        { id: requestId, role: "customer" },
+                        24 * 60 * 60,
+                        process.env.PUBLIC_APP_URL || `${req.protocol}://${req.get("host")}`
+                    )
+                }))
 
 
             }

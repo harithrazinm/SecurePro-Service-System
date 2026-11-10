@@ -1,6 +1,11 @@
 const WHATSAPP_NUMBER =
     "60139706363";
 
+const API_BASE = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+    ? "http://localhost:5001/api"
+    : "/api";
+const API_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
+
 
 let currentLanguage =
     localStorage.getItem(
@@ -52,7 +57,13 @@ const translations = {
             "Back to Home",
 
         privacy:
-            "Your information will only be used to process your service request."
+            "Your information will only be used to process your service request.",
+
+        uploadedPhotos:
+            "Your uploaded photos",
+
+        mediaExpiry:
+            "These private links are available for 24 hours in this browser."
 
     },
 
@@ -96,7 +107,13 @@ const translations = {
             "Kembali ke Laman Utama",
 
         privacy:
-            "Maklumat anda hanya akan digunakan untuk memproses permintaan servis anda."
+            "Maklumat anda hanya akan digunakan untuk memproses permintaan servis anda.",
+
+        uploadedPhotos:
+            "Gambar yang anda muat naik",
+
+        mediaExpiry:
+            "Pautan peribadi ini tersedia selama 24 jam dalam pelayar ini."
 
     }
 
@@ -250,6 +267,40 @@ function renderRequest() {
 
     }
 
+    renderUploadedMedia();
+
+}
+
+function renderUploadedMedia() {
+    const section = document.querySelector("#uploadedMediaSection");
+    const grid = document.querySelector("#uploadedMediaGrid");
+    const files = Array.isArray(requestData?.customer_media)
+        ? requestData.customer_media.filter(file => file?.url)
+        : [];
+
+    if (!section || !grid || !files.length) return;
+    section.hidden = false;
+
+    files.forEach((file, index) => {
+        const url = /^https?:\/\//i.test(file.url)
+            ? file.url
+            : `${API_ORIGIN}${file.url.startsWith("/") ? file.url : `/${file.url}`}`;
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+
+        const image = document.createElement("img");
+        image.src = url;
+        image.alt = file.file_name || `Uploaded photo ${index + 1}`;
+        image.loading = "lazy";
+        link.appendChild(image);
+
+        const name = document.createElement("span");
+        name.textContent = file.file_name || `Photo ${index + 1}`;
+        link.appendChild(name);
+        grid.appendChild(link);
+    });
 }
 
 

@@ -1,11 +1,10 @@
 const express = require("express");
 const multer = require("multer");
 const {
-    CloudinaryStorage
-} = require("multer-storage-cloudinary");
-
-const cloudinary =
-    require("../config/cloudinary");
+    createLocalStorage,
+    prepareUploadedFiles,
+    cleanupOnControllerFailure
+} = require("../services/mediaStorage");
 
 const {
     validateUploadFile
@@ -34,54 +33,19 @@ const router =
     express.Router();
 
 
-/* =========================================================
-   CLOUDINARY STORAGE
-========================================================= */
-
-const storage =
-    new CloudinaryStorage({
-
-        cloudinary,
-
-        params:
-            async (
-                req,
-                file
-            ) => ({
-
-                folder:
-                    file.fieldname ===
-                    "payment_proof"
-
-                        ? "securepro/payment-proofs"
-
-                        : "securepro/quotations",
-
-                resource_type:
-                    file.fieldname ===
-                    "quotation_file"
-
-                        ? "raw"
-
-                        : "auto",
-
-                format:
-                    file.fieldname ===
-                    "quotation_file"
-
-                        ? "pdf"
-
-                        : undefined,
-
-                use_filename:
-                    true,
-
-                unique_filename:
-                    true
-
-            })
-
-    });
+/* Private local storage; payment proofs use their own subdirectory. */
+const quotationStorage = createLocalStorage("quotations");
+const paymentProofStorage = createLocalStorage("payment-proofs");
+const storage = {
+    _handleFile(req, file, callback) {
+        const selected = file.fieldname === "payment_proof" ? paymentProofStorage : quotationStorage;
+        selected._handleFile(req, file, callback);
+    },
+    _removeFile(req, file, callback) {
+        const selected = file.fieldname === "payment_proof" ? paymentProofStorage : quotationStorage;
+        selected._removeFile(req, file, callback);
+    }
+};
 
 
 /* =========================================================
@@ -213,7 +177,8 @@ router.get(
 router.post(
     "/",
     upload.single("quotation_file"),
-    createQuotation
+    prepareUploadedFiles,
+    cleanupOnControllerFailure(createQuotation)
 );
 
 
@@ -224,7 +189,8 @@ router.post(
 router.put(
     "/:id",
     upload.single("quotation_file"),
-    updateQuotation
+    prepareUploadedFiles,
+    cleanupOnControllerFailure(updateQuotation)
 );
 
 
@@ -265,7 +231,8 @@ router.post(
 router.post(
     "/:id/payment-proof",
     upload.single("payment_proof"),
-    uploadPaymentProof
+    prepareUploadedFiles,
+    cleanupOnControllerFailure(uploadPaymentProof)
 );
 
 
@@ -289,7 +256,8 @@ router.post(
 router.post(
     "/:requestId/final-quotation",
     upload.single("quotation_file"),
-    uploadFinalQuotation
+    prepareUploadedFiles,
+    cleanupOnControllerFailure(uploadFinalQuotation)
 );
 
 

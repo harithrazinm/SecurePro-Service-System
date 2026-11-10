@@ -2,11 +2,10 @@ const express = require("express");
 const multer = require("multer");
 
 const {
-    CloudinaryStorage
-} = require("multer-storage-cloudinary");
-
-const cloudinary =
-    require("../config/cloudinary");
+    createLocalStorage,
+    prepareUploadedFiles,
+    cleanupOnControllerFailure
+} = require("../services/mediaStorage");
 
 const {
     validateUploadFile
@@ -35,82 +34,8 @@ console.log(
 );
 
 
-/*
- * ==========================================================
- * CLOUDINARY STORAGE
- * ==========================================================
- */
-
-const storage =
-    new CloudinaryStorage({
-
-        cloudinary:
-
-            cloudinary,
-
-
-        params: async (
-            req,
-            file
-        ) => {
-
-            console.log(
-                "Uploading photo to Cloudinary:",
-                {
-                    originalName:
-                        file.originalname,
-
-                    mimetype:
-                        file.mimetype
-                }
-            );
-
-
-            return {
-
-                /*
-                 * Cloudinary folder
-                 */
-
-                folder:
-                    "securepro/customer-photos",
-
-
-                /*
-                 * Image type
-                 */
-
-                resource_type:
-                    "image",
-
-
-                /*
-                 * Generate unique filename automatically
-                 */
-
-                use_filename:
-                    true,
-
-                unique_filename:
-                    true,
-
-
-                /*
-                 * Supported upload formats
-                 */
-
-                allowed_formats: [
-                    "jpg",
-                    "jpeg",
-                    "png",
-                    "webp"
-                ]
-
-            };
-
-        }
-
-    });
+/* Keep customer uploads private; files are served only by the signed media endpoint. */
+const storage = createLocalStorage("customers");
 
 
 /*
@@ -124,18 +49,6 @@ function fileFilter(
     file,
     callback
 ) {
-
-    console.log(
-        "Incoming photo:",
-        {
-            originalName:
-                file.originalname,
-
-            mimetype:
-                file.mimetype
-        }
-    );
-
 
     const validation =
         validateUploadFile(
@@ -235,7 +148,8 @@ router.post(
         "customer_photos",
         10
     ),
-    createRequest
+    prepareUploadedFiles,
+    cleanupOnControllerFailure(createRequest)
 );
 
 

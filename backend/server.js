@@ -3,6 +3,8 @@ const cors = require("cors");
 const path = require("path");
 const dotenv = require("dotenv");
 const rateLimit = require("express-rate-limit");
+const { decorateMediaReferences } = require("./services/mediaStorage");
+const { streamAuthorizedMedia } = require("./services/mediaAccess");
 
 // ======================================================
 // LOAD ENVIRONMENT VARIABLES
@@ -21,6 +23,23 @@ const invoiceRoutes =
     require("./routes/invoiceRoutes");
 
 const app = express();
+
+// Replace private local-storage references in authenticated JSON responses
+// with short-lived, role-scoped media links. Existing Cloudinary URLs pass
+// through unchanged during the transition.
+app.use((req, res, next) => {
+    const sendJson = res.json.bind(res);
+    res.json = payload => {
+        try {
+            const mediaOrigin = process.env.PUBLIC_APP_URL || `${req.protocol}://${req.get("host")}`;
+            return sendJson(decorateMediaReferences(payload, req.user, mediaOrigin));
+        } catch (error) {
+            console.error("Unable to sign media links:", error.message);
+            return sendJson(payload);
+        }
+    };
+    next();
+});
 
 // Render runs behind a reverse proxy. Trust the first proxy so
 // rate limiting uses the real client IP without trusting arbitrary proxies.
@@ -247,7 +266,7 @@ app.use(
 // PUBLIC SERVICE REQUEST RATE LIMITER
 // ======================================================
 // Customer requests are intentionally public, but they can
-// also trigger database writes and Cloudinary uploads.
+// also trigger database writes and private media uploads.
 const requestLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 10,
@@ -384,6 +403,10 @@ app.get(
     }
 );
 
+// Private media is accessed using a short-lived signature issued only after
+// an authenticated API response has passed its existing role checks.
+app.get("/api/media/file", streamAuthorizedMedia);
+
 // ======================================================
 // ROOT ROUTE
 // ======================================================
@@ -420,6 +443,35 @@ app.use(
 
 app.use(
     (err, req, res, next) => {
+
+        if (res.headersSent) {
+            return next(err);
+        }
+
+        const uploadMessages = {
+            LIMIT_FILE_SIZE: "The selected file is too large. Choose a smaller file and try again.",
+            LIMIT_FILE_COUNT: "Too many files were selected for this upload.",
+            LIMIT_UNEXPECTED_FILE: "The upload included an unexpected file field.",
+            LIMIT_PART_COUNT: "The upload contains too many form fields."
+        };
+        const storageUnavailable = ["ENOSPC", "EACCES", "EPERM", "EROFS", "EIO"].includes(err.code);
+        const isMultipart = req.is("multipart/form-data");
+        const isMulterError = err.name === "MulterError";
+        const isUploadValidationError = isMultipart && /upload|file type|extension|signature|only .* allowed/i.test(err.message || "");
+
+        if (uploadMessages[err.code] || storageUnavailable || isMulterError || isUploadValidationError) {
+            const status = storageUnavailable ? 503 : 400;
+            const message = storageUnavailable
+                ? "Local upload storage is unavailable. Check the storage path, permissions, and free disk space."
+                : uploadMessages[err.code] || err.message || "Upload failed. Check the file type and size, then try again.";
+
+            console.warn("Upload request failed:", {
+                code: err.code || err.name,
+                message: err.message
+            });
+
+            return res.status(status).json({ success: false, message });
+        }
 
         console.error(
             "Unhandled server error:",

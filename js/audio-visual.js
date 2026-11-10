@@ -30,7 +30,7 @@ window.CATEGORY_FORM_CONFIG = {
     { id: "existing_equipment", type: "radio", required: true, title: { en: "Is there any equipment available?", ms: "Adakah equipment sedia ada?" }, options: ["None", "Yes", "Not sure"].map(x => ({ value: x.toLowerCase().replace(/ /g, "_"), label: { en: x, ms: x } })) },
     { id: "existing_equipment_details", type: "textarea", title: { en: "Existing equipment details (optional — you may skip this question)", ms: "Butiran equipment sedia ada (pilihan,boleh langkau soalan ini)" } },
     { id: "existing_infrastructure", type: "multi", required: true, title: { en: "Existing infrastructure", ms: "Infrastruktur sedia ada" }, options: ["Network / Internet", "Electrical Point", "LAN Cabling", "Rack", "Not sure"].map(x => ({ value: x.toLowerCase().replace(/[^a-z0-9]+/g, "_"), label: { en: x, ms: x } })) },
-    { id: "location_media", type: "file", title: { en: "Upload location photos (optional)", ms: "Muat naik gambar lokasi (pilihan)" }, description: { en: "Choose JPG, PNG or WebP photos. You can select multiple images; they will be carried to Customer Details and uploaded to Cloudinary when you submit the request.", ms: "Pilih gambar JPG, PNG atau WebP. Anda boleh memilih beberapa gambar; gambar akan dibawa ke Maklumat Pelanggan dan dimuat naik ke Cloudinary apabila permintaan dihantar." }, accept: ["image/jpeg", "image/png", "image/webp"], multiple: true },
+    { id: "location_media", type: "file", title: { en: "Upload location photos (optional)", ms: "Muat naik gambar lokasi (pilihan)" }, description: { en: "Choose JPG, PNG or WebP photos. You can select multiple images; they will be carried to Customer Details and uploaded securely when you submit the request.", ms: "Pilih gambar JPG, PNG atau WebP. Anda boleh memilih beberapa gambar; gambar akan dibawa ke Maklumat Pelanggan dan disimpan dengan selamat apabila permintaan dihantar." }, accept: ["image/jpeg", "image/png", "image/webp"], multiple: true },
     { id: "installation_location", type: "fields", required: true, title: { en: "Site visit", ms: "Lawatan Tapak" }, fields: [{ id: "site_visit", type: "select", label: { en: "Do you require a site visit?", ms: "Adakah anda memerlukan lawatan tapak?" }, options: [{ value: "required", label: { en: "Required", ms: "Diperlukan" } }, { value: "not_required", label: { en: "Not Required", ms: "Tidak Diperlukan" } }, { value: "unsure", label: { en: "Not sure", ms: "Tidak pasti" } }] }] },
     { id: "budget", type: "radio", title: { en: "Budget (optional)", ms: "Budget anggaran (optional)" }, options: ["< RM5,000", "RM5k–10k", "RM10k–30k", "RM30k–50k", "> RM50k", "Need recommendation first"].map(x => ({ value: x.toLowerCase().replace(/[^a-z0-9]+/g, "_"), label: { en: x, ms: x } })) }
   ]
@@ -251,7 +251,7 @@ window.CATEGORY_FORM_CONFIG.questions = window.CATEGORY_FORM_CONFIG.questions.ma
 
 
 /* Keep Q10 uploads between the question page and Customer Details.
-   The existing review flow then submits these files as customer_photos to Cloudinary. */
+   The existing review flow then submits these files as customer_photos to private local media storage. */
 window.SOPRO_BEFORE_CATEGORY_CONTINUE = async function () {
   const input = document.querySelector('[data-answer="location_media"]');
   const files = input && input.files ? Array.from(input.files) : [];

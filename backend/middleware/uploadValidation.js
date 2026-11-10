@@ -2,8 +2,9 @@ const path = require("path");
 
 /**
  * Validate upload field name, MIME type and filename extension.
- * MIME type alone is client-controlled, so extension consistency
- * is checked as an additional guard before Cloudinary receives the file.
+ * MIME type alone is client-controlled, so extension consistency is checked
+ * here and the local-storage middleware checks the actual file signature
+ * after Multer has written the upload to its private staging location.
  */
 function validateUploadFile(file, rules) {
     if (!file || !rules) {

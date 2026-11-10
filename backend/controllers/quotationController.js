@@ -3,6 +3,8 @@ const pool = require("../config/db");
 const {
     sendQuotationEmail
 } = require("../config/email");
+const { createSignedMediaUrl } = require("../services/mediaStorage");
+const { deleteLocalMediaIfUnreferenced } = require("../services/mediaAccess");
 
 
 /* =========================================================
@@ -571,6 +573,11 @@ async function updateQuotation(req, res) {
                 quotationId
             ]);
 
+            await deleteLocalMediaIfUnreferenced(
+                quotation.quotation_file_url,
+                connection
+            ).catch(error => console.error("Unable to remove replaced quotation file:", error.message));
+
         } else {
 
             await connection.query(`
@@ -643,7 +650,9 @@ async function deleteQuotation(
                 SELECT
                     id,
                     quotation_number,
-                    quotation_type
+                    quotation_type,
+                    quotation_file_url,
+                    payment_proof_url
                 FROM quotations
                 WHERE id = ?
                 LIMIT 1
@@ -700,6 +709,11 @@ async function deleteQuotation(
                 quotationId
             ]
         );
+
+        await Promise.all([
+            deleteLocalMediaIfUnreferenced(quotation.quotation_file_url, connection),
+            deleteLocalMediaIfUnreferenced(quotation.payment_proof_url, connection)
+        ]).catch(error => console.error("Unable to remove deleted quotation media:", error.message));
 
 
         return res.json({
@@ -979,6 +993,13 @@ async function sendQuotationByEmail(
             quotationFileUrl:
                 quotation.quotation_file_url,
 
+            quotationFileAccessUrl:
+                createSignedMediaUrl(
+                    quotation.quotation_file_url,
+                    req.user,
+                    7 * 24 * 60 * 60
+                ),
+
             quotationFileName:
                 quotation.quotation_file_name
 
@@ -1086,7 +1107,8 @@ async function uploadPaymentProof(
                 SELECT
     id,
     request_id,
-    approval_status
+    approval_status,
+    payment_proof_url
 FROM quotations
 WHERE id = ?
 LIMIT 1
@@ -1199,6 +1221,11 @@ LIMIT 1
 
 
         await connection.commit();
+
+        await deleteLocalMediaIfUnreferenced(
+            quotationRows[0].payment_proof_url,
+            connection
+        ).catch(error => console.error("Unable to remove replaced payment proof:", error.message));
 
 
         return res.json({
@@ -1585,7 +1612,7 @@ async function uploadFinalQuotation(req, res) {
         const [existing] =
             await connection.query(
                 `
-                SELECT id, quotation_number
+                SELECT id, quotation_number, quotation_file_url
                 FROM quotations
                 WHERE request_id = ?
                   AND quotation_type = 'final'
@@ -1609,6 +1636,11 @@ async function uploadFinalQuotation(req, res) {
                 `,
                 [file.url, file.name, existing[0].id]
             );
+
+            await deleteLocalMediaIfUnreferenced(
+                existing[0].quotation_file_url,
+                connection
+            ).catch(error => console.error("Unable to remove replaced final quotation:", error.message));
 
             return res.json({
                 success: true,

@@ -1,9 +1,12 @@
 const express = require("express");
 const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("../config/cloudinary");
 const authMiddleware = require("../middleware/authMiddleware");
 const { validateUploadFile } = require("../middleware/uploadValidation");
+const {
+    createLocalStorage,
+    prepareUploadedFiles,
+    cleanupOnControllerFailure
+} = require("../services/mediaStorage");
 const invoiceController = require("../controllers/invoiceController");
 
 const {
@@ -17,16 +20,18 @@ const {
 } = invoiceController;
 const router = express.Router();
 
-const storage = new CloudinaryStorage({
-    cloudinary,
-    params: async (req, file) => ({
-        folder: file.fieldname === "payment_proof" ? "securepro/invoice-payment-proofs" : "securepro/invoices",
-        resource_type: file.fieldname === "invoice_file" ? "raw" : "auto",
-        format: file.fieldname === "invoice_file" ? "pdf" : undefined,
-        use_filename: true,
-        unique_filename: true
-    })
-});
+const invoiceStorage = createLocalStorage("invoices");
+const paymentProofStorage = createLocalStorage("payment-proofs");
+const storage = {
+    _handleFile(req, file, callback) {
+        const selected = file.fieldname === "payment_proof" ? paymentProofStorage : invoiceStorage;
+        selected._handleFile(req, file, callback);
+    },
+    _removeFile(req, file, callback) {
+        const selected = file.fieldname === "payment_proof" ? paymentProofStorage : invoiceStorage;
+        selected._removeFile(req, file, callback);
+    }
+};
 
 const upload = multer({
     storage,
@@ -77,9 +82,9 @@ router.use(authMiddleware, authMiddleware.requireAdmin);
 router.get("/", getInvoices);
 router.get("/payments", getPaymentProofs);
 router.get("/request/:requestId", getInvoiceForRequest);
-router.post("/request/:requestId", upload.single("invoice_file"), createInvoice);
+router.post("/request/:requestId", upload.single("invoice_file"), prepareUploadedFiles, cleanupOnControllerFailure(createInvoice));
 router.post("/:id/email", sendInvoiceByEmail);
-router.post("/:id/payment-proof", upload.single("payment_proof"), uploadPaymentProof);
+router.post("/:id/payment-proof", upload.single("payment_proof"), prepareUploadedFiles, cleanupOnControllerFailure(uploadPaymentProof));
 router.post("/payments/:paymentId/verify", verifyPayment);
 router.patch(
     "/:id/referral-reward",

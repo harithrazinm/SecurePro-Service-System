@@ -12,6 +12,9 @@ backend/.env
 # macOS
 .DS_Store
 # Runtime uploads - do not commit user uploads
+backend/.private-media/
+backend/private-media/
+backend/securepro-storage/
 backend/uploads/customer/*
 backend/uploads/technician/reports/*
 

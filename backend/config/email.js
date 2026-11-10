@@ -1,4 +1,6 @@
 const nodemailer = require("nodemailer");
+const fs = require("fs");
+const { resolveReference } = require("../services/mediaStorage");
 
 function escapeHtml(value) {
     return String(value || "")
@@ -45,6 +47,7 @@ async function sendQuotationEmail({
     customerName,
     quotationNumber,
     quotationFileUrl,
+    quotationFileAccessUrl,
     quotationFileName
 }) {
     if (!process.env.SMTP_HOST) {
@@ -74,7 +77,13 @@ async function sendQuotationEmail({
         process.env.MAIL_FROM_NAME ||
         "SecurePro System Solutions";
 
-    const fileUrl = quotationPdfUrl(quotationFileUrl);
+    const storedFile = resolveReference(quotationFileUrl);
+    const configuredAppUrl = String(process.env.PUBLIC_APP_URL || "").replace(/\/$/, "");
+    const fileUrl = storedFile
+        ? (configuredAppUrl && quotationFileAccessUrl
+            ? `${configuredAppUrl}${quotationFileAccessUrl}`
+            : "")
+        : quotationPdfUrl(quotationFileUrl);
 
     let attachment = [];
 
@@ -82,18 +91,18 @@ async function sendQuotationEmail({
      * Download the quotation PDF from its URL
      * and attach it to the email.
      */
-    if (fileUrl) {
-        const pdfResponse = await fetch(fileUrl);
+    if (quotationFileUrl) {
+        let pdfBuffer;
 
-        if (!pdfResponse.ok) {
-            throw new Error(
-                `Unable to download quotation PDF. HTTP ${pdfResponse.status}`
-            );
+        if (storedFile) {
+            pdfBuffer = await fs.promises.readFile(storedFile.absolutePath);
+        } else {
+            const pdfResponse = await fetch(fileUrl);
+            if (!pdfResponse.ok) {
+                throw new Error(`Unable to download quotation PDF. HTTP ${pdfResponse.status}`);
+            }
+            pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
         }
-
-        const pdfBuffer = Buffer.from(
-            await pdfResponse.arrayBuffer()
-        );
 
         attachment = [
             {
@@ -126,8 +135,7 @@ async function sendQuotationEmail({
 
 Please find attached quotation ${quotationNumber} from SecurePro System Solutions.
 
-You can also view it here:
-${fileUrl}
+${fileUrl ? `You can also view it here:\n${fileUrl}\n` : ""}
 
 Thank you for choosing SecurePro System Solutions.`,
 

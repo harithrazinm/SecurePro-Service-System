@@ -1,5 +1,10 @@
 const crypto = require("crypto");
+const fs = require("fs");
 const pool = require("../config/db");
+const {
+    resolveReference,
+    createSignedMediaUrl
+} = require("../services/mediaStorage");
 
 function invoiceNumber() {
     const d = new Date();
@@ -247,9 +252,22 @@ async function sendInvoiceByEmail(req, res) {
             return res.status(500).json({ success: false, message: "Brevo email settings are not configured." });
         }
 
-        const fileUrl = pdfUrl(invoice.invoice_file_url);
+        const storedFile = resolveReference(invoice.invoice_file_url);
+        const configuredAppUrl = String(process.env.PUBLIC_APP_URL || "").replace(/\/$/, "");
+        const fileUrl = storedFile
+            ? (configuredAppUrl
+                ? `${configuredAppUrl}${createSignedMediaUrl(invoice.invoice_file_url, req.user, 7 * 24 * 60 * 60)}`
+                : "")
+            : pdfUrl(invoice.invoice_file_url);
         const safeName = escapeHtml(invoice.customer_name || "Customer");
         const safeNumber = escapeHtml(invoice.invoice_number);
+
+        const attachment = storedFile
+            ? [{
+                content: (await fs.promises.readFile(storedFile.absolutePath)).toString("base64"),
+                name: invoice.invoice_file_name || `${invoice.invoice_number}.pdf`
+            }]
+            : [{ url: fileUrl, name: invoice.invoice_file_name || `${invoice.invoice_number}.pdf` }];
 
         const response = await fetch("https://api.brevo.com/v3/smtp/email", {
             method: "POST",
@@ -263,9 +281,9 @@ async function sendInvoiceByEmail(req, res) {
                 replyTo: { email: process.env.BREVO_SENDER_EMAIL },
                 to: [{ email: invoice.customer_email, name: invoice.customer_name || "Customer" }],
                 subject: `SecurePro Final Invoice ${invoice.invoice_number}`,
-                textContent: `Dear ${invoice.customer_name || "Customer"},\n\nPlease find attached your final invoice ${invoice.invoice_number} from SecurePro System Solutions.\n\nInvoice: ${fileUrl}\n\nThank you for choosing SecurePro System Solutions.`,
-                htmlContent: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033"><h2>SecurePro System Solutions</h2><p>Dear ${safeName},</p><p>Please find attached your final invoice <strong>${safeNumber}</strong>.</p><p><a href="${fileUrl}">View Invoice PDF</a></p><p>Thank you for choosing SecurePro System Solutions.</p></div>`,
-                attachment: [{ url: fileUrl, name: invoice.invoice_file_name || `${invoice.invoice_number}.pdf` }]
+                textContent: `Dear ${invoice.customer_name || "Customer"},\n\nPlease find attached your final invoice ${invoice.invoice_number} from SecurePro System Solutions.${fileUrl ? `\n\nInvoice: ${fileUrl}` : ""}\n\nThank you for choosing SecurePro System Solutions.`,
+                htmlContent: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033"><h2>SecurePro System Solutions</h2><p>Dear ${safeName},</p><p>Please find attached your final invoice <strong>${safeNumber}</strong>.</p>${fileUrl ? `<p><a href="${fileUrl}">View Invoice PDF</a></p>` : ""}<p>Thank you for choosing SecurePro System Solutions.</p></div>`,
+                attachment
             })
         });
 
