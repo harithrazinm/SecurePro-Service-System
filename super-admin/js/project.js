@@ -88,6 +88,18 @@ function date(value) {
 
 }
 
+function dateOnly(value) {
+    if (!value) return "—";
+    const valueText = String(value).slice(0, 10);
+    const parsed = new Date(`${valueText}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return "—";
+    return parsed.toLocaleDateString("en-MY", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
 
 /* ======================================================
    PROJECT STATUS
@@ -189,6 +201,37 @@ function fileUrl(path) {
         )
     );
 
+}
+
+function mediaKind(item = {}) {
+    const mime = String(item.mime_type || item.media_type || "").toLowerCase();
+    const fileName = String(item.file_name || item.file_path || "").toLowerCase();
+
+    if (mime.startsWith("image/") || /\.(png|jpe?g|gif|webp|avif)(?:$|\?)/.test(fileName)) return "image";
+    if (mime.startsWith("video/") || /\.(mp4|webm|mov|m4v)(?:$|\?)/.test(fileName)) return "video";
+    if (mime.includes("pdf") || /\.pdf(?:$|\?)/.test(fileName)) return "pdf";
+    return "file";
+}
+
+function renderMediaCard(item = {}, fallbackName = "Project file") {
+    const url = fileUrl(item.file_path || item.url);
+    const name = item.file_name || fallbackName;
+    const kind = mediaKind(item);
+    const safeUrl = esc(url);
+    const safeName = esc(name);
+    const mime = esc(item.mime_type || "");
+
+    let preview;
+    if (kind === "image" && url) {
+        preview = `<a class="media-preview-visual" href="${safeUrl}" target="_blank" rel="noopener" aria-label="Open ${safeName}"><img src="${safeUrl}" alt="${safeName}" loading="lazy" decoding="async"><span class="media-preview-open">View full image ↗</span></a>`;
+    } else if (kind === "video" && url) {
+        preview = `<div class="media-preview-visual media-preview-video"><video controls preload="metadata" aria-label="${safeName}"><source src="${safeUrl}"${mime ? ` type="${mime}"` : ""}>Your browser does not support video playback.</video></div>`;
+    } else {
+        const icon = kind === "pdf" ? "PDF" : "FILE";
+        preview = `<div class="media-preview-visual media-preview-placeholder"><span>${icon}</span><small>${kind === "pdf" ? "Document preview" : "Attachment"}</small></div>`;
+    }
+
+    return `<article class="media-preview-card">${preview}<div class="media-preview-caption"><div><strong title="${safeName}">${safeName}</strong><small>${esc(item.mime_type || item.media_type || kind.toUpperCase())}</small></div>${url ? `<a class="doc" href="${safeUrl}" target="_blank" rel="noopener">Open ↗</a>` : ""}</div></article>`;
 }
 
 
@@ -497,110 +540,8 @@ function renderReportMedia(
             </h4>
 
 
-            <div class="report-file-list">
-
-                ${items.map(item => {
-
-                    const type =
-                        String(
-                            item.media_type ||
-                            item.mime_type ||
-                            ""
-                        ).toLowerCase();
-
-
-                    let icon =
-                        "📄";
-
-
-                    if (
-                        type.includes(
-                            "image"
-                        )
-                    ) {
-
-                        icon =
-                            "📷";
-
-                    }
-                    else if (
-                        type.includes(
-                            "video"
-                        )
-                    ) {
-
-                        icon =
-                            "🎥";
-
-                    }
-                    else if (
-                        type.includes(
-                            "pdf"
-                        )
-                    ) {
-
-                        icon =
-                            "📕";
-
-                    }
-
-
-                    return `
-
-                        <div class="media-file">
-
-                            <span class="media-file-icon">
-
-                                ${icon}
-
-                            </span>
-
-
-                            <div class="media-file-info">
-
-                                <strong>
-
-                                    ${esc(
-                                        item.file_name ||
-                                        "Attachment"
-                                    )}
-
-                                </strong>
-
-
-                                <small>
-
-                                    ${esc(
-                                        item.mime_type ||
-                                        "File"
-                                    )}
-
-                                </small>
-
-                            </div>
-
-
-                            <a
-                                class="doc"
-                                href="${esc(
-                                    fileUrl(
-                                        item.file_path
-                                    )
-                                )}"
-                                target="_blank"
-                                rel="noopener"
-                            >
-
-                                View File ↗
-
-                            </a>
-
-                        </div>
-
-                    `;
-
-                }).join("")}
-
+            <div class="media-preview-grid">
+                ${items.map(item => renderMediaCard(item, "Report attachment")).join("")}
             </div>
 
         </div>
@@ -1450,13 +1391,12 @@ function render(data) {
                         </div>
 
 
-                        <div>
-
-                            ${documentLink(
-                                proof.payment_proof_url,
-                                "View Invoice Payment Proof"
-                            )}
-
+                        <div class="payment-proof-preview">
+                            ${renderMediaCard({
+                                file_path: proof.payment_proof_url,
+                                file_name: proof.payment_proof_name || "Invoice payment proof",
+                                mime_type: proof.payment_proof_type || ""
+                            }, "Invoice payment proof")}
                         </div>
 
                     </div>
@@ -1543,13 +1483,11 @@ function render(data) {
                         </div>
 
 
-                        <div>
-
-                            ${documentLink(
-                                proof.payment_proof_url,
-                                "View Quotation Payment Proof"
-                            )}
-
+                        <div class="payment-proof-preview">
+                            ${renderMediaCard({
+                                file_path: proof.payment_proof_url,
+                                file_name: proof.payment_proof_name || "Quotation payment proof"
+                            }, "Quotation payment proof")}
                         </div>
 
                     </div>
@@ -1596,36 +1534,8 @@ function render(data) {
                     </div>
 
 
-                    <div class="media-list">
-
-                        ${customerPhotos.map(
-                            photo => `
-
-                                <a
-                                    class="media-item"
-                                    href="${esc(
-                                        fileUrl(
-                                            photo.file_path
-                                        )
-                                    )}"
-                                    target="_blank"
-                                    rel="noopener"
-                                >
-
-                                    📷
-
-                                    ${esc(
-                                        photo.file_name ||
-                                        "Customer Photo"
-                                    )}
-
-                                    ↗
-
-                                </a>
-
-                            `
-                        ).join("")}
-
+                    <div class="media-preview-grid">
+                        ${customerPhotos.map(photo => renderMediaCard(photo, "Customer photo")).join("")}
                     </div>
 
                 </section>
@@ -1663,56 +1573,8 @@ function render(data) {
                     </div>
 
 
-                    <div class="media-list">
-
-                        ${media.map(
-                            item => {
-
-                                const type =
-                                    String(
-                                        item.media_type ||
-                                        item.mime_type ||
-                                        ""
-                                    ).toLowerCase();
-
-
-                                const icon =
-                                    type.includes(
-                                        "video"
-                                    )
-                                        ? "🎥"
-                                        : "📷";
-
-
-                                return `
-
-                                    <a
-                                        class="media-item"
-                                        target="_blank"
-                                        rel="noopener"
-                                        href="${esc(
-                                            fileUrl(
-                                                item.file_path
-                                            )
-                                        )}"
-                                    >
-
-                                        ${icon}
-
-                                        ${esc(
-                                            item.file_name ||
-                                            "View File"
-                                        )}
-
-                                        ↗
-
-                                    </a>
-
-                                `;
-
-                            }
-                        ).join("")}
-
+                    <div class="media-preview-grid">
+                        ${media.map(item => renderMediaCard(item, "Project media")).join("")}
                     </div>
 
                 </section>
@@ -1783,6 +1645,30 @@ function render(data) {
 
         </section>
 
+
+
+        <section class="project-quick-facts" aria-label="Project summary">
+            <article class="quick-fact">
+                <span>Customer</span>
+                <strong>${esc(p.customer_name || "—")}</strong>
+                <small>${esc(p.customer_phone || "Customer contact")}</small>
+            </article>
+            <article class="quick-fact">
+                <span>Service</span>
+                <strong>${esc(p.service_name || "—")}</strong>
+                <small>${esc(p.service_name_ms || "Selected service")}</small>
+            </article>
+            <article class="quick-fact">
+                <span>Appointment</span>
+                <strong>${esc(p.scheduled_date ? dateOnly(p.scheduled_date) : "Not scheduled")}</strong>
+                <small>${esc(p.scheduled_time || "Date and time pending")}</small>
+            </article>
+            <article class="quick-fact">
+                <span>Last activity</span>
+                <strong>${esc(date(p.updated_at))}</strong>
+                <small>${esc(p.technician_name || "No technician assigned")}</small>
+            </article>
+        </section>
 
 
         <!-- =========================================

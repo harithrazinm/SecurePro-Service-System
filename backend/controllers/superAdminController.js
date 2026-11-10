@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const { decorateMediaReferences } = require("../services/mediaStorage");
 
 /*
  * ======================================================
@@ -688,6 +689,14 @@ async function getProjectById(req, res) {
 
                 sr.*,
 
+                DATE_FORMAT(sr.scheduled_date, '%Y-%m-%d') AS project_scheduled_date,
+                TIME_FORMAT(sr.scheduled_time, '%H:%i:%s') AS project_scheduled_time,
+                DATE_FORMAT(sr.assigned_at, '%Y-%m-%d %H:%i:%s') AS project_assigned_at,
+                DATE_FORMAT(sr.admin_notes_updated_at, '%Y-%m-%d %H:%i:%s') AS project_admin_notes_updated_at,
+                DATE_FORMAT(sr.created_at, '%Y-%m-%d %H:%i:%s') AS project_created_at,
+                DATE_FORMAT(sr.updated_at, '%Y-%m-%d %H:%i:%s') AS project_updated_at,
+                DATE_FORMAT(sr.completed_at, '%Y-%m-%d %H:%i:%s') AS project_completed_at,
+
                 s.name_en AS service_name,
                 s.name_ms AS service_name_ms,
 
@@ -715,13 +724,13 @@ async function getProjectById(req, res) {
 
                 q.quotation_file_name,
 
-                q.created_at AS quotation_uploaded_at,
+                DATE_FORMAT(q.created_at, '%Y-%m-%d %H:%i:%s') AS quotation_uploaded_at,
 
-                q.sent_at AS quotation_sent_at,
+                DATE_FORMAT(q.sent_at, '%Y-%m-%d %H:%i:%s') AS quotation_sent_at,
 
-                q.follow_up_1_sent_at,
+                DATE_FORMAT(q.follow_up_1_sent_at, '%Y-%m-%d %H:%i:%s') AS follow_up_1_sent_at,
 
-                q.follow_up_2_sent_at,
+                DATE_FORMAT(q.follow_up_2_sent_at, '%Y-%m-%d %H:%i:%s') AS follow_up_2_sent_at,
 
 
                 /*
@@ -734,7 +743,7 @@ async function getProjectById(req, res) {
                 q.payment_proof_name
                     AS quotation_payment_proof_name,
 
-                q.payment_proof_uploaded_at
+                DATE_FORMAT(q.payment_proof_uploaded_at, '%Y-%m-%d %H:%i:%s')
                     AS quotation_payment_proof_uploaded_at,
 
                 q.payment_status
@@ -779,6 +788,21 @@ async function getProjectById(req, res) {
 
         const project =
             requests[0];
+
+        project.scheduled_date = project.project_scheduled_date;
+        project.scheduled_time = project.project_scheduled_time;
+        project.assigned_at = project.project_assigned_at;
+        project.admin_notes_updated_at = project.project_admin_notes_updated_at;
+        project.created_at = project.project_created_at;
+        project.updated_at = project.project_updated_at;
+        project.completed_at = project.project_completed_at;
+        delete project.project_scheduled_date;
+        delete project.project_scheduled_time;
+        delete project.project_assigned_at;
+        delete project.project_admin_notes_updated_at;
+        delete project.project_created_at;
+        delete project.project_updated_at;
+        delete project.project_completed_at;
 
         const [serviceAnswers] = await pool.query(`
             SELECT
@@ -848,8 +872,8 @@ async function getProjectById(req, res) {
 
                 created_by,
 
-                created_at,
-                updated_at
+                DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+                DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at
 
             FROM invoices
 
@@ -886,7 +910,7 @@ async function getProjectById(req, res) {
 
                     q.payment_proof_name,
 
-                    q.payment_proof_uploaded_at,
+                    DATE_FORMAT(q.payment_proof_uploaded_at, '%Y-%m-%d %H:%i:%s') AS payment_proof_uploaded_at,
 
                     q.payment_status,
 
@@ -945,11 +969,11 @@ async function getProjectById(req, res) {
 
                     ip.status,
 
-                    ip.submitted_at,
+                    DATE_FORMAT(ip.submitted_at, '%Y-%m-%d %H:%i:%s') AS submitted_at,
 
                     ip.verified_by,
 
-                    ip.verified_at,
+                    DATE_FORMAT(ip.verified_at, '%Y-%m-%d %H:%i:%s') AS verified_at,
 
                     ip.remarks,
 
@@ -1013,17 +1037,17 @@ async function getProjectById(req, res) {
 
                 rpt.status,
 
-                rpt.submitted_at,
+                DATE_FORMAT(rpt.submitted_at, '%Y-%m-%d %H:%i:%s') AS submitted_at,
 
-                rpt.reviewed_at,
+                DATE_FORMAT(rpt.reviewed_at, '%Y-%m-%d %H:%i:%s') AS reviewed_at,
 
                 reviewer.name AS reviewed_by_name,
 
                 rpt.review_remarks,
 
-                rpt.created_at,
+                DATE_FORMAT(rpt.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
 
-                rpt.updated_at
+                DATE_FORMAT(rpt.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at
 
 
             FROM service_reports rpt
@@ -1085,7 +1109,7 @@ async function getProjectById(req, res) {
 
                 file_size,
 
-                uploaded_at
+                DATE_FORMAT(uploaded_at, '%Y-%m-%d %H:%i:%s') AS uploaded_at
 
 
             FROM service_report_media
@@ -1117,7 +1141,7 @@ async function getProjectById(req, res) {
 
                 file_path,
 
-                uploaded_at
+                DATE_FORMAT(uploaded_at, '%Y-%m-%d %H:%i:%s') AS uploaded_at
 
 
             FROM customer_photos
@@ -1139,11 +1163,7 @@ async function getProjectById(req, res) {
          * --------------------------------------------------
          */
 
-        return res.json({
-
-            success: true,
-
-            data: {
+        const projectData = {
 
                 project,
 
@@ -1169,7 +1189,11 @@ async function getProjectById(req, res) {
                 customer_photos:
                     photos
 
-            }
+            };
+
+        return res.json({
+            success: true,
+            data: decorateMediaReferences(projectData, req.user)
 
         });
 
