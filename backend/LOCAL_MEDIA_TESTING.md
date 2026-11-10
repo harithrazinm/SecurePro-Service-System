@@ -27,13 +27,14 @@ Start the existing SecurePro frontend with VS Code Live Server (normally `http:/
 
 Use the real workflows so the app saves both the media storage key and the existing database metadata:
 
-1. Submit a test service request with a JPG/PNG/WebP image from the customer request form. Confirm the success page displays the uploaded image.
+1. Submit a test service request with a JPG/PNG/WebP image from the customer request form. Confirm the success page displays the uploaded image, then open the admin **Service Requests** page and mark the request as test data by typing its request code.
 2. Sign in as a technician, open an assigned test job, and submit progress/completion photos and a supported video (MP4, WebM, or MOV). Confirm the admin/job detail page can preview the media.
 3. Sign in as admin and upload a quotation PDF and payment proof through the existing enquiry/quotation workflow. Upload an invoice PDF through the invoice workflow if enabled in your local data.
 4. Restart the backend and reload the relevant pages. The same files should still open from `backend/securepro-storage/`.
 5. Try an unsupported extension, mismatched content (for example a text file renamed `.jpg`), and an over-limit file. The API should return a readable upload error and should not leave a partial file behind.
+6. When done, use **Delete test** from the admin requests list and type the exact request code. Test deletion is permanent and blocked if referral usage exists; unexpected foreign-key dependencies abort safely.
 
-The database keeps storage keys in the existing columns (`customer_photos.file_path`, `service_report_media.file_path`, `service_reports.report_file_path`, quotation/invoice file URL fields). Existing filename/MIME/size columns continue to be filled where the current schema and workflows have them. No schema changes are performed by this provider.
+The database keeps media keys in the existing columns (`customer_photos.file_path`, `service_report_media.file_path`, `service_reports.report_file_path`, quotation/invoice file URL fields). Existing filename/MIME/size columns continue to be filled where the current schema and workflows have them. The admin test-marker feature adds `service_requests.is_test` using `database/test-request-marker-migration.sql`. Apply that additive migration to a local/test database before using the marker UI; existing requests default to `is_test = 0`.
 
 ## 3. Test with Postman
 
@@ -81,7 +82,7 @@ Expect `206 Partial Content` and a `Content-Range` response header. A normal req
 
 ### Check deletion safely
 
-Use the existing authenticated admin deletion/replacement workflow (for example, deleting an eligible quotation via `DELETE {{baseUrl}}/api/quotations/{{quotationId}}`). Local media is deleted only after no supported database record references that storage key. Shared/referenced media and legacy uploads are left untouched. Do not delete files manually from the storage root while a database row still references them.
+On the admin **Service Requests** page, choose **Mark test** and type `PROCEED` in the confirmation prompt. The row will show a `TEST DATA` badge and a **Delete test** action. Deletion also requires `PROCEED`; it removes the test request, its linked quotation/invoice/payment/report rows, and any local media no longer referenced elsewhere. Referral-used requests are deliberately blocked to protect referral records. If another foreign-key relationship prevents deletion, the transaction rolls back and leaves the records intact. You can **Unmark test** if a request was marked by mistake. Do not mark real customer requests as test data.
 
 ## Troubleshooting
 

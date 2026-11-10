@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const crypto = require("crypto");
+const { deleteLocalMediaIfUnreferenced } = require("../services/mediaAccess");
 
 
 /*
@@ -29,6 +30,7 @@ async function getRequests(req, res) {
                 sr.customer_address,
                 sr.customer_location_link,
                 sr.admin_notes,
+                sr.is_test,
                 sr.status,
                 sr.technician_id,
 
@@ -183,6 +185,9 @@ async function getRequests(req, res) {
                         status:
                             request.status,
 
+                        is_test:
+                            Boolean(request.is_test),
+
                         admin_notes:
                             request.admin_notes,
 
@@ -241,6 +246,174 @@ async function getRequests(req, res) {
 
     }
 
+}
+
+
+/* ======================================================
+   MARK / UNMARK A REQUEST AS TEST DATA
+====================================================== */
+async function setRequestTestFlag(req, res) {
+    const requestId = String(req.params.id || "").trim();
+    const confirmationCode = String(req.body?.confirmationCode || "").trim().toUpperCase();
+    const isTest = req.body?.isTest;
+    if (!requestId || !confirmationCode || typeof isTest !== "boolean") {
+        return res.status(400).json({ success: false, message: "Type PROCEED and choose whether this request is test data." });
+    }
+
+    let connection;
+    let transactionStarted = false;
+    try {
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+        transactionStarted = true;
+        const [rows] = await connection.query(
+            "SELECT request_code FROM service_requests WHERE id = ? LIMIT 1 FOR UPDATE",
+            [requestId]
+        );
+        if (!rows.length) return res.status(404).json({ success: false, message: "Request not found." });
+        if (confirmationCode !== "PROCEED") {
+            return res.status(400).json({ success: false, message: "Confirmation did not match. No changes were made." });
+        }
+
+        await connection.query("UPDATE service_requests SET is_test = ? WHERE id = ?", [isTest ? 1 : 0, requestId]);
+        await connection.commit();
+        transactionStarted = false;
+        return res.json({
+            success: true,
+            message: isTest ? "Request marked as test data." : "Test marker removed from the request."
+        });
+    } catch (error) {
+        console.error("Update test request marker error:", error.message);
+        return res.status(500).json({ success: false, message: "Unable to update the test marker." });
+    } finally {
+        if (connection) {
+            if (transactionStarted) await connection.rollback().catch(() => {});
+            connection.release();
+        }
+    }
+}
+
+
+/* ======================================================
+   DELETE A MARKED TEST REQUEST AND ITS RELATED TEST DATA
+====================================================== */
+async function deleteTestRequest(req, res) {
+    const requestId = String(req.params.id || "").trim();
+    const confirmationCode = String(req.body?.confirmationCode || "").trim().toUpperCase();
+    if (!requestId || !confirmationCode) {
+        return res.status(400).json({ success: false, message: "Type PROCEED to confirm deletion." });
+    }
+
+    let connection;
+    let transactionStarted = false;
+    let requestCode;
+    let mediaReferences = [];
+
+    try {
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+        transactionStarted = true;
+        const [rows] = await connection.query(
+            `SELECT id, request_code, is_test
+             FROM service_requests
+             WHERE id = ?
+             LIMIT 1
+             FOR UPDATE`,
+            [requestId]
+        );
+        if (!rows.length) return res.status(404).json({ success: false, message: "Request not found." });
+        const request = rows[0];
+        requestCode = String(request.request_code || "");
+        if (confirmationCode !== "PROCEED") {
+            return res.status(400).json({ success: false, message: "Confirmation did not match. Nothing was deleted." });
+        }
+        if (!Number(request.is_test)) {
+            return res.status(409).json({ success: false, message: "Only requests explicitly marked as test data can be deleted here." });
+        }
+
+        const [referrals] = await connection.query(
+            "SELECT COUNT(*) AS usage_count FROM referral_usages WHERE request_id = ?",
+            [requestId]
+        );
+        if (Number(referrals[0]?.usage_count)) {
+            return res.status(409).json({
+                success: false,
+                message: "This request has referral usage history. It was not deleted; remove or resolve that record through the referral workflow first."
+            });
+        }
+
+        const [mediaRows] = await connection.query(
+            `SELECT file_path AS media_ref FROM customer_photos WHERE request_id = ?
+             UNION ALL
+             SELECT file_path AS media_ref FROM service_report_media WHERE request_id = ?
+             UNION ALL
+             SELECT report_file_path AS media_ref FROM service_reports WHERE request_id = ? AND report_file_path IS NOT NULL
+             UNION ALL
+             SELECT tp.file_path AS media_ref
+             FROM technician_photos tp
+             INNER JOIN technician_reports tr ON tr.id = tp.report_id
+             WHERE tr.request_id = ?
+             UNION ALL
+             SELECT quotation_file_url AS media_ref FROM quotations WHERE request_id = ? AND quotation_file_url IS NOT NULL
+             UNION ALL
+             SELECT payment_proof_url AS media_ref FROM quotations WHERE request_id = ? AND payment_proof_url IS NOT NULL
+             UNION ALL
+             SELECT invoice_file_url AS media_ref FROM invoices WHERE request_id = ? AND invoice_file_url IS NOT NULL
+             UNION ALL
+             SELECT ip.payment_proof_url AS media_ref
+             FROM invoice_payments ip
+             INNER JOIN invoices i ON i.id = ip.invoice_id
+             WHERE i.request_id = ? AND ip.payment_proof_url IS NOT NULL`,
+            Array(8).fill(requestId)
+        );
+        mediaReferences = mediaRows.map(row => row.media_ref).filter(Boolean);
+
+        // Explicitly remove payment children before invoices; other request
+        // children are removed by the existing foreign-key cascades. Any
+        // unexpected restrictive relation aborts the transaction safely.
+        await connection.query(
+            `DELETE FROM invoice_payments
+             WHERE invoice_id IN (SELECT id FROM invoices WHERE request_id = ?)`,
+            [requestId]
+        );
+        await connection.query("DELETE FROM invoices WHERE request_id = ?", [requestId]);
+        await connection.query("DELETE FROM quotations WHERE request_id = ?", [requestId]);
+        const [result] = await connection.query(
+            "DELETE FROM service_requests WHERE id = ? AND is_test = 1",
+            [requestId]
+        );
+        if (!result.affectedRows) {
+            return res.status(409).json({ success: false, message: "The request changed and could not be deleted." });
+        }
+
+        await connection.commit();
+        transactionStarted = false;
+
+        const cleanupResults = await Promise.allSettled(
+            mediaReferences.map(reference => deleteLocalMediaIfUnreferenced(reference))
+        );
+        const failedCleanups = cleanupResults.filter(result => result.status === "rejected").length;
+        if (failedCleanups) {
+            console.warn(`Test request ${requestCode} was deleted, but ${failedCleanups} local media file(s) need cleanup.`);
+        }
+
+        return res.json({
+            success: true,
+            message: `Test request ${requestCode} and its linked records were deleted.`,
+            mediaCleanupWarning: failedCleanups > 0
+        });
+    } catch (error) {
+        console.error("Delete test request error:", error.message);
+        return res.status(409).json({
+            success: false,
+            message: "Unable to safely delete this test request. Related records prevented deletion; no database changes were kept."
+        });
+    } finally {
+        if (connection) {
+            if (transactionStarted) await connection.rollback().catch(() => {});
+            connection.release();
+        }
+    }
 }
 
 
@@ -2645,6 +2818,10 @@ async function reviewTechnicianReport(req, res) {
 module.exports = {
 
     getJobPendingRequests,
+
+    setRequestTestFlag,
+
+    deleteTestRequest,
 
     getRequests,
 

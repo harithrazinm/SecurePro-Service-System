@@ -810,6 +810,7 @@ function renderRequests(
                                         requestCode
                                     )}
                                 </span>
+                                ${request.is_test ? `<span class="test-request-badge">TEST DATA</span>` : ""}
 
                                 <span
                                     class="request-date"
@@ -926,16 +927,34 @@ function renderRequests(
 
                             <td>
 
-                                <a
-                                    class="view-button"
-                                    href="request.html?id=${
-                                        encodeURIComponent(
-                                            requestId
-                                        )
-                                    }"
-                                >
-                                    View
-                                </a>
+                                <div class="request-row-actions">
+                                    <a
+                                        class="view-button"
+                                        href="request.html?id=${
+                                            encodeURIComponent(
+                                                requestId
+                                            )
+                                        }"
+                                    >
+                                        View
+                                    </a>
+                                    <button
+                                        class="test-flag-button${request.is_test ? " is-marked" : ""}"
+                                        type="button"
+                                        data-test-flag="${escapeHtml(requestId)}"
+                                        data-request-code="${escapeHtml(requestCode)}"
+                                        data-test-value="${request.is_test ? "false" : "true"}"
+                                    >${request.is_test ? "Unmark test" : "Mark test"}</button>
+                                    ${request.is_test ? `
+                                        <button
+                                            class="delete-request-button"
+                                            type="button"
+                                            data-delete-test-request="${escapeHtml(requestId)}"
+                                            data-request-code="${escapeHtml(requestCode)}"
+                                            aria-label="Delete test request ${escapeHtml(requestCode)}"
+                                        >Delete test</button>
+                                    ` : ""}
+                                </div>
 
                             </td>
 
@@ -978,6 +997,60 @@ function formatStatus(
         );
 
 }
+
+
+requestsTableBody?.addEventListener("click", async event => {
+    const flagButton = event.target.closest("[data-test-flag]");
+    const deleteButton = event.target.closest("[data-delete-test-request]");
+    const button = flagButton || deleteButton;
+    if (!button) return;
+
+    const requestId = flagButton
+        ? flagButton.dataset.testFlag
+        : deleteButton.dataset.deleteTestRequest;
+    const requestCode = button.dataset.requestCode;
+    if (!requestId || !requestCode) return;
+
+    const isDelete = Boolean(deleteButton);
+    const confirmationText = "PROCEED";
+    const typedConfirmation = window.prompt(isDelete
+        ? `Permanently delete test request ${requestCode}, its linked records, and uploaded media?\n\nType PROCEED to continue.`
+        : `Mark/unmark request ${requestCode} as test data? Only marked requests can be deleted from this page.\n\nType PROCEED to continue.`);
+    if (typedConfirmation === null) return;
+    if (typedConfirmation.trim().toUpperCase() !== confirmationText) {
+        window.alert("Confirmation did not match. No changes were made.");
+        return;
+    }
+    const nextTestFlag = flagButton?.dataset.testValue === "true";
+    if (!window.confirm(isDelete
+        ? `Delete test request ${requestCode} and its linked test records? This cannot be undone.`
+        : `${nextTestFlag ? "Mark" : "Unmark"} ${requestCode} as test data?`)) return;
+
+    button.disabled = true;
+    const oldText = button.textContent;
+    button.textContent = isDelete ? "Deleting…" : "Saving…";
+    try {
+        const result = await apiRequest(isDelete
+            ? `/admin/requests/${encodeURIComponent(requestId)}`
+            : `/admin/requests/${encodeURIComponent(requestId)}/test-flag`, {
+            method: isDelete ? "DELETE" : "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                confirmationCode: confirmationText,
+                ...(isDelete ? {} : { isTest: nextTestFlag })
+            })
+        });
+        if (!result) return;
+        await loadRequests();
+        window.alert(result.mediaCleanupWarning
+            ? `${result.message} One or more local files could not be cleaned up; check the backend log.`
+            : result.message);
+    } catch (error) {
+        button.disabled = false;
+        button.textContent = oldText;
+        showError(error.message || "Unable to update this request.");
+    }
+});
 
 
 /*

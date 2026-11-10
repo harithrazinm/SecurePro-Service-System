@@ -45,12 +45,14 @@ For a complete Postman and actual-frontend walkthrough, see [LOCAL_MEDIA_TESTING
 
    `MEDIA_SIGNING_SECRET` is optional; if omitted, the app uses the existing `JWT_SECRET`.
 4. Keep the actual path and credentials out of Git. Restart the Node.js application after changing environment variables.
-5. Deploy the code only after configuring the path. Cloudinary upload calls have been removed from the active upload routes, but the Cloudinary package/configuration is intentionally retained until the cPanel validation checklist passes.
+5. Before deploying the test-marker version, back up the intended database and apply `database/test-request-marker-migration.sql`; the admin requests page uses the new `service_requests.is_test` column. Verify you selected the intended database. Then deploy the code after configuring the storage path. Cloudinary upload calls have been removed from the active upload routes, but the Cloudinary package/configuration is intentionally retained until the cPanel validation checklist passes.
 6. From a staff test account, upload one small customer image, one technician image and video, one quotation PDF, one payment proof, and one invoice PDF. Confirm staff can view them, a technician cannot open a file from an unassigned job, direct unsigned URLs are rejected, and video seeking works.
 7. Restart the Node application and confirm the same files still load. In cPanel, inspect available disk space and inode quota. Confirm the hosting plan does not delete files from the chosen directory during deploys/backups.
 8. Test request limits through the live cPanel/Passenger path. Current app limits are 10 customer photos up to 20 MB each, 10 technician files up to 100 MB each, and one quotation/invoice/proof file up to 10 MB. Apache/Passenger/account-level request limits may be lower; this repository cannot verify those hosting settings.
 
 The repository's Dockerfile targets Node.js 22; the existing Express 5 runtime requires Node.js 18 or newer. The actual version selected in cPanel, account quota, inode limit, upload proxy limit, and restart persistence cannot be verified from this repository. Confirm each in cPanel before production uploads. Sharp is not introduced, so image optimization does not depend on a native binary; FFmpeg is not required.
+
+The admin test-marker UI requires the additive migration in `database/test-request-marker-migration.sql` before deploying this version; otherwise the admin request list will not find `service_requests.is_test`. Back up the database and verify the target database before applying it. It adds one boolean column defaulting to `0` and does not mark or delete existing requests. Mark/unmark and delete actions require typing `PROCEED`; deletion is available only for marked test requests. Do not run SQL from this repository against production without first confirming the selected database and backup.
 
 ## Existing Cloudinary files: dry run, apply, rollback
 

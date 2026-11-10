@@ -6,6 +6,8 @@ const {
     getDashboardSummary,
     getJobPendingRequests,
     getTechnicians,
+    setRequestTestFlag,
+    deleteTestRequest,
     updateRequest,
     reviewTechnicianReport
 } = require("../controllers/adminController");
@@ -56,6 +58,16 @@ router.get(
 router.get(
     "/requests",
     getRequests
+);
+
+router.patch(
+    "/requests/:id/test-flag",
+    setRequestTestFlag
+);
+
+router.delete(
+    "/requests/:id",
+    deleteTestRequest
 );
 
 // Paid requests waiting for technician assignment.
