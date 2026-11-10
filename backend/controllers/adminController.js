@@ -629,6 +629,14 @@ async function getRequestById(req, res) {
                 SELECT
                     sr.*,
 
+                    DATE_FORMAT(sr.scheduled_date, '%Y-%m-%d') AS scheduled_date_formatted,
+                    TIME_FORMAT(sr.scheduled_time, '%H:%i:%s') AS scheduled_time_formatted,
+                    DATE_FORMAT(sr.assigned_at, '%Y-%m-%d %H:%i:%s') AS assigned_at_formatted,
+                    DATE_FORMAT(sr.admin_notes_updated_at, '%Y-%m-%d %H:%i:%s') AS admin_notes_updated_at_formatted,
+                    DATE_FORMAT(sr.created_at, '%Y-%m-%d %H:%i:%s') AS created_at_formatted,
+                    DATE_FORMAT(sr.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at_formatted,
+                    DATE_FORMAT(sr.completed_at, '%Y-%m-%d %H:%i:%s') AS completed_at_formatted,
+
                     s.service_code,
                     s.name_en AS service_name_en,
                     s.name_ms AS service_name_ms
@@ -1263,16 +1271,16 @@ async function getRequestById(req, res) {
                 schedule: {
 
                     date:
-                        request.scheduled_date,
+                        request.scheduled_date_formatted,
 
                     time:
-                        request.scheduled_time
+                        request.scheduled_time_formatted
 
                 },
 
 
                 assigned_at:
-                    request.assigned_at,
+                    request.assigned_at_formatted,
 
 
                 admin_notes:
@@ -1280,7 +1288,7 @@ async function getRequestById(req, res) {
 
 
                 admin_notes_updated_at:
-                    request.admin_notes_updated_at,
+                    request.admin_notes_updated_at_formatted,
 
 
                 quotations: {
@@ -1371,13 +1379,13 @@ async function getRequestById(req, res) {
 
 
                 created_at:
-                    request.created_at,
+                    request.created_at_formatted,
 
                 updated_at:
-                    request.updated_at,
+                    request.updated_at_formatted,
 
                 completed_at:
-                    request.completed_at
+                    request.completed_at_formatted
 
             }
 
