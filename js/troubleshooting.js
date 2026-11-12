@@ -12,7 +12,7 @@ window.CATEGORY_FORM_CONFIG = {
             id: "system", type: "radio", required: true,
             title: { en: "Select System", ms: "Pilih Sistem" },
             description: { en: "Which system has an issue?", ms: "Sistem manakah yang mengalami masalah?" },
-            options: ["CCTV", "Alarm System", "Door Access", "Barrier Gate / LPR", "Electrical", "Network / WiFi", "Intercom", "PA / Audio Visual", "Attendance System", "Smart Home", "Other"].map(x => {
+            options: ["CCTV", "Alarm System", "Door Access", "Autogate / Barrier Gate / LPR", "Electrical", "Network / WiFi", "Intercom", "PA / Audio Visual", "Attendance System", "Smart Home", "Other"].map(x => {
                 const value = x.toLowerCase().replace(/[^a-z0-9]+/g, "_");
                 return {
                     value,
