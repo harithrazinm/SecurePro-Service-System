@@ -1382,10 +1382,11 @@ function renderQuotationJobQueue() {
         const requestId = escapeHtml(request.id);
         const requestKey = String(request.id);
         const count = quotationCountByRequest.get(requestKey) || 0;
-        const revisionRequired = quotations.some(quotation =>
+        const existingOriginal = quotations.find(quotation =>
             String(quotation?.request_id ?? "") === requestKey &&
-            quotation?.approval_status === "revision_required"
+            (!quotation?.quotation_type || quotation.quotation_type === "original")
         );
+        const revisionRequired = existingOriginal?.approval_status === "revision_required";
         const requestCode = escapeHtml(request.request_code || request.code || 'Service Request');
         const customer = escapeHtml(getRequestCustomerName(request));
         const service = escapeHtml(getRequestServiceName(request));
@@ -1413,7 +1414,7 @@ function renderQuotationJobQueue() {
                     ${isOverdue ? `<a class="quotation-overdue-review" href="request.html?id=${encodeURIComponent(request.id)}">Review request →</a>` : ''}
                 </div>
                 <button type="button" class="quotation-job-upload" data-upload-quotation="${requestId}">
-                    ${revisionRequired ? 'Submit Revised Quotation' : count ? 'Upload New Revision' : 'Upload Quotation'}
+                    ${revisionRequired ? 'Submit Revised Quotation' : existingOriginal ? 'Update Existing Quotation' : count ? 'Upload Quotation' : 'Upload Quotation'}
                 </button>
             </article>`;
     }).join('');
@@ -2744,13 +2745,13 @@ quotationJobList?.addEventListener(
 
         if (!requestId) return;
 
-        const revisionQuotation = quotations.find(quotation =>
+        const existingOriginal = quotations.find(quotation =>
             String(quotation?.request_id ?? "") === String(requestId) &&
-            quotation?.approval_status === "revision_required"
+            (!quotation?.quotation_type || quotation.quotation_type === "original")
         );
 
-        if (revisionQuotation) {
-            openEditModal(revisionQuotation.id);
+        if (existingOriginal) {
+            openEditModal(existingOriginal.id);
             return;
         }
 

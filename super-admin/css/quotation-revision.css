@@ -337,7 +337,8 @@
     }
 
     .review-button,
-    .open-file-button {
+    .open-file-button,
+    .undo-approval-button {
         width: 100%;
     }
 

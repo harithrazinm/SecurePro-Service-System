@@ -225,6 +225,80 @@ async function createQuotation(req, res) {
         const request =
             requests[0];
 
+        const [existingOriginals] = await connection.query(`
+            SELECT
+                id,
+                quotation_number,
+                quotation_file_url,
+                approval_status,
+                revision_number
+            FROM quotations
+            WHERE request_id = ?
+              AND (quotation_type = 'original' OR quotation_type IS NULL)
+            ORDER BY created_at DESC
+            LIMIT 1
+        `, [requestId]);
+
+        if (existingOriginals.length) {
+            const existing = existingOriginals[0];
+
+            if (!["revision_required", "pending_approval"].includes(existing.approval_status)) {
+                return res.status(409).json({
+                    success: false,
+                    message: "An original quotation already exists for this request. Open that quotation to revise it instead of creating another."
+                });
+            }
+
+            const file = uploadDetails(req.file);
+            const nextRevision = Number(existing.revision_number || 1) + 1;
+
+            await connection.query(`
+                UPDATE quotations
+                SET
+                    quotation_file_url = ?,
+                    quotation_file_name = ?,
+                    notes = ?,
+                    approval_status = 'pending_approval',
+                    approval_remarks = NULL,
+                    approved_by = NULL,
+                    approved_at = NULL,
+                    revision_number = ?,
+                    revised_at = CURRENT_TIMESTAMP,
+                    status = 'draft',
+                    sent_at = NULL,
+                    follow_up_1_sent_at = NULL,
+                    follow_up_2_sent_at = NULL,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `, [
+                file.url,
+                file.name,
+                notes || null,
+                nextRevision,
+                existing.id
+            ]);
+
+            await deleteLocalMediaIfUnreferenced(
+                existing.quotation_file_url,
+                connection
+            ).catch(error => console.error(
+                "Unable to remove replaced quotation file:",
+                error.message
+            ));
+
+            return res.status(200).json({
+                success: true,
+                message: "Revised quotation uploaded and submitted for Super Admin approval.",
+                data: {
+                    id: existing.id,
+                    quotation_number: existing.quotation_number,
+                    status: "draft",
+                    approval_status: "pending_approval",
+                    revision_number: nextRevision
+                }
+            });
+        }
+
 
         const [revisionRows] = await connection.query(
             `SELECT COALESCE(MAX(revision_number), 0) AS latest_revision
@@ -235,15 +309,8 @@ async function createQuotation(req, res) {
         );
         const nextRevision = Number(revisionRows[0]?.latest_revision || 0) + 1;
 
-        /* ================================================
-           ORIGINAL QUOTATION HISTORY
-
-           Quotations are allowed at any workflow stage.
-           Each upload creates a new quotation record so the
-           previous PDF and approval history remain available.
-           This endpoint deliberately does not update the
-           service request status or technician progress.
-        ================================================= */
+        /* The database permits one original quotation per request.
+           Revisions above update that original record in place. */
 
         /* ================================================
            UPLOAD
@@ -331,6 +398,13 @@ async function createQuotation(req, res) {
         });
 
     } catch (error) {
+
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                success: false,
+                message: "An original quotation already exists for this request. Reload the enquiry and revise the existing quotation."
+            });
+        }
 
         console.error(
             "Create quotation error:",

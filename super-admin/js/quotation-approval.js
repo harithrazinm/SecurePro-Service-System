@@ -808,6 +808,21 @@ function renderQuotations() {
                                             : ""
                                     }
 
+                                    ${
+                                        quotation.approval_status === "approved"
+                                            ? `
+                                                <button
+                                                    class="undo-approval-button"
+                                                    type="button"
+                                                    data-undo-approval="${escapeHtml(quotation.id)}"
+                                                    title="Return this quotation to pending approval"
+                                                >
+                                                    Undo approval
+                                                </button>
+                                              `
+                                            : ""
+                                    }
+
                                 </div>
 
                             </td>
@@ -1711,6 +1726,42 @@ async function approveQuotation() {
 
 
 /* =========================================================
+   UNDO ACCIDENTAL APPROVAL
+========================================================= */
+
+async function undoApproval(id, button) {
+    const quotation = quotations.find(item => item.id === id);
+    if (!quotation) return;
+
+    const confirmed = confirm(
+        `Return ${quotation.quotation_number} to Pending approval?\n\n` +
+        "This does not recall a copy already sent to the customer or change its payment/job status. If it was already sent, coordinate any correction with the customer."
+    );
+    if (!confirmed) return;
+
+    button.disabled = true;
+    button.textContent = "Undoing...";
+
+    try {
+        const result = await apiRequest(
+            `/super-admin/quotations/${encodeURIComponent(id)}/undo-approval`,
+            { method: "POST" }
+        );
+
+        if (!result) return;
+
+        await loadQuotations();
+        alert(result.message || "Quotation returned to pending approval.");
+    } catch (error) {
+        showPageError(error.message);
+    } finally {
+        button.disabled = false;
+        button.textContent = "Undo approval";
+    }
+}
+
+
+/* =========================================================
    REQUEST REVISION
 ========================================================= */
 
@@ -1944,6 +1995,10 @@ tableBody?.addEventListener(
 
             }
 
+        }
+
+        if (button.dataset.undoApproval) {
+            undoApproval(button.dataset.undoApproval, button);
         }
 
     }

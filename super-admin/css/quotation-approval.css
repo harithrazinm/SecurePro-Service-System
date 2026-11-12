@@ -215,6 +215,27 @@
     color: #123c69;
 }
 
+.undo-approval-button {
+    padding: 8px 10px;
+    border: 1px solid #f1c5bf;
+    border-radius: 9px;
+    background: #fff7f5;
+    color: #b42318;
+    font-size: 11px;
+    font-weight: 800;
+    transition: 0.2s ease;
+}
+
+.undo-approval-button:hover:not(:disabled) {
+    border-color: #d92d20;
+    background: #fee4e2;
+}
+
+.undo-approval-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
 .page-error,
 .decision-error {
     margin-bottom: 18px;

@@ -38,6 +38,7 @@ async function getQuotationApprovalQueue(req, res) {
                 q.quotation_file_url,
                 q.quotation_file_name,
                 q.status,
+                q.sent_at,
                 q.approval_status,
                 q.approval_remarks,
                 q.approved_by,
@@ -411,6 +412,122 @@ async function approveQuotation(req, res) {
 
 /*
  * ======================================================
+ * UNDO AN ACCIDENTAL APPROVAL
+ * ======================================================
+ * Return any approved quotation to the pending approval
+ * queue without changing its delivery or payment lifecycle.
+ */
+
+async function undoQuotationApproval(req, res) {
+
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [rows] = await connection.query(`
+            SELECT
+                id,
+                quotation_number,
+                approval_status,
+                status,
+                sent_at,
+                revision_number
+            FROM quotations
+            WHERE id = ?
+            LIMIT 1
+            FOR UPDATE
+        `, [req.params.id]);
+
+        if (!rows.length) {
+            await connection.rollback();
+            return res.status(404).json({
+                success: false,
+                message: "Quotation not found."
+            });
+        }
+
+        const quotation = rows[0];
+
+        if (quotation.approval_status !== "approved") {
+            await connection.rollback();
+            return res.status(409).json({
+                success: false,
+                message: "Only an approved quotation can be returned to pending approval."
+            });
+        }
+
+        await connection.query(`
+            UPDATE quotations
+            SET
+                approval_status = 'pending_approval',
+                approval_remarks = NULL,
+                approved_by = NULL,
+                approved_at = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `, [quotation.id]);
+
+        // Review history is optional on older installations. Keep the state
+        // change successful if that table or decision value is unavailable.
+        try {
+            await connection.query(`
+                INSERT INTO quotation_reviews (
+                    id,
+                    quotation_id,
+                    revision_number,
+                    decision,
+                    remarks,
+                    reviewed_by,
+                    created_at
+                )
+                VALUES (
+                    UUID(),
+                    ?,
+                    ?,
+                    'approval_undone',
+                    'Approval was undone; quotation returned to pending approval.',
+                    ?,
+                    CURRENT_TIMESTAMP
+                )
+            `, [
+                quotation.id,
+                quotation.revision_number || 1,
+                req.user.id
+            ]);
+        } catch (historyError) {
+            console.warn(
+                "Unable to save quotation approval undo history:",
+                historyError.message
+            );
+        }
+
+        await connection.commit();
+
+        return res.json({
+            success: true,
+            message: `${quotation.quotation_number} returned to pending approval.`,
+            data: {
+                id: quotation.id,
+                quotation_number: quotation.quotation_number,
+                approval_status: "pending_approval"
+            }
+        });
+    } catch (error) {
+        await connection.rollback();
+        console.error("Undo quotation approval error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to undo quotation approval."
+        });
+    } finally {
+        connection.release();
+    }
+}
+
+
+/*
+ * ======================================================
  * REQUEST REVISION
  * ======================================================
  */
@@ -599,5 +716,6 @@ module.exports = {
     getQuotationApprovalQueue,
     getQuotationReview,
     approveQuotation,
-    requestQuotationRevision
+    requestQuotationRevision,
+    undoQuotationApproval
 };

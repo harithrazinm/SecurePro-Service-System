@@ -9,7 +9,8 @@ const {
     getQuotationApprovalQueue,
     getQuotationReview,
     approveQuotation,
-    requestQuotationRevision
+    requestQuotationRevision,
+    undoQuotationApproval
 } =
     require("../controllers/superAdminQuotationController");
 
@@ -88,6 +89,18 @@ router.get(
 router.post(
     "/:id/approve",
     approveQuotation
+);
+
+
+/* =========================================================
+   UNDO AN ACCIDENTAL APPROVAL
+ *
+ * POST /api/super-admin/quotations/:id/undo-approval
+========================================================= */
+
+router.post(
+    "/:id/undo-approval",
+    undoQuotationApproval
 );
 
 
