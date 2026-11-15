@@ -1,0 +1,6 @@
+RewriteEngine On
+
+RewriteCond %{THE_REQUEST} \s/+clean-url-test/hello\.html[\s?]
+RewriteRule ^hello\.html$ hello [R=301,L]
+
+RewriteRule ^hello/?$ hello.html [L]

@@ -7,6 +7,7 @@ deployment:
     - /bin/cp -R admin assets css js pages super-admin technician "$FRONTENDPATH/"
     - /bin/cp index.html "$FRONTENDPATH/"
     - /bin/cp login.html "$FRONTENDPATH/"
+    - /bin/cp .htaccess "$FRONTENDPATH/.htaccess"
     - /bin/mkdir -p "$APPPATH/backend/services" "$APPPATH/backend/uploads"
     - /bin/cp -R backend/config backend/controllers backend/middleware backend/routes "$APPPATH/backend/"
     - /bin/cp -R backend/services "$APPPATH/backend/"
