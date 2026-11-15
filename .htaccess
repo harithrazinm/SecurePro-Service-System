@@ -1,0 +1,25 @@
+# SecurePro clean URLs for Apache / GB Network cPanel
+Options -MultiViews
+DirectoryIndex index.html
+
+RewriteEngine On
+
+# Keep the Google Search Console verification file at its exact URL.
+RewriteRule ^google5df3752c7583c6f4\.html$ - [L]
+
+# Redirect /index.html to the canonical homepage.
+RewriteCond %{THE_REQUEST} \s/+index\.html(?:[?\s]) [NC]
+RewriteRule ^index\.html$ / [R=301,L]
+
+# Redirect direct .html requests to clean URLs (preserves query strings).
+# Example: /pages/inspection.html?source=home -> /pages/inspection?source=home
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.html(?:[?\s]) [NC]
+RewriteRule ^(.+)\.html$ /$1 [R=301,L,NE]
+
+# Internally serve the matching .html file for extensionless page requests.
+# Only GET/HEAD page requests are rewritten; API requests and assets are untouched.
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ $1.html [END]
