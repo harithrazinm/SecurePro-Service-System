@@ -466,17 +466,24 @@ WHERE
         'cancelled'
     )
     AND (
+        /* Keep work visible after it has moved beyond the payment gate. */
+        sr.status IN (
+            'assigned',
+            'in_progress',
+            'waiting_parts'
+        )
+        OR
         s.service_code IN (
             'troubleshoot_repair',
             'maintenance_service',
             'inspection'
         )
         OR (
-            q.payment_status = 'proof_uploaded'
+            q.payment_status IN ('proof_uploaded', 'verified')
             AND q.payment_proof_url IS NOT NULL
             AND TRIM(q.payment_proof_url) <> ''
         )
-            OR COALESCE(sr.updated_at, sr.created_at) <= DATE_SUB(NOW(), INTERVAL 48 HOUR)
+        OR COALESCE(sr.updated_at, sr.created_at) <= DATE_SUB(NOW(), INTERVAL 48 HOUR)
     )
 
 ORDER BY

@@ -76,6 +76,20 @@ async function loadServices() {
         }
     ];
 
+    // Keep the complete picker available if the public services API is briefly
+    // unavailable. The wizard itself still loads its questions from the API.
+    const fallbackServices = [
+        { id: "cctv", name: { en: "CCTV System", ms: "Sistem CCTV" } },
+        { id: "alarm", name: { en: "Alarm System", ms: "Sistem Penggera" } },
+        { id: "access", name: { en: "Access Control", ms: "Kawalan Akses" } },
+        { id: "attendance", name: { en: "Time Attendance", ms: "Kehadiran" } },
+        { id: "autogate", name: { en: "Autogate", ms: "Autogate" } },
+        { id: "barriergate", name: { en: "Barrier Gate", ms: "Pintu Penghadang" } },
+        { id: "pabx", name: { en: "PABX System", ms: "Sistem PABX" } },
+        { id: "solar_cctv", name: { en: "Solar CCTV", ms: "CCTV Solar" } },
+        { id: "solar_pump", name: { en: "Solar Water Pump", ms: "Pam Air Solar" } }
+    ];
+
     const normalizeId = value => String(value ?? "")
         .trim().toLowerCase().replace(/[\s-]+/g, "_");
 
@@ -137,13 +151,17 @@ card.innerHTML = `
         if (!result.success) throw new Error(result.message || t.error);
         apiServices = Array.isArray(result.data) ? result.data : [];
     } catch (error) {
-        // The two dedicated pages should still be available even if the API fails.
+        // Show every known service instead of silently reducing the picker to
+        // only the two dedicated pages when the API is unavailable.
         console.error("Load New System services error:", error);
         grid.innerHTML = "";
+        fallbackServices.forEach(service => grid.appendChild(makeCard(service)));
         dedicatedServices.forEach(service => grid.appendChild(makeCard(service, service)));
         const message = document.createElement("p");
         message.className = "loading";
-        message.textContent = t.error;
+        message.textContent = currentLanguage === "ms"
+            ? "Senarai sistem dipaparkan, tetapi sambungan servis terganggu. Sila cuba lagi jika borang tidak dapat dibuka."
+            : "Systems are shown, but the services connection is unavailable. Please retry if a request form does not open.";
         grid.appendChild(message);
         return;
     }
