@@ -1,16 +1,17 @@
+const dotenv = require("dotenv");
+dotenv.config();
+
+// Install file logging before loading route modules so startup dependency errors
+// (for example, a missing npm package on the host) are captured as well.
+const { installErrorLogging } = require("./utils/errorLogger");
+installErrorLogging();
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const dotenv = require("dotenv");
 const rateLimit = require("express-rate-limit");
 const { decorateMediaReferences } = require("./services/mediaStorage");
 const { streamAuthorizedMedia } = require("./services/mediaAccess");
-
-// ======================================================
-// LOAD ENVIRONMENT VARIABLES
-// ======================================================
-
-dotenv.config();
 
 // ======================================================
 // LOAD ROUTES AFTER ENVIRONMENT VARIABLES
@@ -510,7 +511,7 @@ app.use(
             "Unhandled server error:",
             {
                 method: req.method,
-                url: req.originalUrl,
+                url: req.path,
                 message: err.message,
                 stack: err.stack
             }
