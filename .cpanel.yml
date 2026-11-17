@@ -7,12 +7,16 @@ deployment:
     - /bin/cp -R admin assets css js pages super-admin technician "$FRONTENDPATH/"
     - /bin/cp index.html "$FRONTENDPATH/"
     - /bin/cp login.html "$FRONTENDPATH/"
+    - /bin/cp firebase-messaging-sw.js "$FRONTENDPATH/"
     # Preserve the cPanel-managed .htaccess in the document root. It contains
     # the Passenger mapping for the Node.js API; overwriting it with the
     # repository's clean-URL rules makes /api/* fall through to Apache (404).
-    - /bin/mkdir -p "$APPPATH/backend/services" "$APPPATH/backend/uploads"
+    - /bin/mkdir -p "$APPPATH/backend/services" "$APPPATH/backend/uploads" "$APPPATH/backend/data"
     - /bin/cp -R backend/config backend/controllers backend/middleware backend/routes "$APPPATH/backend/"
     - /bin/cp -R backend/services "$APPPATH/backend/"
     - /bin/cp backend/server.js backend/package.json backend/package-lock.json backend/migrateCloudinaryMedia.js "$APPPATH/backend/"
+    # cPanel's configured application root is securepro, so place its npm
+    # manifest there as well; Node resolves root node_modules from backend/.
+    - /bin/cp backend/package.json backend/package-lock.json "$APPPATH/"
     - /bin/cp backend/data/services.js "$APPPATH/backend/data/"
     - /bin/cp backend/uploads/.htaccess "$APPPATH/backend/uploads/.htaccess"
