@@ -6,6 +6,7 @@ const {
 } = require("../config/email");
 const { createSignedMediaUrl } = require("../services/mediaStorage");
 const { deleteLocalMediaIfUnreferenced } = require("../services/mediaAccess");
+const { sendSuperAdminQuotationPush } = require("../services/firebasePush");
 
 
 async function notifySuperAdminsOfQuotationReview({
@@ -15,31 +16,38 @@ async function notifySuperAdminsOfQuotationReview({
     serviceName,
     revisionNumber
 }) {
+    let emailSent = 0;
     try {
         const recipientEmail = String(process.env.SUPER_ADMIN_NOTIFICATION_EMAIL || "").trim();
         if (!recipientEmail) {
             console.warn("Quotation review email not sent: SUPER_ADMIN_NOTIFICATION_EMAIL is not configured.");
-            return { sent: 0, total: 0 };
+        } else {
+            const appUrl = String(process.env.PUBLIC_APP_URL || "https://sopro.my").replace(/\/+$/, "");
+            const reviewUrl = `${appUrl}/super-admin/quotation-approval.html`;
+            await sendQuotationReviewEmail({
+                recipientEmail,
+                recipientName: "Super Admin",
+                quotationNumber,
+                requestCode,
+                customerName,
+                serviceName,
+                revisionNumber,
+                reviewUrl
+            });
+            emailSent = 1;
         }
-
-        const appUrl = String(process.env.PUBLIC_APP_URL || "https://sopro.my").replace(/\/+$/, "");
-        const reviewUrl = `${appUrl}/super-admin/quotation-approval.html`;
-        await sendQuotationReviewEmail({
-            recipientEmail,
-            recipientName: "Super Admin",
-            quotationNumber,
-            requestCode,
-            customerName,
-            serviceName,
-            revisionNumber,
-            reviewUrl
-        });
-
-        return { sent: 1, total: 1 };
     } catch (error) {
-        console.error("Super Admin quotation notification error:", error.message);
-        return { sent: 0, total: 0 };
+        console.error("Super Admin quotation email notification error:", error.message);
     }
+
+    const appUrl = String(process.env.PUBLIC_APP_URL || "https://sopro.my").replace(/\/+$/, "");
+    const push = await sendSuperAdminQuotationPush({
+        title: "Quotation needs your review",
+        body: `${quotationNumber} · ${serviceName}${Number(revisionNumber) > 1 ? ` · Revision ${revisionNumber}` : ""}`,
+        link: `${appUrl}/super-admin/quotation-approval.html`
+    });
+
+    return { sent: emailSent, total: 1, pushSent: push.sent, pushTotal: push.total };
 }
 
 function quotationReviewMessage(notification, revisionNumber) {
@@ -47,11 +55,19 @@ function quotationReviewMessage(notification, revisionNumber) {
         ? "Revised quotation uploaded and submitted for Super Admin approval."
         : "Quotation uploaded successfully and submitted for Super Admin approval.";
 
+    if (notification.sent > 0 && notification.pushSent > 0) {
+        return `${base} Email and browser push notifications sent.`;
+    }
+
     if (notification.sent > 0) {
         return `${base} Email notification sent to the configured Super Admin address.`;
     }
 
-    return `${base} However, the Super Admin email notification could not be sent. Please check SUPER_ADMIN_NOTIFICATION_EMAIL and the SMTP settings.`;
+    if (notification.pushSent > 0) {
+        return `${base} Browser push notification sent; email could not be sent. Check the SMTP settings.`;
+    }
+
+    return `${base} However, email and browser push notifications could not be sent. Check SMTP and Firebase push settings.`;
 }
 
 
@@ -354,7 +370,8 @@ async function createQuotation(req, res) {
                     status: "draft",
                     approval_status: "pending_approval",
                     revision_number: nextRevision,
-                    email_notification_sent: notification.sent > 0
+                    email_notification_sent: notification.sent > 0,
+                    push_notification_sent: notification.pushSent > 0
                 }
             });
         }
@@ -461,7 +478,8 @@ async function createQuotation(req, res) {
                 status: "draft",
                 approval_status: "pending_approval",
                 revision_number: nextRevision,
-                email_notification_sent: notification.sent > 0
+                email_notification_sent: notification.sent > 0,
+                push_notification_sent: notification.pushSent > 0
             }
         });
 
@@ -747,7 +765,8 @@ async function updateQuotation(req, res) {
                     notes,
                     approval_status: "pending_approval",
                     revision_number: nextRevision,
-                    email_notification_sent: notification.sent > 0
+                    email_notification_sent: notification.sent > 0,
+                    push_notification_sent: notification.pushSent > 0
                 }
             });
 

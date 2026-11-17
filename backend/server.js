@@ -421,6 +421,14 @@ app.get("/", (req, res) => {
     );
 });
 
+// Firebase requires the messaging worker to be available at the domain root.
+app.get("/firebase-messaging-sw.js", (req, res) => {
+    res.set("Service-Worker-Allowed", "/");
+    res.type("application/javascript").sendFile(
+        path.join(__dirname, "..", "firebase-messaging-sw.js")
+    );
+});
+
 // ======================================================
 // 404 HANDLER
 // ======================================================

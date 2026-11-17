@@ -2246,6 +2246,17 @@ tbody td small {
     font-size: 16px;
 }
 
+.push-notification-status {
+    max-width: 220px;
+    color: #667085;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.push-notification-status.push-status-error {
+    color: #b42318;
+}
+
 /* ---------- RECENT PROJECTS PANEL ---------- */
 
 .panel.dashboard-panel {
