@@ -1,10 +1,58 @@
 const crypto = require("crypto");
 const pool = require("../config/db");
 const {
-    sendQuotationEmail
+    sendQuotationEmail,
+    sendQuotationReviewEmail
 } = require("../config/email");
 const { createSignedMediaUrl } = require("../services/mediaStorage");
 const { deleteLocalMediaIfUnreferenced } = require("../services/mediaAccess");
+
+
+async function notifySuperAdminsOfQuotationReview({
+    quotationNumber,
+    requestCode,
+    customerName,
+    serviceName,
+    revisionNumber
+}) {
+    try {
+        const recipientEmail = String(process.env.SUPER_ADMIN_NOTIFICATION_EMAIL || "").trim();
+        if (!recipientEmail) {
+            console.warn("Quotation review email not sent: SUPER_ADMIN_NOTIFICATION_EMAIL is not configured.");
+            return { sent: 0, total: 0 };
+        }
+
+        const appUrl = String(process.env.PUBLIC_APP_URL || "https://sopro.my").replace(/\/+$/, "");
+        const reviewUrl = `${appUrl}/super-admin/quotation-approval.html`;
+        await sendQuotationReviewEmail({
+            recipientEmail,
+            recipientName: "Super Admin",
+            quotationNumber,
+            requestCode,
+            customerName,
+            serviceName,
+            revisionNumber,
+            reviewUrl
+        });
+
+        return { sent: 1, total: 1 };
+    } catch (error) {
+        console.error("Super Admin quotation notification error:", error.message);
+        return { sent: 0, total: 0 };
+    }
+}
+
+function quotationReviewMessage(notification, revisionNumber) {
+    const base = revisionNumber > 1
+        ? "Revised quotation uploaded and submitted for Super Admin approval."
+        : "Quotation uploaded successfully and submitted for Super Admin approval.";
+
+    if (notification.sent > 0) {
+        return `${base} Email notification sent to the configured Super Admin address.`;
+    }
+
+    return `${base} However, the Super Admin email notification could not be sent. Please check SUPER_ADMIN_NOTIFICATION_EMAIL and the SMTP settings.`;
+}
 
 
 /* =========================================================
@@ -193,13 +241,16 @@ async function createQuotation(req, res) {
             await connection.query(
                 `
                 SELECT
-                    id,
-                    request_code,
-                    customer_name,
-                    service_id,
-                    status
-                FROM service_requests
-                WHERE id = ?
+                    sr.id,
+                    sr.request_code,
+                    sr.customer_name,
+                    sr.service_id,
+                    sr.status,
+                    s.name_en AS service_name
+                FROM service_requests sr
+                LEFT JOIN services s
+                    ON s.id = sr.service_id
+                WHERE sr.id = ?
                 LIMIT 1
                 `,
                 [
@@ -286,15 +337,24 @@ async function createQuotation(req, res) {
                 error.message
             ));
 
+            const notification = await notifySuperAdminsOfQuotationReview({
+                quotationNumber: existing.quotation_number,
+                requestCode: request.request_code,
+                customerName: request.customer_name,
+                serviceName: request.service_name,
+                revisionNumber: nextRevision
+            });
+
             return res.status(200).json({
                 success: true,
-                message: "Revised quotation uploaded and submitted for Super Admin approval.",
+                message: quotationReviewMessage(notification, nextRevision),
                 data: {
                     id: existing.id,
                     quotation_number: existing.quotation_number,
                     status: "draft",
                     approval_status: "pending_approval",
-                    revision_number: nextRevision
+                    revision_number: nextRevision,
+                    email_notification_sent: notification.sent > 0
                 }
             });
         }
@@ -383,17 +443,25 @@ async function createQuotation(req, res) {
             ]
         );
 
+        const notification = await notifySuperAdminsOfQuotationReview({
+            quotationNumber,
+            requestCode: request.request_code,
+            customerName: request.customer_name,
+            serviceName: request.service_name,
+            revisionNumber: nextRevision
+        });
+
 
         return res.status(201).json({
             success: true,
-            message:
-                "Quotation uploaded successfully and submitted for Super Admin approval.",
+            message: quotationReviewMessage(notification, nextRevision),
             data: {
                 id,
                 quotation_number: quotationNumber,
                 status: "draft",
                 approval_status: "pending_approval",
-                revision_number: nextRevision
+                revision_number: nextRevision,
+                email_notification_sent: notification.sent > 0
             }
         });
 
@@ -575,15 +643,23 @@ async function updateQuotation(req, res) {
 
         const [rows] = await connection.query(`
             SELECT
-                id,
-                quotation_number,
-                quotation_type,
-                quotation_file_url,
-                quotation_file_name,
-                approval_status,
-                revision_number
-            FROM quotations
-            WHERE id = ?
+                q.id,
+                q.quotation_number,
+                q.request_id,
+                q.quotation_type,
+                q.quotation_file_url,
+                q.quotation_file_name,
+                q.approval_status,
+                q.revision_number,
+                r.request_code,
+                r.customer_name,
+                s.name_en AS service_name
+            FROM quotations q
+            INNER JOIN service_requests r
+                ON r.id = q.request_id
+            LEFT JOIN services s
+                ON s.id = r.service_id
+            WHERE q.id = ?
             LIMIT 1
         `, [quotationId]);
 
@@ -652,6 +728,29 @@ async function updateQuotation(req, res) {
                 connection
             ).catch(error => console.error("Unable to remove replaced quotation file:", error.message));
 
+            const notification = await notifySuperAdminsOfQuotationReview({
+                quotationNumber: quotation.quotation_number,
+                requestCode: quotation.request_code,
+                customerName: quotation.customer_name,
+                serviceName: quotation.service_name,
+                revisionNumber: nextRevision
+            });
+
+            return res.json({
+                success: true,
+                message: quotationReviewMessage(notification, nextRevision),
+                data: {
+                    id: quotationId,
+                    quotation_number: quotation.quotation_number,
+                    quotation_file_url: fileUrl,
+                    quotation_file_name: fileName,
+                    notes,
+                    approval_status: "pending_approval",
+                    revision_number: nextRevision,
+                    email_notification_sent: notification.sent > 0
+                }
+            });
+
         } else {
 
             await connection.query(`
@@ -666,21 +765,16 @@ async function updateQuotation(req, res) {
 
         return res.json({
             success: true,
-            message: replacingPdf
-                ? "Revised quotation uploaded and submitted for Super Admin approval."
-                : "Quotation updated successfully.",
+            message: "Quotation updated successfully.",
             data: {
                 id: quotationId,
                 quotation_number: quotation.quotation_number,
                 quotation_file_url: fileUrl,
                 quotation_file_name: fileName,
                 notes,
-                approval_status: replacingPdf
-                    ? "pending_approval"
-                    : quotation.approval_status,
-                revision_number: replacingPdf
-                    ? nextRevision
-                    : quotation.revision_number
+                approval_status: quotation.approval_status,
+                revision_number: quotation.revision_number,
+                email_notification_sent: false
             }
         });
 

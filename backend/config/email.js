@@ -25,6 +25,18 @@ function quotationPdfUrl(url) {
         : normalizedPath;
 }
 
+function getMailFromAddress() {
+    return process.env.MAIL_FROM || process.env.SMTP_FROM || "";
+}
+
+function isSmtpSecure() {
+    if (process.env.SMTP_SECURE !== undefined) {
+        return process.env.SMTP_SECURE === "true";
+    }
+
+    return Number(process.env.SMTP_PORT || 465) === 465;
+}
+
 /*
  * GB Network SMTP
  *
@@ -35,7 +47,7 @@ function quotationPdfUrl(url) {
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 465),
-    secure: process.env.SMTP_SECURE === "true",
+    secure: isSmtpSecure(),
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD
@@ -50,6 +62,8 @@ async function sendQuotationEmail({
     quotationFileAccessUrl,
     quotationFileName
 }) {
+    const mailFrom = getMailFromAddress();
+
     if (!process.env.SMTP_HOST) {
         throw new Error("SMTP_HOST is not configured.");
     }
@@ -62,8 +76,8 @@ async function sendQuotationEmail({
         throw new Error("SMTP_PASSWORD is not configured.");
     }
 
-    if (!process.env.MAIL_FROM) {
-        throw new Error("MAIL_FROM is not configured.");
+    if (!mailFrom) {
+        throw new Error("MAIL_FROM or SMTP_FROM is not configured.");
     }
 
     if (!customerEmail) {
@@ -116,13 +130,13 @@ async function sendQuotationEmail({
     }
 
     const mailOptions = {
-        from: `"${senderName}" <${process.env.MAIL_FROM}>`,
+        from: `"${senderName}" <${mailFrom}>`,
 
-        replyTo: process.env.MAIL_FROM,
+        replyTo: mailFrom,
 
         to: [
             {
-                email: customerEmail,
+                address: customerEmail,
                 name: customerName || "Customer"
             }
         ],
@@ -193,6 +207,72 @@ Thank you for choosing SecurePro System Solutions.`,
     return result;
 }
 
+async function sendQuotationReviewEmail({
+    recipientEmail,
+    recipientName,
+    quotationNumber,
+    requestCode,
+    customerName,
+    serviceName,
+    revisionNumber,
+    reviewUrl
+}) {
+    const mailFrom = getMailFromAddress();
+
+    const missingSettings = [
+        !process.env.SMTP_HOST && "SMTP_HOST",
+        !process.env.SMTP_USER && "SMTP_USER",
+        !process.env.SMTP_PASSWORD && "SMTP_PASSWORD",
+        !mailFrom && "MAIL_FROM or SMTP_FROM"
+    ].filter(Boolean);
+
+    if (missingSettings.length) {
+        throw new Error(`SMTP email settings are incomplete: ${missingSettings.join(", ")}.`);
+    }
+
+    if (!recipientEmail) {
+        throw new Error("Super Admin email address is missing.");
+    }
+
+    const safeRecipientName = escapeHtml(recipientName || "Super Admin");
+    const safeQuotationNumber = escapeHtml(quotationNumber || "Quotation");
+    const safeRequestCode = escapeHtml(requestCode || "Service request");
+    const safeCustomerName = escapeHtml(customerName || "Customer");
+    const safeServiceName = escapeHtml(serviceName || "Service");
+    const revision = Math.max(1, Number(revisionNumber) || 1);
+    const reviewLabel = revision > 1
+        ? `Revision ${revision} submitted for review`
+        : "New quotation submitted for review";
+    const safeReviewUrl = escapeHtml(reviewUrl);
+
+    const result = await transporter.sendMail({
+        from: `"${process.env.MAIL_FROM_NAME || "SecurePro System Solutions"}" <${mailFrom}>`,
+        replyTo: mailFrom,
+        to: [{ address: recipientEmail, name: recipientName || "Super Admin" }],
+        subject: `Review required: ${quotationNumber} — ${requestCode}`,
+        text: `Dear ${recipientName || "Super Admin"},\n\n${reviewLabel}: ${quotationNumber}\nRequest: ${requestCode}\nCustomer: ${customerName || "Customer"}\nService: ${serviceName || "Service"}\n\nSign in to SecurePro to review the quotation: ${reviewUrl}\n\nThis is an automated notification from SecurePro System Solutions.`,
+        html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033;max-width:600px">
+            <h2 style="color:#1d4ed8">Quotation review required</h2>
+            <p>Dear ${safeRecipientName},</p>
+            <p>${escapeHtml(reviewLabel)}: <strong>${safeQuotationNumber}</strong></p>
+            <table style="border-collapse:collapse;width:100%;margin:16px 0">
+                <tr><td style="padding:7px 0;color:#64748b">Request</td><td style="padding:7px 0"><strong>${safeRequestCode}</strong></td></tr>
+                <tr><td style="padding:7px 0;color:#64748b">Customer</td><td style="padding:7px 0">${safeCustomerName}</td></tr>
+                <tr><td style="padding:7px 0;color:#64748b">Service</td><td style="padding:7px 0">${safeServiceName}</td></tr>
+            </table>
+            <p><a href="${safeReviewUrl}" style="display:inline-block;padding:11px 18px;background:#2563eb;color:#fff;text-decoration:none;border-radius:7px;font-weight:700">Review quotation</a></p>
+            <p style="font-size:13px;color:#64748b">Sign in to the SecurePro Super Admin account to view and review the quotation. This is an automated notification.</p>
+        </div>`
+    });
+
+    if (result.rejected?.some(address => String(address).toLowerCase() === String(recipientEmail).toLowerCase()) || result.accepted?.length === 0) {
+        throw new Error("SMTP server did not accept the Super Admin recipient address.");
+    }
+
+    return result;
+}
+
 module.exports = {
-    sendQuotationEmail
+    sendQuotationEmail,
+    sendQuotationReviewEmail
 };
