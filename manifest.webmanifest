@@ -1,0 +1,24 @@
+{
+  "id": "/super-admin/",
+  "name": "SOPro Super Admin",
+  "short_name": "SOPro",
+  "description": "SecureOnePro Super Admin workspace and quotation alerts.",
+  "start_url": "/super-admin/login.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fc",
+  "theme_color": "#14233a",
+  "icons": [
+    {
+      "src": "/assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
