@@ -7,7 +7,6 @@ const {
     getDashboardCategoryFiles
 } = require("../controllers/superAdminController");
 const {
-    getPushConfig,
     saveSubscription,
     removeSubscription
 } = require("../controllers/superAdminPushController");
@@ -23,7 +22,6 @@ router.get("/projects/:id", getProjectById);
 router.get("/dashboard/files", getDashboardCategoryFiles);
 
 // A Super Admin can register or remove only their own authenticated browser token.
-router.get("/push-config", getPushConfig);
 router.post("/push-subscriptions", saveSubscription);
 router.delete("/push-subscriptions", removeSubscription);
 
