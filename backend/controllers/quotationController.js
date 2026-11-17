@@ -6,7 +6,7 @@ const {
 } = require("../config/email");
 const { createSignedMediaUrl } = require("../services/mediaStorage");
 const { deleteLocalMediaIfUnreferenced } = require("../services/mediaAccess");
-const { sendSuperAdminQuotationPush } = require("../services/webPush");
+const { sendSuperAdminQuotationPush } = require("../services/firebasePush");
 
 
 async function notifySuperAdminsOfQuotationReview({
@@ -47,13 +47,7 @@ async function notifySuperAdminsOfQuotationReview({
         link: `${appUrl}/super-admin/quotation-approval.html`
     });
 
-    return {
-        sent: emailSent,
-        total: 1,
-        pushSent: push.sent,
-        pushTotal: push.total,
-        pushEnabled: push.enabled
-    };
+    return { sent: emailSent, total: 1, pushSent: push.sent, pushTotal: push.total };
 }
 
 function quotationReviewMessage(notification, revisionNumber) {
@@ -66,15 +60,6 @@ function quotationReviewMessage(notification, revisionNumber) {
     }
 
     if (notification.sent > 0) {
-        if (!notification.pushEnabled) {
-            return `${base} Email sent. Browser push is not configured on the server yet.`;
-        }
-        if (notification.pushTotal === 0) {
-            return `${base} Email sent. No Super Admin devices are registered for browser push.`;
-        }
-        if (notification.pushTotal > 0) {
-            return `${base} Email sent, but browser push delivery failed; check the backend log.`;
-        }
         return `${base} Email notification sent to the configured Super Admin address.`;
     }
 
@@ -82,7 +67,7 @@ function quotationReviewMessage(notification, revisionNumber) {
         return `${base} Browser push notification sent; email could not be sent. Check the SMTP settings.`;
     }
 
-    return `${base} However, email and browser push notifications could not be sent. Check SMTP and Web Push VAPID settings.`;
+    return `${base} However, email and browser push notifications could not be sent. Check SMTP and Firebase push settings.`;
 }
 
 

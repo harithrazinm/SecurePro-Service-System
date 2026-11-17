@@ -107,17 +107,6 @@ const allowedOrigins = [
 "https://www.sopro.my"
 ];
 
-// Temporary HTTPS tunnel origins can be allowlisted per environment without
-// accepting arbitrary ngrok subdomains or weakening production CORS.
-const configuredOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
-    .split(",")
-    .map(origin => origin.trim())
-    .filter(Boolean);
-const corsAllowedOrigins = new Set([
-    ...allowedOrigins,
-    ...configuredOrigins
-]);
-
 app.use(
     cors({
         origin: function (origin, callback) {
@@ -128,7 +117,7 @@ app.use(
                 return callback(null, true);
             }
 
-            if (corsAllowedOrigins.has(origin)) {
+            if (allowedOrigins.includes(origin)) {
                 return callback(null, true);
             }
 
@@ -432,26 +421,12 @@ app.get("/", (req, res) => {
     );
 });
 
-// Standard Web Push requires the worker and PWA manifest at the domain root.
-// Keep the former Firebase worker URL as a temporary alias so browsers with an
-// existing registration can update instead of repeatedly receiving a 404.
-app.get(["/service-worker.js", "/firebase-messaging-sw.js"], (req, res) => {
+// Firebase requires the messaging worker to be available at the domain root.
+app.get("/firebase-messaging-sw.js", (req, res) => {
     res.set("Service-Worker-Allowed", "/");
     res.type("application/javascript").sendFile(
-        path.join(__dirname, "..", "service-worker.js")
+        path.join(__dirname, "..", "firebase-messaging-sw.js")
     );
-});
-
-app.get("/manifest.webmanifest", (req, res) => {
-    res.type("application/manifest+json").sendFile(
-        path.join(__dirname, "..", "manifest.webmanifest")
-    );
-});
-
-// The shared staff login is a root-level HTML page. Serve it explicitly so
-// local HTTPS tunnels and the Node-hosted frontend can follow super-admin/login's redirect.
-app.get("/login.html", (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "login.html"));
 });
 
 // ======================================================
