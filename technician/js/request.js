@@ -4313,29 +4313,6 @@ function addCompletionMedia(
     }
 
 
-    /*
-     * Maximum 10 files.
-     */
-
-    if (
-        selectedCompletionMedia.length >
-        10
-    ) {
-
-        selectedCompletionMedia =
-            selectedCompletionMedia.slice(
-                0,
-                10
-            );
-
-
-        alert(
-            "You can upload a maximum of 10 photos/videos."
-        );
-
-    }
-
-
     renderMediaPreview();
 
 }
@@ -4431,28 +4408,6 @@ function validateCompletionMedia() {
         100 *
         1024 *
         1024;
-
-
-    /*
-     * Maximum files.
-     */
-
-    if (
-        files.length >
-        10
-    ) {
-
-        return {
-
-            valid:
-                false,
-
-            message:
-                "You can upload a maximum of 10 photos/videos."
-
-        };
-
-    }
 
 
     /*

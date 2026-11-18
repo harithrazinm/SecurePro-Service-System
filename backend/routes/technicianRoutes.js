@@ -95,9 +95,6 @@ const upload =
         storage,
 
         limits: {
-
-            files: 10,
-
             fileSize:
                 100 * 1024 * 1024
 
@@ -219,8 +216,7 @@ router.post(
     "/requests/:id/report",
 
     upload.array(
-        "completion_media",
-        10
+        "completion_media"
     ),
     prepareUploadedFiles,
     cleanupOnControllerFailure(submitWorkReport)
@@ -263,23 +259,6 @@ router.use(
 
                     message:
                         "One file is too large. Maximum size is 100 MB."
-
-                });
-
-            }
-
-
-            if (
-                error.code ===
-                "LIMIT_FILE_COUNT"
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Maximum 10 files are allowed."
 
                 });
 
