@@ -73,7 +73,27 @@ let editingQuotation =
 
 const REQUEST_OVERDUE_AFTER_MS = 48 * 60 * 60 * 1000;
 const quotationOverdueCount = document.querySelector("#quotationOverdueCount");
+const ENQUIRY_SERVICE_CATEGORIES = [
+    { key: "new_system", label: "New System", description: "New equipment and system installations" },
+    { key: "inspection", label: "Inspection", description: "Inspections and site assessments" },
+    { key: "maintenance", label: "Maintenance & Service", description: "Preventive maintenance and servicing" },
+    { key: "troubleshooting", label: "Troubleshooting / Repair", description: "Fault diagnosis and repair requests" }
+];
 
+function getEnquiryCategoryKey(item) {
+    const code = String(
+        item?.service_code || item?.service?.code || item?.service_type || item?.category || ""
+    ).trim().toLowerCase().replace(/[\s-]+/g, "_");
+    const name = String(
+        item?.service_name || item?.service_name_en || item?.service?.name?.en || ""
+    ).trim().toLowerCase();
+    const value = `${code} ${name}`;
+
+    if (/\binspection\b|\binspect\b/.test(value)) return "inspection";
+    if (/maintenance|\bservicing\b/.test(value)) return "maintenance";
+    if (/troubleshoot|\brepair\b|\bbreakdown\b/.test(value)) return "troubleshooting";
+    return "new_system";
+}
 
 /* =========================================================
    ERROR
@@ -617,6 +637,10 @@ function renderQuotations() {
         return;
     }
 
+    filtered.sort((a, b) => {
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    });
+
 
     tableBody.innerHTML =
         filtered
@@ -649,7 +673,6 @@ function renderQuotations() {
 
 
                     return `
-
                         <tr>
 
                             <!-- =========================
@@ -1140,8 +1163,23 @@ function renderQuotations() {
                 }
             )
             .join("");
+    moveFollowUpColumnToEnd();
 }
 
+function moveFollowUpColumnToEnd() {
+    const table = tableBody?.closest("table");
+    const headerRow = table?.querySelector("thead tr");
+    if (!table || !headerRow) return;
+
+    const headerCells = Array.from(headerRow.cells);
+    const followUpHeader = headerCells.find(cell => cell.textContent.trim().toLowerCase() === "follow-up");
+    if (followUpHeader) headerRow.appendChild(followUpHeader);
+
+    tableBody.querySelectorAll("tr").forEach(row => {
+        if (row.cells.length !== 9) return;
+        row.appendChild(row.cells[6]);
+    });
+}
 
 /* =========================================================
    LOAD QUOTATIONS
@@ -1280,6 +1318,10 @@ function getRequestServiceName(request) {
         return request.service_name;
     }
 
+    if (typeof request?.service_name_en === "string") {
+        return request.service_name_en;
+    }
+
     if (
         typeof request?.service_type === "string"
     ) {
@@ -1345,12 +1387,6 @@ function renderQuotationJobQueue() {
         })
         .slice()
         .sort((a, b) => {
-            const aActivity = getRequestLastActivity(a);
-            const bActivity = getRequestLastActivity(b);
-            const aOverdue = aActivity && Date.now() - aActivity.getTime() >= REQUEST_OVERDUE_AFTER_MS;
-            const bOverdue = bActivity && Date.now() - bActivity.getTime() >= REQUEST_OVERDUE_AFTER_MS;
-            if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
-            if (aOverdue && bOverdue) return aActivity - bActivity;
             const aDate = new Date(getRequestSubmittedDate(a) || 0).getTime();
             const bDate = new Date(getRequestSubmittedDate(b) || 0).getTime();
             return bDate - aDate;
@@ -1378,7 +1414,32 @@ function renderQuotationJobQueue() {
         return;
     }
 
-    quotationJobList.innerHTML = jobs.map(request => {
+    const groupedJobs = ENQUIRY_SERVICE_CATEGORIES.map(category => ({
+        ...category,
+        requests: jobs.filter(request => getEnquiryCategoryKey(request) === category.key)
+    }));
+
+    quotationJobList.innerHTML = groupedJobs.map(category => `
+        <details class="quotation-category-group" data-category="${category.key}" ${category.requests.length ? "open" : ""}>
+            <summary class="quotation-category-summary">
+                <span class="quotation-category-mark" aria-hidden="true"></span>
+                <span class="quotation-category-heading">
+                    <strong>${escapeHtml(category.label)}</strong>
+                    <small>${escapeHtml(category.description)}</small>
+                </span>
+                <span class="quotation-category-count">${category.requests.length} ${category.requests.length === 1 ? "job" : "jobs"}</span>
+                <span class="quotation-category-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="quotation-category-items">
+                ${category.requests.length
+                    ? category.requests.map(request => renderQuotationJobItem(request, quotationCountByRequest)).join("")
+                    : `<div class="quotation-category-empty">No enquiries in this section.</div>`}
+            </div>
+        </details>
+    `).join("");
+}
+
+function renderQuotationJobItem(request, quotationCountByRequest) {
         const requestId = escapeHtml(request.id);
         const requestKey = String(request.id);
         const count = quotationCountByRequest.get(requestKey) || 0;
@@ -1390,6 +1451,7 @@ function renderQuotationJobQueue() {
         const requestCode = escapeHtml(request.request_code || request.code || 'Service Request');
         const customer = escapeHtml(getRequestCustomerName(request));
         const service = escapeHtml(getRequestServiceName(request));
+        const categoryKey = getEnquiryCategoryKey(request);
         const status = escapeHtml(formatStatus(request.status || 'pending'));
         const submitted = escapeHtml(formatDate(getRequestSubmittedDate(request)));
         const lastActivity = getRequestLastActivity(request);
@@ -1413,11 +1475,15 @@ function renderQuotationJobQueue() {
                     </div>
                     ${isOverdue ? `<a class="quotation-overdue-review" href="request.html?id=${encodeURIComponent(request.id)}">Review request →</a>` : ''}
                 </div>
-                <button type="button" class="quotation-job-upload" data-upload-quotation="${requestId}">
-                    ${revisionRequired ? 'Submit Revised Quotation' : existingOriginal ? 'Update Existing Quotation' : count ? 'Upload Quotation' : 'Upload Quotation'}
-                </button>
+                <div class="quotation-job-actions${categoryKey !== "new_system" ? " has-assign" : ""}">
+                    <button type="button" class="quotation-job-upload" data-upload-quotation="${requestId}">
+                        ${revisionRequired ? 'Submit Revised Quotation' : existingOriginal ? 'Update Existing Quotation' : 'Upload Quotation'}
+                    </button>
+                    ${categoryKey !== "new_system"
+                        ? `<a class="quotation-job-assign" href="request.html?id=${encodeURIComponent(request.id)}#technicianAssignmentSection">Assign Technician</a>`
+                        : ""}
+                </div>
             </article>`;
-    }).join('');
 }
 
 /* =========================================================

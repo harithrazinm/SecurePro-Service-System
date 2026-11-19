@@ -340,6 +340,14 @@ async function loadRequest({ silent = false } = {}) {
     } finally {
         if (!silent && loading) loading.hidden = true;
         if (details && requestData) details.hidden = false;
+        if (!silent && requestData && location.hash === "#technicianAssignmentSection") {
+            requestAnimationFrame(() => {
+                document.querySelector("#technicianAssignmentSection")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            });
+        }
     }
 }
 
