@@ -288,59 +288,74 @@ This stylesheet is only for the Projects page.
 
 
 /* =========================================================
-   SEARCH + FILTER
+   SEARCH + STATUS FILTERS (matched to Enquiry)
 ========================================================= */
 
-.toolbar {
-    display: grid;
-
-    grid-template-columns:
-        minmax(250px, 1fr)
-        210px;
-
-    gap: 12px;
-
-    margin-bottom: 18px;
+.job-panel-head {
+    align-items: flex-end;
+    gap: 18px;
 }
 
-.toolbar input,
-.toolbar select {
-    width: 100%;
-    height: 45px;
+.job-panel-head h2 {
+    margin: 4px 0 0;
+}
 
-    padding: 0 14px;
+.project-status-filters {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 7px;
+}
 
-    border: 1px solid var(--project-border);
+.project-status-filters .filter-button {
+    padding: 8px 13px;
+    border: 1px solid #e5eaf0;
     border-radius: 9px;
+    background: #fff;
+    color: #667085;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
 
+.project-status-filters .filter-button:hover {
+    border-color: #123c69;
+    color: #123c69;
+}
+
+.project-status-filters .filter-button.active {
+    border-color: #123c69;
+    background: #123c69;
+    color: #fff;
+}
+
+.project-search {
+    margin: 0 18px 16px;
+}
+
+.project-search input {
+    width: 100%;
+    max-width: 420px;
+    padding: 11px 14px;
+    border: 1px solid #e5eaf0;
+    border-radius: 10px;
     outline: none;
-
-    background: #ffffff;
-    color: var(--project-text);
-
-    font-family: inherit;
-    font-size: 13px;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+    background: #fff;
+    color: #17212b;
+    font: inherit;
 }
 
-.toolbar input::placeholder {
-    color: #94a3b8;
+.project-search input::placeholder {
+    color: #98a2b3;
 }
 
-.toolbar input:hover,
-.toolbar select:hover {
-    border-color: #cbd5e1;
-}
-
-.toolbar input:focus,
-.toolbar select:focus {
-    border-color: #60a5fa;
-
-    box-shadow:
-        0 0 0 3px rgba(59, 130, 246, 0.10);
+.project-search input:focus {
+    border-color: #123c69;
+    box-shadow: 0 0 0 3px rgba(18, 60, 105, 0.08);
 }
 
 
@@ -795,8 +810,23 @@ table a.doc:hover {
         width: 100%;
     }
 
-    .toolbar {
-        grid-template-columns: 1fr;
+    .job-panel-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .project-status-filters {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .project-search {
+        margin-inline: 12px;
+    }
+
+    .project-status-filters .filter-button {
+        padding: 8px 11px;
+        font-size: 11px;
     }
 }
 

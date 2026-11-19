@@ -17,7 +17,7 @@ const TOKEN_KEY = "securepro_super_admin_token";
 const USER_KEY = "securepro_super_admin_user";
 const OVERDUE_AFTER_MS = 48 * 60 * 60 * 1000;
 const CLOSED_STATUSES = new Set(["completed", "cancelled", "canceled"]);
-const ACTIVE_JOB_STATUSES = new Set(["pending", "assigned", "in_progress", "waiting_parts", "awaiting_payment"]);
+const ACTIVE_JOB_STATUSES = new Set(["in_progress", "waiting_parts", "awaiting_payment"]);
 
 // =========================================================
 // HELPERS
@@ -338,7 +338,7 @@ async function load() {
 function render() {
 
     const searchInput = $("#searchInput");
-    const statusFilter = $("#statusFilter");
+    const statusFilters = $("#statusFilters");
     const projectTable = $("#projectTable");
     const countLabel = $("#countLabel");
 
@@ -375,8 +375,8 @@ function render() {
 
     // Status filter
 
-    const selectedStatus = statusFilter
-        ? statusFilter.value
+    const selectedStatus = statusFilters
+        ? statusFilters.querySelector(".filter-button.active")?.dataset.status ?? ""
         : "";
 
 
@@ -668,22 +668,40 @@ if (!token()) {
     }
 
 
-    // Status filter
+    // Status filters styled like the Enquiry page.
 
-    const statusFilter = $("#statusFilter");
+    const statusFilters = $("#statusFilters");
+    const pendingJobsPage = new URLSearchParams(location.search).get("status") === "active";
 
-    if (statusFilter && new URLSearchParams(location.search).get("status") === "active") {
-        statusFilter.value = "active";
+    if (statusFilters && pendingJobsPage) {
+        const allButton = statusFilters.querySelector('[data-status=""]');
+        if (allButton) {
+            allButton.dataset.status = "active";
+            allButton.textContent = "All active";
+        }
+        statusFilters.querySelectorAll('[data-status="pending"], [data-status="assigned"], [data-status="completed"]').forEach(button => {
+            button.hidden = true;
+        });
         document.querySelector('nav a[href="projects.html"]')?.classList.remove("active");
         document.querySelector('nav a[href="projects.html?status=active"]')?.classList.add("active");
         const pageTitle = $(".topbar h1");
         const introTitle = $(".intro h2");
         if (pageTitle) pageTitle.textContent = "Pending Jobs";
-        if (introTitle) introTitle.textContent = "Pending, In-Progress & Awaiting Payment Jobs";
+        if (introTitle) introTitle.textContent = "In-progress jobs through awaiting payment";
     }
 
-    if (statusFilter) {
-        statusFilter.onchange = render;
+    if (statusFilters) {
+        statusFilters.addEventListener("click", event => {
+            const button = event.target.closest(".filter-button");
+            if (!button || button.hidden) return;
+
+            statusFilters.querySelectorAll(".filter-button").forEach(filterButton => {
+                const selected = filterButton === button;
+                filterButton.classList.toggle("active", selected);
+                filterButton.setAttribute("aria-pressed", String(selected));
+            });
+            render();
+        });
     }
 
 

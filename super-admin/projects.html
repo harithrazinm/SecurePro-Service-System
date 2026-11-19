@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>SOPro | Super Admin Projects</title>
     <link rel="stylesheet" href="css/super-admin.css">
-    <link rel="stylesheet" href="css/projects.css">
+    <link rel="stylesheet" href="css/projects.css?v=20261119-2">
     <link rel="icon" type="image/png" href="/assets/favicon.png">
 </head>
 
@@ -55,20 +55,24 @@
                     <article class="job-summary-card waiting"><span>Waiting Parts</span><strong id="jobCountWaiting">0</strong></article>
                     <article class="job-summary-card payment"><span>Awaiting Payment</span><strong id="jobCountPayment">0</strong></article>
                 </section>
-                <div class="toolbar"><input id="searchInput"
-                        placeholder="Search project, customer or technician..."><select id="statusFilter">
-                        <option value="">All Status</option>
-                        <option value="active">Pending, In Progress &amp; Awaiting Payment</option>
-                        <option value="pending">Pending</option>
-                        <option value="assigned">Assigned</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="waiting_parts">Waiting Parts</option>
-                        <option value="awaiting_payment">Awaiting Payment</option>
-                        <option value="completed">Completed</option>
-                    </select></div>
                 <section class="panel">
-                    <div class="panel-head">
-                        <h2 id="countLabel">Projects</h2>
+                    <div class="panel-head job-panel-head">
+                        <div>
+                            <span class="eyebrow">JOB STATUS</span>
+                            <h2 id="countLabel">Projects</h2>
+                        </div>
+                        <div id="statusFilters" class="project-status-filters" role="group" aria-label="Filter jobs by status">
+                            <button type="button" class="filter-button active" data-status="" aria-pressed="true">All</button>
+                            <button type="button" class="filter-button" data-status="pending" aria-pressed="false">Pending</button>
+                            <button type="button" class="filter-button" data-status="assigned" aria-pressed="false">Assigned</button>
+                            <button type="button" class="filter-button" data-status="in_progress" aria-pressed="false">In Progress</button>
+                            <button type="button" class="filter-button" data-status="waiting_parts" aria-pressed="false">Waiting Parts</button>
+                            <button type="button" class="filter-button" data-status="awaiting_payment" aria-pressed="false">Awaiting Payment</button>
+                            <button type="button" class="filter-button" data-status="completed" aria-pressed="false">Completed</button>
+                        </div>
+                    </div>
+                    <div class="project-search">
+                        <input id="searchInput" type="search" placeholder="Search project, customer or technician..." autocomplete="off">
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -96,7 +100,7 @@
             </section>
         </main>
     </div>
-    <script src="js/projects.js?v=20261118-4"></script>
+    <script src="js/projects.js?v=20261119-2"></script>
     <script src="js/session-timeout.js"></script>
 
 </body>
