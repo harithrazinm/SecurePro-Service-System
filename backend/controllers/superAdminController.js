@@ -330,6 +330,7 @@ async function getDashboard(req, res) {
                 q.quotation_file_name,
 
                 q.status AS quotation_status,
+                q.approval_status AS quotation_approval_status,
 
                 q.created_at AS quotation_created_at,
                 q.sent_at AS quotation_sent_at,
@@ -514,6 +515,7 @@ async function getProjects(req, res) {
                 q.quotation_number,
 
                 q.status AS quotation_status,
+                q.approval_status AS quotation_approval_status,
 
                 q.quotation_file_url,
                 q.quotation_file_name,

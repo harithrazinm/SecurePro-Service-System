@@ -17,6 +17,7 @@ const TOKEN_KEY = "securepro_super_admin_token";
 const USER_KEY = "securepro_super_admin_user";
 const OVERDUE_AFTER_MS = 48 * 60 * 60 * 1000;
 const CLOSED_STATUSES = new Set(["completed", "cancelled", "canceled"]);
+const ACTIVE_JOB_STATUSES = new Set(["pending", "assigned", "in_progress", "waiting_parts", "awaiting_payment"]);
 
 // =========================================================
 // HELPERS
@@ -346,6 +347,24 @@ function render() {
         return;
     }
 
+    const allProjects = window.projects || [];
+    const normalizedStatus = project => String(project.status || "").toLowerCase();
+    const countStatus = value => allProjects.filter(project => normalizedStatus(project) === value).length;
+    const openStatuses = new Set(["pending", "assigned", "in_progress", "waiting_parts", "awaiting_payment"]);
+    const openCount = allProjects.filter(project => openStatuses.has(normalizedStatus(project))).length;
+    const summaryCounts = {
+        jobCountOpen: openCount,
+        jobCountPending: countStatus("pending"),
+        jobCountAssigned: countStatus("assigned"),
+        jobCountProgress: countStatus("in_progress"),
+        jobCountWaiting: countStatus("waiting_parts"),
+        jobCountPayment: countStatus("awaiting_payment")
+    };
+    Object.entries(summaryCounts).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = String(value);
+    });
+
 
     // Search
 
@@ -363,11 +382,12 @@ function render() {
 
     // Filter projects
 
-    const rows = (window.projects || []).filter(project => {
+    const rows = allProjects.filter(project => {
 
-        const matchesStatus =
-            !selectedStatus ||
-            project.status === selectedStatus;
+        const projectStatus = String(project.status || "").toLowerCase();
+        const matchesStatus = selectedStatus === "active"
+            ? ACTIVE_JOB_STATUSES.has(projectStatus)
+            : !selectedStatus || projectStatus === selectedStatus;
 
 
         const searchText = [
@@ -651,6 +671,16 @@ if (!token()) {
     // Status filter
 
     const statusFilter = $("#statusFilter");
+
+    if (statusFilter && new URLSearchParams(location.search).get("status") === "active") {
+        statusFilter.value = "active";
+        document.querySelector('nav a[href="projects.html"]')?.classList.remove("active");
+        document.querySelector('nav a[href="projects.html?status=active"]')?.classList.add("active");
+        const pageTitle = $(".topbar h1");
+        const introTitle = $(".intro h2");
+        if (pageTitle) pageTitle.textContent = "Pending Jobs";
+        if (introTitle) introTitle.textContent = "Pending, In-Progress & Awaiting Payment Jobs";
+    }
 
     if (statusFilter) {
         statusFilter.onchange = render;

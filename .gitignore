@@ -39,6 +39,7 @@ database/securepro-data.sql
 # Local database backups - never push to GitHub
 backups/
 *.sql
+!backend/database/migrations/*.sql
 !database/
 !database/*.sql
 database/securepro-data.sql

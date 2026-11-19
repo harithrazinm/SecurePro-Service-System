@@ -37,6 +37,8 @@ const TOKEN_KEY =
 const USER_KEY =
     "securepro_super_admin_user";
 
+let dashboardUnreadNotificationCount = 0;
+
 
 /* ======================================================
    HELPERS
@@ -207,145 +209,6 @@ function setupProfile() {
 }
 
 
-/* ======================================================
-   DASHBOARD SUMMARY
-====================================================== */
-
-async function loadDashboard() {
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/super-admin/dashboard`,
-                {
-                    headers: {
-
-                        Authorization:
-                            `Bearer ${token()}`
-
-                    }
-
-                }
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !result.success
-        ) {
-
-            throw new Error(
-                result.message ||
-                "Unable to load dashboard."
-            );
-
-        }
-
-
-        const summary =
-            result.data?.summary ||
-            {};
-
-
-        const recent =
-            result.data?.recent ||
-            [];
-
-
-        /*
-         * --------------------------------------------------
-         * SUMMARY CARDS
-         * --------------------------------------------------
-         */
-
-        setValue(
-            "totalProjects",
-            summary.total_projects
-        );
-
-        setValue(
-            "customerFilledTotal",
-            summary.customer_filled_total
-        );
-
-        setValue(
-            "adminFilledTotal",
-            summary.admin_filled_total
-        );
-
-
-        setValue(
-            "quotationsUploaded",
-            summary.quotations_uploaded
-        );
-
-
-        setValue(
-            "quotationsSent",
-            summary.quotations_sent
-        );
-
-
-        setValue(
-            "invoicesUploaded",
-            summary.invoices_uploaded
-        );
-
-
-        setValue(
-            "paymentProofs",
-            summary.payment_proofs
-        );
-
-
-        setValue(
-            "projectsCompleted",
-            summary.projects_completed
-        );
-
-
-        /*
-         * --------------------------------------------------
-         * RECENT PROJECTS
-         * --------------------------------------------------
-         */
-
-        renderRecentProjects(
-            recent
-        );
-
-
-    } catch (error) {
- 
-        console.error(
-            "Dashboard loading error:",
-            error
-        );
- 
-        const count = $("#projectCount");
- 
-        if (count) {
-            count.textContent = "—";
-        }
- 
-        $("#projectList").innerHTML = `
-            <div class="empty-state error-state">
-                <div>
-                    <strong>Unable to load dashboard</strong>
-                    <span>${esc(error.message || "Please try again.")}</span>
-                </div>
-            </div>
-        `;
- 
-    }
-
-}
-
 async function loadOverdueSummary() {
     try {
         const response = await fetch(`${API_BASE}/super-admin/projects`, {
@@ -370,6 +233,188 @@ async function loadOverdueSummary() {
     } catch (error) {
         console.error("Super Admin overdue request summary error:", error);
     }
+}
+
+
+async function loadNotificationInbox() {
+    const list = $("#notificationInbox");
+    const count = $("#inboxCount");
+    if (!list || !count) return;
+
+    let projects = null;
+    try {
+        const projectsResponse = await fetch(`${API_BASE}/super-admin/projects`, {
+            headers: { Authorization: `Bearer ${token()}` },
+            cache: "no-store"
+        });
+        const projectsResult = await projectsResponse.json();
+        if (!projectsResponse.ok || !projectsResult.success) {
+            throw new Error(projectsResult.message || "Unable to load dashboard summaries.");
+        }
+
+        projects = Array.isArray(projectsResult.data) ? projectsResult.data : [];
+        renderDashboardSummaries(projects);
+
+        const notificationsResponse = await fetch(`${API_BASE}/super-admin/notifications`, {
+            headers: { Authorization: `Bearer ${token()}` },
+            cache: "no-store"
+        });
+        const notificationsResult = await notificationsResponse.json();
+        if (!notificationsResponse.ok || !notificationsResult.success) {
+            throw new Error(notificationsResult.message || "Unable to load notification inbox.");
+        }
+
+        const items = Array.isArray(notificationsResult.data?.notifications)
+            ? notificationsResult.data.notifications
+            : [];
+        const unreadCount = Number(notificationsResult.data?.unread_count || 0);
+        dashboardUnreadNotificationCount = unreadCount;
+        count.textContent = unreadCount > 99 ? "99+" : String(unreadCount);
+        count.hidden = unreadCount === 0;
+        const toggle = $("#notificationToggle");
+        if (toggle) toggle.setAttribute("aria-label", `Notifications, ${unreadCount} unread alert${unreadCount === 1 ? "" : "s"}`);
+        list.innerHTML = items.length
+            ? items.slice(0, 8).map(item => {
+                const notificationDate = notificationTimestamp(item.created_at);
+                const notificationDateTime = notificationDateTimeValue(item.created_at);
+                const destination = item.type === "quotation" ? "quotation-approval.html" : item.link;
+                return `
+                <a class="notification-inbox-item ${item.read_at ? "is-read" : "is-unread"}" href="${esc(destination)}" data-notification-id="${esc(item.id)}">
+                    <span class="notification-inbox-icon" aria-hidden="true">${notificationIcon(item.type)}</span>
+                    <span class="notification-inbox-copy">
+                        <strong>${esc(item.title)}</strong>
+                        <small>${esc(item.message || "Service request")}</small>
+                        <time class="notification-inbox-time" datetime="${esc(notificationDateTime)}" title="${esc(notificationDate)}">${esc(notificationDate)}${notificationDate ? ` · ${esc(timeAgo(item.created_at))}` : ""}</time>
+                    </span>
+                    <span class="notification-inbox-arrow" aria-hidden="true">›</span>
+                </a>
+            `;
+            }).join("")
+            : `<div class="notification-inbox-empty">You’re all caught up. No new alerts.</div>`;
+    } catch (error) {
+        console.error("Super Admin notification inbox error:", error);
+        count.textContent = "!";
+        count.hidden = false;
+        list.innerHTML = `<div class="notification-inbox-empty">Unable to load the inbox. Refresh to try again.</div>`;
+        if (!Array.isArray(projects)) renderDashboardSummaries(null);
+    }
+}
+
+async function loadFormEntrySummary() {
+    const customerTotal = $("#customerFilledTotal");
+    const adminTotal = $("#adminFilledTotal");
+    if (!customerTotal || !adminTotal) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/super-admin/dashboard`, {
+            headers: { Authorization: `Bearer ${token()}` },
+            cache: "no-store"
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Unable to load form entry summary.");
+        }
+
+        const summary = result.data?.summary || {};
+        customerTotal.textContent = String(Number(summary.customer_filled_total || 0));
+        adminTotal.textContent = String(Number(summary.admin_filled_total || 0));
+    } catch (error) {
+        console.error("Super Admin form entry summary error:", error);
+        customerTotal.textContent = "—";
+        adminTotal.textContent = "—";
+    }
+}
+
+function notificationIcon(type) {
+    return ({
+        request: "＋",
+        quotation: "✓",
+        report: "▤",
+        quotation_payment: "＄",
+        invoice_payment: "＄"
+    })[type] || "•";
+}
+
+function timeAgo(value) {
+    const timestamp = new Date(value || "").getTime();
+    if (!Number.isFinite(timestamp)) return "Recently";
+    const minutes = Math.max(1, Math.floor((Date.now() - timestamp) / 60000));
+    if (minutes < 60) return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+function notificationTimestamp(value) {
+    const timestamp = new Date(value || "");
+    if (Number.isNaN(timestamp.getTime())) return "";
+    return timestamp.toLocaleString("en-MY", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function notificationDateTimeValue(value) {
+    const timestamp = new Date(value || "");
+    return Number.isNaN(timestamp.getTime()) ? "" : timestamp.toISOString();
+}
+
+async function markNotificationRead(id) {
+    const response = await fetch(`${API_BASE}/super-admin/notifications/${encodeURIComponent(id)}/read`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token()}` }
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || "Unable to mark notification as read.");
+    }
+
+    const badge = $("#inboxCount");
+    const toggle = $("#notificationToggle");
+    if (badge && toggle) {
+        dashboardUnreadNotificationCount = Math.max(0, dashboardUnreadNotificationCount - 1);
+        badge.textContent = dashboardUnreadNotificationCount > 99 ? "99+" : String(dashboardUnreadNotificationCount);
+        badge.hidden = dashboardUnreadNotificationCount === 0;
+        toggle.setAttribute("aria-label", `Notifications, ${dashboardUnreadNotificationCount} unread alert${dashboardUnreadNotificationCount === 1 ? "" : "s"}`);
+    }
+}
+
+function renderDashboardSummaries(projects) {
+    const statusCounts = {
+        pending: 0,
+        assigned: 0,
+        in_progress: 0,
+        waiting_parts: 0,
+        awaiting_payment: 0
+    };
+    let pendingReview = 0;
+    let revisionRequired = 0;
+
+    if (Array.isArray(projects)) {
+        projects.forEach(project => {
+            const status = String(project.status || "").toLowerCase();
+            if (Object.prototype.hasOwnProperty.call(statusCounts, status)) statusCounts[status] += 1;
+
+            const approvalStatus = String(project.quotation_approval_status || "").toLowerCase();
+            if (approvalStatus === "pending_approval") pendingReview += 1;
+            if (approvalStatus === "revision_required") revisionRequired += 1;
+        });
+    }
+
+    const values = {
+        dashboardPendingTotal: Object.values(statusCounts).reduce((sum, value) => sum + value, 0),
+        dashboardPendingCount: statusCounts.pending,
+        dashboardAssignedCount: statusCounts.assigned,
+        dashboardInProgressCount: statusCounts.in_progress,
+        dashboardWaitingPartsCount: statusCounts.waiting_parts,
+        dashboardAwaitingPaymentCount: statusCounts.awaiting_payment,
+        dashboardEnquiryTotal: pendingReview + revisionRequired,
+        dashboardEnquiryPendingCount: pendingReview,
+        dashboardEnquiryRevisionCount: revisionRequired
+    };
+
+    Object.entries(values).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = Array.isArray(projects) ? String(value) : "—";
+    });
 }
 
 
@@ -1238,10 +1283,56 @@ function setupStatCards() {
 function setupRefresh() {
 
     $("#refreshButton").onclick = () => {
-        loadDashboard();
         loadOverdueSummary();
+        loadNotificationInbox();
+        loadFormEntrySummary();
     };
 
+}
+
+function setupNotificationDrawer() {
+    const toggle = $("#notificationToggle");
+    const drawer = $("#notificationDrawer");
+    const backdrop = $("#notificationBackdrop");
+    const close = $("#notificationClose");
+    if (!toggle || !drawer || !backdrop || !close) return;
+
+    const setOpen = open => {
+        drawer.hidden = !open;
+        backdrop.hidden = !open;
+        toggle.setAttribute("aria-expanded", String(open));
+        if (open) close.focus();
+    };
+
+    $("#notificationInbox")?.addEventListener("click", event => {
+        const item = event.target.closest("a[data-notification-id]");
+        if (!item || !item.classList.contains("is-unread")) return;
+        event.preventDefault();
+        const destination = item.href;
+        markNotificationRead(item.dataset.notificationId)
+            .then(() => {
+                item.classList.remove("is-unread");
+                item.classList.add("is-read");
+            })
+            .catch(error => console.error("Unable to persist notification read state:", error))
+            .finally(() => window.location.assign(destination));
+    });
+
+    toggle.addEventListener("click", () => setOpen(drawer.hidden));
+    close.addEventListener("click", () => {
+        setOpen(false);
+        toggle.focus();
+    });
+    backdrop.addEventListener("click", () => {
+        setOpen(false);
+        toggle.focus();
+    });
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && !drawer.hidden) {
+            setOpen(false);
+            toggle.focus();
+        }
+    });
 }
 
 
@@ -1263,8 +1354,10 @@ if (!token()) {
     setupStatCards();
 
     setupRefresh();
+    setupNotificationDrawer();
 
-    loadDashboard();
     loadOverdueSummary();
+    loadNotificationInbox();
+    loadFormEntrySummary();
 
 }

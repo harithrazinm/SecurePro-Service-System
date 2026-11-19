@@ -21,14 +21,14 @@
 
     <link
         rel="stylesheet"
-        href="css/super-admin.css"
+        href="css/super-admin.css?v=20261118-2"
     >
 
     <link rel="icon" type="image/png" href="/assets/favicon.png">
 </head>
 
 
-<body>
+<body class="dashboard-page">
 
     <div class="layout">
 
@@ -73,16 +73,6 @@
                 </a>
 
 
-                <a href="projects.html">
-
-                    ▤
-
-                    <span>
-                        Projects
-                    </span>
-
-                </a>
-
                 <a href="quotation-approval.html">
 
                     ✓
@@ -93,6 +83,7 @@
 
                 </a>
 
+                <a href="projects.html?status=active">◷ <span>Pending Jobs</span></a>
 
                 <a href="work-calendar.html">
 
@@ -103,6 +94,8 @@
                     </span>
 
                 </a>
+
+                <a href="projects.html">▤ <span>Projects</span></a>
 
             </nav>
 
@@ -172,14 +165,18 @@
                         </h1>
 
                         <p class="page-subtitle">
-                            Monitor quotations, invoices, payment proofs,
-                            technician progress, reports and completed projects.
+                            Track open jobs and enquiries that need quotation review.
                         </p>
 
                     </div>
 
 
                     <div class="hero-actions">
+
+                        <button id="notificationToggle" class="notification-toggle" type="button" aria-label="Notifications" aria-haspopup="dialog" aria-expanded="false" aria-controls="notificationDrawer" title="Notifications">
+                            <span aria-hidden="true">✉</span>
+                            <span id="inboxCount" class="notification-badge" hidden>0</span>
+                        </button>
 
                         <div class="hero-date">
                             <span>Today</span>
@@ -211,167 +208,58 @@
                     <a href="projects.html">Review projects →</a>
                 </aside>
 
+                <button id="notificationBackdrop" class="notification-backdrop" type="button" aria-label="Close notifications" hidden></button>
+                <aside id="notificationDrawer" class="notification-drawer" role="dialog" aria-modal="false" aria-labelledby="inboxTitle" hidden>
+                    <div class="notification-drawer-header">
+                        <div>
+                            <span class="eyebrow">SUPER ADMIN</span>
+                            <h2 id="inboxTitle">Notifications</h2>
+                        </div>
+                        <button id="notificationClose" class="notification-close" type="button" aria-label="Close notifications">×</button>
+                    </div>
+                    <div id="notificationInbox" class="notification-inbox-list" aria-live="polite">
+                        <div class="notification-inbox-empty">Loading notifications...</div>
+                    </div>
+                </aside>
 
 
-                <!-- =====================================
-                     STAT CARDS (unchanged)
-                ====================================== -->
 
-                <section class="stats">
-
-
-                    <!-- TOTAL PROJECTS -->
-
-                    <article
-                        class="stat-card"
-                        data-file-category="all"
-                        tabindex="0"
-                        role="button"
-                    >
-
-                        <span>
-                            Total Projects
-                        </span>
-
-                        <strong id="totalProjects">
-                            —
-                        </strong>
-
-                        <small>
-                            All active records
-                        </small>
-
+                <section class="dashboard-work-summaries" aria-label="Job and enquiry summaries">
+                    <article class="panel dashboard-panel dashboard-summary-panel" aria-labelledby="pendingJobsSummaryTitle">
+                        <div class="panel-heading">
+                            <div>
+                                <span class="eyebrow">WORK QUEUE</span>
+                                <h2 id="pendingJobsSummaryTitle">Pending Jobs</h2>
+                                <p>Open jobs grouped by their current status.</p>
+                            </div>
+                            <a class="panel-link" href="projects.html?status=active">View jobs <span>→</span></a>
+                        </div>
+                        <div class="dashboard-summary-grid job-summary-grid" aria-live="polite">
+                            <div class="dashboard-summary-total"><span>Open jobs</span><strong id="dashboardPendingTotal">—</strong></div>
+                            <div><span>Pending</span><strong id="dashboardPendingCount">—</strong></div>
+                            <div><span>Assigned</span><strong id="dashboardAssignedCount">—</strong></div>
+                            <div><span>In progress</span><strong id="dashboardInProgressCount">—</strong></div>
+                            <div><span>Waiting parts</span><strong id="dashboardWaitingPartsCount">—</strong></div>
+                            <div><span>Awaiting payment</span><strong id="dashboardAwaitingPaymentCount">—</strong></div>
+                        </div>
                     </article>
 
-
-
-                    <!-- QUOTATION UPLOADED -->
-
-                    <article
-                        class="stat-card"
-                        data-file-category="quotation_uploaded"
-                        tabindex="0"
-                        role="button"
-                    >
-
-                        <span>
-                            Quotation Uploaded
-                        </span>
-
-                        <strong id="quotationsUploaded">
-                            —
-                        </strong>
-
-                        <small>
-                            PDF uploaded
-                        </small>
-
+                    <article class="panel dashboard-panel dashboard-summary-panel" aria-labelledby="enquirySummaryTitle">
+                        <div class="panel-heading">
+                            <div>
+                                <span class="eyebrow">QUOTATION REVIEW</span>
+                                <h2 id="enquirySummaryTitle">Enquiry</h2>
+                                <p>Enquiries needing quotation review or follow-up.</p>
+                            </div>
+                            <a class="panel-link" href="quotation-approval.html">Review enquiries <span>→</span></a>
+                        </div>
+                        <div class="dashboard-summary-grid enquiry-summary-grid" aria-live="polite">
+                            <div class="dashboard-summary-total"><span>Needs attention</span><strong id="dashboardEnquiryTotal">—</strong></div>
+                            <div><span>Pending review</span><strong id="dashboardEnquiryPendingCount">—</strong></div>
+                            <div><span>Revision required</span><strong id="dashboardEnquiryRevisionCount">—</strong></div>
+                        </div>
                     </article>
-
-
-
-                    <!-- QUOTATION SENT -->
-
-                    <article
-                        class="stat-card"
-                        data-file-category="quotation_sent"
-                        tabindex="0"
-                        role="button"
-                    >
-
-                        <span>
-                            Quotation Sent
-                        </span>
-
-                        <strong id="quotationsSent">
-                            —
-                        </strong>
-
-                        <small>
-                            Sent to customer
-                        </small>
-
-                    </article>
-
-
-
-                    <!-- FINAL INVOICE -->
-
-                    <article
-                        class="stat-card"
-                        data-file-category="invoice_uploaded"
-                        tabindex="0"
-                        role="button"
-                    >
-
-                        <span>
-                            Final Invoice
-                        </span>
-
-                        <strong id="invoicesUploaded">
-                            —
-                        </strong>
-
-                        <small>
-                            Invoice PDF uploaded
-                        </small>
-
-                    </article>
-
-
-
-                    <!-- PAYMENT PROOF -->
-
-                    <article
-                        class="stat-card"
-                        data-file-category="payment_proof"
-                        tabindex="0"
-                        role="button"
-                    >
-
-                        <span>
-                            Payment Proof
-                        </span>
-
-                        <strong id="paymentProofs">
-                            —
-                        </strong>
-
-                        <small>
-                            Proof uploaded
-                        </small>
-
-                    </article>
-
-
-
-                    <!-- COMPLETED -->
-
-                    <article
-                        class="stat-card"
-                        data-file-category="completed"
-                        tabindex="0"
-                        role="button"
-                    >
-
-                        <span>
-                            Completed
-                        </span>
-
-                        <strong id="projectsCompleted">
-                            —
-                        </strong>
-
-                        <small>
-                            Projects completed
-                        </small>
-
-                    </article>
-
-
                 </section>
-
-
 
                 <section class="panel form-entry-summary" aria-label="Overall request form entries">
                     <div class="form-entry-summary-header">
@@ -382,7 +270,7 @@
                         </div>
                         <span class="form-entry-summary-total">All requests</span>
                     </div>
-                    <div class="form-entry-summary-grid">
+                    <div class="form-entry-summary-grid" aria-live="polite">
                         <article class="form-entry-summary-item customer-entry">
                             <span class="form-entry-summary-icon" aria-hidden="true">C</span>
                             <div class="form-entry-summary-copy">
@@ -465,51 +353,6 @@
                     </article>
 
                 </section>
-
-
-                <!-- =====================================
-                     RECENT PROJECTS
-                ====================================== -->
-
-                <section class="panel dashboard-panel">
-
-                    <div class="panel-heading">
-
-                        <div>
-
-                            <span class="eyebrow">
-                                LIVE OVERVIEW
-                            </span>
-
-                            <h2>
-                                Recent Projects
-                            </h2>
-
-                            <p>
-                                Latest projects with quotation, payment,
-                                technician and report status.
-                            </p>
-
-                        </div>
-
-
-                        <div class="panel-heading-actions">
-                            <span id="projectCount" class="panel-count">Loading...</span>
-                            <a class="panel-link" href="projects.html">
-                                View all <span>→</span>
-                            </a>
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="project-list" id="projectList">
-                        <div class="project-list-loading">Loading...</div>
-                    </div>
-
-                </section>
-
 
 
             </section>
@@ -596,7 +439,7 @@
          JAVASCRIPT
     ============================================== -->
 
-    <script src="js/dashboard.js?v=20260915-1"></script>
+    <script src="js/dashboard.js?v=20261118-6"></script>
     <script src="js/dashboard-schedule.js?v=20260924-1"></script>
     <script src="js/session-timeout.js"></script>
     <script type="module" src="js/push-notifications.js?v=20261117-1"></script>

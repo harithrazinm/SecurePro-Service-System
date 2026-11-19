@@ -10,6 +10,10 @@ const {
     saveSubscription,
     removeSubscription
 } = require("../controllers/superAdminPushController");
+const {
+    getNotifications,
+    markNotificationRead
+} = require("../controllers/superAdminNotificationController");
 
 const router = express.Router();
 
@@ -20,6 +24,8 @@ router.get("/dashboard", getDashboard);
 router.get("/projects", getProjects);
 router.get("/projects/:id", getProjectById);
 router.get("/dashboard/files", getDashboardCategoryFiles);
+router.get("/notifications", getNotifications);
+router.patch("/notifications/:id/read", markNotificationRead);
 
 // A Super Admin can register or remove only their own authenticated browser token.
 router.post("/push-subscriptions", saveSubscription);
