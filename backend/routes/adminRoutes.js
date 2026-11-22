@@ -15,6 +15,12 @@ const {
 const authMiddleware =
     require("../middleware/authMiddleware");
 
+const {
+    getPendingCancellationReviews,
+    approveCancellationReview,
+    rejectCancellationReview
+} = require("../controllers/cancellationReviewController");
+
 const requireAdmin =
     authMiddleware.requireAdmin;
 
@@ -74,6 +80,21 @@ router.delete(
 router.get(
     "/job-pending",
     getJobPendingRequests
+);
+
+router.get(
+    "/cancellation-reviews",
+    getPendingCancellationReviews
+);
+
+router.post(
+    "/cancellation-reviews/:id/approve",
+    approveCancellationReview
+);
+
+router.post(
+    "/cancellation-reviews/:id/reject",
+    rejectCancellationReview
 );
 
 

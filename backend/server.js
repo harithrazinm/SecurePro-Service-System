@@ -55,6 +55,7 @@ const PORT = process.env.PORT || 5001;
 // ======================================================
 
 const pool = require("./config/db");
+const { queueStalePendingCancellations } = require("./services/pendingCancellationReviewService");
 
 // ======================================================
 // ROUTES
@@ -539,6 +540,29 @@ const server =
         }
     );
 
+// Queue requests for Admin cancellation review after 30 days pending.
+// The scheduler never cancels a service request directly. Recheck hourly.
+let pendingCancellationQueueInProgress = false;
+const runPendingCancellationQueue = async () => {
+    if (pendingCancellationQueueInProgress) return;
+    pendingCancellationQueueInProgress = true;
+    try {
+        const queuedCount = await queueStalePendingCancellations();
+        if (queuedCount > 0) {
+            console.log(`Queued ${queuedCount} pending request(s) for cancellation review.`);
+        }
+    } catch (error) {
+        console.error("Pending cancellation review queue failed:", error.message);
+    } finally {
+        pendingCancellationQueueInProgress = false;
+    }
+};
+
+const pendingCancellationQueueStartupTimer = setTimeout(runPendingCancellationQueue, 15000);
+pendingCancellationQueueStartupTimer.unref();
+const pendingCancellationQueueInterval = setInterval(runPendingCancellationQueue, 60 * 60 * 1000);
+pendingCancellationQueueInterval.unref();
+
 // ======================================================
 // GRACEFUL SHUTDOWN
 // ======================================================
@@ -546,6 +570,9 @@ const server =
 async function shutdown(signal) {
 
     console.log(`\nReceived ${signal}. Shutting down SecurePro...`);
+
+    clearTimeout(pendingCancellationQueueStartupTimer);
+    clearInterval(pendingCancellationQueueInterval);
 
     server.close(async () => {
 

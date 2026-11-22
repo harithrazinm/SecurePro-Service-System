@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>SOPro | Cancellation Review</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/admin-theme.css">
+    <link rel="stylesheet" href="css/request.css">
+    <link rel="stylesheet" href="css/cancellation-reviews.css?v=20261122-2">
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+</head>
+<body>
+<div class="app-shell">
+    <header class="topbar-card">
+        <div class="brand">
+            <div class="brand-mark">S</div>
+            <div class="brand-text"><strong>SOPro</strong><span>System Solutions</span></div>
+        </div>
+        <nav class="top-nav" aria-label="Admin navigation">
+            <a href="dashboard.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+                Dashboard
+            </a>
+            <a href="quotations.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 12h6M9 16h4"/></svg>
+                Enquiry
+            </a>
+            <a href="job-pending.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                Job Pending
+            </a>
+            <a href="requests.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z"/><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 12h6M9 16h6"/></svg>
+                Service Requests
+            </a>
+            <a href="invoices.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5M16 18h.01"/></svg>
+                Invoices &amp; Payments
+            </a>
+            <a href="cancellation-reviews.html" class="active" aria-current="page">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>
+                Cancellation Review
+            </a>
+        </nav>
+    </header>
+
+    <button type="button" id="logoutButton" class="logout-bar">↪ Logout</button>
+
+    <main class="cancellation-page">
+        <section class="cancellation-hero">
+            <div>
+                <div class="eyebrow-row">
+                    <span class="eyebrow">SERVICE REQUESTS</span>
+                    <span class="admin-pill"><span class="dot"></span><span id="topbarAdminName">Admin</span></span>
+                </div>
+                <h1>Cancellation Review</h1>
+                <p>Review requests that have remained pending for 30 days. Jobs are only cancelled after Admin approval.</p>
+            </div>
+            <button id="refreshButton" class="secondary-button" type="button">↻ Refresh</button>
+        </section>
+
+        <div id="pageMessage" class="page-message" role="status" hidden></div>
+
+        <section class="review-summary" aria-label="Cancellation summary">
+            <span class="summary-icon">!</span>
+            <div><span>Awaiting review</span><strong id="reviewCount">—</strong></div>
+        </section>
+
+        <section class="review-card">
+            <header class="review-card-header">
+                <div><span class="eyebrow">ADMIN ACTION REQUIRED</span><h2>Pending cancellations</h2></div>
+                <label class="review-search-label" for="reviewSearch">Search requests</label>
+                <input id="reviewSearch" class="review-search" type="search" placeholder="Request, customer or service..." autocomplete="off">
+            </header>
+            <div class="review-table-wrap">
+                <table class="review-table">
+                    <thead>
+                        <tr>
+                            <th>Request</th><th>Customer</th><th>Service</th><th>Pending since</th><th>Queued</th><th>Reason</th><th>Decision</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewTableBody">
+                        <tr><td colspan="7" class="review-empty">Loading cancellation reviews...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="rejectModal" class="review-modal" hidden>
+    <div class="review-modal-backdrop" data-close-modal></div>
+    <section class="review-modal-card" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+        <button type="button" class="modal-close" data-close-modal aria-label="Close">×</button>
+        <span class="eyebrow">KEEP REQUEST OPEN</span>
+        <h2 id="rejectModalTitle">Reject cancellation</h2>
+        <p>The request stays pending. Its 30-day review period restarts from today.</p>
+        <label for="rejectReason">Reason for rejecting</label>
+        <textarea id="rejectReason" maxlength="2000" rows="4" placeholder="Explain why the job should remain open..."></textarea>
+        <div class="modal-actions">
+            <button type="button" class="secondary-button" data-close-modal>Go back</button>
+            <button type="button" id="confirmRejectButton" class="danger-button">Reject cancellation</button>
+        </div>
+    </section>
+</div>
+
+<script src="js/cancellation-reviews.js?v=20261122-1"></script>
+<script src="js/session-timeout.js"></script>
+</body>
+</html>
