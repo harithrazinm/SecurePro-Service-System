@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const pool =
     require("../config/db");
 const { createSignedMediaUrl } = require("../services/mediaStorage");
+const { sendAdminNewOrderPush } = require("../services/firebasePush");
 
 
 /*
@@ -1194,6 +1195,13 @@ const sourceRequest = sourceRows[0];
             "Request created successfully:",
             requestCode
         );
+
+        const appUrl = String(process.env.PUBLIC_APP_URL || "https://sopro.my").replace(/\/+$/, "");
+        void sendAdminNewOrderPush({
+            title: "New customer order",
+            body: `${requestCode} · ${customerName} · ${service.name_en || service.service_code}`,
+            link: `${appUrl}/admin/requests.html`
+        }).catch(error => console.error("Unable to dispatch new-order push notification:", error.message));
 
 
         return res.status(201).json({

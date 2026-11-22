@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/dashboard.css?v=20261105-3">
+    <link rel="stylesheet" href="css/dashboard.css?v=20261122-1">
 <link rel="stylesheet" href="css/request.css">
     <link rel="icon" type="image/png" href="/assets/favicon.png">
 </head>
@@ -77,6 +77,10 @@
             </div>
 
             <div class="hero-actions">
+                <div class="push-notification-action">
+                    <button id="enablePushNotifications" class="refresh-button" type="button">Enable order alerts</button>
+                    <span id="pushNotificationStatus" role="status" aria-live="polite"></span>
+                </div>
                 <div class="hero-date">
                     <span>Today</span>
                     <strong id="todayDate">—</strong>
@@ -272,6 +276,7 @@
 </div>
 
 <script src="js/dashboard.js?v=20261105-2"></script>
+<script type="module" src="js/push-notifications.js?v=20261122-1"></script>
 <script src="js/session-timeout.js"></script>
 </body>
 </html>

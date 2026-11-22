@@ -20,6 +20,10 @@ const {
     approveCancellationReview,
     rejectCancellationReview
 } = require("../controllers/cancellationReviewController");
+const {
+    saveSubscription: savePushSubscription,
+    removeSubscription: removePushSubscription
+} = require("../controllers/adminPushController");
 
 const requireAdmin =
     authMiddleware.requireAdmin;
@@ -35,6 +39,9 @@ router.use(
     authMiddleware,
     requireAdmin
 );
+
+router.post("/push-subscriptions", savePushSubscription);
+router.delete("/push-subscriptions", removePushSubscription);
 
 
 // ======================================================

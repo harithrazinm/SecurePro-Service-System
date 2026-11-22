@@ -59,6 +59,28 @@ body {
     background: linear-gradient(180deg, var(--dashboard-blue), var(--dashboard-indigo));
 }
 
+.push-notification-action {
+    display: grid;
+    justify-items: end;
+    gap: 6px;
+}
+
+#pushNotificationStatus {
+    max-width: 260px;
+    color: var(--dashboard-muted);
+    font-size: 11px;
+    text-align: right;
+}
+
+#pushNotificationStatus.push-status-error {
+    color: #b42318;
+}
+
+@media (max-width: 700px) {
+    .push-notification-action { justify-items: start; }
+    #pushNotificationStatus { text-align: left; }
+}
+
 .overdue-dashboard-alert {
     display: flex;
     align-items: center;

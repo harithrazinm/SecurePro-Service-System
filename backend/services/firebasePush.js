@@ -69,7 +69,7 @@ async function getAccessToken(serviceAccount) {
     return cachedAccessToken;
 }
 
-async function sendToToken({ token, title, body, link, serviceAccount, projectId }) {
+async function sendToToken({ token, title, body, link, serviceAccount, projectId, tag }) {
     const accessToken = await getAccessToken(serviceAccount);
     const response = await fetch(`${FCM_ENDPOINT}/${encodeURIComponent(projectId)}/messages:send`, {
         method: "POST",
@@ -86,7 +86,7 @@ async function sendToToken({ token, title, body, link, serviceAccount, projectId
                     fcmOptions: { link },
                     notification: {
                         icon: "/assets/favicon.png",
-                        tag: "quotation-review"
+                        tag: tag || "securepro-notification"
                     }
                 }
             }
@@ -105,6 +105,14 @@ async function sendToToken({ token, title, body, link, serviceAccount, projectId
 }
 
 async function sendSuperAdminQuotationPush({ title, body, link }) {
+    return sendRolePush({ table: "super_admin_push_subscriptions", role: "super_admin", title, body, link, tag: "quotation-review" });
+}
+
+async function sendAdminNewOrderPush({ title, body, link }) {
+    return sendRolePush({ table: "admin_push_subscriptions", role: "admin", title, body, link, tag: "new-customer-order" });
+}
+
+async function sendRolePush({ table, role, title, body, link, tag }) {
     const projectId = String(process.env.FIREBASE_PROJECT_ID || "").trim();
     let serviceAccount;
 
@@ -120,12 +128,14 @@ async function sendSuperAdminQuotationPush({ title, body, link }) {
     }
 
     try {
+        // Table names are selected only by the fixed internal wrappers above.
         const [subscriptions] = await pool.query(
             `SELECT ps.id, ps.token
-             FROM super_admin_push_subscriptions ps
+             FROM ${table} ps
              INNER JOIN users u
                ON CONVERT(u.id USING binary) = CONVERT(ps.user_id USING binary)
-             WHERE u.role = 'super_admin' AND u.status = 'active'`
+             WHERE u.role = ? AND u.status = 'active'`,
+            [role]
         );
 
         if (!subscriptions.length) {
@@ -140,14 +150,15 @@ async function sendSuperAdminQuotationPush({ title, body, link }) {
                     body,
                     link,
                     serviceAccount,
-                    projectId
+                    projectId,
+                    tag
                 });
                 return true;
             } catch (error) {
-                console.error("Super Admin push delivery failed:", error.message, error.details || "");
+                console.error(`${role} push delivery failed:`, error.message, error.details || "");
                 if (error.details?.includes("UNREGISTERED")) {
                     await pool.query(
-                        "DELETE FROM super_admin_push_subscriptions WHERE id = ?",
+                        `DELETE FROM ${table} WHERE id = ?`,
                         [subscription.id]
                     ).catch(cleanupError => console.error("Unable to remove stale push token:", cleanupError.message));
                 }
@@ -161,7 +172,7 @@ async function sendSuperAdminQuotationPush({ title, body, link }) {
             enabled: true
         };
     } catch (error) {
-        console.error("Super Admin push notification error:", error.message);
+        console.error(`${role} push notification error:`, error.message);
         return { sent: 0, total: 0, enabled: true };
     }
 }
@@ -172,5 +183,6 @@ function hashPushToken(token) {
 
 module.exports = {
     hashPushToken,
-    sendSuperAdminQuotationPush
+    sendSuperAdminQuotationPush,
+    sendAdminNewOrderPush
 };
