@@ -298,7 +298,8 @@ async function createQuotation(req, res) {
                 quotation_number,
                 quotation_file_url,
                 approval_status,
-                revision_number
+                revision_number,
+                payment_proof_url
             FROM quotations
             WHERE request_id = ?
               AND (quotation_type = 'original' OR quotation_type IS NULL)
@@ -333,6 +334,11 @@ async function createQuotation(req, res) {
                     revised_at = CURRENT_TIMESTAMP,
                     status = 'draft',
                     sent_at = NULL,
+                    whatsapp_sent_at = NULL,
+                    payment_proof_url = NULL,
+                    payment_proof_name = NULL,
+                    payment_proof_uploaded_at = NULL,
+                    payment_status = 'unpaid',
                     follow_up_1_sent_at = NULL,
                     follow_up_2_sent_at = NULL,
                     updated_at = CURRENT_TIMESTAMP
@@ -350,6 +356,13 @@ async function createQuotation(req, res) {
                 connection
             ).catch(error => console.error(
                 "Unable to remove replaced quotation file:",
+                error.message
+            ));
+            await deleteLocalMediaIfUnreferenced(
+                existing.payment_proof_url,
+                connection
+            ).catch(error => console.error(
+                "Unable to remove superseded payment proof:",
                 error.message
             ));
 
@@ -669,6 +682,7 @@ async function updateQuotation(req, res) {
                 q.quotation_file_name,
                 q.approval_status,
                 q.revision_number,
+                q.payment_proof_url,
                 r.request_code,
                 r.customer_name,
                 s.name_en AS service_name
@@ -729,6 +743,11 @@ async function updateQuotation(req, res) {
                     revised_at = CURRENT_TIMESTAMP,
                     status = 'draft',
                     sent_at = NULL,
+                    whatsapp_sent_at = NULL,
+                    payment_proof_url = NULL,
+                    payment_proof_name = NULL,
+                    payment_proof_uploaded_at = NULL,
+                    payment_status = 'unpaid',
                     follow_up_1_sent_at = NULL,
                     follow_up_2_sent_at = NULL,
                     updated_at = CURRENT_TIMESTAMP
@@ -745,6 +764,10 @@ async function updateQuotation(req, res) {
                 quotation.quotation_file_url,
                 connection
             ).catch(error => console.error("Unable to remove replaced quotation file:", error.message));
+            await deleteLocalMediaIfUnreferenced(
+                quotation.payment_proof_url,
+                connection
+            ).catch(error => console.error("Unable to remove superseded payment proof:", error.message));
 
             const notification = await notifySuperAdminsOfQuotationReview({
                 quotationNumber: quotation.quotation_number,
@@ -1027,11 +1050,16 @@ async function sendQuotation(req, res) {
                     COALESCE(
                         sent_at,
                         CURRENT_TIMESTAMP
-                    )
+                    ),
+                whatsapp_sent_at = CASE
+                    WHEN ? = 'whatsapp' THEN CURRENT_TIMESTAMP
+                    ELSE whatsapp_sent_at
+                END
 
             WHERE id = ?
             `,
             [
+                req.body?.channel === "whatsapp" ? "whatsapp" : null,
                 req.params.id
             ]
         );
@@ -1042,7 +1070,9 @@ async function sendQuotation(req, res) {
             success: true,
 
             message:
-                "Quotation marked as sent.",
+                req.body?.channel === "whatsapp"
+                    ? "Quotation marked as sent via WhatsApp."
+                    : "Quotation marked as sent.",
 
             data: {
 
@@ -1292,13 +1322,17 @@ async function uploadPaymentProof(
             await connection.query(
                 `
                 SELECT
-    id,
-    request_id,
-    approval_status,
-    payment_proof_url
-FROM quotations
-WHERE id = ?
-LIMIT 1
+                    q.id,
+                    q.request_id,
+                    q.approval_status,
+                    q.payment_proof_url,
+                    q.whatsapp_sent_at,
+                    s.service_code
+                FROM quotations q
+                INNER JOIN service_requests r ON r.id = q.request_id
+                INNER JOIN services s ON s.id = r.service_id
+                WHERE q.id = ?
+                LIMIT 1
                 `,
                 [
                     req.params.id
@@ -1337,6 +1371,22 @@ LIMIT 1
 
             });
 
+        }
+
+        const technicianFirstServices = new Set([
+            "troubleshoot_repair",
+            "maintenance_service",
+            "inspection"
+        ]);
+        if (
+            !technicianFirstServices.has(quotationRows[0].service_code) &&
+            !quotationRows[0].whatsapp_sent_at
+        ) {
+            await connection.rollback();
+            return res.status(403).json({
+                success: false,
+                message: "Send the approved New System quotation via WhatsApp before uploading the customer's payment proof."
+            });
         }
 
         const requestId =

@@ -6,6 +6,7 @@ const authMiddleware =
     require("../middleware/authMiddleware");
 
 const {
+    getEnquiriesRequiringQuotation,
     getQuotationApprovalQueue,
     getQuotationReview,
     approveQuotation,
@@ -63,6 +64,11 @@ router.use(
 router.get(
     "/pending",
     getQuotationApprovalQueue
+);
+
+router.get(
+    "/enquiries/requiring-quotation",
+    getEnquiriesRequiringQuotation
 );
 
 

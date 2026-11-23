@@ -44,7 +44,7 @@ This stylesheet is only for the Projects page.
 
 .job-summary-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 12px;
     margin: 0 0 18px;
 }
@@ -75,6 +75,7 @@ This stylesheet is only for the Projects page.
 }
 
 .job-summary-card.pending strong { color: #a7650b; }
+.job-summary-card.needs-tech strong { color: #b45309; }
 .job-summary-card.assigned strong { color: #315fc0; }
 .job-summary-card.progress strong { color: #16825d; }
 .job-summary-card.waiting strong { color: #9858a8; }
@@ -578,6 +579,12 @@ td small {
     background: #fff7ed;
     border-color: #fed7aa;
     color: #c2410c;
+}
+
+.badge-needs_technician {
+    background: #fff7ed;
+    border-color: #fdba74;
+    color: #b45309;
 }
 
 /* Assigned — Blue */

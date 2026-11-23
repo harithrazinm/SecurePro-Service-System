@@ -15,7 +15,7 @@ const API_BASE =
     )
         ? "http://localhost:5001/api"
         : "/api";
-        
+
 /* =========================================================
    AUTH
 ========================================================= */
@@ -45,6 +45,9 @@ const $ =
 
 const tableBody =
     $("#quotationTableBody");
+
+const enquiryMonitorGroups = $("#enquiryMonitorGroups");
+const enquiryMonitorCount = $("#enquiryMonitorCount");
 
 const pageError =
     $("#pageError");
@@ -1064,6 +1067,114 @@ async function loadQuotations() {
 
 }
 
+function enquiryStatusLabel(value) {
+    const status = String(value || "pending")
+        .trim()
+        .toLowerCase()
+        .replace(/[ -]+/g, "_");
+    return status.split("_").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+}
+
+function quotationEnquiryLabel(value) {
+    return {
+        pending_approval: "Pending review",
+        revision_required: "Revision required",
+        approved: "Approved",
+        uploaded: "Uploaded"
+    }[value] || "Uploaded";
+}
+
+async function loadEnquiriesRequiringQuotation() {
+    if (!enquiryMonitorGroups || !enquiryMonitorCount) return;
+
+    enquiryMonitorGroups.innerHTML = `<div class="enquiry-monitor-empty">Loading Admin enquiries…</div>`;
+    enquiryMonitorCount.textContent = "Loading…";
+
+    try {
+        const result = await apiRequest("/super-admin/quotations/enquiries/requiring-quotation");
+        if (!result) return;
+
+        const enquiries = Array.isArray(result.data) ? result.data : [];
+        enquiryMonitorCount.textContent = `${enquiries.length} active ${enquiries.length === 1 ? "enquiry" : "enquiries"}`;
+
+        const categories = [
+            { key: "new_system", label: "New System" },
+            { key: "inspection", label: "Inspection" },
+            { key: "maintenance", label: "Maintenance & Service" },
+            { key: "troubleshooting", label: "Troubleshooting / Repair" }
+        ];
+        const categoryFor = enquiry => {
+            const code = String(enquiry.service_code || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+            const name = String(enquiry.service_name || "").trim().toLowerCase();
+            const value = `${code} ${name}`;
+            if (/\binspection\b|\binspect\b/.test(value)) return "inspection";
+            if (/maintenance|\bservicing\b/.test(value)) return "maintenance";
+            if (/troubleshoot|\brepair\b|\bbreakdown\b/.test(value)) return "troubleshooting";
+            return "new_system";
+        };
+        const submittedAt = enquiry => {
+            const value = String(enquiry.created_at || "").replace(" ", "T");
+            const timestamp = new Date(value).getTime();
+            return Number.isNaN(timestamp) ? 0 : timestamp;
+        };
+
+        const groupedRows = categories.map(category => {
+            const categoryEnquiries = enquiries
+                .filter(enquiry => categoryFor(enquiry) === category.key)
+                .sort((a, b) => submittedAt(b) - submittedAt(a));
+            const rows = categoryEnquiries.map(enquiry => {
+                const status = String(enquiry.status || "pending").toLowerCase().replace(/[ -]+/g, "_");
+                const safeStatusClass = status.replace(/[^a-z0-9_-]/g, "");
+                const quotationStatus = enquiry.quotation_status || "not_uploaded";
+                const quotationLabel = quotationStatus === "not_uploaded"
+                    ? "Not uploaded"
+                    : quotationEnquiryLabel(quotationStatus);
+                const quotationClass = quotationStatus === "not_uploaded"
+                    ? "quotation-not_uploaded"
+                    : `quotation-${String(quotationStatus).replace(/[^a-z0-9_-]/g, "")}`;
+
+                return `
+                    <article class="enquiry-monitor-item">
+                        <div class="enquiry-monitor-request">
+                            <strong>${escapeHtml(enquiry.request_code || "Service request")}</strong>
+                            <small>${escapeHtml(formatDate(String(enquiry.created_at || "").replace(" ", "T")))}</small>
+                        </div>
+                        <div class="enquiry-monitor-customer"><small>Customer</small><strong>${escapeHtml(enquiry.customer_name || "Unknown customer")}</strong></div>
+                        <div class="enquiry-monitor-service"><small>Service</small><strong>${escapeHtml(enquiry.service_name || "Service request")}</strong></div>
+                        <div class="enquiry-monitor-state"><small>Job status</small><span class="enquiry-monitor-badge status-${safeStatusClass}">${escapeHtml(enquiryStatusLabel(enquiry.status))}</span></div>
+                        <div class="enquiry-monitor-state"><small>Quotation</small><span class="enquiry-monitor-badge ${quotationClass}">${escapeHtml(quotationLabel)}</span></div>
+                    </article>`;
+            }).join("");
+
+            return `
+                <details class="enquiry-monitor-category" data-category="${category.key}">
+                    <summary class="enquiry-monitor-category-summary">
+                        <span class="enquiry-monitor-category-mark" aria-hidden="true"></span>
+                        <span class="enquiry-monitor-category-heading">
+                            <strong>${escapeHtml(category.label)}</strong>
+                            <small>Active enquiries </small>
+                        </span>
+                        <span class="enquiry-monitor-category-count">${categoryEnquiries.length} ${categoryEnquiries.length === 1 ? "job" : "jobs"}</span>
+                        <span class="enquiry-monitor-category-chevron" aria-hidden="true">⌄</span>
+                    </summary>
+                    <div class="enquiry-monitor-category-items">
+                        ${rows || `<div class="enquiry-monitor-empty">No enquiries in this category.</div>`}
+                    </div>
+                </details>`;
+        });
+
+        enquiryMonitorGroups.innerHTML = groupedRows.join("");
+    } catch (error) {
+        console.error("Load Admin quotation enquiries error:", error);
+        enquiryMonitorCount.textContent = "Unavailable";
+        enquiryMonitorGroups.innerHTML = `<div class="enquiry-monitor-empty">Unable to load Admin enquiries. ${escapeHtml(error.message)}</div>`;
+    }
+}
+
+async function refreshReviewPage() {
+    await Promise.all([loadEnquiriesRequiringQuotation(), loadQuotations()]);
+}
+
 
 /* =========================================================
    OPEN REVIEW
@@ -2023,7 +2134,7 @@ $("#searchInput")
 $("#refreshButton")
     ?.addEventListener(
         "click",
-        loadQuotations
+        refreshReviewPage
     );
 
 
@@ -2170,4 +2281,4 @@ try {
    INITIALIZE
 ========================================================= */
 
-loadQuotations();
+refreshReviewPage();

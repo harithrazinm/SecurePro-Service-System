@@ -143,13 +143,10 @@ function renderJobs(jobs) {
     }
 
     filtered.sort((first, second) => {
-        const firstActivity = getLastActivity(first);
-        const secondActivity = getLastActivity(second);
-        const firstOverdue = firstActivity && now - firstActivity.getTime() >= OVERDUE_AFTER_MS;
-        const secondOverdue = secondActivity && now - secondActivity.getTime() >= OVERDUE_AFTER_MS;
-        if (firstOverdue !== secondOverdue) return firstOverdue ? -1 : 1;
-        if (firstOverdue && secondOverdue) return firstActivity - secondActivity;
-        return 0;
+        const firstCreated = new Date(String(first.created_at || "").replace(" ", "T")).getTime();
+        const secondCreated = new Date(String(second.created_at || "").replace(" ", "T")).getTime();
+        return (Number.isFinite(secondCreated) ? secondCreated : 0) -
+            (Number.isFinite(firstCreated) ? firstCreated : 0);
     });
 
 

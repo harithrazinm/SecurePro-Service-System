@@ -671,6 +671,21 @@ function renderQuotations() {
                         quotation.approval_status ===
                         "revision_required";
 
+                    const isNewSystem =
+                        getEnquiryCategoryKey(quotation) === "new_system";
+
+                    const canUploadPaymentProof =
+                        isApproved &&
+                        (!isNewSystem || Boolean(quotation.whatsapp_sent_at));
+
+                    const paymentProofLockMessage = !isApproved
+                        ? "Quotation must be approved by Super Admin before payment proof can be uploaded"
+                        : isNewSystem && !quotation.whatsapp_sent_at
+                            ? "Send the approved quotation to the customer via WhatsApp first"
+                            : quotation.payment_proof_url
+                                ? "Replace payment proof"
+                                : "Add payment proof";
+
 
                     return `
                         <tr>
@@ -1104,27 +1119,17 @@ function renderQuotations() {
 
                                     <button
                                         class="action-button action-text proof ${
-                                            isApproved
+                                            canUploadPaymentProof
                                                 ? ""
                                                 : "approval-locked"
                                         }"
                                         data-upload-proof="${quotation.id}"
-                                        title="${
-                                            isApproved
-
-                                                ? (
-                                                    quotation.payment_proof_url
-                                                        ? "Replace payment proof"
-                                                        : "Add payment proof"
-                                                )
-
-                                                : "Quotation must be approved by Super Admin before payment proof can be uploaded"
-                                        }"
                                         ${
-                                            isApproved
+                                            canUploadPaymentProof
                                                 ? ""
                                                 : "disabled"
                                         }
+                                        title="${escapeHtml(paymentProofLockMessage)}"
                                     >
 
                                         <svg
@@ -1139,7 +1144,7 @@ function renderQuotations() {
                                         </svg>
 
                                         ${
-                                            isApproved
+                                            canUploadPaymentProof
 
                                                 ? (
                                                     quotation.payment_proof_url
@@ -1420,7 +1425,7 @@ function renderQuotationJobQueue() {
     }));
 
     quotationJobList.innerHTML = groupedJobs.map(category => `
-        <details class="quotation-category-group" data-category="${category.key}" ${category.requests.length ? "open" : ""}>
+        <details class="quotation-category-group" data-category="${category.key}">
             <summary class="quotation-category-summary">
                 <span class="quotation-category-mark" aria-hidden="true"></span>
                 <span class="quotation-category-heading">
@@ -1448,10 +1453,16 @@ function renderQuotationJobItem(request, quotationCountByRequest) {
             (!quotation?.quotation_type || quotation.quotation_type === "original")
         );
         const revisionRequired = existingOriginal?.approval_status === "revision_required";
+        const categoryKey = getEnquiryCategoryKey(request);
+        const newSystem = categoryKey === "new_system";
+        const proofReady = Boolean(
+            existingOriginal?.whatsapp_sent_at &&
+            existingOriginal?.payment_proof_url &&
+            ["proof_uploaded", "verified"].includes(String(existingOriginal?.payment_status || "").toLowerCase())
+        );
         const requestCode = escapeHtml(request.request_code || request.code || 'Service Request');
         const customer = escapeHtml(getRequestCustomerName(request));
         const service = escapeHtml(getRequestServiceName(request));
-        const categoryKey = getEnquiryCategoryKey(request);
         const status = escapeHtml(formatStatus(request.status || 'pending'));
         const submitted = escapeHtml(formatDate(getRequestSubmittedDate(request)));
         const lastActivity = getRequestLastActivity(request);
@@ -1475,13 +1486,13 @@ function renderQuotationJobItem(request, quotationCountByRequest) {
                     </div>
                     ${isOverdue ? `<a class="quotation-overdue-review" href="request.html?id=${encodeURIComponent(request.id)}">Review request →</a>` : ''}
                 </div>
-                <div class="quotation-job-actions${categoryKey !== "new_system" ? " has-assign" : ""}">
+                <div class="quotation-job-actions has-assign">
                     <button type="button" class="quotation-job-upload" data-upload-quotation="${requestId}">
                         ${revisionRequired ? 'Submit Revised Quotation' : existingOriginal ? 'Update Existing Quotation' : 'Upload Quotation'}
                     </button>
-                    ${categoryKey !== "new_system"
-                        ? `<a class="quotation-job-assign" href="request.html?id=${encodeURIComponent(request.id)}#technicianAssignmentSection">Assign Technician</a>`
-                        : ""}
+                    ${newSystem && !proofReady
+                        ? `<button type="button" class="quotation-job-assign" disabled title="${existingOriginal?.whatsapp_sent_at ? "Upload the customer's quotation payment proof before assigning a technician." : "Send the approved quotation by WhatsApp first, then upload the customer's payment proof."}">Assign Technician</button>`
+                        : `<a class="quotation-job-assign" href="request.html?id=${encodeURIComponent(request.id)}#technicianAssignmentSection">Assign Technician</a>`}
                 </div>
             </article>`;
 }
@@ -2296,7 +2307,6 @@ async function sendWhatsApp(
         "noopener,noreferrer"
     );
 
-
     try {
 
         const result =
@@ -2306,7 +2316,11 @@ async function sendWhatsApp(
                 )}/send`,
                 {
                     method:
-                        "POST"
+                        "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ channel: "whatsapp" })
                 }
             );
 
@@ -2510,6 +2524,14 @@ function choosePaymentProof(
 
         return;
 
+    }
+
+    if (
+        getEnquiryCategoryKey(quotation) === "new_system" &&
+        !quotation.whatsapp_sent_at
+    ) {
+        showError("Send the approved New System quotation via WhatsApp before uploading the customer's payment proof.");
+        return;
     }
 
 

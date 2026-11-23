@@ -18,6 +18,7 @@ const USER_KEY = "securepro_super_admin_user";
 const OVERDUE_AFTER_MS = 48 * 60 * 60 * 1000;
 const CLOSED_STATUSES = new Set(["completed", "cancelled", "canceled"]);
 const ACTIVE_JOB_STATUSES = new Set(["in_progress", "waiting_parts", "awaiting_payment"]);
+const TECHNICIAN_FIRST_SERVICES = new Set(["troubleshoot_repair", "maintenance_service", "inspection"]);
 
 // =========================================================
 // HELPERS
@@ -72,6 +73,7 @@ const overdueAgeLabel = request => {
 
 const status = value => ({
     pending: "Pending",
+    needs_technician: "Needs Technician",
     assigned: "Assigned",
     in_progress: "In Progress",
     waiting_parts: "Waiting Parts",
@@ -137,6 +139,7 @@ const badge = value => {
     if (
         [
             "pending",
+            "needs_technician",
             "assigned",
             "in_progress",
             "waiting_parts",
@@ -180,6 +183,15 @@ const badge = value => {
             ${esc(displayText)}
         </span>
     `;
+};
+
+const needsTechnician = project => {
+    if (String(project.status || "").toLowerCase() !== "pending" || project.technician_id) return false;
+    const serviceCode = String(project.service_code || "").toLowerCase();
+    const paymentProofExists = Boolean(String(project.quotation_payment_proof_url || "").trim());
+    const paymentStatus = String(project.quotation_payment_status || "").toLowerCase();
+    return TECHNICIAN_FIRST_SERVICES.has(serviceCode) ||
+        (paymentProofExists && ["proof_uploaded", "verified"].includes(paymentStatus));
 };
 
 
@@ -350,11 +362,8 @@ function render() {
     const allProjects = window.projects || [];
     const normalizedStatus = project => String(project.status || "").toLowerCase();
     const countStatus = value => allProjects.filter(project => normalizedStatus(project) === value).length;
-    const openStatuses = new Set(["pending", "assigned", "in_progress", "waiting_parts", "awaiting_payment"]);
-    const openCount = allProjects.filter(project => openStatuses.has(normalizedStatus(project))).length;
     const summaryCounts = {
-        jobCountOpen: openCount,
-        jobCountPending: countStatus("pending"),
+        jobCountNeedsTechnician: allProjects.filter(needsTechnician).length,
         jobCountAssigned: countStatus("assigned"),
         jobCountProgress: countStatus("in_progress"),
         jobCountWaiting: countStatus("waiting_parts"),
@@ -386,7 +395,9 @@ function render() {
 
         const projectStatus = String(project.status || "").toLowerCase();
         const matchesStatus = selectedStatus === "active"
-            ? ACTIVE_JOB_STATUSES.has(projectStatus)
+            ? ACTIVE_JOB_STATUSES.has(projectStatus) || needsTechnician(project)
+            : selectedStatus === "needs_technician"
+                ? needsTechnician(project)
             : !selectedStatus || projectStatus === selectedStatus;
 
 
@@ -481,7 +492,7 @@ function render() {
         // PROJECT STATUS
         // -------------------------------------------------
 
-        const statusCell = badge(project.status);
+        const statusCell = badge(needsTechnician(project) ? "needs_technician" : project.status);
 
 
         // -------------------------------------------------
@@ -682,12 +693,14 @@ if (!token()) {
         statusFilters.querySelectorAll('[data-status="pending"], [data-status="assigned"], [data-status="completed"]').forEach(button => {
             button.hidden = true;
         });
+        const needsTechnicianFilter = statusFilters.querySelector('[data-status="needs_technician"]');
+        if (needsTechnicianFilter) needsTechnicianFilter.hidden = false;
         document.querySelector('nav a[href="projects.html"]')?.classList.remove("active");
         document.querySelector('nav a[href="projects.html?status=active"]')?.classList.add("active");
         const pageTitle = $(".topbar h1");
         const introTitle = $(".intro h2");
         if (pageTitle) pageTitle.textContent = "Pending Jobs";
-        if (introTitle) introTitle.textContent = "In-progress jobs through awaiting payment";
+        if (introTitle) introTitle.textContent = "Jobs needing a technician, in progress, waiting for parts or awaiting payment";
     }
 
     if (statusFilters) {

@@ -1721,24 +1721,40 @@ async function updateRequest(req, res) {
         if (technician_id) {
 
             /*
-             * Troubleshooting & Repair is technician-first.
-             * It does NOT require a quotation/payment proof before
-             * the initial site inspection. All other services keep
-             * the existing payment-proof requirement.
+             * New System jobs require an approved quotation to be sent via
+             * WhatsApp and the customer's payment proof uploaded before
+             * technician assignment. Other service categories stay unchanged.
              */
 
-            if (
-                technician_id &&
-                ![
-                    'troubleshoot_repair',
-                    'maintenance_service',
-                    'inspection'
-                ].includes(serviceCode)
-            ) {
+            const technicianFirstServices = new Set([
+                "troubleshoot_repair",
+                "maintenance_service",
+                "inspection"
+            ]);
+            const requiresNewSystemQuoteSteps = !technicianFirstServices.has(serviceCode);
 
-                const [paymentProofRows] =
-                    await connection.query(
-                        `
+            if (requiresNewSystemQuoteSteps) {
+                const [whatsappRows] = await connection.query(
+                    `SELECT id
+                     FROM quotations
+                     WHERE request_id = ?
+                       AND (quotation_type = 'original' OR quotation_type IS NULL)
+                       AND approval_status = 'approved'
+                       AND whatsapp_sent_at IS NOT NULL
+                     ORDER BY created_at DESC
+                     LIMIT 1`,
+                    [requestId]
+                );
+
+                if (!whatsappRows.length) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Send the approved New System quotation via WhatsApp before assigning a technician."
+                    });
+                }
+
+                const [paymentProofRows] = await connection.query(
+                    `
                 SELECT
                     id,
                     payment_proof_url,
@@ -1755,29 +1771,25 @@ async function updateRequest(req, res) {
                     AND TRIM(payment_proof_url) <> ''
 
                     AND payment_status = 'proof_uploaded'
+                    AND whatsapp_sent_at IS NOT NULL
+                    AND approval_status = 'approved'
+                    AND (quotation_type = 'original' OR quotation_type IS NULL)
 
                 ORDER BY
                     payment_proof_uploaded_at DESC
 
                 LIMIT 1
-                `,
-                        [requestId]
-                    );
+                    `,
+                    [requestId]
+                );
 
 
                 if (!paymentProofRows.length) {
-
                     return res.status(400).json({
-
                         success: false,
-
-                        message:
-                            "Technician cannot be assigned yet. Please upload the customer's quotation payment proof first."
-
+                        message: "Technician cannot be assigned yet. Please upload the customer's quotation payment proof first."
                     });
-
                 }
-
             }
 
 

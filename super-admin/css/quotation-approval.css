@@ -129,6 +129,227 @@
     vertical-align: middle;
 }
 
+.enquiry-monitor-panel .panel-head {
+    align-items: center;
+}
+
+.enquiry-monitor-description {
+    margin: 5px 0 0;
+    color: #667085;
+    font-size: 12px;
+}
+
+.enquiry-monitor-count {
+    flex: 0 0 auto;
+    padding: 7px 11px;
+    border: 1px solid #d9e3f1;
+    border-radius: 999px;
+    background: #f4f7fb;
+    color: #365778;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.enquiry-monitor-groups {
+    overflow: hidden;
+    border-top: 1px solid #edf1f6;
+}
+
+.enquiry-monitor-category {
+    overflow: hidden;
+    border-bottom: 1px solid #e9eef5;
+    background: #fff;
+}
+
+.enquiry-monitor-category:last-child {
+    border-bottom: 0;
+}
+
+.enquiry-monitor-category-summary {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-height: 70px;
+    padding: 12px 22px;
+    list-style: none;
+    cursor: pointer;
+    background: linear-gradient(105deg, #f8faff, #fff 78%);
+    transition: background .16s ease;
+}
+
+.enquiry-monitor-category-summary::-webkit-details-marker {
+    display: none;
+}
+
+.enquiry-monitor-category-summary:hover,
+.enquiry-monitor-category[open] > .enquiry-monitor-category-summary {
+    background: #f5f8ff;
+}
+
+.enquiry-monitor-category-mark {
+    display: inline-block;
+    width: 8px;
+    height: 32px;
+    flex: 0 0 8px;
+    border-radius: 999px;
+    background: #725ed0;
+}
+
+.enquiry-monitor-category[data-category="inspection"] .enquiry-monitor-category-mark { background: #2f80c9; }
+.enquiry-monitor-category[data-category="maintenance"] .enquiry-monitor-category-mark { background: #23936c; }
+.enquiry-monitor-category[data-category="troubleshooting"] .enquiry-monitor-category-mark { background: #d2762b; }
+
+.enquiry-monitor-category-heading {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.enquiry-monitor-category-heading strong {
+    color: #1d2b43;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.enquiry-monitor-category-heading small {
+    color: #78869b;
+    font-size: 10px;
+}
+
+.enquiry-monitor-category-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 66px;
+    min-height: 27px;
+    padding: 4px 9px;
+    border: 1px solid #dce5f2;
+    border-radius: 999px;
+    background: #fff;
+    color: #4a5d7a;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.enquiry-monitor-category-chevron {
+    color: #75849b;
+    font-size: 19px;
+    line-height: 1;
+    transition: transform .16s ease;
+}
+
+.enquiry-monitor-category[open] .enquiry-monitor-category-chevron {
+    transform: rotate(180deg);
+}
+
+.enquiry-monitor-category-items {
+    border-top: 1px solid #edf1f6;
+}
+
+.enquiry-monitor-item {
+    display: grid;
+    grid-template-columns: 1.05fr 1.2fr 1.35fr .9fr 1fr;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 22px;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.enquiry-monitor-item:last-child {
+    border-bottom: 0;
+}
+
+.enquiry-monitor-request strong,
+.enquiry-monitor-request small,
+.enquiry-monitor-customer strong,
+.enquiry-monitor-customer small,
+.enquiry-monitor-service strong,
+.enquiry-monitor-service small,
+.enquiry-monitor-state small {
+    display: block;
+}
+
+.enquiry-monitor-request strong,
+.enquiry-monitor-customer strong {
+    color: #17212b;
+    font-size: 12px;
+}
+
+.enquiry-monitor-request small,
+.enquiry-monitor-customer small,
+.enquiry-monitor-service small,
+.enquiry-monitor-state small {
+    margin-top: 3px;
+    color: #98a2b3;
+    font-size: 10px;
+}
+
+.enquiry-monitor-service {
+    color: #475467;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.enquiry-monitor-service strong {
+    color: #475467;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.enquiry-monitor-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: #f2f4f7;
+    color: #475467;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .25px;
+    white-space: nowrap;
+}
+
+.enquiry-monitor-badge.status-pending,
+.enquiry-monitor-badge.status-quotation_required,
+.enquiry-monitor-badge.quotation-pending_approval {
+    background: #fff6df;
+    color: #9b6700;
+}
+
+.enquiry-monitor-badge.quotation-revision_required {
+    background: #fff0ed;
+    color: #c84b32;
+}
+
+.enquiry-monitor-badge.quotation-approved {
+    background: #eaf8ef;
+    color: #16834a;
+}
+
+.enquiry-monitor-empty {
+    padding: 18px 24px;
+    color: #667085;
+    font-size: 12px;
+}
+
+@media (max-width: 900px) {
+    .enquiry-monitor-item {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 18px;
+    }
+}
+
+@media (max-width: 560px) {
+    .enquiry-monitor-category-summary { min-height: 64px; gap: 9px; padding: 11px 14px; }
+    .enquiry-monitor-category-heading small { font-size: 9px; }
+    .enquiry-monitor-category-count { min-width: 54px; padding: 4px 6px; font-size: 9px; }
+    .enquiry-monitor-item { grid-template-columns: 1fr; gap: 10px; padding: 14px; }
+}
+
 .quotation-number-cell strong,
 .quotation-number-cell span,
 .customer-cell strong,

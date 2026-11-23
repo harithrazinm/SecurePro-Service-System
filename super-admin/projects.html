@@ -48,8 +48,7 @@
                     <button id="refreshButton" class="refresh">↻ Refresh</button>
                 </div>
                 <section class="job-summary-grid" aria-label="Job status summary">
-                    <article class="job-summary-card total"><span>Open Jobs</span><strong id="jobCountOpen">0</strong></article>
-                    <article class="job-summary-card pending"><span>Pending</span><strong id="jobCountPending">0</strong></article>
+                    <article class="job-summary-card needs-tech"><span>Needs Technician</span><strong id="jobCountNeedsTechnician">0</strong></article>
                     <article class="job-summary-card assigned"><span>Assigned</span><strong id="jobCountAssigned">0</strong></article>
                     <article class="job-summary-card progress"><span>In Progress</span><strong id="jobCountProgress">0</strong></article>
                     <article class="job-summary-card waiting"><span>Waiting Parts</span><strong id="jobCountWaiting">0</strong></article>
@@ -63,6 +62,7 @@
                         </div>
                         <div id="statusFilters" class="project-status-filters" role="group" aria-label="Filter jobs by status">
                             <button type="button" class="filter-button active" data-status="" aria-pressed="true">All</button>
+                            <button type="button" class="filter-button" data-status="needs_technician" aria-pressed="false" hidden>Needs Technician</button>
                             <button type="button" class="filter-button" data-status="pending" aria-pressed="false">Pending</button>
                             <button type="button" class="filter-button" data-status="assigned" aria-pressed="false">Assigned</button>
                             <button type="button" class="filter-button" data-status="in_progress" aria-pressed="false">In Progress</button>

@@ -491,6 +491,8 @@ async function getProjects(req, res) {
 
                 sr.technician_id,
 
+                s.service_code,
+
                 sr.technician_started_at,
 
                 CASE

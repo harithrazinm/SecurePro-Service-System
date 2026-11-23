@@ -1,5 +1,46 @@
 const pool = require("../config/db");
 
+async function getEnquiriesRequiringQuotation(req, res) {
+    try {
+        const [rows] = await pool.query(`
+            SELECT
+                r.id,
+                r.request_code,
+                r.customer_name,
+                r.status,
+                DATE_FORMAT(r.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+                s.service_code,
+                s.name_en AS service_name,
+                (
+                    SELECT q.quotation_number
+                    FROM quotations q
+                    WHERE q.request_id = r.id
+                      AND (q.quotation_type = 'original' OR q.quotation_type IS NULL)
+                    ORDER BY q.created_at DESC
+                    LIMIT 1
+                ) AS quotation_number,
+                (
+                    SELECT COALESCE(q.approval_status, 'uploaded')
+                    FROM quotations q
+                    WHERE q.request_id = r.id
+                      AND (q.quotation_type = 'original' OR q.quotation_type IS NULL)
+                    ORDER BY q.created_at DESC
+                    LIMIT 1
+                ) AS quotation_status
+            FROM service_requests r
+            INNER JOIN services s ON s.id = r.service_id
+            WHERE LOWER(REPLACE(REPLACE(COALESCE(r.status, 'pending'), ' ', '_'), '-', '_'))
+                NOT IN ('completed', 'cancelled', 'canceled')
+            ORDER BY r.created_at DESC
+        `);
+
+        return res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error("Get Super Admin quotation enquiries error:", error);
+        return res.status(500).json({ success: false, message: "Unable to retrieve enquiries requiring quotation." });
+    }
+}
+
 
 /*
  * ======================================================
@@ -713,6 +754,7 @@ async function requestQuotationRevision(req, res) {
 
 
 module.exports = {
+    getEnquiriesRequiringQuotation,
     getQuotationApprovalQueue,
     getQuotationReview,
     approveQuotation,
