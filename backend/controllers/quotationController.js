@@ -1514,7 +1514,7 @@ async function uploadPaymentProof(
    FOLLOW-UP
  *
  * FU1 = 12 hours after quotation sent
- * FU2 = 48 hours after FU1
+ * FU2 = 24 hours after FU1
 ========================================================= */
 
 async function recordFollowUp(
@@ -1672,7 +1672,7 @@ async function recordFollowUp(
                     ).getTime()
                     +
                     (
-                        48 *
+                        24 *
                         60 *
                         60 *
                         1000

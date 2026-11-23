@@ -533,7 +533,7 @@ function followUpInfo(
                 fu1.getTime()
                 +
                 (
-                    48 *
+                    24 *
                     60 *
                     60 *
                     1000
@@ -2377,72 +2377,46 @@ async function sendFollowUp(
     }
 
 
-    try {
-
-        const result =
-            await apiRequest(
-                `/quotations/${encodeURIComponent(
-                    id
-                )}/follow-up/${number}`,
-                {
-                    method:
-                        "POST"
-                }
+    let phone =
+        String(
+            quotation.customer_phone
+        )
+            .replace(
+                /\D/g,
+                ""
             );
 
 
-        if (!result) return;
+    if (phone.startsWith("0")) {
+        phone = `60${phone.slice(1)}`;
+    }
+
+    if (!phone.startsWith("60")) {
+        phone = `60${phone}`;
+    }
 
 
-        let phone =
-            String(
-                quotation.customer_phone
-            )
-                .replace(
-                    /\D/g,
-                    ""
-                );
+    const customer = quotation.customer_name || "Pelanggan";
+    const message = number === 1
+        ? `Hi ${customer}, nak follow up sikit berkenaan quotation yang saya hantar sebelum ni. Dah sempat tengok ke? Kalau ada apa-apa yang nak ditanya atau nak kami explain lebih lanjut, boleh terus bagitahu ya. Terima kasih!`
+        : `Hi ${customer}, saya nak follow up sekali lagi berkenaan quotation untuk ${quotation.service_name || "perkhidmatan kami"}. Kalau masih berminat untuk proceed, boleh maklumkan kepada saya ya. Nanti kami bantu uruskan langkah seterusnya. Terima kasih kerana memilih Sonic System Solutions.`;
 
+    // Open WhatsApp during the button click so browsers don't block the popup
+    // after the API request's asynchronous round trip.
+    window.open(
+        `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
+        "_blank",
+        "noopener,noreferrer"
+    );
 
-        if (
-            phone.startsWith("0")
-        ) {
-
-            phone =
-                `60${phone.slice(1)}`;
-
-        }
-
-
-        if (
-            !phone.startsWith("60")
-        ) {
-
-            phone =
-                `60${phone}`;
-
-        }
-
-
-        const customer = quotation.customer_name || "Pelanggan";
-
-const message =
-  number === 1
-    ? `Hi ${customer}, nak follow up sikit berkenaan quotation yang saya hantar sebelum ni. Dah sempat tengok ke? Kalau ada apa-apa yang nak ditanya atau nak kami explain lebih lanjut, boleh terus bagitahu ya. Terima kasih!`
-    : `Hi ${customer}, saya nak follow up sekali lagi berkenaan quotation untuk ${quotation.service_name || "perkhidmatan kami"}. Kalau masih berminat untuk proceed, boleh maklumkan kepada saya ya. Nanti kami bantu uruskan langkah seterusnya. Terima kasih kerana memilih Sonic System Solutions.`;
-
-    
-        window.open(
-            `https://wa.me/${phone}?text=${encodeURIComponent(
-                message
-            )}`,
-            "_blank",
-            "noopener,noreferrer"
+    try {
+        const result = await apiRequest(
+            `/quotations/${encodeURIComponent(id)}/follow-up/${number}`,
+            { method: "POST" }
         );
 
-
+        if (!result) return;
         await loadQuotations();
-
     } catch (error) {
 
         showError(
