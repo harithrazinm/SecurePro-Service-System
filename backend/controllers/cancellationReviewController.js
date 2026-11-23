@@ -48,6 +48,14 @@ async function getPendingCancellationReviews(req, res) {
 }
 
 async function approveCancellationReview(req, res) {
+    const reason = String(req.body?.reason || "").trim();
+    if (!reason) {
+        return res.status(400).json({ success: false, message: "Enter a reason for cancelling this job." });
+    }
+    if (reason.length > 2000) {
+        return res.status(400).json({ success: false, message: "The cancellation reason must be 2,000 characters or fewer." });
+    }
+
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
@@ -89,19 +97,18 @@ async function approveCancellationReview(req, res) {
             return res.status(409).json({ success: false, message: "The request changed before it could be cancelled." });
         }
 
-        const remarks = String(req.body?.remarks || "").trim() || "Cancellation approved by Admin after 30-day pending review.";
         await connection.query(
             `INSERT INTO request_status_history
                 (id, request_id, old_status, new_status, changed_by, remarks)
              VALUES (UUID(), ?, 'pending', 'cancelled', ?, ?)`,
-            [review.request_id, req.user.id, remarks]
+            [review.request_id, req.user.id, reason]
         );
         await connection.query(
             `UPDATE request_cancellation_reviews
              SET review_status = 'approved', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP,
                  review_remarks = ?
              WHERE id = ? AND review_status = 'pending'`,
-            [req.user.id, remarks, review.id]
+            [req.user.id, reason, review.id]
         );
 
         await connection.commit();

@@ -90,6 +90,23 @@
     </main>
 </div>
 
+<div id="approveModal" class="review-modal" hidden>
+    <div class="review-modal-backdrop" data-close-approve-modal></div>
+    <section class="review-modal-card" role="dialog" aria-modal="true" aria-labelledby="approveModalTitle">
+        <button type="button" class="modal-close" data-close-approve-modal aria-label="Close">×</button>
+        <span class="eyebrow">CANCEL JOB</span>
+        <h2 id="approveModalTitle">Approve cancellation</h2>
+        <p>Enter why this job is being cancelled. The reason will be saved with the job history.</p>
+        <label for="approveReason">Cancellation reason <span aria-hidden="true">*</span></label>
+        <textarea id="approveReason" maxlength="2000" rows="4" placeholder="Explain why this job should be cancelled..." required></textarea>
+        <div id="approveModalMessage" class="page-message error" role="alert" hidden></div>
+        <div class="modal-actions">
+            <button type="button" class="secondary-button" data-close-approve-modal>Go back</button>
+            <button type="button" id="confirmApproveButton" class="danger-button">Approve and cancel job</button>
+        </div>
+    </section>
+</div>
+
 <div id="rejectModal" class="review-modal" hidden>
     <div class="review-modal-backdrop" data-close-modal></div>
     <section class="review-modal-card" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
@@ -106,7 +123,7 @@
     </section>
 </div>
 
-<script src="js/cancellation-reviews.js?v=20261122-1"></script>
+<script src="js/cancellation-reviews.js?v=20261123-1"></script>
 <script src="js/session-timeout.js"></script>
 </body>
 </html>

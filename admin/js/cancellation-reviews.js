@@ -9,8 +9,10 @@ if (!token || !adminUser || adminUser.role !== "admin") location.href = "login.h
 const $ = selector => document.querySelector(selector);
 const tbody = $("#reviewTableBody");
 const messageBox = $("#pageMessage");
+const approveModal = $("#approveModal");
 const modal = $("#rejectModal");
 let reviews = [];
+let approvingId = null;
 let rejectingId = null;
 
 if (adminUser?.name && $("#topbarAdminName")) $("#topbarAdminName").textContent = adminUser.name;
@@ -94,14 +96,46 @@ async function loadReviews() {
     }
 }
 
-async function approveReview(id) {
+function openApproveModal(id) {
     const review = reviews.find(item => String(item.id) === String(id));
-    if (!review || !confirm(`Approve cancellation for ${review.request_code}? This will change the job status to Cancelled.`)) return;
+    if (!review) return;
+    approvingId = id;
+    $("#approveReason").value = "";
+    $("#approveModalMessage").hidden = true;
+    $("#approveModalMessage").textContent = "";
+    $("#approveModalTitle").textContent = `Cancel ${review.request_code}?`;
+    approveModal.hidden = false;
+    $("#approveReason").focus();
+}
+
+function closeApproveModal() {
+    approveModal.hidden = true;
+    approvingId = null;
+}
+
+async function approveReview() {
+    const reason = $("#approveReason").value.trim();
+    if (!reason) {
+        const reasonMessage = $("#approveModalMessage");
+        reasonMessage.textContent = "Enter a reason for cancelling this job.";
+        reasonMessage.hidden = false;
+        $("#approveReason").focus();
+        return;
+    }
+    if (!approvingId) return;
+    const button = $("#confirmApproveButton");
+    button.disabled = true;
     try {
-        const result = await api(`/admin/cancellation-reviews/${encodeURIComponent(id)}/approve`, { method: "POST", body: JSON.stringify({}) });
-        showMessage(result?.message || "Cancellation approved.");
+        const result = await api(`/admin/cancellation-reviews/${encodeURIComponent(approvingId)}/approve`, { method: "POST", body: JSON.stringify({ reason }) });
+        closeApproveModal();
         await loadReviews();
-    } catch (error) { showMessage(error.message, "error"); }
+        showMessage(result?.message || "Cancellation approved.");
+    } catch (error) {
+        const reasonMessage = $("#approveModalMessage");
+        reasonMessage.textContent = error.message;
+        reasonMessage.hidden = false;
+    }
+    finally { button.disabled = false; }
 }
 
 function openRejectModal(id) {
@@ -133,13 +167,17 @@ async function rejectReview() {
 tbody.addEventListener("click", event => {
     const approve = event.target.closest("[data-approve]");
     const reject = event.target.closest("[data-reject]");
-    if (approve) approveReview(approve.dataset.approve);
+    if (approve) openApproveModal(approve.dataset.approve);
     if (reject) openRejectModal(reject.dataset.reject);
 });
 
 modal.addEventListener("click", event => {
     if (event.target.closest("[data-close-modal]")) closeRejectModal();
 });
+approveModal.addEventListener("click", event => {
+    if (event.target.closest("[data-close-approve-modal]")) closeApproveModal();
+});
+$("#confirmApproveButton").addEventListener("click", approveReview);
 $("#confirmRejectButton").addEventListener("click", rejectReview);
 $("#refreshButton").addEventListener("click", loadReviews);
 $("#reviewSearch").addEventListener("input", render);
