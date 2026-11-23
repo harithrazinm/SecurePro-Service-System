@@ -1,0 +1,112 @@
+/* Shared Admin top navigation: keep spacing and active states identical on every page. */
+body .app-shell > header.topbar-card {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 15px 20px;
+    border: 1px solid #e2e9f3;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 8px 26px rgba(29, 52, 88, .06);
+}
+
+body .app-shell > header.topbar-card > .brand {
+    flex: 0 0 auto;
+}
+
+body .app-shell > header.topbar-card > .brand .brand-mark {
+    border-radius: 12px;
+    background: linear-gradient(145deg, #2e66db, #173c8c);
+    box-shadow: 0 5px 12px rgba(30, 77, 166, .2);
+}
+
+body .app-shell > header.topbar-card > .top-nav {
+    box-sizing: border-box;
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    min-width: 0;
+    padding: 5px;
+    border-radius: 12px;
+    background: #f3f6fb;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+body .app-shell > header.topbar-card > .top-nav::-webkit-scrollbar {
+    display: none;
+}
+
+body .app-shell > header.topbar-card > .top-nav > a {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    color: #536782;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+body .app-shell > header.topbar-card > .top-nav > a:hover {
+    background: rgba(255, 255, 255, .72);
+    color: #173b75;
+}
+
+body .app-shell > header.topbar-card > .top-nav > a.active,
+body .app-shell > header.topbar-card > .top-nav > a[aria-current="page"] {
+    background: #fff;
+    color: #1d4ed8;
+    box-shadow: 0 3px 10px rgba(31, 77, 155, .12);
+}
+
+body .app-shell > header.topbar-card > .top-nav > a:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, .35);
+    outline-offset: 2px;
+}
+
+body .app-shell > header.topbar-card > .top-nav > a svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+}
+
+@media (max-width: 900px) {
+    body .app-shell > header.topbar-card {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    body .app-shell > header.topbar-card > .top-nav {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 600px) {
+    body .app-shell > header.topbar-card {
+        padding: 13px;
+        border-radius: 14px;
+    }
+
+    body .app-shell > header.topbar-card > .top-nav > a {
+        min-height: 38px;
+        padding: 8px 11px;
+        font-size: 11px;
+    }
+}
