@@ -604,7 +604,15 @@ function renderQuotations() {
 
 
     const filtered =
-        filteredQuotations();
+        filteredQuotations().sort((a, b) => {
+            const timestamp = quotation => {
+                const value = String(quotation.created_at || "").replace(" ", "T");
+                const parsed = new Date(value).getTime();
+                return Number.isFinite(parsed) ? parsed : 0;
+            };
+
+            return timestamp(b) - timestamp(a);
+        });
 
 
     if (!filtered.length) {
@@ -756,8 +764,6 @@ function renderQuotations() {
                                 <span class="date-text">
 
                                     ${formatDate(
-                                        quotation.revised_at ||
-                                        quotation.updated_at ||
                                         quotation.created_at
                                     )}
 

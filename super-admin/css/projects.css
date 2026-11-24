@@ -57,29 +57,50 @@ This stylesheet is only for the Projects page.
     gap: 8px;
     padding: 15px 17px;
     border: 1px solid var(--project-border);
+    border-top: 3px solid #cbd5e1;
     border-radius: 15px;
     background: #fff;
-    box-shadow: 0 7px 20px rgba(19, 35, 66, .045);
+    box-shadow: 0 4px 16px rgba(19, 35, 66, .04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.job-summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(19, 35, 66, .08);
 }
 
 .job-summary-card span {
     color: var(--project-muted);
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .job-summary-card strong {
     color: var(--project-text);
-    font-size: 25px;
+    font-size: 26px;
     line-height: 1;
+    font-weight: 800;
 }
 
-.job-summary-card.pending strong { color: #a7650b; }
+.job-summary-card.pending { border-top-color: #ea580c; }
+.job-summary-card.pending strong { color: #c2410c; }
+
+.job-summary-card.needs-tech { border-top-color: #d97706; }
 .job-summary-card.needs-tech strong { color: #b45309; }
-.job-summary-card.assigned strong { color: #315fc0; }
-.job-summary-card.progress strong { color: #16825d; }
-.job-summary-card.waiting strong { color: #9858a8; }
-.job-summary-card.payment strong { color: #b54c43; }
+
+.job-summary-card.assigned { border-top-color: #2563eb; }
+.job-summary-card.assigned strong { color: #1e40af; }
+
+.job-summary-card.progress { border-top-color: #7c3aed; }
+.job-summary-card.progress strong { color: #6d28d9; }
+
+.job-summary-card.waiting { border-top-color: #ca8a04; }
+.job-summary-card.waiting strong { color: #a16207; }
+
+.job-summary-card.payment { border-top-color: #f97316; }
+.job-summary-card.payment strong { color: #c2410c; }
 
 @media (max-width: 1100px) {
     .job-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -310,28 +331,32 @@ This stylesheet is only for the Projects page.
 }
 
 .project-status-filters .filter-button {
-    padding: 8px 13px;
-    border: 1px solid #e5eaf0;
-    border-radius: 9px;
+    padding: 7px 13px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9999px;
     background: #fff;
-    color: #667085;
+    color: #64748b;
     font: inherit;
     font-size: 12px;
     font-weight: 700;
     white-space: nowrap;
     cursor: pointer;
-    transition: 0.2s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    transition: all 0.18s ease;
 }
 
 .project-status-filters .filter-button:hover {
     border-color: #123c69;
     color: #123c69;
+    background: #f8fbff;
+    transform: translateY(-0.5px);
 }
 
 .project-status-filters .filter-button.active {
     border-color: #123c69;
     background: #123c69;
     color: #fff;
+    box-shadow: 0 2px 8px rgba(18, 60, 105, 0.25);
 }
 
 .project-search {
@@ -502,41 +527,55 @@ td small {
    REPORT + STATUS BADGES
 ========================================================= */
 
+@keyframes badge-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(1.25);
+    }
+}
+
 .badge {
     display: inline-flex !important;
-
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 7px;
 
-    min-height: 28px;
-
-    padding: 5px 11px;
+    min-height: 27px;
+    padding: 4px 12px;
 
     border: 1px solid transparent;
-    border-radius: 999px;
+    border-radius: 9999px;
 
     white-space: nowrap;
 
     font-family: inherit;
-    font-size: 11px;
-    line-height: 1.2;
+    font-size: 11.5px;
+    line-height: 1.25;
     font-weight: 750;
+    letter-spacing: 0.015em;
+
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Small coloured dot */
+.badge:hover {
+    transform: translateY(-0.5px);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
 
+/* Coloured status indicator dot */
 .badge::before {
     content: "";
-
-    width: 6px;
-    height: 6px;
-
-    flex: 0 0 6px;
-
+    width: 6.5px;
+    height: 6.5px;
+    flex: 0 0 6.5px;
     border-radius: 50%;
-
     background: currentColor;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
 
@@ -545,27 +584,39 @@ td small {
 ========================================================= */
 
 /* Approved — Green */
-
 .badge-approved {
-    background: #ecfdf5;
-    border-color: #bbf7d0;
+    background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #86efac;
     color: #15803d;
+}
+
+.badge-approved::before {
+    background: #16a34a;
+    box-shadow: 0 0 0 2px #bbf7d0;
 }
 
 /* Submitted — Blue */
-
 .badge-submitted {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1d4ed8;
+    background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-color: #93c5fd;
+    color: #0369a1;
+}
+
+.badge-submitted::before {
+    background: #0284c7;
+    box-shadow: 0 0 0 2px #bae6fd;
 }
 
 /* Available — Green */
-
 .badge-available {
-    background: #ecfdf5;
-    border-color: #bbf7d0;
+    background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #86efac;
     color: #15803d;
+}
+
+.badge-available::before {
+    background: #16a34a;
+    box-shadow: 0 0 0 2px #bbf7d0;
 }
 
 
@@ -573,75 +624,127 @@ td small {
    PROJECT STATUS
 ========================================================= */
 
-/* Pending — Orange */
-
+/* Pending — Warm Amber / Orange */
 .badge-pending {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #c2410c;
-}
-
-.badge-needs_technician {
-    background: #fff7ed;
+    background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
     border-color: #fdba74;
-    color: #b45309;
+    color: #9a3412;
 }
 
-/* Assigned — Blue */
+.badge-pending::before {
+    background: #ea580c;
+    box-shadow: 0 0 0 2px #fed7aa;
+}
 
+/* Needs Technician — Amber / Gold */
+.badge-needs_technician {
+    background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #fcd34d;
+    color: #92400e;
+}
+
+.badge-needs_technician::before {
+    background: #d97706;
+    box-shadow: 0 0 0 2px #fde68a;
+}
+
+/* Assigned — Royal Indigo / Blue */
 .badge-assigned {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1d4ed8;
+    background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: #93c5fd;
+    color: #1e40af;
 }
 
-/* In Progress — Purple */
+.badge-assigned::before {
+    background: #2563eb;
+    box-shadow: 0 0 0 2px #bfdbfe;
+}
 
+/* In Progress — Rich Violet with live pulse */
 .badge-in_progress {
-    background: #f5f3ff;
-    border-color: #ddd6fe;
-    color: #6d28d9;
+    background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+    border-color: #c4b5fd;
+    color: #5b21b6;
 }
 
-/* Waiting Parts — Yellow */
+.badge-in_progress::before {
+    background: #7c3aed;
+    box-shadow: 0 0 0 2px #ddd6fe;
+    animation: badge-pulse 2s infinite ease-in-out;
+}
 
+/* Waiting Parts — Warm Bronze / Gold */
 .badge-waiting_parts {
-    background: #fefce8;
-    border-color: #fde68a;
-    color: #a16207;
+    background: linear-gradient(180deg, #fefce8 0%, #fef9c3 100%);
+    border-color: #fde047;
+    color: #854d0e;
 }
 
-/* Completed — Green */
+.badge-waiting_parts::before {
+    background: #ca8a04;
+    box-shadow: 0 0 0 2px #fef08a;
+}
 
+/* Awaiting Payment — Vivid Coral / Orange */
+.badge-awaiting_payment {
+    background: linear-gradient(180deg, #fff7ed 0%, #fed7aa 100%);
+    border-color: #fb923c;
+    color: #9a3412;
+}
+
+.badge-awaiting_payment::before {
+    background: #f97316;
+    box-shadow: 0 0 0 2px #ffedd5;
+}
+
+/* Completed — Vivid Emerald */
 .badge-completed {
-    background: #ecfdf5;
-    border-color: #bbf7d0;
-    color: #15803d;
+    background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: #6ee7b7;
+    color: #065f46;
 }
 
-/* Cancelled — Red */
+.badge-completed::before {
+    background: #059669;
+    box-shadow: 0 0 0 2px #a7f3d0;
+}
 
+/* Cancelled — Rose Red */
 .badge-cancelled {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #b91c1c;
+    background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
+    border-color: #fda4af;
+    color: #9f1239;
 }
 
-/* Rejected — Red */
+.badge-cancelled::before {
+    background: #e11d48;
+    box-shadow: 0 0 0 2px #fecdd3;
+}
 
+/* Rejected — Rose Red */
 .badge-rejected {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #b91c1c;
+    background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
+    border-color: #fda4af;
+    color: #9f1239;
 }
 
-/* No report — Grey */
+.badge-rejected::before {
+    background: #e11d48;
+    box-shadow: 0 0 0 2px #fecdd3;
+}
 
+/* No report / default — Slate */
 .badge-none,
 .badge-no_report {
-    background: #f1f5f9;
-    border-color: #e2e8f0;
-    color: #64748b;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+.badge-none::before,
+.badge-no_report::before {
+    background: #94a3b8;
+    box-shadow: 0 0 0 2px #e2e8f0;
 }
 
 

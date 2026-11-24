@@ -49,6 +49,12 @@ const date = value => {
     });
 };
 
+const createdTimestamp = project => {
+    const value = String(project?.created_at || "").replace(" ", "T");
+    const timestamp = new Date(value).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+};
+
 const lastActivity = request => {
     const d = new Date(request.updated_at || request.created_at || "");
     return Number.isNaN(d.getTime()) ? null : d;
@@ -77,6 +83,7 @@ const status = value => ({
     assigned: "Assigned",
     in_progress: "In Progress",
     waiting_parts: "Waiting Parts",
+    awaiting_payment: "Awaiting Payment",
     completed: "Completed",
     cancelled: "Cancelled",
     rejected: "Rejected"
@@ -143,6 +150,7 @@ const badge = value => {
             "assigned",
             "in_progress",
             "waiting_parts",
+            "awaiting_payment",
             "completed",
             "cancelled",
             "rejected"
@@ -427,16 +435,10 @@ function render() {
     if (overdueAlert) {
         overdueAlert.hidden = overdueCount === 0;
         overdueAlert.textContent = overdueCount
-            ? `⚠ ${overdueCount} open request${overdueCount === 1 ? "" : "s"} untouched for 48+ hours — review the oldest items first.`
+            ? `⚠ ${overdueCount} open request${overdueCount === 1 ? "" : "s"} untouched for 48+ hours — review these items.`
             : "";
     }
-    rows.sort((a, b) => {
-        const aOverdue = isOverdue(a);
-        const bOverdue = isOverdue(b);
-        if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
-        if (aOverdue && bOverdue) return lastActivity(a) - lastActivity(b);
-        return 0;
-    });
+    rows.sort((a, b) => createdTimestamp(b) - createdTimestamp(a));
 
 
     // =====================================================

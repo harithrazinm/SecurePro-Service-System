@@ -121,16 +121,7 @@ async function getQuotationApprovalQueue(req, res) {
                 )
 
             ORDER BY
-                CASE
-                    WHEN q.approval_status = 'pending_approval'
-                    THEN 1
-                    WHEN q.approval_status = 'revision_required'
-                    THEN 2
-                    WHEN q.approval_status = 'approved'
-                    THEN 3
-                    ELSE 4
-                END,
-                COALESCE(q.updated_at, q.created_at) DESC
+                q.created_at DESC
         `);
 
 
