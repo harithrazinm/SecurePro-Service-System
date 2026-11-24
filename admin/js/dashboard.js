@@ -567,8 +567,15 @@ async function loadJobPending() {
         }
 
 
+        const sortedJobs = [...jobs].sort((first, second) => {
+            const firstCreated = new Date(String(first.created_at || "").replace(" ", "T")).getTime();
+            const secondCreated = new Date(String(second.created_at || "").replace(" ", "T")).getTime();
+            return (Number.isFinite(secondCreated) ? secondCreated : 0) -
+                (Number.isFinite(firstCreated) ? firstCreated : 0);
+        });
+
         list.innerHTML =
-            jobs
+            sortedJobs
                 .slice(
                     0,
                     5
@@ -757,20 +764,14 @@ async function loadEnquiries() {
         const result = await apiRequest("/admin/requests");
         if (!result) return;
 
-        const now = Date.now();
         const closedStatuses = new Set(["completed", "cancelled", "canceled"]);
         const enquiries = (Array.isArray(result.data) ? result.data : [])
             .filter(request => !closedStatuses.has(String(request.status || "pending").toLowerCase()))
             .sort((first, second) => {
-                const firstDate = new Date(first.updated_at || first.created_at || "");
-                const secondDate = new Date(second.updated_at || second.created_at || "");
-                const firstTime = Number.isNaN(firstDate.getTime()) ? 0 : firstDate.getTime();
-                const secondTime = Number.isNaN(secondDate.getTime()) ? 0 : secondDate.getTime();
-                const firstOverdue = firstTime > 0 && now - firstTime >= 48 * 60 * 60 * 1000;
-                const secondOverdue = secondTime > 0 && now - secondTime >= 48 * 60 * 60 * 1000;
-                if (firstOverdue !== secondOverdue) return firstOverdue ? -1 : 1;
-                if (firstOverdue && secondOverdue) return firstTime - secondTime;
-                return new Date(second.created_at || 0) - new Date(first.created_at || 0);
+                const firstCreated = new Date(String(first.created_at || "").replace(" ", "T")).getTime();
+                const secondCreated = new Date(String(second.created_at || "").replace(" ", "T")).getTime();
+                return (Number.isFinite(secondCreated) ? secondCreated : 0) -
+                    (Number.isFinite(firstCreated) ? firstCreated : 0);
             });
 
         if (count) {
@@ -787,7 +788,7 @@ async function loadEnquiries() {
             return;
         }
 
-        list.innerHTML = enquiries.slice(0, 4).map(request => `
+        list.innerHTML = enquiries.slice(0, 5).map(request => `
             <article class="enquiry-item">
                 <div class="enquiry-reference">
                     <strong>${escapeHtml(request.request_code || "Service Request")}</strong>
@@ -1264,12 +1265,17 @@ function renderUpcomingJobs() {
                         "completed"
             )
             .sort(
-                (a, b) =>
-                    a.date - b.date
+                (a, b) => {
+                    const dateDiff = b.date.getTime() - a.date.getTime();
+                    if (dateDiff !== 0) return dateDiff;
+                    const aCreated = new Date(String(a.job?.created_at || "").replace(" ", "T")).getTime();
+                    const bCreated = new Date(String(b.job?.created_at || "").replace(" ", "T")).getTime();
+                    return (Number.isFinite(bCreated) ? bCreated : 0) - (Number.isFinite(aCreated) ? aCreated : 0);
+                }
             )
             .slice(
                 0,
-                4
+                5
             );
 
 
