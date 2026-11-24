@@ -427,6 +427,12 @@ function decorateMediaReferences(payload, user, origin = "") {
     const allowedRole = ["admin", "super_admin", "technician"].includes(user?.role);
 
     function visit(value) {
+        // mysql2 returns TIMESTAMP/DATETIME columns as Date instances. Preserve
+        // them so res.json can serialize them as ISO strings; treating Date as
+        // a plain object via Object.entries turns it into `{}` and erases API
+        // timestamps (for example quotations.sent_at).
+        if (value instanceof Date) return value;
+
         if (typeof value === "string") {
             if (parseLocalReference(value) || parseLegacyReference(value)) {
                 return allowedRole ? createSignedMediaUrl(value, user, 10 * 60, origin) : null;

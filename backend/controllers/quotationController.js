@@ -1046,11 +1046,10 @@ async function sendQuotation(req, res) {
 
             SET
                 status = 'sent',
-                sent_at =
-                    COALESCE(
-                        sent_at,
-                        CURRENT_TIMESTAMP
-                    ),
+                sent_at = CASE
+                    WHEN ? = 'whatsapp' THEN CURRENT_TIMESTAMP
+                    ELSE COALESCE(sent_at, CURRENT_TIMESTAMP)
+                END,
                 whatsapp_sent_at = CASE
                     WHEN ? = 'whatsapp' THEN CURRENT_TIMESTAMP
                     ELSE whatsapp_sent_at
@@ -1059,6 +1058,7 @@ async function sendQuotation(req, res) {
             WHERE id = ?
             `,
             [
+                req.body?.channel === "whatsapp" ? "whatsapp" : null,
                 req.body?.channel === "whatsapp" ? "whatsapp" : null,
                 req.params.id
             ]

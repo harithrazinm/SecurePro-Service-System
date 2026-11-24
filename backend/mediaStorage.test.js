@@ -13,12 +13,21 @@ const {
     verifySignedMediaUrl,
     getStorageRoot,
     createLocalStorage,
-    resolveReference
+    resolveReference,
+    decorateMediaReferences
 } = require("./services/mediaStorage");
 const { canReadMedia, streamAuthorizedMedia, deleteLocalMediaIfUnreferenced } = require("./services/mediaAccess");
 const pool = require("./config/db");
 
 const validId = "39d9cb45-c1a4-44f0-9f6b-9d01dff86ba1";
+
+test("media response decoration preserves database date values", () => {
+    const sentAt = new Date("2026-11-24T01:29:45.000Z");
+    const decorated = decorateMediaReferences({ sent_at: sentAt }, { role: "admin" });
+
+    assert.equal(decorated.sent_at, sentAt);
+    assert.equal(JSON.parse(JSON.stringify(decorated)).sent_at, "2026-11-24T01:29:45.000Z");
+});
 
 test("detects the supported media signatures", () => {
     assert.equal(signatureMime(Buffer.from([0xff, 0xd8, 0xff, 0x00])), "image/jpeg");
