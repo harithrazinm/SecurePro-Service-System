@@ -175,8 +175,7 @@ async function getNotifications(req, res) {
                     DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s') AS created_at
              FROM super_admin_notifications
              WHERE user_id = ?
-             ORDER BY created_at DESC
-             LIMIT 100`,
+             ORDER BY created_at DESC`,
             [userId]
         );
 

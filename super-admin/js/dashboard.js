@@ -274,7 +274,7 @@ async function loadNotificationInbox() {
         const toggle = $("#notificationToggle");
         if (toggle) toggle.setAttribute("aria-label", `Notifications, ${unreadCount} unread alert${unreadCount === 1 ? "" : "s"}`);
         list.innerHTML = items.length
-            ? items.slice(0, 8).map(item => {
+            ? items.map(item => {
                 const notificationDate = notificationTimestamp(item.created_at);
                 const notificationDateTime = notificationDateTimeValue(item.created_at);
                 const destination = item.type === "quotation" ? "quotation-approval.html" : item.link;
