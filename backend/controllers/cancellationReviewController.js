@@ -33,6 +33,8 @@ async function getPendingCancellationReviews(req, res) {
             INNER JOIN services s
                 ON s.id = sr.service_id
             WHERE review.review_status = 'pending'
+              AND sr.status = 'pending'
+              AND sr.technician_id IS NULL
             ORDER BY review.requested_at ASC
             `
         );

@@ -41,6 +41,7 @@ function showMessage(text, type = "success") {
 async function api(path, options = {}) {
     const response = await fetch(`${API_BASE}${path}`, {
         ...options,
+        ...(options.method ? {} : { cache: "no-store" }),
         headers: { Authorization: `Bearer ${token}`, ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.headers || {}) }
     });
     if (response.status === 401 || response.status === 403) {
@@ -127,7 +128,10 @@ async function approveReview() {
     button.disabled = true;
     try {
         const result = await api(`/admin/cancellation-reviews/${encodeURIComponent(approvingId)}/approve`, { method: "POST", body: JSON.stringify({ reason }) });
+        const approvedId = String(approvingId);
         closeApproveModal();
+        reviews = reviews.filter(review => String(review.id) !== approvedId);
+        render();
         await loadReviews();
         showMessage(result?.message || "Cancellation approved.");
     } catch (error) {
