@@ -338,7 +338,7 @@ async function createQuotation(req, res) {
                     payment_proof_url = NULL,
                     payment_proof_name = NULL,
                     payment_proof_uploaded_at = NULL,
-                    payment_status = 'unpaid',
+                    payment_status = 'not_received',
                     follow_up_1_sent_at = NULL,
                     follow_up_2_sent_at = NULL,
                     updated_at = CURRENT_TIMESTAMP
@@ -747,7 +747,7 @@ async function updateQuotation(req, res) {
                     payment_proof_url = NULL,
                     payment_proof_name = NULL,
                     payment_proof_uploaded_at = NULL,
-                    payment_status = 'unpaid',
+                    payment_status = 'not_received',
                     follow_up_1_sent_at = NULL,
                     follow_up_2_sent_at = NULL,
                     updated_at = CURRENT_TIMESTAMP
