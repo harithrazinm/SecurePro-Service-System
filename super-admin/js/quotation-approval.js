@@ -1274,17 +1274,26 @@ async function openReview(
             )
                 ? payload.history
                 : Array.isArray(
+                    payload.reviews
+                )
+                    ? payload.reviews
+                : Array.isArray(
                     payload.review_history
                 )
                     ? payload.review_history
                     : [];
+
+        const previousVersions = Array.isArray(payload.previous_versions)
+            ? payload.previous_versions
+            : [];
 
 
         currentReview = {
 
             ...reviewQuotation,
 
-            history
+            history,
+            previous_versions: previousVersions
 
         };
 
@@ -1585,6 +1594,8 @@ function populateReview(
         history
     );
 
+    renderPreviousQuotationVersions(quotation.previous_versions || []);
+
 
     /*
      * Decision section
@@ -1609,6 +1620,24 @@ function populateReview(
 
     }
 
+}
+
+function renderPreviousQuotationVersions(versions) {
+    const section = $("#previousVersionsSection");
+    const container = $("#previousQuotationVersions");
+    if (!section || !container) return;
+
+    section.hidden = !versions.length;
+    container.innerHTML = versions.map(version => `
+        <article class="previous-quotation-version">
+            <div class="previous-quotation-version-icon" aria-hidden="true">PDF</div>
+            <div class="previous-quotation-version-details">
+                <strong>Revision ${escapeHtml(version.revision_number)} · ${escapeHtml(version.quotation_file_name || "quotation.pdf")}</strong>
+                <span>Archived ${escapeHtml(formatDate(version.archived_at))}${version.archived_by_name ? ` · by ${escapeHtml(version.archived_by_name)}` : ""}</span>
+            </div>
+            <a class="previous-quotation-version-link" href="${escapeHtml(version.quotation_file_url || "#")}" target="_blank" rel="noopener noreferrer">Open PDF ↗</a>
+        </article>
+    `).join("");
 }
 
 

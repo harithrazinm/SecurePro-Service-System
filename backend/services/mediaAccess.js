@@ -29,6 +29,12 @@ async function findMediaReferences(reference, database = pool) {
         SELECT request_id, quotation_file_name AS file_name, 'quotation' AS media_kind
         FROM quotations WHERE quotation_file_url = ?
         UNION ALL
+        SELECT q.request_id, versions.file_name, 'quotation_revision' AS media_kind
+        FROM quotation_revision_files versions
+        INNER JOIN quotations q
+            ON q.id COLLATE utf8mb4_unicode_ci = versions.quotation_id COLLATE utf8mb4_unicode_ci
+        WHERE versions.file_url = ?
+        UNION ALL
         SELECT request_id, payment_proof_name AS file_name, 'quotation_payment' AS media_kind
         FROM quotations WHERE payment_proof_url = ?
         UNION ALL
@@ -40,7 +46,7 @@ async function findMediaReferences(reference, database = pool) {
         INNER JOIN invoices i ON i.id = ip.invoice_id
         WHERE ip.payment_proof_url = ?
         `,
-        Array(8).fill(reference)
+        Array(9).fill(reference)
     );
 
     return rows;

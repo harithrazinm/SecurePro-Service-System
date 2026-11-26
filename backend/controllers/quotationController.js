@@ -320,6 +320,25 @@ async function createQuotation(req, res) {
             const file = uploadDetails(req.file);
             const nextRevision = Number(existing.revision_number || 1) + 1;
 
+            if (existing.quotation_file_url) {
+                await connection.query(`
+                    INSERT INTO quotation_revision_files (
+                        id, quotation_id, revision_number, file_url, file_name, archived_by
+                    ) VALUES (UUID(), ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                        file_url = VALUES(file_url),
+                        file_name = VALUES(file_name),
+                        archived_by = VALUES(archived_by),
+                        archived_at = CURRENT_TIMESTAMP
+                `, [
+                    existing.id,
+                    Number(existing.revision_number || 1),
+                    existing.quotation_file_url,
+                    existing.quotation_file_name || "quotation.pdf",
+                    req.user.id
+                ]);
+            }
+
             await connection.query(`
                 UPDATE quotations
                 SET
@@ -682,6 +701,7 @@ async function updateQuotation(req, res) {
                 q.quotation_file_name,
                 q.approval_status,
                 q.revision_number,
+                q.created_by,
                 q.payment_proof_url,
                 r.request_code,
                 r.customer_name,
@@ -728,6 +748,25 @@ async function updateQuotation(req, res) {
             fileUrl = file.url;
             fileName = file.name;
             nextRevision += 1;
+
+            if (quotation.quotation_file_url) {
+                await connection.query(`
+                    INSERT INTO quotation_revision_files (
+                        id, quotation_id, revision_number, file_url, file_name, archived_by
+                    ) VALUES (UUID(), ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                        file_url = VALUES(file_url),
+                        file_name = VALUES(file_name),
+                        archived_by = VALUES(archived_by),
+                        archived_at = CURRENT_TIMESTAMP
+                `, [
+                    quotationId,
+                    Number(quotation.revision_number || 1),
+                    quotation.quotation_file_url,
+                    quotation.quotation_file_name || "quotation.pdf",
+                    req.user.id
+                ]);
+            }
 
             await connection.query(`
                 UPDATE quotations

@@ -265,6 +265,80 @@
     line-height: 1.5;
 }
 
+.previous-versions-section[hidden] {
+    display: none;
+}
+
+.previous-quotation-versions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.previous-quotation-version {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 13px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.previous-quotation-version-icon {
+    display: grid;
+    width: 38px;
+    height: 42px;
+    flex: 0 0 38px;
+    place-items: center;
+    border-radius: 8px;
+    background: #fff0ed;
+    color: #c84b32;
+    font-size: 9px;
+    font-weight: 900;
+}
+
+.previous-quotation-version-details {
+    min-width: 0;
+    flex: 1;
+}
+
+.previous-quotation-version-details strong,
+.previous-quotation-version-details span {
+    display: block;
+}
+
+.previous-quotation-version-details strong {
+    overflow: hidden;
+    color: #1e293b;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.previous-quotation-version-details span {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.previous-quotation-version-link {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    border: 1px solid #d9e2ec;
+    border-radius: 8px;
+    background: #fff;
+    color: #123c69;
+    font-size: 10px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.previous-quotation-version-link:hover {
+    border-color: #123c69;
+    background: #eef4fa;
+}
+
 
 /* =========================================================
    HISTORY
@@ -338,8 +412,22 @@
 
     .review-button,
     .open-file-button,
-    .undo-approval-button {
+    .undo-approval-button,
+    .previous-quotation-version-link {
         width: 100%;
+    }
+
+    .previous-quotation-version {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .previous-quotation-version-details {
+        flex-basis: calc(100% - 52px);
+    }
+
+    .previous-quotation-version-link {
+        margin-left: 50px;
     }
 
 }

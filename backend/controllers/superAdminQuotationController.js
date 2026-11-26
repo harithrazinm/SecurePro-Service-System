@@ -207,6 +207,27 @@ async function getQuotationReview(req, res) {
 
 
         let reviews = [];
+        let previousVersions = [];
+
+        try {
+            const [versionRows] = await pool.query(`
+                SELECT
+                    versions.id,
+                    versions.revision_number,
+                    versions.file_url AS quotation_file_url,
+                    versions.file_name AS quotation_file_name,
+                    DATE_FORMAT(versions.archived_at, '%Y-%m-%d %H:%i:%s') AS archived_at,
+                    uploader.name AS archived_by_name
+                FROM quotation_revision_files versions
+                LEFT JOIN users uploader
+                    ON uploader.id COLLATE utf8mb4_unicode_ci = versions.archived_by COLLATE utf8mb4_unicode_ci
+                WHERE versions.quotation_id = ?
+                ORDER BY versions.revision_number DESC
+            `, [quotation.id]);
+            previousVersions = versionRows;
+        } catch (versionError) {
+            console.warn("Quotation PDF revision archive unavailable:", versionError.message);
+        }
 
         try {
 
@@ -253,7 +274,8 @@ async function getQuotationReview(req, res) {
             success: true,
             data: {
                 quotation,
-                reviews
+                reviews,
+                previous_versions: previousVersions
             }
         });
 
